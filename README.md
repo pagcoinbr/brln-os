@@ -32,7 +32,7 @@ Crie uma conta na tailscale e adicione o dispositivo.
 Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
 Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
 
-`ssh temp@o.ip.do.tailscale`
+`ssh temp@ip.do.servidor`
 
 Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
 
@@ -51,19 +51,18 @@ Em seguida faça o `logout`.
 
 Agora que criamos um novo usuário "admin", vamos fazer o login novamente e apagar o usuário "temp" anterior.
 
-Mais uma vez faça o comando, agora com o user admin `ssh admin@o.ip.do.tailscale`.
+Mais uma vez faça o comando, agora com o user admin `ssh admin@ip.do.servidor`.
 Uma vez logado faça: 
 
 `sudo userdel -rf temp`
 
-E depois `git clone https://github.com/REDACTED_USERbtc/Instala_minibolt.git`
+E depois `git clone https://github.com/REDACTED_USERbtc/minibolt-semiauto.git`
 
 # Iniciando a instalação por scripts
-Até agora fizemos a parte mais diícil que não pode ser automatizada por scripts, de agora em diante você vai copiar os scripts que estão na coluna a esquerda e seguir este passo a passo:
 
-Execute `chmod +x instala_minibolt1.sh` e depois `./instala_minibolt1.sh`, vão acontecer alguns comandos e no final você deve responder `y`para ativar o firewall ufw. 
+Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai copiar os scripts que estão na coluna a esquerda e seguir este passo a passo:
 
-Em seguida `chmod +x instala_minibolt2.sh` e `./instala_minibolt2.sh`
+Execute `chmod +x ufw_nginx.sh` e depois `./ufw_nginx.sh`, vão acontecer alguns prompts e você deve responder `y`para ativar o firewall ufw, quando solicitado. 
 
 # Agora vamos configurar a instalações tor e i2p
 
@@ -90,18 +89,19 @@ Tudo correu bem, em seguida:
 1. `wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -`
 2. `sudo apt update && sudo apt install i2pd`
 
-Agradecimentos especiais ao criador do tutorial https://v2.minibolt.info/system/system/privacy sem ele este projeto não seria possível.
+Agradecimentos especiais ao criador do tutorial https://v2.minibolt.info/system/system/privacy, sem ele este projeto não seria possível.
 
 # Finalmente instalando o lnd
 
 Como fizemos com os scripts anteriores, vamos fazer agora:
 
-1. `nano install_lnd.sh` - copiar o conteúdo do script e colar com o botão direito do mouse.
-2. `chmod +x install_lnd.sh`
-3. `./install_lnd.sh`
+1. `chmod +x install_lnd.sh`
+2. `./install_lnd.sh`
 
 Agora vamos logar como usuário lnd, lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
-Em seguida vamos criar o arquivo `nano setup_lnd.sh` e copiar o seu conteúdo do github.
+
+Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/minibolt-semiauto.git`
+
 Depois `chmod +x setup_lnd.sh` e `./setup_lnd.sh`
 
 Saia da sessão como lnd digitando `exit`
@@ -110,12 +110,11 @@ Faça `sudo usermod -aG debian-tor lnd`, `sudo chmod 640 /run/tor/control.authco
 
 # Criando o service o systemd para automatizar no boot do sistema.
 
-1. `nano create_lnd_service.sh` e copie o conteúdo do script.
-2. `chmod +x create_lnd_service.sh`
-3. `./create_lnd_service.sh`
+2. `chmod +x create_lndservice.sh`
+3. `./create_lndservice.sh`
 4. `sudo systemctl status lnd.service`
 
-Neste ponto o lnd já deve estar como "active" mas "Wallet locked". Vamos prosseguir.
+Neste ponto o lnd.service já deve estar como "active" mas "Wallet locked". Vamos prosseguir.
 
 # Configurando a carteira
 
@@ -154,9 +153,6 @@ Generating fresh cipher seed...
 !!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
 
 lnd successfully initialized!
-
-!!!ATENÇÃO!!!
-Esta é sua frase secreta para acessar o node lnd, anote em algum lugar seguro e de preferência tenha mais de uma cópia.
 
 Em seguida dê `exit` para sair do lnd user, mais uma vez.
 
