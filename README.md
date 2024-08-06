@@ -1,2 +1,167 @@
-# minibolt-semiauto
-Feito com base no sutorial original do Minibolt V1. Agradecimentos especiais ao criador.
+# Instalando o Ubuntu Server
+Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. 05.08.24
+
+Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o ssh openserver durante a instalação.
+
+quando te pedir as credenciais para login escreva o seguinte:
+
+name: temp
+
+server name: minibolt
+
+user: temp
+
+password: ********* (você escolhe)
+
+Prossiga com a instalação e quando finalizar, faça o reboot e retire o disco. Provavelmente agora você vai ver uma mensagem de erro no boot, pressione `Enter`.
+Agora sem o disco plugado, o sistema deve iniciar.
+
+# Instalando o TailScale VPN (Opcional)
+
+Esta vai ser uma parte chata, para não precisarmos procurar o pelo ip da maquina, vamos fazer o acesso usando o tailscale, por isso será necessário digitar no terminal manualmente o seguinte comando:
+
+`curl -fsSL https://tailscale.com/install.sh | sh`
+
+Lembrando que provavelmente o teclado estará em inglês e os `:` vão estar no lugar do "Ç" no teclado br e o pipe `|` é a ultima tecla da direita na mesma linha do "Ç".
+
+
+Em seguida escreva `sudo tailscale up` e ele vai te fornecer um link, este link deve ser digitado, letra por letra, no navegador de um outro dispositivo qualquer, de preferência no computador que você vai fazer o SSH no servidor. 
+
+Crie uma conta na tailscale e adicione o dispositivo.
+
+Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
+Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
+
+`ssh temp@o.ip.do.tailscale`
+
+Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
+
+# Preparando o terreno
+
+Agora faça 
+
+`sudo adduser --gecos "" admin`
+
+Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha do usuário admin, que estamos criando. 
+
+Depois copie e cole no terminal:
+`sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`. 
+
+Em seguida faça o `logout`.
+
+Agora que criamos um novo usuário "admin", vamos fazer o login novamente e apagar o usuário "temp" anterior.
+
+Mais uma vez faça o comando, agora com o user admin `ssh admin@o.ip.do.tailscale`.
+Uma vez logado faça: 
+
+`sudo userdel -rf temp`
+
+E depois `git clone https://github.com/REDACTED_USERbtc/Instala_minibolt.git`
+
+# Iniciando a instalação por scripts
+Até agora fizemos a parte mais diícil que não pode ser automatizada por scripts, de agora em diante você vai copiar os scripts que estão na coluna a esquerda e seguir este passo a passo:
+
+Execute `chmod +x instala_minibolt1.sh` e depois `./instala_minibolt1.sh`, vão acontecer alguns comandos e no final você deve responder `y`para ativar o firewall ufw. 
+
+Em seguida `chmod +x instala_minibolt2.sh` e `./instala_minibolt2.sh`
+
+# Agora vamos configurar a instalações tor e i2p
+
+1. `sudo apt update && sudo apt full-upgrade` e responda `y`.
+2. `sudo apt install apt-transport-https`
+3. `sudo nano /etc/apt/sources.list.d/tor.list`
+4. copie o conteúdo: `deb     [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org jammy main
+deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org jammy main` para dentro do arquivo.
+5. `sudo su`
+6. rode `wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null`
+7. `exit`
+8. `sudo apt update && sudo apt install tor deb.torproject.org-keyring`
+9. `sudo nano +56 /etc/tor/torrc --linenumbers`
+10. Descomente a linha "#ControlPort 9051" para "ControlPort 9051", salve e saia.
+11. `sudo systemctl reload tor`
+12. `sudo ss -tulpn | grep LISTEN | grep tor`
+13. Se a saída for:
+
+tcp     LISTEN 0    4096     127.0.0.1:9050   0.0.0.0:*    users:(("tor",pid=795,fd=6))
+tcp     LISTEN 0    4096     127.0.0.1:9051   0.0.0.0:*    users:(("tor",pid=795,fd=7))
+
+Tudo correu bem, em seguida:
+
+1. `wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -`
+2. `sudo apt update && sudo apt install i2pd`
+
+Agradecimentos especiais ao criador do tutorial https://v2.minibolt.info/system/system/privacy sem ele este projeto não seria possível.
+
+# Finalmente instalando o lnd
+
+Como fizemos com os scripts anteriores, vamos fazer agora:
+
+1. `nano install_lnd.sh` - copiar o conteúdo do script e colar com o botão direito do mouse.
+2. `chmod +x install_lnd.sh`
+3. `./install_lnd.sh`
+
+Agora vamos logar como usuário lnd, lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
+Em seguida vamos criar o arquivo `nano setup_lnd.sh` e copiar o seu conteúdo do github.
+Depois `chmod +x setup_lnd.sh` e `./setup_lnd.sh`
+
+Saia da sessão como lnd digitando `exit`
+
+Faça `sudo usermod -aG debian-tor lnd`, `sudo chmod 640 /run/tor/control.authcookie` e `sudo chmod 750 /run/tor`, agora o lnd tem autorização para acessar a tor, caso contrário resultará em erro.
+
+# Criando o service o systemd para automatizar no boot do sistema.
+
+1. `nano create_lnd_service.sh` e copie o conteúdo do script.
+2. `chmod +x create_lnd_service.sh`
+3. `./create_lnd_service.sh`
+4. `sudo systemctl status lnd.service`
+
+Neste ponto o lnd já deve estar como "active" mas "Wallet locked". Vamos prosseguir.
+
+# Configurando a carteira
+
+Faça o `sudo su - lnd`, para logar como lnd novamente.
+Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`.
+Digite a senha 2x para confirmar (a mesma senha escolhida anteriormente) e pressione `n` e `enter`
+
+
+Output esperado:
+`lnd@minibolt:~$ lncli --tlscertpath /data/lnd/tls.cert.tmp create
+Input wallet password:
+Confirm password:
+
+Do you have an existing cipher seed mnemonic or extended master root key you want to use?
+Enter 'y' to use an existing cipher seed mnemonic, 'x' to use an extended master root key
+or 'n' to create a new seed (Enter y/x/n): n
+
+Your cipher seed can optionally be encrypted.
+Input your passphrase if you wish to encrypt it (or press enter to proceed without a cipher seed passphrase):
+
+Generating fresh cipher seed...
+
+!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
+
+---------------BEGIN LND CIPHER SEED---------------
+
+ 1. xxx     2. xxxxxxx   3. xxxxxxxx   4. xxxxxx
+ 5. xxx      6. xxxxxxx   7. xxxx       8. xxxxx
+ 9. xxx      10. xxxxx     11. xxxxxxx    12. xxxxxx
+13. xxx      14. xxxxx    15. xxxxxxxx   16. xxxxx
+17. xxx      18. xxxxxx  19. xxxxxxx    20. xxxx
+21. xxx     22. xxxxxx    23. xxxxxx    24. xxxxx
+
+---------------END LND CIPHER SEED-----------------
+
+!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
+
+lnd successfully initialized!
+
+!!!ATENÇÃO!!!
+Esta é sua frase secreta para acessar o node lnd, anote em algum lugar seguro e de preferência tenha mais de uma cópia.
+
+Em seguida dê `exit` para sair do lnd user, mais uma vez.
+
+Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
+
+A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
+
+neste ponto você já deve estar pronto para ver as informações do seu node com : `sudo su - lnd` e `lncli getinfo`
