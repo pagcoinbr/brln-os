@@ -1,7 +1,7 @@
 # Instalando o Ubuntu Server
 Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. 05.08.24
 
-Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o ssh openserver durante a instalação.
+Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o openssh server durante a instalação.
 
 quando te pedir as credenciais para login escreva o seguinte:
 
@@ -16,26 +16,6 @@ password: ********* (você escolhe)
 Prossiga com a instalação e quando finalizar, faça o reboot e retire o disco. Provavelmente agora você vai ver uma mensagem de erro no boot, pressione `Enter`.
 Agora sem o disco plugado, o sistema deve iniciar.
 
-# Instalando o TailScale VPN (Opcional)
-
-Esta vai ser uma parte chata, para não precisarmos procurar o pelo ip da maquina, vamos fazer o acesso usando o tailscale, por isso será necessário digitar no terminal manualmente o seguinte comando:
-
-`curl -fsSL https://tailscale.com/install.sh | sh`
-
-Lembrando que provavelmente o teclado estará em inglês e os `:` vão estar no lugar do "Ç" no teclado br e o pipe `|` é a ultima tecla da direita na mesma linha do "Ç".
-
-
-Em seguida escreva `sudo tailscale up` e ele vai te fornecer um link, este link deve ser digitado, letra por letra, no navegador de um outro dispositivo qualquer, de preferência no computador que você vai fazer o SSH no servidor. 
-
-Crie uma conta na tailscale e adicione o dispositivo.
-
-Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
-Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
-
-`ssh temp@ip.do.servidor`
-
-Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
-
 # Preparando o terreno
 
 Agora faça 
@@ -47,11 +27,12 @@ Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e 
 Depois copie e cole no terminal:
 `sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`. 
 
-Em seguida faça o `logout`.
+Em seguida faça o `logout` ou `exit`.
 
 Agora que criamos um novo usuário "admin", vamos fazer o login novamente e apagar o usuário "temp" anterior.
 
 Mais uma vez faça o comando, agora com o user admin `ssh admin@ip.do.servidor`.
+
 Uma vez logado faça: 
 
 `sudo userdel -rf temp`
@@ -60,9 +41,11 @@ E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
 
 # Iniciando a instalação por scripts
 
-Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai copiar os scripts que estão na coluna a esquerda e seguir este passo a passo:
+Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
-Execute `chmod +x network_setup.sh` e depois `./network_setup.sh`, vão acontecer alguns prompts e você deve responder `y`para ativar o firewall ufw, quando solicitado. 
+Execute `chmod +x network_setup.sh` e depois `./network_setup.sh`, vão acontecer alguns prompts e você deve responder `y` quando solicitado. 
+
+Conferindo a instalação:
 
 `sudo ss -tulpn | grep LISTEN | grep tor`
 
@@ -80,15 +63,18 @@ Como fizemos com os scripts anteriores, vamos fazer agora:
 1. `chmod +x install_lnd.sh`
 2. `./install_lnd.sh`
 
-Agora vamos logar como usuário lnd, lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
+Agora vamos logar como usuário "lnd", lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
 
-Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
+Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git` novamente.
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@ Atenção, no próximo script é onde acontecem a maior parte @
+@ dos erros, copie os dados ou escreva-os com atenção!!!    @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 Depois `chmod +x setup_lnd.sh` e `./setup_lnd.sh`
 
-Saia da sessão como lnd digitando `exit`
-
-Faça `sudo usermod -aG debian-tor lnd`, `sudo chmod 640 /run/tor/control.authcookie` e `sudo chmod 750 /run/tor`, agora o lnd tem autorização para acessar a tor, caso contrário resultará em erro.
+Saia da sessão como lnd digitando @@@`exit`@@@
 
 # Criando o service o systemd para automatizar no boot do sistema.
 
@@ -100,7 +86,7 @@ Neste ponto o lnd.service já deve estar como "active" mas "Wallet locked". Vamo
 
 # Configurando a carteira
 
-Faça o `sudo su - lnd`, para logar como lnd novamente.
+Faça o `sudo su - lnd`, para logar como "lnd" novamente.
 Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`.
 Digite a senha 2x para confirmar (a mesma senha escolhida anteriormente) e pressione `n` e `enter`
 
@@ -143,3 +129,23 @@ Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
 A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
 
 neste ponto você já deve estar pronto para ver as informações do seu node com : `sudo su - lnd` e `lncli getinfo`
+
+# Instalando o TailScale VPN (Opcional)
+
+Digite o seguinte comando:
+
+`curl -fsSL https://tailscale.com/install.sh | sh`
+
+Em seguida escreva `sudo tailscale up` e ele vai te fornecer um link, este link deve ser digitado, letra por letra, no navegador de um outro dispositivo qualquer, de preferência no computador que você vai fazer o SSH no servidor. 
+
+Crie uma conta na tailscale e adicione o dispositivo.
+
+Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
+Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
+
+`ssh temp@ip.do.servidor`
+
+Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
+
+A lightining não é brinquedo, use com responsabilidade e sempre cuidando dos seus peers.
+Boas transações!
