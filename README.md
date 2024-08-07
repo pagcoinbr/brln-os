@@ -43,7 +43,7 @@ E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
-Execute `chmod +x network_setup.sh` e depois `./network_setup.sh`, vão acontecer alguns prompts e você deve responder `y` quando solicitado. 
+Execute `chmod +x network_setup1.sh` e depois `./network_setup1.sh`, vão acontecer alguns prompts e você deve responder `y` quando solicitado. 
 
 Conferindo a instalação:
 
@@ -60,8 +60,8 @@ Tudo correu bem.
 
 Como fizemos com os scripts anteriores, vamos fazer agora:
 
-1. `chmod +x install_lnd.sh`
-2. `./install_lnd.sh`
+1. `chmod +x install_lnd2.sh`
+2. `./install_lnd2.sh`
 
 Agora vamos logar como usuário "lnd", lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
 
@@ -72,14 +72,14 @@ Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USER
 @ dos erros, copie os dados ou escreva-os com atenção!!!    @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-Depois `chmod +x setup_lnd.sh` e `./setup_lnd.sh`
+Depois `chmod +x setup_lnd3.sh` e `./setup_lnd3.sh`
 
 Saia da sessão como lnd digitando @@@`exit`@@@
 
 # Criando o service o systemd para automatizar no boot do sistema.
 
-2. `chmod +x create_lndservice.sh`
-3. `./create_lndservice.sh`
+2. `chmod +x create_lndservice4.sh`
+3. `./create_lndservice4.sh`
 4. `sudo systemctl status lnd.service`
 
 Neste ponto o lnd.service já deve estar como "active" mas "Wallet locked". Vamos prosseguir.
