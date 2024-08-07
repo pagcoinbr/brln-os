@@ -1,5 +1,9 @@
 #!/bin/bash
 
+sudo usermod -aG debian-tor lnd
+sudo chmod 640 /run/tor/control.authcookie
+sudo chmod 750 /run/tor
+
 # Cria o arquivo de serviço systemd para o lnd
 sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
 # MiniBolt: systemd unit for lnd
