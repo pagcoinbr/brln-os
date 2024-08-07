@@ -41,3 +41,7 @@ sudo adduser admin lnd
 # Cria o diretório /data/lnd e define as permissões
 sudo mkdir -p /data/lnd
 sudo chown -R lnd:lnd /data/lnd
+
+sudo usermod -aG debian-tor lnd
+sudo chmod 640 /run/tor/control.authcookie
+sudo chmod 750 /run/tor
