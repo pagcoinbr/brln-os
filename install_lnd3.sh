@@ -29,6 +29,10 @@ sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$VERSION
 # Limpa os arquivos temporários
 sudo rm -r lnd-linux-amd64-v$VERSION-beta lnd-linux-amd64-v$VERSION-beta.tar.gz manifest-roasbeef-v$VERSION-beta.sig manifest-roasbeef-v$VERSION-beta.sig.ots manifest-v$VERSION-beta.txt manifest-v$VERSION-beta.txt.ots
 
+sudo usermod -aG debian-tor lnd
+sudo chmod 640 /run/tor/control.authcookie
+sudo chmod 750 /run/tor
+
 # Adiciona o usuário lnd
 sudo adduser --disabled-password --gecos "" lnd
 
