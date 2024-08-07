@@ -39,6 +39,8 @@ Uma vez logado faça:
 
 E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
 
+`cd miniboltsemiauto`
+
 # Iniciando a instalação por scripts
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
@@ -67,6 +69,8 @@ Agora vamos logar como usuário "lnd", lembrando que ele não tem senha por isso
 
 Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git` novamente.
 
+`cd miniboltsemiauto`
+
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @ Atenção, no próximo script é onde acontecem a maior parte @
 @ dos erros, copie os dados ou escreva-os com atenção!!!    @
@@ -86,7 +90,7 @@ Neste ponto o lnd.service já deve estar como "active" mas "Wallet locked". Vamo
 
 # Configurando a carteira
 
-Faça o `sudo su - lnd`, para logar como "lnd" novamente.
+Faça o @@`sudo su - lnd`@@, para logar como "lnd" novamente.
 Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`.
 Digite a senha 2x para confirmar (a mesma senha escolhida anteriormente) e pressione `n` e `enter`
 
