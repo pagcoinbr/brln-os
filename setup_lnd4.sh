@@ -7,6 +7,10 @@ ln -s /data/bitcoin /home/lnd/.bitcoin
 # Lista os arquivos e diretórios com detalhes
 ls -la
 
+sudo usermod -aG debian-tor lnd
+sudo chmod 640 /run/tor/control.authcookie
+sudo chmod 750 /run/tor
+
 # Exibe aviso ao usuário sobre a senha
 echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
 
