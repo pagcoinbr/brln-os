@@ -56,7 +56,7 @@ Uma vez logado faça:
 
 `sudo userdel -rf temp`
 
-E depois `git clone https://github.com/REDACTED_USERbtc/minibolt-semiauto.git`
+E depois `git clone https://github.com/REDACTED_USERbtc/minibolt-semiauto-v0.2.git`
 
 # Iniciando a instalação por scripts
 
