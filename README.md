@@ -56,40 +56,22 @@ Uma vez logado faça:
 
 `sudo userdel -rf temp`
 
-E depois `git clone https://github.com/REDACTED_USERbtc/minibolt-semiauto-v0.2.git`
+E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
 
 # Iniciando a instalação por scripts
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai copiar os scripts que estão na coluna a esquerda e seguir este passo a passo:
 
-Execute `chmod +x ufw_nginx.sh` e depois `./ufw_nginx.sh`, vão acontecer alguns prompts e você deve responder `y`para ativar o firewall ufw, quando solicitado. 
+Execute `chmod +x network_setup.sh` e depois `./network_setup.sh`, vão acontecer alguns prompts e você deve responder `y`para ativar o firewall ufw, quando solicitado. 
 
-# Agora vamos configurar a instalações tor e i2p
+`sudo ss -tulpn | grep LISTEN | grep tor`
 
-1. `sudo apt update && sudo apt full-upgrade` e responda `y`.
-2. `sudo apt install apt-transport-https`
-3. `sudo nano /etc/apt/sources.list.d/tor.list`
-4. copie o conteúdo: `deb     [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org jammy main
-deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org jammy main` para dentro do arquivo.
-5. `sudo su`
-6. rode `wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null`
-7. `exit`
-8. `sudo apt update && sudo apt install tor deb.torproject.org-keyring`
-9. `sudo nano +56 /etc/tor/torrc --linenumbers`
-10. Descomente a linha "#ControlPort 9051" para "ControlPort 9051", salve e saia.
-11. `sudo systemctl reload tor`
-12. `sudo ss -tulpn | grep LISTEN | grep tor`
-13. Se a saída for:
+Se a saída for:
 
 tcp     LISTEN 0    4096     127.0.0.1:9050   0.0.0.0:*    users:(("tor",pid=795,fd=6))
 tcp     LISTEN 0    4096     127.0.0.1:9051   0.0.0.0:*    users:(("tor",pid=795,fd=7))
 
-Tudo correu bem, em seguida:
-
-1. `wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -`
-2. `sudo apt update && sudo apt install i2pd`
-
-Agradecimentos especiais ao criador do tutorial https://v2.minibolt.info/system/system/privacy, sem ele este projeto não seria possível.
+Tudo correu bem.
 
 # Finalmente instalando o lnd
 
@@ -100,7 +82,7 @@ Como fizemos com os scripts anteriores, vamos fazer agora:
 
 Agora vamos logar como usuário lnd, lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
 
-Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/minibolt-semiauto.git`
+Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
 
 Depois `chmod +x setup_lnd.sh` e `./setup_lnd.sh`
 
