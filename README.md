@@ -35,11 +35,11 @@ Mais uma vez faça o comando, agora com o user admin `ssh admin@ip.do.servidor`.
 
 Uma vez logado faça: 
 
-`sudo userdel -rf temp`
+`sudo userdel -rf temp` e receba uma mensagem de erro de "not found", ou algo do genero.
 
-E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git`
+E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git` para copiar o repositório.
 
-`cd miniboltsemiauto`
+`cd miniboltsemiauto` para acessar o diretório dos scripts.
 
 # Iniciando a instalação por scripts
 
@@ -76,6 +76,8 @@ Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USER
 @ dos erros, copie os dados ou escreva-os com atenção!!!    @
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 50 Gb na pior das hipoteses. Saiba mais sobre o projeto em: https://services.br-ln.com/
+
 Depois `chmod +x setup_lnd3.sh` e `./setup_lnd3.sh`
 
 Saia da sessão como lnd digitando @@@`exit`@@@
@@ -96,7 +98,8 @@ Digite a senha 2x para confirmar (a mesma senha escolhida anteriormente) e press
 
 
 Output esperado:
-`lnd@minibolt:~$ lncli --tlscertpath /data/lnd/tls.cert.tmp create
+
+lnd@minibolt:~$ lncli --tlscertpath /data/lnd/tls.cert.tmp create
 Input wallet password:
 Confirm password:
 
@@ -133,6 +136,11 @@ Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
 A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
 
 neste ponto você já deve estar pronto para ver as informações do seu node com : `sudo su - lnd` e `lncli getinfo`
+
+@@@@@Para usar os comandos para dministração do node deve-se sempre utilizar o usuário "lnd", através do comando `sudo su - lnd`. Em caso de comandos que exigam root `sudo` é necessário dar o comando exit e utilizar o usuário "admin"@@@@
+
+Disclaimers:
+Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
 
 # Instalando o TailScale VPN (Opcional)
 
