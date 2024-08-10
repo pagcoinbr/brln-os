@@ -39,7 +39,7 @@ Uma vez logado faça:
 
 E depois `git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git` para copiar o repositório.
 
-`cd miniboltsemiauto` para acessar o diretório dos scripts.
+`cd miniboltfullauto` para acessar o diretório dos scripts.
 
 # Iniciando a instalação por scripts
 
