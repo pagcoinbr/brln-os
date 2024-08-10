@@ -128,9 +128,17 @@ Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
 
 A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
 
+Caso sua carteira ainda esteja "locked", vocë pode tentar verificar duas coisas, antes de precisar começar novamente:
+
+`nano /data/lnd/lnd.conf` - Verificar a senha criada anteriormente que fica salvo em um arquivo de texto, se estiver incorreta com a que você acabou de criar, corrija-o.
+
+`nano /data/lnd/lnd.conf` - Verificar as credenciais do [Bitcoind], são comummente onde há mais erros durante o tutorial.
+
+`sudo systemctl restart lnd` e `sudo systemctl status lnd`, agora ele deve aparecer como "unlocked".
+
 neste ponto você já deve estar pronto para ver as informações do seu node com : `sudo su - lnd` e `lncli getinfo`
 
-@@@@@Para usar os comandos para dministração do node deve-se sempre utilizar o usuário "lnd", através do comando `sudo su - lnd`. Em caso de comandos que exigam root `sudo` é necessário dar o comando exit e utilizar o usuário "admin"@@@@
+Para usar os comandos para dministração do node deve-se sempre utilizar o usuário "lnd", através do comando `sudo su - lnd`. Em caso de comandos que exigam root `sudo` é necessário dar o comando exit e utilizar o usuário "admin"
 
 Disclaimers:
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
