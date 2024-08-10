@@ -95,9 +95,7 @@ Generating fresh cipher seed...
 
 lnd successfully initialized!
 
-Em seguida dê `exit` para sair do lnd user, mais uma vez.
-
-Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
+Veja o estado do service com `sudo systemctl status lnd.service`
 
 A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
 
