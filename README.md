@@ -101,7 +101,7 @@ Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
 
 A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
 
-# Caso sua carteira ainda esteja "locked", você pode tentar verificar duas coisas, antes de precisar começar novamente:
+# Caso sua carteira ainda esteja "locked", você pode tentar verificar estas coisas, antes de precisar começar novamente:
 
 A primeira coisa a se fazer é esperar o lnd sincronizar, acesse: 
 
