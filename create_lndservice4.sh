@@ -3,7 +3,6 @@
 # Allow user "admin" to work with LND
 ln -s /data/lnd /home/admin/.lnd
 sudo chmod -R g+X /data/lnd/data/
-sudo usermod -aG debian-tor lnd
 sudo chmod 640 /run/tor/control.authcookie
 sudo chmod 750 /run/tor
 
@@ -31,8 +30,8 @@ TimeoutStopSec=3600
 ####################################
 RuntimeDirectory=lightningd
 RuntimeDirectoryMode=0710
-User=lnd
-Group=lnd
+User=admin
+Group=admin
 
 # Hardening Measures
 ####################
