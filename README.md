@@ -119,7 +119,7 @@ neste ponto você já deve estar pronto para ver as informações do seu node co
 Agora que seu lnd está pronto vamos construir em cima dele.
 Começando pelo script para instalar o bos:
 
-`chmod +x likeabos5.sh` e `./likeabos5.sh`
+`chmod +x likeabos.sh` e `./likeabos.sh`
 
 Ao final da instalação você precisa recarregar a sessão com `. ~/.profile`
 
@@ -135,7 +135,7 @@ Ele vai te devolver: "🤖 Connection code is: 1463539065"
 
 Copie o código, pois ele será usado para o proximo script:
 
-`chmod +x bos-autostart6.sh` e `./bos-autostart6.sh`
+`chmod +x bos-autostart.sh` e `./bos-autostart.sh`
 
 Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
 
