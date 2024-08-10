@@ -47,17 +47,6 @@ Até agora fizemos a parte mais dificil que não pode ser automatizada por scrip
 
 Execute `chmod +x network_setup1.sh` e depois `./network_setup1.sh`, vão acontecer alguns prompts e você deve responder `y` quando solicitado. 
 
-Conferindo a instalação:
-
-`sudo ss -tulpn | grep LISTEN | grep tor`
-
-Se a saída for:
-
-tcp     LISTEN 0    4096     127.0.0.1:9050   0.0.0.0:*    users:(("tor",pid=795,fd=6))
-tcp     LISTEN 0    4096     127.0.0.1:9051   0.0.0.0:*    users:(("tor",pid=795,fd=7))
-
-Tudo correu bem.
-
 # Finalmente instalando o lnd
 
 Como fizemos com os scripts anteriores, vamos fazer agora:
