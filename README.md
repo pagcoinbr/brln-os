@@ -126,6 +126,25 @@ A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/z
 
 neste ponto você já deve estar pronto para ver as informações do seu node com : `lncli getinfo`
 
+# Instalando o Balance of Satoshis
+
+Agora que seu lnd está pronto vamos construir em cima dele.
+Começando pelo script para instalar o bos:
+
+`chmod +x likeabos5.sh` e `./likeabos5.sh`
+
+Ao final da instalação você precisa recarregar a sessão com `. ~/.profile`
+
+Asseguir vamos criar o bot para poder monitorar o movimento do nosso nó:
+
+Acesse: https://t.me/BotFather e crie um bot pelo comand "new bot", após o termino copie a HTTP API:
+
+Inicie o comando `bos telegram`
+
+Cole a API, volte para
+
+`chmod +x bos-autostart6.sh` e `./bos-autostart6.sh`
+
 # Disclaimers:
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
 
