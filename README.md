@@ -45,12 +45,7 @@ E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git` pa
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
-Execute `chmod +x network_setup1.sh` e depois `./network_setup1.sh`, vão acontecer alguns prompts e você deve responder `y` quando solicitado. 
-
-Como fizemos com os scripts anteriores, vamos fazer agora:
-
-1. `chmod +x install_lnd2.sh`
-2. `./install_lnd2.sh`
+Execute `chmod +x miniboltfullauto.sh` e depois `./miniboltfullauto.sh`, você deve responder `y` sempre que solicitado. 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Atenção, no próximo script é onde acontecem a maior parte
@@ -59,24 +54,14 @@ dos erros, copie os dados ou escreva-os com atenção!!!
 
 As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 50 Gb na pior das hipoteses. Saiba mais sobre o projeto em: https://services.br-ln.com/
 
-Depois `chmod +x setup_lnd3.sh` e `./setup_lnd3.sh`
+Caso vocë tenha errado alguma credencial voce pode apertar "Ctrl + C" e começar novamente ou corrigi-la com `nano /data/lnd/lnd.conf` posteriormente a instalação.
 
-Caso vocë tenha errado alguma credencial voce pode corrigi-la com `nano /data/lnd/lnd.conf`
-
-Basta alterar o [Bitcoind]
-
-# Criando o service o systemd para automatizar no boot do sistema.
-
-2. `chmod +x create_lndservice4.sh`
-3. `./create_lndservice4.sh`
-4. `sudo systemctl status lnd.service`
-
-Neste ponto o lnd.service já deve estar como "active" mas "Wallet locked". Vamos prosseguir.
+No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
 
 # Configurando a carteira
 
 Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`.
-Digite a senha 2x para confirmar (a mesma senha escolhida anteriormente) e pressione `n` e `enter`
+Digite a senha 2x para confirmar (a mesma senha escolhida no script anterior) e pressione `n` e `enter`
 
 Output esperado:
 
@@ -117,6 +102,10 @@ Mais uma vez veja o estado do service com `sudo systemctl status lnd.service`
 A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
 
 # Caso sua carteira ainda esteja "locked", você pode tentar verificar duas coisas, antes de precisar começar novamente:
+
+A primeira coisa a se fazer é esperar o lnd sincronizar, acesse: 
+
+`tail /data/lnd/logs/bitcoin/mainnet lnd.log` - Se a ultima saída for algo como "Started rescan from block 0000000...", aguarde cerca de 2-5 minutos e tente `sudo systemctl status lnd.service`, novamente.
 
 `nano /data/lnd/lnd.conf` - Verificar a senha criada anteriormente que fica salvo em um arquivo de texto, se estiver incorreta com a que você acabou de criar, corrija-o.
 
