@@ -49,7 +49,7 @@ Execute `chmod +x miniboltfullauto.sh` e depois `./miniboltfullauto.sh`, você d
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-Atenção, no próximo script é onde acontecem a maior parte dos erros, copie os dados ou escreva-os com atenção!!!
+Atenção, no registro das credenciais é onde acontecem a maior parte dos erros, copie os dados ou escreva-os com atenção!!!
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
