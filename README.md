@@ -54,12 +54,6 @@ Como fizemos com os scripts anteriores, vamos fazer agora:
 1. `chmod +x install_lnd2.sh`
 2. `./install_lnd2.sh`
 
-Agora vamos logar como usuário "lnd", lembrando que ele não tem senha por isso usamos o comando `sudo su - lnd`
-
-Baixe o repositório no usuário lnd `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git` novamente.
-
-`cd miniboltsemiauto`
-
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 Atenção, no próximo script é onde acontecem a maior parte
 dos erros, copie os dados ou escreva-os com atenção!!!
@@ -73,8 +67,6 @@ Caso vocë tenha errado alguma credencial voce pode corrigi-la com `nano /data/l
 
 Basta alterar o [Bitcoind]
 
-Saia da sessão como lnd digitando @@@`exit`@@@
-
 # Criando o service o systemd para automatizar no boot do sistema.
 
 2. `chmod +x create_lndservice4.sh`
@@ -85,10 +77,8 @@ Neste ponto o lnd.service já deve estar como "active" mas "Wallet locked". Vamo
 
 # Configurando a carteira
 
-Faça o @@`sudo su - lnd`@@, para logar como "lnd" novamente.
 Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`.
 Digite a senha 2x para confirmar (a mesma senha escolhida anteriormente) e pressione `n` e `enter`
-
 
 Output esperado:
 
@@ -136,9 +126,7 @@ A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/z
 
 `sudo systemctl restart lnd` e `sudo systemctl status lnd`, agora ele deve aparecer como "unlocked".
 
-neste ponto você já deve estar pronto para ver as informações do seu node com : `sudo su - lnd` e `lncli getinfo`
-
-Para usar os comandos para dministração do node deve-se sempre utilizar o usuário "lnd", através do comando `sudo su - lnd`. Em caso de comandos que exigam root `sudo` é necessário dar o comando exit e utilizar o usuário "admin"
+neste ponto você já deve estar pronto para ver as informações do seu node com : `lncli getinfo`
 
 # Disclaimers:
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
