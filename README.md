@@ -69,6 +69,10 @@ As credenciais que serão solicitadas no próximo script podem ser adquiridas pe
 
 Depois `chmod +x setup_lnd3.sh` e `./setup_lnd3.sh`
 
+Caso vocë tenha errado alguma credencial voce pode corrigi-la com `nano /data/lnd/lnd.conf`
+
+Basta alterar o [Bitcoind]
+
 Saia da sessão como lnd digitando @@@`exit`@@@
 
 # Criando o service o systemd para automatizar no boot do sistema.
