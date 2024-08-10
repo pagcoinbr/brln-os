@@ -104,7 +104,7 @@ A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/z
 
 A primeira coisa a se fazer é esperar o lnd sincronizar, acesse: 
 
-`tail /data/lnd/logs/bitcoin/mainnet lnd.log` - Se a ultima saída for algo como "Started rescan from block 0000000...", aguarde cerca de 2-5 minutos e tente `sudo systemctl status lnd.service`, novamente.
+`sudo journalctl -xeu lnd` - Se a ultima saída for algo como "Started rescan from block 0000000...", aguarde cerca de 2-5 minutos e tente `sudo systemctl status lnd.service`, novamente.
 
 `nano /data/lnd/lnd.conf` - Verificar a senha criada anteriormente que fica salvo em um arquivo de texto, se estiver incorreta com a que você acabou de criar, corrija-o.
 
@@ -135,7 +135,7 @@ Ele vai te devolver: "🤖 Connection code is: 1463539065"
 
 Copie o código, pois ele será usado para o proximo script:
 
-`chmod +x bos-autostart.sh` e `./bos-autostart.sh` (esta parte ainda não está funcional)
+`chmod +x bos-autostart.sh` e `./bos-autostart.sh`
 
 Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
 
