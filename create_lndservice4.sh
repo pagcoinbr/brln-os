@@ -46,3 +46,7 @@ EOF'
 # Habilita e inicia o serviço lnd
 sudo systemctl enable lnd
 sudo systemctl start lnd
+
+# Allow user "admin" to work with LND
+ln -s /data/lnd /home/admin/.lnd
+sudo chmod -R g+X /data/lnd/data/
