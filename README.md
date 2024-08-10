@@ -141,9 +141,15 @@ Acesse: https://t.me/BotFather e crie um bot pelo comand "new bot", após o term
 
 Inicie o comando `bos telegram`
 
-Cole a API, volte para
+Cole a API, volte para o bot recém criado no telegram e envie "/start"
+
+Ele vai te devolver: "🤖 Connection code is: 1463539065"
+
+Copie o código, pois ele será usado para o proximo script:
 
 `chmod +x bos-autostart6.sh` e `./bos-autostart6.sh`
+
+Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
 
 # Disclaimers:
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
