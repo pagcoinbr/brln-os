@@ -33,15 +33,9 @@ sudo usermod -aG debian-tor lnd
 sudo chmod 640 /run/tor/control.authcookie
 sudo chmod 750 /run/tor
 
-# Adiciona o usuário lnd
-sudo adduser --disabled-password --gecos "" lnd
-
 # Adiciona o usuário lnd aos grupos bitcoin e debian-tor
-sudo usermod -a -G bitcoin,debian-tor lnd
-
-# Adiciona o usuário admin ao grupo lnd
-sudo adduser admin lnd
+sudo usermod -a -G bitcoin,debian-tor admin
 
 # Cria o diretório /data/lnd e define as permissões
 sudo mkdir -p /data/lnd
-sudo chown -R lnd:lnd /data/lnd
+sudo chown -R admin:admin /data/lnd
