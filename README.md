@@ -37,7 +37,7 @@ Uma vez logado faça:
 
 `sudo userdel -rf temp` e receba uma mensagem de erro de "not found", ou algo do genero.
 
-E depois `git clone https://github.com/REDACTED_USERbtc/miniboltsemiauto.git` para copiar o repositório.
+E depois `git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git` para copiar o repositório.
 
 `cd miniboltsemiauto` para acessar o diretório dos scripts.
 
