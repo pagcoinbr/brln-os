@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Allow user "admin" to work with LND
+ln -s /data/lnd /home/admin/.lnd
+sudo chmod -R g+X /data/lnd/data/
 sudo usermod -aG debian-tor lnd
 sudo chmod 640 /run/tor/control.authcookie
 sudo chmod 750 /run/tor
@@ -46,7 +49,3 @@ EOF'
 # Habilita e inicia o serviço lnd
 sudo systemctl enable lnd
 sudo systemctl start lnd
-
-# Allow user "admin" to work with LND
-ln -s /data/lnd /home/admin/.lnd
-sudo chmod -R g+X /data/lnd/data/
