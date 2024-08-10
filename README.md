@@ -82,12 +82,14 @@ Generating fresh cipher seed...
 !!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
 
 ---------------BEGIN LND CIPHER SEED---------------
+
  1. absent    2. drive     3. grape    4. inject
  5. nut       6. pencil    7. cloud    8. rude
  9. stomach  10. decline  11. kidney  12. various
 13. spawn    14. harvest  15. wage    16. shield
 17. debate   18. boring   19. assist  20. foster
 21. slender  22. tent     23. deputy  24. any
+
 ---------------END LND CIPHER SEED-----------------
 
 !!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
