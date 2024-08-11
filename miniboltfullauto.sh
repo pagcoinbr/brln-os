@@ -189,6 +189,7 @@ cat << EOF > /data/lnd/lnd.conf
 # /data/lnd/lnd.conf
 
 [Application Options]
+restlisten=0.0.0.0:8080
 # Up to 32 UTF-8 characters, accepts emojis i.e ⚡🧡​ https://emojikeyboard.top/
 alias=$alias
 # You can choose the color you want at https://www.color-hex.com/
