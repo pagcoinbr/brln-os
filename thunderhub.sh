@@ -10,9 +10,9 @@ Wants=lnd.service
 After=lnd.service
 
 [Service]
-WorkingDirectory=/home/thunderhub/thunderhub
+WorkingDirectory=/home/admin/thunderhub
 ExecStart=/usr/bin/npm run start -- -p 3010
-User=thunderhub
+User=admin
 Restart=always
 TimeoutSec=120
 RestartSec=30
