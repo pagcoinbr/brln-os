@@ -139,6 +139,18 @@ Copie o código, pois ele será usado para o proximo script:
 
 Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
 
+# Instalando Zeus App
+
+Use `chmod +x zeusapp.sh` e `./zeusapp.sh`
+
+E por fim, você deve escolher por onde acessar o Zeus Wallet para administrar o node, se for pela rede local, no próximo comando você deve usar o ip da rede local, caso vá acessar pelo tailscale, use o ip da fornecido pelo app.
+
+Tire o zoom ou com "Ctrl + -" pelo menos 6x. E depois:
+
+`lndconnect --host=<0.0.0.0> --port=8080 --nocert`
+
+Escaneie o qr code com o app zeus nas opções avançadas do app, quando vir o aviso, clique em "save node config" e aguarde conectar.
+
 # Disclaimers:
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
 
