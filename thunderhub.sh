@@ -6,10 +6,6 @@ THUNDERHUB_DIR=/home/admin/thunderhub
 NODE_NETWORK=mainnet # ou testnet, se aplicável
 NODE_CHAIN=bitcoin   # ou litecoin, se aplicável
 
-# Verifique se o Node.js está instalado e atualizado
-curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
 # Configure o firewall para permitir o acesso ao ThunderHub
 sudo ufw allow from 192.168.0.0/16 to any port $THUNDERHUB_PORT comment 'allow ThunderHub on LAN'
 
