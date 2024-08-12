@@ -25,13 +25,13 @@ Agora faça
 Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha do usuário admin, que estamos criando. 
 
 Depois copie e cole no terminal:
-`sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`. 
+`sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`.
 
-Em seguida faça o `logout` ou `exit`.
+Em seguida faça o `logout` ou `exit`
 
 Agora que criamos um novo usuário "admin", vamos fazer o login novamente e apagar o usuário "temp" anterior.
 
-Mais uma vez faça o comando, agora com o user admin `ssh admin@ip.do.servidor`.
+Mais uma vez faça o comando, agora com o user admin `ssh admin@ip.do.servidor`
 
 Uma vez logado faça: 
 
@@ -61,7 +61,7 @@ No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta 
 
 # Configurando a carteira
 
-Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`.
+Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`
 Digite a senha 2x para confirmar (a mesma senha escolhida no script anterior) e pressione `n` e `enter`
 
 Output esperado:
@@ -139,7 +139,7 @@ Copie o código, pois ele será usado para o proximo script:
 
 Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
 
-# Instalando Zeus App
+# Instalando o Zeus App
 
 Use `chmod +x zeusapp.sh` e `./zeusapp.sh`
 
@@ -149,12 +149,19 @@ Tire o zoom ou com "Ctrl + -" pelo menos 6x. E depois:
 
 `lndconnect --host=<0.0.0.0> --port=8080 --nocert`
 
+Apple store: https://apps.apple.com/us/app/zeus-wallet/id1456038895
+
+Play store: [https://play.google.com/store/apps/detailsid=app.zeusln.zeus&hl=pt_BR](https://play.google.com/store/apps/details?id=app.zeusln.zeus&hl=pt_BR)
+
 Escaneie o qr code com o app zeus nas opções avançadas do app, quando vir o aviso, clique em "save node config" e aguarde conectar.
 
-# Disclaimers:
-Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança no criador dos scripts, mas esta instalação é livre de malwares se feita corretamente. Para mais informações sobre o projeto de emancipação do cidadão comum pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
+# Instalando o Thunderhub
 
-# Instalando o TailScale VPN (Opcional)
+Primeiro faça `chmod +x thunderhub.sh` e `./thunderhub.sh`
+
+Agora você pode acessar o seu thunderhub pelo ipdominibolt + porta "https://192.168.x.xxx:4002"
+
+# Instalando o TailScale VPN
 
 Digite o seguinte comando:
 
@@ -167,9 +174,15 @@ Crie uma conta na tailscale e adicione o dispositivo.
 Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
 Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
 
-`ssh temp@ip.do.servidor`
+`ssh temp@ip.do.tailscale`
 
 Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
 
+Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
+
+# Disclaimers:
 A lightining não é brinquedo, use com responsabilidade e sempre cuidando dos seus peers.
 Boas transações!
+
+Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
+
