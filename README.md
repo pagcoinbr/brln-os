@@ -66,7 +66,7 @@ No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta 
 # Configurando a carteira
 
 Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`
-Digite a senha 2x para confirmar (a mesma senha escolhida no script anterior) e pressione `n` e `enter`
+Digite a senha 2x para confirmar (a mesma senha escolhida no script anterior) e pressione "n" e "enter".
 
 Output esperado:
 
