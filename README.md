@@ -1,3 +1,4 @@
+# Minibolt amd64 + tools
 # Instalando o Ubuntu Server
 Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. 05.08.24
 
