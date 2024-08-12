@@ -89,4 +89,7 @@ sudo systemctl start thunderhub
 # Verifica o status do serviço ThunderHub
 sudo systemctl status thunderhub
 
-echo "Este script ainda não foi testado e pode não estar funcional"
+echo "Este ultimo script ainda não foi testado e pode não estar funcional"
+
+echo "Seu node Lightning está pronto, se quiser fazer uma doação para o projeto basta enviar alguns satoshis para o seguinte endereço <bitcreek@pay.br-ln.com>. Boa sorte e boas transações!"
+
