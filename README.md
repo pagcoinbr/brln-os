@@ -2,7 +2,7 @@
 
 Esta isntalação consiste em uma instalação rápida do node usando conexão rpc externa podendo abrir seus primeiros canais em menos de 30 minutos, para poder entrar para nosso club e poder receber as credenciais para conexão a um rcp externo e seguro, acesse: https://services.br-ln.com/. Entre no nosso grupo do telegram para suporte personalizado.
 
-# Instalando o Ubuntu Server
+# Instalando o Ubuntu Server *Obrigatório*
 Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. 05.08.24
 
 Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o openssh server durante a instalação.
@@ -20,7 +20,26 @@ password: ********* (você escolhe)
 Prossiga com a instalação e quando finalizar, faça o reboot e retire o disco. Provavelmente agora você vai ver uma mensagem de erro no boot, pressione `Enter`.
 Agora sem o disco plugado, o sistema deve iniciar.
 
-# Preparando o terreno
+# Instalando o TailScale VPN (Opcional)
+
+Digite o seguinte comando:
+
+`curl -fsSL https://tailscale.com/install.sh | sh`
+
+Em seguida escreva `sudo tailscale up` e ele vai te fornecer um link, este link deve ser digitado, letra por letra, no navegador de um outro dispositivo qualquer, de preferência no computador que você vai fazer o SSH no servidor. 
+
+Crie uma conta na tailscale e adicione o dispositivo.
+
+Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
+Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
+
+`ssh temp@ip.do.tailscale`
+
+Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
+
+Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
+
+# Preparando o sistema *Obrigatório*
 
 Agora faça 
 
@@ -45,7 +64,7 @@ E depois `git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git` pa
 
 `cd miniboltfullauto` para acessar o diretório dos scripts.
 
-# Iniciando a instalação por scripts
+# Instalação do Lightning Daemon (lnd) *Obrigatório*
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
@@ -63,7 +82,7 @@ Caso vocë tenha errado alguma credencial voce pode apertar "Ctrl + C" e começa
 
 No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
 
-# Configurando a carteira
+# Configurando a carteira *Obrigatório*
 
 Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`
 Digite a senha 2x para confirmar (a mesma senha escolhida no script anterior) e pressione "n" e "enter".
@@ -118,7 +137,7 @@ A primeira coisa a se fazer é esperar o lnd sincronizar, acesse:
 
 neste ponto você já deve estar pronto para ver as informações do seu node com : `lncli getinfo`
 
-# Instalando o Balance of Satoshis
+# Instalando o Balance of Satoshis *Obrigatório*
 
 Agora que seu lnd está pronto vamos construir em cima dele.
 Começando pelo script para instalar o bos:
@@ -151,15 +170,17 @@ Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" 
 
 Pronto o bos está pronto para ser usado no telegram, mas também uma feramenta de terminal que pode ser usado com o comando `bos help`
 
-# Instalando o Zeus App
+# Instalando o Zeus App (Opcional)
 
 Use `chmod +x zeusapp.sh` e `./zeusapp.sh`
 
 E por fim, você deve escolher por onde acessar o Zeus Wallet para administrar o node, se for pela rede local, no próximo comando você deve usar o ip da rede local, caso vá acessar pelo tailscale, use o ip da fornecido pelo app.
 
-Tire o zoom ou com "Ctrl + -" pelo menos 6x. E depois:
+Tire o zoom com "Ctrl + -" pelo menos 6x, pois o qr code asseguir é realmente grande. E depois:
 
 `lndconnect --host=<0.0.0.0> --port=8080 --nocert`
+
+Trocando o ip <0.0.0.0> pelo seu ip local ou do Tailscale.
 
 Apple store: https://apps.apple.com/us/app/zeus-wallet/id1456038895
 
@@ -167,34 +188,16 @@ Play store: [https://play.google.com/store/apps/detailsid=app.zeusln.zeus&hl=pt_
 
 Escaneie o qr code com o app zeus nas opções avançadas do app, quando vir o aviso, clique em "save node config" e aguarde conectar.
 
-# Instalando o Thunderhub
+# Instalando o Thunderhub (Opcional)
 
 Primeiro faça `chmod +x thunderhub.sh` e `./thunderhub.sh`
 
-Agora você pode acessar o seu thunderhub pelo ipdominibolt + porta "https://192.168.x.xxx:4002"
-
-# Instalando o TailScale VPN
-
-Digite o seguinte comando:
-
-`curl -fsSL https://tailscale.com/install.sh | sh`
-
-Em seguida escreva `sudo tailscale up` e ele vai te fornecer um link, este link deve ser digitado, letra por letra, no navegador de um outro dispositivo qualquer, de preferência no computador que você vai fazer o SSH no servidor. 
-
-Crie uma conta na tailscale e adicione o dispositivo.
-
-Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
-Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
-
-`ssh temp@ip.do.tailscale`
-
-Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
-
-Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
+Agora você pode acessar o seu thunderhub pelo ip do minibolt + porta "https://192.168.x.xxx:4002"
 
 # Disclaimers:
-A lightining não é brinquedo, use com responsabilidade e sempre cuidando dos seus peers.
+Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
+A lightining não é brinquedo, use com responsabilidade.
 Boas transações!
 
-Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts por segurança. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
+Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
 
