@@ -57,4 +57,4 @@ EOF
 # Testa a instalação do bos
 bos utxos
 
-echo "Instalação e configuração do Balance of Satoshis (bos) concluída com sucesso!"
+echo "Instalação do Balance of Satoshis (bos) concluída com sucesso! Agora execute o comando `bos telegram` para configurar o monitoramento pelo Telegram"
