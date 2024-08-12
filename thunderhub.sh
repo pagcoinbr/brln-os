@@ -1,54 +1,90 @@
 #!/bin/bash
 
-# Variáveis de configuração
-THUNDERHUB_PORT=3010
-THUNDERHUB_DIR=/home/admin/thunderhub
-NODE_NETWORK=mainnet # ou testnet, se aplicável
-NODE_CHAIN=bitcoin   # ou litecoin, se aplicável
+# Configurações do Nginx para ThunderHub
 
-# Configure o firewall para permitir o acesso ao ThunderHub
-sudo ufw allow from 192.168.0.0/16 to any port $THUNDERHUB_PORT comment 'allow ThunderHub on LAN'
+# Cria o arquivo de configuração do Nginx para ThunderHub
+sudo bash -c 'cat <<EOF > /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
+server {
+  listen 4002 ssl;
+  error_page 497 =301 https://\$host:\$server_port\$request_uri;
 
-# Se o Tor estiver ativado, crie um serviço oculto para o ThunderHub
-/home/admin/config.scripts/internet.hiddenservice.sh thunderhub 80 $THUNDERHUB_PORT
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+  }
+}
+EOF'
 
-# Clone o repositório do ThunderHub e instale as dependências
-git clone https://github.com/apotdevin/thunderhub.git $THUNDERHUB_DIR
-cd $THUNDERHUB_DIR
-npm install --force
+# Cria o link simbólico para ativar o site no Nginx
+sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
 
-# Execute a build do ThunderHub
+# Verifica a configuração do Nginx e recarrega o serviço
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Permite o tráfego na porta 4002 através do UFW
+sudo ufw allow 4002/tcp comment 'allow ThunderHub SSL from anywhere'
+
+# Define a versão do ThunderHub
+VERSION=0.13.31
+
+# Importa a chave GPG do repositório do ThunderHub
+curl https://github.com/apotdevin.gpg | gpg --import
+
+# Clona o repositório do ThunderHub na versão especificada e entra no diretório
+git clone --branch v$VERSION https://github.com/apotdevin/thunderhub.git && cd thunderhub
+
+# Verifica a integridade do commit
+git verify-commit v$VERSION
+
+# Instala as dependências do ThunderHub
+npm install
+
+# Corrige vulnerabilidades de pacotes
+npm audit fix
+
+# Atualiza os pacotes do sistema
+sudo apt update && sudo apt full-upgrade -y
+
+# Executa a build do ThunderHub
 npm run build
 
-# Crie o serviço systemd para o ThunderHub
-echo "*** Install ThunderHub systemd for ${NODE_NETWORK} on ${NODE_CHAIN} ***"
-sudo bash -c "cat > /etc/systemd/system/thunderhub.service <<EOF
-# Systemd unit for ThunderHub
+# Verifica a versão instalada no package.json
+head -n 3 /home/admin/thunderhub/package.json | grep version
+
+# Cria o serviço systemd para o ThunderHub
+sudo bash -c 'cat <<EOF > /etc/systemd/system/thunderhub.service
+# MiniBolt: systemd unit for ThunderHub
 # /etc/systemd/system/thunderhub.service
 
 [Unit]
-Description=ThunderHub daemon
-Wants=lnd.service
+Description=ThunderHub
+Requires=lnd.service
 After=lnd.service
 
 [Service]
-WorkingDirectory=$THUNDERHUB_DIR
-ExecStart=/usr/bin/npm run start -- -p $THUNDERHUB_PORT
+WorkingDirectory=/home/admin/thunderhub
+ExecStart=/usr/bin/npm run start
+
 User=admin
-Restart=always
-TimeoutSec=120
-RestartSec=30
-StandardOutput=null
-StandardError=journal
+
+# Process management
+####################
+TimeoutSec=300
+
+# Hardening Measures
+####################
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
 
 [Install]
 WantedBy=multi-user.target
-EOF"
+EOF'
 
-# Ajuste as permissões e habilite o serviço
-sudo chown root:root /etc/systemd/system/thunderhub.service
+# Habilita o serviço para iniciar com o sistema e o inicia
 sudo systemctl enable thunderhub
-
-# Inicie o serviço e verifique o status
 sudo systemctl start thunderhub
+
+# Verifica o status do serviço ThunderHub
 sudo systemctl status thunderhub
