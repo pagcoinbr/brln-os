@@ -88,3 +88,5 @@ sudo systemctl start thunderhub
 
 # Verifica o status do serviço ThunderHub
 sudo systemctl status thunderhub
+
+echo "Este script ainda não foi testado e pode não estar funcional"
