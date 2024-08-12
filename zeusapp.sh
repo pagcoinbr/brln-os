@@ -21,4 +21,4 @@ tar -xvf lndconnect-linux-amd64-v$VERSION.tar.gz
 # Move o binário do lndconnect para /usr/local/bin/
 sudo install -m 0755 -o root -g root -t /usr/local/bin lndconnect-linux-amd64-v$VERSION/lndconnect
 
-echo "Instalação do lndconnect concluída. Agora você pode usar o lndconnect para gerar URLs e QR codes para o Zeus Wallet."
+echo "Instalação do lndconnect concluída. Tire o zoom do terminal com <Ctrl + -> pelo menos 6x e depois execute <lndconnect --host=<0.0.0.0> --port=8080 --nocert>, trocando o ip 0.0.0.0 pelo seu ip local. Depois basta escanear o qr code com o Zeus Wallet App para se conectar."
