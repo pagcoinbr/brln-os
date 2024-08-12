@@ -1,4 +1,4 @@
-# Flash Minibolt amd64 install + tools
+# Instalação ultrarrápida Minibolt amd64 + Ferramentas
 
 Esta isntalação consiste em uma instalação rápida do node usando conexão rpc externa podendo abrir seus primeiros canais em menos de 30 minutos, para poder entrar para nosso club e poder receber as credenciais para conexão a um rcp externo e seguro, acesse: https://services.br-ln.com/. Entre no nosso grupo do telegram para suporte personalizado.
 
