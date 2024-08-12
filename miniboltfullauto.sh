@@ -346,4 +346,4 @@ sudo chmod 750 /run/tor
 sudo systemctl enable lnd
 sudo systemctl start lnd
 
-echo "Execute o comando: lncli --tlscertpath /data/lnd/tls.cert.tmp create | Digite a senha 2x para confirmar e pressione "n" e "enter", para criar uma nova carteira."
+echo "Execute o comando: <lncli --tlscertpath /data/lnd/tls.cert.tmp create>, Digite a senha 2x para confirmar e pressione "n" e "enter", para criar uma nova carteira."
