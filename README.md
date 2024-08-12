@@ -2,7 +2,7 @@
 
 Esta isntalação consiste em uma instalação rápida do node usando conexão rpc externa podendo abrir seus primeiros canais em menos de 30 minutos, para poder entrar para nosso club e poder receber as credenciais para conexão a um rcp externo e seguro, acesse: https://services.br-ln.com/. Entre no nosso grupo do telegram para suporte personalizado.
 
-# Instalando o Ubuntu Server *Obrigatório*
+# Instalando o Ubuntu Server (Obrigatório)
 Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. 05.08.24
 
 Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o openssh server durante a instalação.
