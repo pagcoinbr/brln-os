@@ -2,8 +2,9 @@
 
 Esta isntalação consiste em uma instalação rápida do node usando conexão rpc externa podendo abrir seus primeiros canais em menos de 30 minutos, para poder entrar para nosso club e poder receber as credenciais para conexão a um rcp externo e seguro, acesse: https://services.br-ln.com/. Entre no nosso grupo do telegram para suporte personalizado.
 
-# Instalando o Ubuntu Server (Obrigatório)
-Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. 05.08.24
+# Instalando o Ubuntu Server - Obrigatório
+Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. Link: https://ubuntu.com/download/server
+Você até pode utilizar outras distros linux, mas estes scripts não foram testados e podem não funcionar corretamente nestas condições.
 
 Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o openssh server durante a instalação.
 
@@ -39,7 +40,7 @@ Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se v
 
 Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
 
-# Preparando o sistema *Obrigatório*
+# Preparando o sistema (Obrigatório)
 
 Agora faça 
 
@@ -64,7 +65,7 @@ E depois `git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git` pa
 
 `cd miniboltfullauto` para acessar o diretório dos scripts.
 
-# Instalação do Lightning Daemon (lnd) *Obrigatório*
+# Instalação do Lightning Daemon (lnd) - Obrigatório
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
