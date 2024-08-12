@@ -125,23 +125,31 @@ Começando pelo script para instalar o bos:
 
 `chmod +x likeabos.sh` e `./likeabos.sh`
 
-Ao final da instalação você precisa recarregar a sessão com `. ~/.profile`
+*Se você receber o seguinte erro (https://postimg.cc/LYMLQxpg) basta checar a conexão com a internet e rodar novamente o script anterior*
 
-Asseguir vamos criar o bot para poder monitorar o movimento do nosso nó:
+Ao final da instalação você precisa recarregar a sessão com `. ~/.profile` ou sair da sessão e logar novamente.
 
-Acesse: https://t.me/BotFather e crie um bot pelo comand "new bot", após o termino copie a HTTP API:
+Asseguir vamos criar o bot para poder monitorar o movimento do nosso nó pelo Telegram: 
+
+Play store: https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1
+
+Apple store: https://apps.apple.com/br/app/telegram-messenger/id686449807
+
+Acesse: https://t.me/BotFather e crie um bot pelo comand "/newbot" e siga os passos para a criação de um bot no telegram, após o termino copie a "HTTP API", ela será necessária para o próximo passo.
 
 Inicie o comando `bos telegram`
 
-Cole a API, volte para o bot recém criado no telegram e envie "/start"
+Cole a API e pressione "Enter", volte para o bot recém criado no telegram e envie "/start".
 
-Ele vai te devolver: "🤖 Connection code is: 1463539065"
+Ele vai te responder algo como: "🤖 Connection code is: 1463539065"
 
-Copie o código, pois ele será usado para o proximo script:
+Cole o Connection code no terminal e pressione enter novamente, se tudo estiver correto você vai receber uma resposta "🤖 Connected to <nome do seu node>" e você já pode seguir par ao próximo passo.
 
-`chmod +x bos-autostart.sh` e `./bos-autostart.sh`
+Faça, `chmod +x bos-autostart.sh` e `./bos-autostart.sh`
 
 Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
+
+Pronto o bos está pronto para ser usado no telegram, mas também uma feramenta de terminal que pode ser usado com o comando `bos help`
 
 # Instalando o Zeus App
 
