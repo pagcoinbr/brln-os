@@ -38,5 +38,7 @@ sudo systemctl start bos-telegram.service
 # Habilita o serviço para iniciar com o sistema
 sudo systemctl enable bos-telegram.service
 
+echo "Se o serviço estiver como <active>, tudo correu bem, aperte Ctrl + C par voltar o terminal"
+
 # Mostra o status do serviço
 sudo systemctl status bos-telegram.service
