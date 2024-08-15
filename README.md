@@ -189,7 +189,7 @@ Play store: [https://play.google.com/store/apps/detailsid=app.zeusln.zeus&hl=pt_
 
 Escaneie o qr code com o app zeus nas opções avançadas do app, quando vir o aviso, clique em "save node config" e aguarde conectar.
 
-# Instalando o Thunderhub (Opcional)
+# Instalando o Thunderhub (Opcional) - !! ATENÇÃO!! SESSÃO INTIVA, DESFUNCIONAL. NÃO USE.
 
 Primeiro faça `chmod +x thunderhub.sh` e `./thunderhub.sh`
 
