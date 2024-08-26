@@ -49,7 +49,7 @@ Agora faça
 Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha do usuário admin, que estamos criando. 
 
 Depois copie e cole no terminal:
-`sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`.
+`sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`
 
 Em seguida faça o `logout` ou `exit`
 
