@@ -117,6 +117,8 @@ maxconnections=8
 EOF"
 
 # Ajusta as permissões do arquivo de configuração
+sudo chown -R admin:admin /home/admin/.bitcoin
+sudo chmod 750 /home/admin/.bitcoin
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
 
 # Cria o serviço systemd para o bitcoind
