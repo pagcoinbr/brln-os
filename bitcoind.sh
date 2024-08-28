@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Como usuário admin, instale as dependências necessárias
+sudo apt install python3-dev python3-pip python3-wheel -y
+
+# Crie um ambiente virtual para o OpenTimestamps
+python3 -m venv /home/admin/ots-env
+
+# Ative o ambiente virtual
+source /home/admin/ots-env/bin/activate
+
+# Instale o cliente OpenTimestamp dentro do ambiente virtual
+pip install opentimestamps-client
+
+# Verifique a instalação do cliente OpenTimestamp
+ots --version
+
+# Desative o ambiente virtual
+deactivate
+
 # Navega para o diretório temporário
 cd /tmp
 
@@ -10,6 +28,7 @@ VERSION=27.1
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
+wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.ots
 
 # Verifica o checksum
 sha256sum --ignore-missing --check SHA256SUMS
@@ -42,7 +61,7 @@ sudo chown admin:admin /data/bitcoin
 ln -s /data/bitcoin /home/admin/.bitcoin
 
 # Navega para o diretório de configuração do Bitcoin
-cd /home/admin/.bitcoin
+cd .bitcoin
 
 # Baixa o script de autenticação RPC
 wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
@@ -55,13 +74,13 @@ read -s password
 rpcauth=$(python3 rpcauth.py minibolt $password | grep rpcauth)
 
 # Cria o arquivo de configuração bitcoin.conf
-sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
+sudo bash -c "cat <<EOF > .bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
 # /home/admin/.bitcoin/bitcoin.conf
 
 # Bitcoin daemon
 server=1
-#txindex=1
+txindex=1
 
 # Disable integrated Bitcoin Core wallet
 disablewallet=1
@@ -111,9 +130,6 @@ $rpcauth
 # Remember to comment after IBD (Initial Block Download)!
 dbcache=2048
 blocksonly=1
-
-prune=5000
-maxconnections=8
 EOF"
 
 # Ajusta as permissões do arquivo de configuração
