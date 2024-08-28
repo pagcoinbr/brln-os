@@ -49,7 +49,7 @@ npm install
 npm run build
 
 # Verifica a versão instalada no package.json
-head -n 3 /home/admin/thunderhub/package.json | grep version
+head -n 3 /home/admin/miniboltfullauto/thunderhub/package.json | grep version
 
 # Cria o serviço systemd para o ThunderHub
 sudo bash -c 'cat <<EOF > /etc/systemd/system/thunderhub.service
@@ -62,7 +62,7 @@ Requires=lnd.service
 After=lnd.service
 
 [Service]
-WorkingDirectory=/home/admin/thunderhub
+WorkingDirectory=/home/admin/miniboltfullauto/thunderhub
 ExecStart=/usr/bin/npm run start
 
 User=admin
