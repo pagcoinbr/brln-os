@@ -61,7 +61,7 @@ sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
 
 # Bitcoin daemon
 server=1
-txindex=1
+#txindex=1
 
 # Disable integrated Bitcoin Core wallet
 disablewallet=1
