@@ -36,14 +36,14 @@ git clone --branch v$VERSION https://github.com/apotdevin/thunderhub.git && cd t
 # Verifica a integridade do commit
 git verify-commit v$VERSION
 
-# Instala as dependências do ThunderHub
-npm install
-
 # Corrige vulnerabilidades de pacotes
 npm audit fix
 
 # Atualiza os pacotes do sistema
 sudo apt update && sudo apt full-upgrade -y
+
+# Instala as dependências do ThunderHub
+npm install
 
 # Executa a build do ThunderHub
 npm run build
