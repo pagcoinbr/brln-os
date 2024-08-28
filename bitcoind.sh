@@ -15,9 +15,6 @@ pip install opentimestamps-client
 # Verifique a instalação do cliente OpenTimestamp
 ots --version
 
-# Desative o ambiente virtual
-deactivate
-
 # Navega para o diretório temporário
 cd /tmp
 
@@ -28,7 +25,6 @@ VERSION=27.1
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.ots
 
 # Verifica o checksum
 sha256sum --ignore-missing --check SHA256SUMS
@@ -54,7 +50,7 @@ sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS 
 sudo adduser admin debian-tor
 
 # Cria a pasta de dados do Bitcoin
-sudo mkdir -p /data/bitcoin
+mkdir /data/bitcoin
 
 # Muda a propriedade da pasta de dados para o usuário admin
 sudo chown admin:admin /data/bitcoin
@@ -194,5 +190,8 @@ ln -s /data/bitcoin /home/admin/.bitcoin
 
 # Verifica o status do serviço bitcoind
 sudo systemctl status bitcoind
+
+# Desative o ambiente virtual
+deactivate
 
 echo "Instalação do bitcoind concluída com sucesso!"
