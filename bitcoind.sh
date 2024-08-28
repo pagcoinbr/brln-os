@@ -111,6 +111,9 @@ $rpcauth
 # Remember to comment after IBD (Initial Block Download)!
 dbcache=2048
 blocksonly=1
+
+prune=5000
+maxconnections=8
 EOF"
 
 # Ajusta as permissões do arquivo de configuração
@@ -162,6 +165,7 @@ WantedBy=multi-user.target
 EOF"
 
 # Habilita e inicia o serviço bitcoind
+sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
 
