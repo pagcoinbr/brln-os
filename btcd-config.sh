@@ -1,4 +1,4 @@
-
+#!/bin/bash
 
 # Navega para o diretório de configuração do Bitcoin
 cd /home/admin/.bitcoin
