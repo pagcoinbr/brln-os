@@ -42,9 +42,3 @@ sudo chown admin:admin /data/bitcoin
 
 # Cria o link simbólico para o diretório de configuração do Bitcoin
 ln -s /data/bitcoin /home/admin/.bitcoin
-
-# Navega para o diretório de configuração do Bitcoin
-cd .bitcoin
-
-# Baixa o script de autenticação RPC
-wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
