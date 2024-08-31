@@ -1,3 +1,11 @@
+
+
+# Navega para o diretório de configuração do Bitcoin
+cd /home/admin/.bitcoin
+
+# Baixa o script de autenticação RPC
+wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
+
 # Cria o arquivo de configuração bitcoin.conf
 sudo bash -c "cat <<EOF > .bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
