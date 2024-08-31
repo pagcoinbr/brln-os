@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Navega para o diretório de configuração do Bitcoin
+cd /home/admin/.bitcoin
+
+# Baixa o script de autenticação RPC
+wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
+
 # Navega para o diretório temporário
 cd /tmp
 
