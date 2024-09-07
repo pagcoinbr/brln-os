@@ -171,30 +171,6 @@ Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" 
 
 Pronto o bos está pronto para ser usado no telegram, mas também uma feramenta de terminal que pode ser usado com o comando `bos help`
 
-# Instalando o Zeus App (Opcional)
-
-Use `chmod +x zeusapp.sh` e `./zeusapp.sh`
-
-E por fim, você deve escolher por onde acessar o Zeus Wallet para administrar o node, se for pela rede local, no próximo comando você deve usar o ip da rede local, caso vá acessar pelo tailscale, use o ip da fornecido pelo app.
-
-Tire o zoom com "Ctrl + -" pelo menos 6x, pois o qr code asseguir é realmente grande. E depois:
-
-`lndconnect --host=<0.0.0.0> --port=8080 --nocert`
-
-Trocando o ip <0.0.0.0> pelo seu ip local ou do Tailscale.
-
-Apple store: https://apps.apple.com/us/app/zeus-wallet/id1456038895
-
-Play store: [https://play.google.com/store/apps/detailsid=app.zeusln.zeus&hl=pt_BR](https://play.google.com/store/apps/details?id=app.zeusln.zeus&hl=pt_BR)
-
-Escaneie o qr code com o app zeus nas opções avançadas do app, quando vir o aviso, clique em "save node config" e aguarde conectar.
-
-# Instalando o Thunderhub (Opcional) - !! ATENÇÃO!! SESSÃO INATIVA, DESFUNCIONAL. NÃO USE.
-
-Primeiro faça `chmod +x thunderhub.sh` e `./thunderhub.sh`
-
-Agora você pode acessar o seu thunderhub pelo ip do minibolt + porta "https://192.168.x.xxx:4002"
-
 # Disclaimers:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
 A lightining não é brinquedo, use com responsabilidade.
