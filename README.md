@@ -65,7 +65,7 @@ E depois `git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git` pa
 
 `cd miniboltfullauto` para acessar o diretório dos scripts.
 
-# Instalação do Lightning Daemon (lnd) - Obrigatório
+# Instalação do Lightning Daemon (lnd) - (Obrigatório)
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
