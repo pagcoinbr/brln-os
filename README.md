@@ -138,7 +138,7 @@ A primeira coisa a se fazer é esperar o lnd sincronizar, acesse:
 
 neste ponto você já deve estar pronto para ver as informações do seu node com : `lncli getinfo`
 
-# Instalando o Balance of Satoshis *Obrigatório*
+# Instalando o Balance of Satoshis (Obrigatório)
 
 Agora que seu lnd está pronto vamos construir em cima dele.
 Começando pelo script para instalar o bos:
