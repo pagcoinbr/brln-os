@@ -1,95 +1,151 @@
 # Instalação ultrarrápida Minibolt amd64 + Ferramentas
 
-Esta isntalação consiste em uma instalação rápida do node usando conexão rpc externa podendo abrir seus primeiros canais em menos de 30 minutos, para poder entrar para nosso club e poder receber as credenciais para conexão a um rcp externo e seguro, acesse: https://services.br-ln.com/. Entre no nosso grupo do telegram para suporte personalizado.
+Este tutorial aborda a instalação rápida de um nó Lightning utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial (https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. 
 
-# Instalando o Ubuntu Server - Obrigatório
-Este tutorial se destina a facilitar a instalação do minibolt em um sistema standalone. Parto do pressuposto que você está fazendo uma instalação nova do ubuntu server, que está na sua versão 24.0 atualmente. Link: https://ubuntu.com/download/server
-Você até pode utilizar outras distros linux, mas estes scripts não foram testados e podem não funcionar corretamente nestas condições.
 
-Faça o flash do disco/pendrive e realize a instalação do Ubuntu, selecionando [x] o openssh server durante a instalação.
+# Instalando o Ubuntu Server - (Obrigatório)
 
-quando te pedir as credenciais para login escreva o seguinte:
+**Passos para instalação:**
+Baixar a imagem do Ubuntu Server: Acesse o site oficial (https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente à última versão do Ubuntu Server.
+Criar um pendrive de boot: Utilize o Balena Etcher ou outro software de sua preferência para gravar a imagem ISO no pendrive.
 
-name: temp
+**Instalação do sistema:**
 
-server name: minibolt
+Inicie o computador a partir do pendrive e siga os passos para instalar o Ubuntu Server.
+Durante a instalação, certifique-se de marcar a opção `[x] OpenSSH Server` para habilitar o acesso remoto ao servidor via SSH.
 
-user: temp
+**Configuração de credenciais:**
+Quando solicitado a inserir as credenciais de login, use as seguintes informações:
 
-password: ********* (você escolhe)
+Nome: `temp`
 
-Prossiga com a instalação e quando finalizar, faça o reboot e retire o disco. Provavelmente agora você vai ver uma mensagem de erro no boot, pressione `Enter`.
-Agora sem o disco plugado, o sistema deve iniciar.
+Nome do servidor: `minibolt`
 
-# Instalando o TailScale VPN (Opcional)
+Usuário: `temp`
 
-Digite o seguinte comando:
+Senha: Escolha uma senha de sua preferência.
 
-`curl -fsSL https://tailscale.com/install.sh | sh`
 
-Em seguida escreva `sudo tailscale up` e ele vai te fornecer um link, este link deve ser digitado, letra por letra, no navegador de um outro dispositivo qualquer, de preferência no computador que você vai fazer o SSH no servidor. 
+**Finalização da instalação:**
+
+Após concluir a instalação, realize o reboot e remova o pendrive.
+Caso uma mensagem de erro seja exibida no boot, pressione `Enter` para continuar.
+Agora, sem o pendrive conectado, o sistema deve inicializar corretamente.
+
+
+## Instalando o TailScale VPN - (Opcional)
+
+Para instalar o **TailScale VPN**, execute o seguinte comando no terminal:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+Após a instalação, inicie o TailScale com o comando:
+
+```bash
+sudo tailscale up
+```
+
+O terminal fornecerá um link. Esse link deve ser transcrito, letra por letra, no navegador de outro dispositivo, preferencialmente no computador que será utilizado para realizar o acesso SSH ao servidor.
 
 Crie uma conta na tailscale e adicione o dispositivo.
 
-Em seguida baixe o tailscale pelo link `https://tailscale.com/download/windows` e faça o login com a sua conta recém criada.
-Pronto, agora já podemos fazer o ssh no servidor, digitando no cmd o seguinte comando:
+Em seguida baixe o tailscale pelo link (https://tailscale.com/download/windows) e faça o login com a sua conta recém criada.
+Pronto, agora você já pode fazer o acesso via ssh no servidor, digitando no Terminal do Windows o seguinte comando:
 
-`ssh temp@ip.do.tailscale`
+```bash
+ssh temp@ip.do.tailscale
+```
 
-Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando windows, deve estar na sua barra de icones próximo ao relógio.
+Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando Windows, deve estar na sua barra de icones próximo ao relógio.
 
 Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
 
-# Preparando o sistema (Obrigatório)
 
-Agora faça 
+# Preparando o sistema - (Obrigatório)
 
-`sudo adduser --gecos "" admin`
+Agora vamos criar o usuário admin, para isso, de o seguinte comando: 
 
-Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha do usuário admin, que estamos criando. 
+```bash
+sudo adduser --gecos "" admin
+```
+
+Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha para o usuário admin, que estamos criando. 
 
 Depois copie e cole no terminal:
-`sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin`
+```bash
+sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin
+```
 
-Em seguida faça o `logout` ou `exit`
+Em seguida faça o `logout` ou `exit` para retornar ao usuário `temp`
 
-Agora que criamos um novo usuário "admin", vamos fazer o login novamente e apagar o usuário "temp" anterior.
+Agora que criamos um novo usuário "admin", vamos fazer o login neste novo usuário, novamente e apagar o usuário "temp" anterior.
 
-Mais uma vez faça o comando, agora com o user admin `ssh admin@ip.do.servidor`
+Mais uma vez faça o comando, agora com o user admin:
+```bash
+ssh admin@ip.do.servidor
+```
 
-Uma vez logado faça: 
+Uma vez logado, de o seguinte comando: 
 
-`sudo userdel -rf temp` e receba uma mensagem de erro de "not found", ou algo do genero.
+```bash
+sudo userdel -rf temp
+```
+Você receberá uma mensagem de erro de `not found`, ou algo semelhante.
 
-E depois `git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git` para copiar o repositório.
+E depois de o seguinte comando, para copiar o repositório:
+```bash
+git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git
+```
 
-`cd miniboltfullauto` para acessar o diretório dos scripts.
+Agora acesse o diretório copiado, com o seguinte comando:
+```bash
+cd miniboltfullauto
+```
 
-# Instalação do Lightning Daemon (lnd) - (Obrigatório)
+
+# Instalação do Lightning Network Daemon (lnd) - (Obrigatório)
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
-Execute `chmod +x miniboltfullauto.sh` e depois `./miniboltfullauto.sh`, você deve responder `y` sempre que solicitado. 
+Execute o seguinte comando para aplicar as permições necessárias ao programa:
+```bash
+chmod +x miniboltfullauto.sh`
+```
+Em seguida, execute o programa com o seguinte comando:
+```bash
+./miniboltfullauto.sh
+```
+**Observe que você deve responder `  y  ` sempre que solicitado.** 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-Atenção, no registro das credenciais é onde acontecem a maior parte dos erros, copie os dados ou escreva-os com atenção!!!
+**Atenção, no registro das credenciais é onde acontecem a maior parte dos erros, copie os dados ou escreva-os com atenção!!!**
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 50 Gb na pior das hipoteses. Saiba mais sobre o projeto em: https://services.br-ln.com/
 
-Caso vocë tenha errado alguma credencial voce pode apertar "Ctrl + C" e começar novamente ou corrigi-la com `nano /data/lnd/lnd.conf` posteriormente a instalação.
+Caso você tenha errado alguma credencial voce pode apertar `Ctrl + C` e começar novamente ou corrigi-la após a instalação, editando o arquivo de configuração com o seguinte comando:
+```bash
+nano /data/lnd/lnd.conf
+```
+Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar.
 
-No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
+**No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.**
 
-# Configurando a carteira *Obrigatório*
+# Configurando a carteira - (Obrigatório)
 
-Depois `lncli --tlscertpath /data/lnd/tls.cert.tmp create`
-Digite a senha 2x para confirmar (a mesma senha escolhida no script anterior) e pressione "n" e "enter".
+Agora, de o seguinte comando:
+```bash
+lncli --tlscertpath /data/lnd/tls.cert.tmp create
+```
+Digite duas vezes a mesma senha escolhida no script anterior, para confirmar e pressione `  n  ` e `  enter  `.
 
-Output esperado:
+**Exemplo de resultado esperado:**
 
+```bash
 lnd@minibolt:~$ lncli --tlscertpath /data/lnd/tls.cert.tmp create
 Input wallet password:
 Confirm password:
@@ -119,62 +175,138 @@ Generating fresh cipher seed...
 !!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
 
 lnd successfully initialized!
+```
 
-Veja o estado do service com `sudo systemctl status lnd.service`
+Veja o estado do service com o seguinte comando:
+```bash
+sudo systemctl status lnd.service
+```
 
-A saída deve ser esta -> [photo-5008557502593346775-w.jpg](https://postimg.cc/zbpWqHP9)
+**Exemplo de resultado esperado:**
+
+```bash
+admin@minibolt:~$ sudo systemctl status lnd.service
+[sudo] password for admin:
+● lnd.service - Lightning Network Daemon
+     Loaded: loaded (/etc/systemd/system/lnd.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2024-09-10 02:03:49 UTC; 1 week 0 days ago
+   Main PID: 124698 (lnd)
+     Status: "Wallet unlocked"
+      Tasks: 23 (limit: 38229)
+     Memory: 145.6M (peak: 286.0M)
+        CPU: 1h 30min 4.458s
+     CGroup: /system.slice/lnd.service
+             └─124698 /usr/local/bin/lnd
+
+Sep 17 20:57:49 minibolt lnd[124698]: 2024-09-17 20:57:49.843 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+Sep 17 20:58:49 minibolt lnd[124698]: 2024-09-17 20:58:49.844 [INF] WTCL: (legacy) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+Sep 17 20:58:49 minibolt lnd[124698]: 2024-09-17 20:58:49.844 [INF] WTCL: (taproot) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquire>
+Sep 17 20:58:49 minibolt lnd[124698]: 2024-09-17 20:58:49.844 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+Sep 17 20:59:49 minibolt lnd[124698]: 2024-09-17 20:59:49.843 [INF] WTCL: (legacy) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+Sep 17 20:59:49 minibolt lnd[124698]: 2024-09-17 20:59:49.843 [INF] WTCL: (taproot) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquire>
+Sep 17 20:59:49 minibolt lnd[124698]: 2024-09-17 20:59:49.843 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (taproot) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquire>
+Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (legacy) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
+lines 1-21/21 (END)
+```
 
 # Caso sua carteira ainda esteja "locked", você pode tentar verificar estas coisas, antes de precisar começar novamente:
 
-A primeira coisa a se fazer é esperar o lnd sincronizar, acesse: 
+A primeira coisa a se fazer é esperar o lnd sincronizar, de o seguinte comando: 
 
-`sudo journalctl -xeu lnd` - Se a ultima saída for algo como "Started rescan from block 0000000...", aguarde cerca de 2-5 minutos e tente `sudo systemctl status lnd.service`, novamente.
+```bash
+sudo journalctl -xeu lnd
+```
+- Se a ultima saída for algo como `Started rescan from block 0000000...`, aguarde cerca de 2-5 minutos e tente novamente o seguinte comando:
+```bash
+sudo systemctl status lnd.service
+```
 
-`nano /data/lnd/lnd.conf` - Verificar a senha criada anteriormente que fica salvo em um arquivo de texto, se estiver incorreta com a que você acabou de criar, corrija-o.
+- Se a situação persistir, verifique o arquivo de configuração para se sertificar se a senha que você acabou de digitar, está correta e caso não esteja, corrija-a. Para isso, utilize o seguinte comando:
+```bash
+nano /data/lnd/lnd.conf
+```
+Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar.
+- Se a situação persistir, verifique novamente o arquivo de configuração e verifique as credenciais do ` [Bitcond] `, visto que é bastante comum erros na hora de informar estes parâmetros.
+```bash
+nano /data/lnd/lnd.conf
+```
+Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar.
 
-`nano /data/lnd/lnd.conf` - Verificar as credenciais do [Bitcoind], são comummente onde há mais erros durante o tutorial.
+Agora vamos reiniciar o serviço do ` lnd ` com o seguinte comando:
 
-`sudo systemctl restart lnd` e `sudo systemctl status lnd`, agora ele deve aparecer como "unlocked".
+```bash
+sudo systemctl restart lnd
+```
 
-neste ponto você já deve estar pronto para ver as informações do seu node com : `lncli getinfo`
+ E verificar novamente o status do ` lnd ` para verificar se agora a wallet aparece como: `unlocked`
+ 
+ ```bash
+ sudo systemctl status lnd.service
+ ```
 
-# Instalando o Balance of Satoshis (Obrigatório)
+Agora você já deve estar pronto para ver as informações do seu node com o seguinte comando: 
 
-Agora que seu lnd está pronto vamos construir em cima dele.
-Começando pelo script para instalar o bos:
+ ```bash
+lncli getinfo
+```
 
-`chmod +x likeabos.sh` e `./likeabos.sh`
 
-*Se você receber o seguinte erro (https://postimg.cc/LYMLQxpg) basta checar a conexão com a internet e rodar novamente o script anterior*
+# Instalando o BOS - Balance Of Satoshis (Obrigatório)
 
-Ao final da instalação você precisa recarregar a sessão com `. ~/.profile` ou sair da sessão e logar novamente.
+Agora que seu lnd está pronto vamos instalar uma importante ferramenta de apoio a gestão do seu node, que é o Balance Of Satoshis (BOS).
+De o seguinte comando para dar as permissões necessárias ao programa:
 
-Asseguir vamos criar o bot para poder monitorar o movimento do nosso nó pelo Telegram: 
+```bash
+chmod +x likeabos.sh` e `./likeabos.sh
+```
 
-Play store: https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1
+**Se você receber o seguinte erro (https://postimg.cc/LYMLQxpg) basta checar a conexão com a Internet e rodar novamente o script anterior**
 
-Apple store: https://apps.apple.com/br/app/telegram-messenger/id686449807
+Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
+```bash
+. ~/.profile
+```
 
-Acesse: https://t.me/BotFather e crie um bot pelo comand "/newbot" e siga os passos para a criação de um bot no telegram, após o termino copie a "HTTP API", ela será necessária para o próximo passo.
+Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
 
-Inicie o comando `bos telegram`
+Agora vamos criar um **bot** (abreviação de "robot") para poder monitorar o movimento do node pelo Telegram.
 
-Cole a API e pressione "Enter", volte para o bot recém criado no telegram e envie "/start".
+Primeiramente acesse a loja do seu smartphone e instale o app do Telegram:
+- Play store: https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1
+- Apple store: https://apps.apple.com/br/app/telegram-messenger/id686449807
 
-Ele vai te responder algo como: "🤖 Connection code is: 1463539065"
+Agora acesse a ferramenta de criação de bots do Telegram no seguinte endereço: (https://t.me/BotFather) e crie um bot com o comando ` /newbot ` e siga os passos para a criação de um bot no Telegram, após o término copie o ´ token ´, ele será necessária para o próximo passo.
 
-Cole o Connection code no terminal e pressione enter novamente, se tudo estiver correto você vai receber uma resposta "🤖 Connected to <nome do seu node>" e você já pode seguir par ao próximo passo.
+Agora retorne ao terminal do seu computador e de o comando:
+```bash
+bos telegram
+```
 
-Faça, `chmod +x bos-autostart.sh` e `./bos-autostart.sh`
+Cole o token fornecido pelo BotFathter do Telegram e pressione ` Enter `, volte para o bot recém criado no telegram e envie o seguinte comando: ´ /start `.
 
-Cole o Connection code quando solicitado. Ao final, basta pressionar "Ctrl + C" para voltar para o terminal.
+Ele vai te responder algo como: `🤖 Connection code is: ########`
 
-Pronto o bos está pronto para ser usado no telegram, mas também uma feramenta de terminal que pode ser usado com o comando `bos help`
+Cole o Connection code no terminal e pressione enter novamente, se tudo estiver correto você vai receber uma resposta `🤖 Connected to <nome do seu node>` e você já pode seguir par ao próximo passo.
 
-# Disclaimers:
+De o seguinte comando, para aplicar as permissões necessárias ao programa:
+```bash
+chmod +x bos-autostart.sh
+```
+
+Agora execute o programa com o seguinte comando:
+```bash
+./bos-autostart.sh
+```
+
+Cole o `Connection code` quando solicitado. Ao final, basta pressionar `Ctrl + C` para voltar para o terminal.
+
+Pronto o **bos** está pronto para ser usado no Telegram, mas ele também é uma feramenta de terminal que pode ser usado com o comando `bos help`
+
+# ALERTAS:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
-A lightining não é brinquedo, use com responsabilidade.
+**A lightining não é brinquedo, use com responsabilidade.**
 Boas transações!
 
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
-
