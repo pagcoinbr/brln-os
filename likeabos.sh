@@ -1,4 +1,7 @@
 #!/bin/bash
+# Script criado por PagcoinBTC
+# PGP: 9585 831e 06ac 0821
+# Ultima edição: 26/09/2024
 
 # Solicita o alias do node
 read -p "Digite o alias do seu node: " nome_do_seu_node
