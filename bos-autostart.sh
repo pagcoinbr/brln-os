@@ -1,4 +1,7 @@
 #!/bin/bash
+# Script criado por PagcoinBTC
+# PGP: 9585 831e 06ac 0821
+# Ultima edição: 26/09/2024
 
 # Solicita o código de conexão do Telegram
 read -p "Telegram Connection code: " telegram_code
