@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# Script criado por PagcoinBTC
+# PGP: 9585 831e 06ac 0821
+# Ultima edição: 07/10/2024
+
+GITHUB_CRIPTOSHARK=https://github.com/cryptosharks131/lndg.git
+LNDG_DIR=/home/admin/lndg
+VERSION_THUB=0.13.31
+read -sp "Digite a senha para ThunderHub: " senha
+echo
+
+# Atualiza os pacotes do sistema
+sudo apt update && sudo apt full-upgrade -y
+
 # Criar link simbólico para a configuração
 if [ ! -f /etc/nginx/sites-enabled/thunderhub-reverse-proxy.conf ]; then
   sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
@@ -25,17 +38,14 @@ npm -v
 # Volta ao diretório home
 cd
 
-# Define a versão do ThunderHub
-VERSION=0.13.31
-
 # Importa a chave GPG do repositório do ThunderHub
 curl https://github.com/apotdevin.gpg | gpg --import
 
 # Clona o repositório do ThunderHub na versão especificada e entra no diretório
-git clone --branch v$VERSION https://github.com/apotdevin/thunderhub.git && cd thunderhub
+git clone --branch v$VERSION_THUB https://github.com/apotdevin/thunderhub.git && cd thunderhub
 
 # Verifica a integridade do commit
-git verify-commit v$VERSION
+git verify-commit v$VERSION_THUB
 
 # Atualiza os pacotes do sistema
 sudo apt update && sudo apt full-upgrade -y
@@ -58,10 +68,6 @@ sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .e
 
 # Cria a configuração da conta
 # Criar um novo arquivo thubConfig.yaml
-
-# Perguntar a senha ao usuário e armazená-la em uma variável
-read -sp "Digite a senha para ThunderHub: " senha
-echo
 
 # Criar ou sobrescrever o arquivo thubConfig.yaml com o conteúdo inicial
 cat <<EOL > thubConfig.yaml
@@ -115,3 +121,92 @@ sudo systemctl start thunderhub
 
 # Verifica o status do serviço ThunderHub
 sudo systemctl status thunderhub
+
+# Atualiza os pacotes do sistema
+sudo apt update && sudo apt full-upgrade -y
+
+# Verifica se o git está instalado, caso contrário, instala
+if ! command -v git &> /dev/null
+then
+    echo "Git não encontrado, instalando..."
+    sudo apt install git -y
+fi
+
+# Volta à home
+cd
+
+# Clona o repositório, se ainda não estiver clonado
+if [ ! -d "$LNDG_DIR" ]; then
+    git clone $GITHUB_CRIPTOSHARK && cd lndg
+else
+    echo "O repositório já foi clonado."
+    cd lndg
+fi
+
+# Instala o virtualenv (ou python3-venv) se não estiver instalado
+if ! command -v virtualenv &> /dev/null
+then
+    echo "Instalando virtualenv..."
+    sudo apt install virtualenv -y
+fi
+
+# Configura o ambiente virtual
+virtualenv -p python3 .venv
+
+# Ativa o ambiente virtual e instala as dependências
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install whitenoise
+
+# Executa o script de inicialização
+.venv/bin/python initialize.py --whitenoise
+
+# Cria o service para o backend
+sudo tee /etc/systemd/system/lndg-controller.service > /dev/null <<EOF
+[Unit]
+Description=Controlador de backend para Lndg
+
+[Service]
+Environment=PYTHONUNBUFFERED=1
+User=admin
+Group=admin
+ExecStart=$LNDG_DIR/.venv/bin/python $LNDG_DIR/controller.py
+StandardOutput=append:/var/log/lndg-controller.log
+StandardError=append:/var/log/lndg-controller.log
+Restart=always
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Cria o service para o frontend
+sudo tee /etc/systemd/system/lndg.service > /dev/null <<EOF
+[Unit]
+Description=LNDG Django Server
+After=network.target
+
+[Service]
+Environment=PYTHONUNBUFFERED=1
+User=admin
+Group=admin
+WorkingDirectory=$LNDG_DIR
+ExecStart=$LNDG_DIR/.venv/bin/python $LNDG_DIR/manage.py runserver 0.0.0.0:8889
+StandardOutput=append:/var/log/lndg.log
+StandardError=append:/var/log/lndg.log
+Restart=always
+RestartSec=5
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Recarrega e reinicia os serviços
+sudo systemctl daemon-reload
+sudo systemctl restart lndg-controller.service
+sudo systemctl restart lndg.service
+
+# Mostra o status dos serviços
+sudo systemctl status lndg-controller.service
+sudo systemctl status lndg.service
