@@ -334,7 +334,7 @@ sudo systemctl status bitcoind
 
 O processo agora deve encontrar-se como *"active"*.
 
-# Instalando o lndg, ferramenta para Routers.
+# Instalando o lndg, ferramenta para Routing Nodes. (Opcional)
 
 Volte ao diretório dos scripts de instalação:
 ```bash
