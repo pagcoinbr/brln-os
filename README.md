@@ -111,7 +111,7 @@ Até agora fizemos a parte mais dificil que não pode ser automatizada por scrip
 
 Execute o seguinte comando para aplicar as permições necessárias ao programa:
 ```bash
-chmod +x miniboltfullauto.sh`
+chmod +x miniboltfullauto.sh
 ```
 Em seguida, execute o programa com o seguinte comando:
 ```bash
