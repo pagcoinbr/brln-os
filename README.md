@@ -318,7 +318,17 @@ Execute:
 ./bitcoind.sh
 ```
 
-Como a linha final do script já orienta, acesse: <nano /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida rode "sudo systemctl restart bitcoind" e "sudo systemctl restart bitcoind". O processo agora deve encontrar-se como "active".
+Como a linha final do script já orienta, acesse: <nano /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida:
+Execute:
+```bash
+sudo systemctl restart bitcoin
+```
+Execute:
+```bash
+sudo systemctl restart bitcoind
+```
+
+O processo agora deve encontrar-se como *"active"*.
 
 ## ALERTAS:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
