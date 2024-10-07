@@ -3,7 +3,7 @@
 Este tutorial aborda a instalação rápida de um nó Lightning utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial (https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. 
 
 
-# Instalando o Ubuntu Server - (Obrigatório)
+## Instalando o Ubuntu Server - (Obrigatório)
 
 **Passos para instalação:**
 Baixar a imagem do Ubuntu Server: Acesse o site oficial (https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente à última versão do Ubuntu Server.
@@ -304,7 +304,23 @@ Cole o `Connection code` quando solicitado. Ao final, basta pressionar `Ctrl + C
 
 Pronto o **bos** está pronto para ser usado no Telegram, mas ele também é uma feramenta de terminal que pode ser usado com o comando `bos help`
 
-# ALERTAS:
+## Instalando e sincronizando o seu proprio bitcoin core (opcional)
+
+Com o próximo script vamos instalar o bitcoin core, o coração de toda nossa operação. *Fique atento aos comandos a serem dados a final do script, eles são necessários para o sucesso da intalação correta.*
+
+Execute:
+```bash
+chmod +x bitcoind.sh
+```
+
+Execute:
+```bash
+./bitcoind.sh
+```
+
+Como a linha final do script já orienta, acesse: <nano /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida rode <sudo systemctl restart bitcoind> e <sudo systemctl restart bitcoind>. O processo agora deve encontrar-se como "active".
+
+## ALERTAS:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
 **A lightining não é brinquedo, use com responsabilidade.**
 Boas transações!
