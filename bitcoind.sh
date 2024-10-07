@@ -173,4 +173,4 @@ chmod +x rpcauth.py
 # Gera o rpcauth usando o script python baixado
 python3 rpcauth.py minibolt
 
-echo acesse: "<nano /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida rode <sudo systemctl restart bitcoind> e <sudo systemctl status bitcoind>."
+echo acesse: "<nano -l +48 /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida rode <sudo systemctl restart bitcoind> e <sudo systemctl status bitcoind>."
