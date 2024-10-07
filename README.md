@@ -259,7 +259,10 @@ Agora que seu lnd está pronto vamos instalar uma importante ferramenta de apoio
 De o seguinte comando para dar as permissões necessárias ao programa:
 
 ```bash
-chmod +x likeabos.sh` e `./likeabos.sh
+chmod +x likeabos.sh
+```
+```bash
+./likeabos.sh
 ```
 
 **Se você receber o seguinte erro (https://postimg.cc/LYMLQxpg) basta checar a conexão com a Internet e rodar novamente o script anterior**
