@@ -334,6 +334,23 @@ sudo systemctl status bitcoind
 
 O processo agora deve encontrar-se como *"active"*.
 
+# Instalando o lndg, ferramenta para Routers.
+
+Volte ao diretório dos scripts de instalação:
+```bash
+cd /miniboltfullauto
+```
+Dê permissão de executável:
+```bash
+chmod +x lndg.sh
+```
+Faça a instalação:
+```bash
+./lndg.sh
+```
+
+Agora você pode acessar seu lndg pelo endereço, no navegador, *localhost:8889*
+
 # Thunderhub, node manager (Obrigatório).
 ### Primeiro crie o arquivo de configuração do Nginx
 ```bash
