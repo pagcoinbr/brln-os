@@ -30,9 +30,6 @@ virtualenv -p python3 .venv
 # Rodar o script com flag especial
 .venv/bin/python initialize.py --whitenoise
 
-# Usa um script para o backend
-sudo bash systemd.sh
-
 # Cria o service para o backend
 sudo cat <<EOF > /etc/systemd/system/lndg-controller.service
 [Unit]
