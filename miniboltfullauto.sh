@@ -228,6 +228,13 @@ accept-amp=true
 ## Rebalancing
 allow-circular-route=true
 
+## Descomente as ultimas duas linhas e mude seu endereço ddns para ativar o modo hibrido.
+# specify an interface (IPv4/IPv6) and port (default 9735) to listen on
+# listen on IPv4 interface or listen=[::1]:9736 on IPv6 interface
+# listen=[::1]:9736
+#listen=0.0.0.0:9735
+#externalhosts=meu.ddns.no-ip:9735
+
 ## Performance
 gc-canceled-invoices-on-startup=true
 gc-canceled-invoices-on-the-fly=true
