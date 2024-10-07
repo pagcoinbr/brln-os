@@ -114,7 +114,7 @@ fi
 cd /tmp
 
 # Define a variável de ambiente de versão temporária
-VERSION=0.18.0
+VERSION=0.18.3
 
 # Baixa os arquivos necessários
 wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/lnd-linux-amd64-v$VERSION-beta.tar.gz
