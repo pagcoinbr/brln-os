@@ -331,6 +331,42 @@ sudo systemctl restart bitcoind
 
 O processo agora deve encontrar-se como *"active"*.
 
+# Thunderhub, node manager (Obrigatório).
+### Primeiro crie o arquivo de configuração do Nginx
+```bash
+sudo nano /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
+```
+Copie e cole dentro do arquivo:
+```bash
+server {
+  listen 4002 ssl;
+  error_page 497 =301 https://$host:$server_port$request_uri;
+
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+  }
+}
+```
+Saia usando Ctrl + x, confirmando com *y* e saindo com *Enter*.
+
+### Faça a instalação via script
+
+Se não estiver, vá para o diretórios `miniboltfullauto`
+```bash
+cd /miniboltfullauto
+```
+Em seguida, para torar o script executável:
+```bash
+chmod +x thunderhub.sh
+```
+E para instalar:
+```bash
+./thunderhub.sh
+```
+Digite a senha de acesso do Thunderhub, evitando os seguintes símbolos (./$&*(#@!) e qualquer outro carácter especial que não letras e numeros.
+
+Após a instalação acesse via: ipdoservidor:4002 (Ex. 192.168.0.101:4002)
+
 ## ALERTAS:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
 **A lightining não é brinquedo, use com responsabilidade.**
