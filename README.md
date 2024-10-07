@@ -304,7 +304,7 @@ Cole o `Connection code` quando solicitado. Ao final, basta pressionar `Ctrl + C
 
 Pronto o **bos** está pronto para ser usado no Telegram, mas ele também é uma feramenta de terminal que pode ser usado com o comando `bos help`
 
-# Instalando e sincronizando o seu proprio bitcoin core (opcional)
+## Instalando e sincronizando o seu proprio bitcoin core (opcional)
 
 Com o próximo script vamos instalar o bitcoin core, o coração de toda nossa operação. *Fique atento aos comandos a serem dados a final do script, eles são necessários para o sucesso da intalação correta.*
 
