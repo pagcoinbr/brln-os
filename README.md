@@ -251,21 +251,35 @@ Agora você já deve estar pronto para ver as informações do seu node com o se
  ```bash
 lncli getinfo
 ```
+# Instalando Noderunners Tools.
 
-
-# Instalando o BOS - Balance Of Satoshis (Obrigatório)
-
-Agora que seu lnd está pronto vamos instalar uma importante ferramenta de apoio a gestão do seu node, que é o Balance Of Satoshis (BOS).
-De o seguinte comando para dar as permissões necessárias ao programa:
+Este script vai instalar o bos + Thunderhub + lndg, depois basta configura-los.
 
 ```bash
-chmod +x likeabos.sh
+sudo nano /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
 ```
+Copie e cole dentro do arquivo:
 ```bash
-./likeabos.sh
-```
+server {
+  listen 4002 ssl;
+  error_page 497 =301 https://$host:$server_port$request_uri;
 
-**Se você receber o seguinte erro (https://postimg.cc/LYMLQxpg) basta checar a conexão com a Internet e rodar novamente o script anterior**
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+  }
+}
+```
+Saia usando Ctrl + x, confirmando com *y* e saindo com *Enter
+
+```bash
+chmod +x tools.sh
+```
+Em seguinda:
+```bash
+./tools.sh
+```
+Digite a senha de acesso do Thunderhub, *evitando os seguintes símbolos (./$&*(#@!)* e qualquer outro carácter especial que não letras e numeros.
+*Em alguns momentos ele pode parecer que travou, mas tenha paciência.
 
 Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
 ```bash
@@ -277,10 +291,14 @@ Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
 Agora vamos criar um **bot** (abreviação de "robot") para poder monitorar o movimento do node pelo Telegram.
 
 Primeiramente acesse a loja do seu smartphone e instale o app do Telegram:
-- Play store: https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1
-- Apple store: https://apps.apple.com/br/app/telegram-messenger/id686449807
+- [Play store](https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1)
+- [Apple store](https://apps.apple.com/br/app/telegram-messenger/id686449807)
 
-Agora acesse a ferramenta de criação de bots do Telegram no seguinte endereço: (https://t.me/BotFather) e crie um bot com o comando ` /newbot ` e siga os passos para a criação de um bot no Telegram, após o término copie o ´ token ´, ele será necessária para o próximo passo.
+Agora acesse a ferramenta de criação de bots do Telegram no seguinte endereço: [Bot Father, no Telegram](https://t.me/BotFather) e crie um bot com o comando
+```bash
+/newbot
+```
+e siga os passos para a criação de um bot no Telegram, após o término copie o ´ token ´ entregue, ele será necessária para o próximo passo.
 
 Agora retorne ao terminal do seu computador e de o comando:
 ```bash
@@ -305,7 +323,7 @@ Agora execute o programa com o seguinte comando:
 
 Cole o `Connection code` quando solicitado. Ao final, basta pressionar `Ctrl + C` para voltar para o terminal.
 
-Pronto o **bos** está pronto para ser usado no Telegram, mas ele também é uma feramenta de terminal que pode ser usado com o comando `bos help`
+Pronto o **bos** está pronto para ser usado no Telegram, você também pode acessar seu **lndg** pelo endereço, no navegador, *localhost:8889* e o **Thunderhub** por *ipdoservidor:4002* (Ex. 192.168.0.101:4002).
 
 ## Instalando e sincronizando o seu proprio bitcoin core (opcional)
 
@@ -332,60 +350,10 @@ Execute:
 sudo systemctl status bitcoind
 ```
 
-O processo agora deve encontrar-se como *"active"*.
-
-# Instalando o lndg, ferramenta para Routing Nodes. (Opcional)
-
-Volte ao diretório dos scripts de instalação:
+Ao final, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando o comando:
 ```bash
-cd /miniboltfullauto
+journal -fu bitcoind
 ```
-Dê permissão de executável:
-```bash
-chmod +x lndg.sh
-```
-Faça a instalação:
-```bash
-./lndg.sh
-```
-
-Agora você pode acessar seu lndg pelo endereço, no navegador, *localhost:8889*
-
-# Thunderhub, node manager (Obrigatório).
-### Primeiro crie o arquivo de configuração do Nginx
-```bash
-sudo nano /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
-```
-Copie e cole dentro do arquivo:
-```bash
-server {
-  listen 4002 ssl;
-  error_page 497 =301 https://$host:$server_port$request_uri;
-
-  location / {
-    proxy_pass http://127.0.0.1:3000;
-  }
-}
-```
-Saia usando Ctrl + x, confirmando com *y* e saindo com *Enter*.
-
-### Faça a instalação via script
-
-Se não estiver, vá para o diretórios `miniboltfullauto`
-```bash
-cd /miniboltfullauto
-```
-Em seguida, para torar o script executável:
-```bash
-chmod +x thunderhub.sh
-```
-E para instalar:
-```bash
-./thunderhub.sh
-```
-Digite a senha de acesso do Thunderhub, evitando os seguintes símbolos (./$&*(#@!) e qualquer outro carácter especial que não letras e numeros.
-
-Após a instalação acesse via: ipdoservidor:4002 (Ex. 192.168.0.101:4002)
 
 ## ALERTAS:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
