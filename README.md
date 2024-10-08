@@ -342,7 +342,11 @@ Execute:
 ./bitcoind.sh
 ```
 
-Agora acesse: <nano -l +48 /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida:
+Agora abra com o comando:
+```bash
+nano -l +48 /home/admin/.bitcoin/bitcoin.conf
+```
+e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida:
 
 Execute:
 ```bash
