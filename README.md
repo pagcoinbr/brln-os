@@ -255,10 +255,12 @@ lncli getinfo
 
 Este script vai instalar o bos + Thunderhub + lndg, depois basta configura-los.
 
+Faça a primeira configuração manualmente, abrindo o arquivo:
+
 ```bash
 sudo nano /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
 ```
-Copie e cole dentro do arquivo:
+Copie abaixo e cole dentro dele:
 ```bash
 server {
   listen 4002 ssl;
@@ -269,7 +271,7 @@ server {
   }
 }
 ```
-Saia usando Ctrl + x, confirmando com *y* e saindo com *Enter
+Saia usando e salve Ctrl + x, confirmando com *y* e saindo com *Enter*.
 
 ```bash
 chmod +x tools.sh
@@ -278,7 +280,8 @@ Em seguinda:
 ```bash
 ./tools.sh
 ```
-Digite a senha de acesso do Thunderhub, *evitando os seguintes símbolos (./$&*(#@!)* e qualquer outro carácter especial que não letras e numeros.
+Digite a *senha de acesso do Thunderhub* e cole o *nome do seu Node Lightning*.
+
 *Em alguns momentos ele pode parecer que travou, mas tenha paciência.
 
 Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
