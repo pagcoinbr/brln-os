@@ -291,7 +291,7 @@ Ao final da instalação você precisa recarregar a sessão. Para isso, de o seg
 
 Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
 
-Agora vamos criar um **bot** (abreviação de "robot") para poder monitorar o movimento do node pelo Telegram.
+### Agora vamos criar um **bot** (abreviação de "robot") para poder monitorar o movimento do node pelo Telegram.
 
 Primeiramente acesse a loja do seu smartphone e instale o app do Telegram:
 - [Play store](https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1)
