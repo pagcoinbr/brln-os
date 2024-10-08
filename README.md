@@ -211,7 +211,7 @@ Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (ancho
 lines 1-21/21 (END)
 ```
 
-# Caso sua carteira ainda esteja "locked", você pode tentar verificar estas coisas, antes de precisar começar novamente:
+### Caso sua carteira ainda esteja "locked", você pode tentar verificar estas coisas, antes de precisar começar novamente:
 
 A primeira coisa a se fazer é esperar o lnd sincronizar, de o seguinte comando: 
 
