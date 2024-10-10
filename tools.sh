@@ -4,6 +4,7 @@
 # PGP: 9585 831e 06ac 0821
 # Ultima edição: 07/10/2024
 
+# Define as variáveis
 GITHUB_CRIPTOSHARK=https://github.com/cryptosharks131/lndg.git
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
@@ -17,7 +18,8 @@ sudo apt update && sudo apt full-upgrade -y
 curl -sL https://deb.nodesource.com/setup_21.x | sudo -E bash -
 sudo apt-get install nodejs -y
 
-# Configura npm para instalação global sem sudo
+# Inicio da instalação do bos (Balance os Satoshis)
+# Configura npm para instalação do bos global sem sudo
 mkdir -p ~/.npm-global
 npm config set prefix '~/.npm-global'
 
@@ -56,31 +58,54 @@ base64 -w0 /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon > /data/lnd/data/
 cert_base64=$(cat /data/lnd/tls.cert.base64)
 macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64)
 
-cat <<EOF > ~/.bos/$nome_do_seu_node/credentials.json
+bash -c "cat <<EOF > ~/.bos/$nome_do_seu_node/credentials.json
 {
   "cert": "$cert_base64",
   "macaroon": "$macaroon_base64",
   "socket": "localhost:10009"
 }
-EOF
+EOF"
 
-# Testa a instalação do bos
-bos utxos
+# Cria o arquivo bos-telegram.service em /etc/systemd/system/
+sudo bash -c "cat <<EOF > /etc/systemd/system/bos-telegram.service
+# Systemd unit for Bos-Telegram Bot
+# /etc/systemd/system/bos-telegram.service
+# Substitua as variáveis iniciadas com \$ com suas informações
+# Não esquece de apagar o \$
+
+[Unit]
+Description=bos-telegram
+Wants=lnd.service
+After=lnd.service
+
+[Service]
+ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect <seu_connect_code_aqui>
+User=admin
+Restart=always
+TimeoutSec=120
+RestartSec=30
+StandardOutput=null
+StandardError=journal
+Environment=BOS_DEFAULT_LND_PATH=/data/lnd
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+
+# Atualiza o daemon do systemd
+sudo systemctl daemon-reload
+
+# Inicia o serviço bos-telegram
+sudo systemctl start bos-telegram.service
+
+# Habilita o serviço para iniciar com o sistema
+sudo systemctl enable bos-telegram.service
 
 # Atualiza os pacotes do sistema
 sudo apt update && sudo apt full-upgrade -y
 
 # Criar link simbólico para a configuração
-if [ ! -f /etc/nginx/sites-enabled/thunderhub-reverse-proxy.conf ]; then
-  sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
-fi
-
-# Testar a configuração do NGINX
-sudo nginx -t
-if [ $? -ne 0 ]; then
-  echo "Erro na configuração do NGINX. Verifique o arquivo de configuração."
-  exit 1
-fi
+sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
 
 # Recarregar a configuração do NGINX
 sudo systemctl reload nginx
@@ -95,6 +120,7 @@ npm -v
 # Volta ao diretório home
 cd
 
+## Inicia a instalação do thunderhub
 # Importa a chave GPG do repositório do ThunderHub
 curl https://github.com/apotdevin.gpg | gpg --import
 
@@ -113,6 +139,18 @@ npm install
 # Executa a build do ThunderHub
 npm run build
 
+# Inicio da Instalação do Thunderhub
+sudo tee /etc/nginx/sites-available/thunderhub-reverse-proxy.conf > /dev/null  <<EOF
+server {
+  listen 4002 ssl;
+  error_page 497 =301 https://$host:$server_port$request_uri;
+
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+  }
+}
+EOF
+
 # Verifica a versão instalada no package.json
 head -n 3 /home/admin/thunderhub/package.json | grep version
 
@@ -127,7 +165,7 @@ sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .e
 # Criar um novo arquivo thubConfig.yaml
 
 # Criar ou sobrescrever o arquivo thubConfig.yaml com o conteúdo inicial
-cat <<EOL > thubConfig.yaml
+bash -c "cat <<EOF > thubConfig.yaml
 masterPassword: 'PASSWORD'
 accounts:
   - name: 'MiniBolt'
@@ -135,7 +173,7 @@ accounts:
     macaroonPath: '/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon'
     certificatePath: '/data/lnd/tls.cert'
     password: '[E] ThunderHub password'
-EOL
+EOF"
 
 # Usar sed para substituir a senha na linha 7
 # Procurar pela palavra "[E] ThunderHub password" e substituir pela senha fornecida
@@ -215,6 +253,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pip install whitenoise
 
+echo 'SUA SENHA DO LNDG ESTÁ SENDO CRIADA ISTO PODE DEMORAR ALGUNS MINUTOS
+###APÓS A INSTALAÇÃO VENHA E COPIE A SENHA PARA ACESSAR O LNDG###'
+
 # Executa o script de inicialização
 .venv/bin/python initialize.py --whitenoise
 
@@ -238,7 +279,7 @@ WantedBy=multi-user.target
 EOF
 
 # Cria o service para o frontend
-sudo tee /etc/systemd/system/lndg.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/lndg.service > /dev/null  <<EOF
 [Unit]
 Description=LNDG Django Server
 After=network.target
