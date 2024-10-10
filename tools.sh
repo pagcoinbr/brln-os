@@ -213,6 +213,7 @@ EOF'
 # Habilita o serviço para iniciar com o sistema e o inicia
 sudo systemctl enable thunderhub
 sudo systemctl start thunderhub
+sudo systemctl reload nginx
 
 # Verifica o status do serviço ThunderHub
 sudo systemctl status thunderhub
