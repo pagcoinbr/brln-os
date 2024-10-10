@@ -359,7 +359,7 @@ sudo systemctl status bitcoind
 
 Ao final, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando o comando:
 ```bash
-journal -fu bitcoind
+journalctl -fu bitcoind
 ```
 
 ## ALERTAS:
