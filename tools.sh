@@ -263,3 +263,8 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl restart lndg-controller.service
 sudo systemctl restart lndg.service
+
+# Instalação do lnbits por script
+wget https://raw.githubusercontent.com/lnbits/lnbits/main/lnbits.sh &&
+chmod +x lnbits.sh &&
+./lnbits.sh
