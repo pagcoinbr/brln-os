@@ -263,7 +263,3 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl restart lndg-controller.service
 sudo systemctl restart lndg.service
-
-# Mostra o status dos serviços
-sudo systemctl status lndg-controller.service
-sudo systemctl status lndg.service
