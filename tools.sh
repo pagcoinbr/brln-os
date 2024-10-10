@@ -306,7 +306,31 @@ sudo systemctl daemon-reload
 sudo systemctl restart lndg-controller.service
 sudo systemctl restart lndg.service
 
+# Cria o serviço do lnbits
+sudo bash -c 'cat <<EOF > /etc/systemd/system/lnbits.service
+[Unit]
+Description=LNbits Service
+After=network.target
+
+[Service]
+ExecStart=/home/admin/.local/bin/poetry run lnbits
+WorkingDirectory=/home/admin/lnbits
+User=admin
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+# Volta ao diretório home
+cd 
+
 # Instalação do lnbits por script
-wget https://raw.githubusercontent.com/lnbits/lnbits/main/lnbits.sh &&
+wget https://raw.githubusercontent.com/lnbits/lnbits/main/lnbits.sh && curl -sSL sudo apt install python3-poetry &&
 chmod +x lnbits.sh &&
 ./lnbits.sh
+
+# Inicia o serviço do lnbits
+sudo systemctl enable lnbits.service
+sudo systemctl start lnbits.service
+
