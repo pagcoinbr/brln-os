@@ -253,36 +253,20 @@ lncli getinfo
 ```
 # Instalando Noderunners Tools.
 
-Este script vai instalar o bos + Thunderhub + lndg, depois basta configura-los.
-
-Faça a primeira configuração manualmente, abrindo o arquivo:
-
-```bash
-sudo nano /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
-```
-Copie abaixo e cole dentro dele:
-```bash
-server {
-  listen 4002 ssl;
-  error_page 497 =301 https://$host:$server_port$request_uri;
-
-  location / {
-    proxy_pass http://127.0.0.1:3000;
-  }
-}
-```
-Saia usando e salve Ctrl + x, confirmando com *y* e saindo com *Enter*.
+Este script vai instalar o bos + Thunderhub + lndg + lnbits, depois basta configura-los.
 
 ```bash
 chmod +x tools.sh
 ```
+
 Em seguinda:
 ```bash
 ./tools.sh
 ```
+
 Digite a *senha de acesso do Thunderhub* e cole o *nome do seu Node Lightning*.
 
-*Em alguns momentos ele pode parecer que travou, mas tenha paciência.
+*A instalação do whitenoise pode ser demorada, portanto, tenha paciência.
 
 Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
 ```bash
@@ -312,16 +296,29 @@ Cole o token fornecido pelo BotFathter do Telegram e pressione ` Enter `, volte 
 
 Ele vai te responder algo como: `🤖 Connection code is: ########`
 
-Cole o Connection code no terminal e pressione enter novamente, se tudo estiver correto você vai receber uma resposta `🤖 Connected to <nome do seu node>` e você já pode seguir par ao próximo passo.
+Cole o Connection code no terminal e pressione enter novamente, se tudo estiver correto você vai receber uma resposta `🤖 Connected to <nome do seu node>`, agora pressione *Ctrl + C* para sair e você já pode seguir para o próximo passo.
 
-De o seguinte comando, para aplicar as permissões necessárias ao programa:
+Acesse o arquivo:
 ```bash
-chmod +x bos-autostart.sh
+sudo nano -l +12 /etc/systemd/system/bos-telegram.service
 ```
 
-Agora execute o programa com o seguinte comando:
+Vá até o fim da linha e apague *<seu_connect_code_aqui>* e coloque no lugar o **Connection code** obtido no seu bot do telegram. Saia salvando com *Ctrl + X* e pressione *y* para confirmar.
+
+Agora de o seguintes comandos, para reiniciar o serviço:
 ```bash
-./bos-autostart.sh
+systemctl daemon-reload
+```
+
+Escolha a opção 1 e digite a senha do seu usuário linux.
+
+```bash
+sudo systemctl restart bos-telegram.service
+```
+
+Agora verifique se o serviço está funcionando, com o seguinte comando:
+```bash
+sudo systemctl status bos-telegram.service
 ```
 
 Cole o `Connection code` quando solicitado. Ao final, basta pressionar `Ctrl + C` para voltar para o terminal.
