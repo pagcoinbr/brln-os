@@ -103,14 +103,7 @@ sudo systemctl enable bos-telegram.service
 # Atualiza os pacotes do sistema
 sudo apt update && sudo apt full-upgrade -y
 
-# Criar link simbólico para a configuração
-sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
 
-# Recarregar a configuração do NGINX
-sudo systemctl reload nginx
-
-# Configurar o firewall para permitir tráfego na porta 4002
-sudo ufw allow 4002/tcp comment 'allow ThunderHub SSL from anywhere'
 
 # Verifica se os pré-requisitos estão instalados
 node -v
@@ -138,7 +131,7 @@ npm install
 # Executa a build do ThunderHub
 npm run build
 
-# Inicio da Instalação do Thunderhub
+# Configura o nginx
 sudo tee /etc/nginx/sites-available/thunderhub-reverse-proxy.conf > /dev/null  <<EOF
 server {
   listen 4002 ssl;
@@ -149,9 +142,10 @@ server {
   }
 }
 EOF
-
-# Verifica a versão instalada no package.json
-head -n 3 /home/admin/thunderhub/package.json | grep version
+sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo ufw allow 4002/tcp comment 'allow ThunderHub SSL from anywhere'
 
 # Copiar o modelo do ficheiro de configuração
 cp .env .env.local
