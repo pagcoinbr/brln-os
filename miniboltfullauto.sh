@@ -3,6 +3,9 @@
 # PGP: 9585 831e 06ac 0821
 # Ultima edição: 26/09/2024
 
+# Atualiza a lista de pacotes e faz upgrade
+sudo apt update && sudo apt full-upgrade -y
+
 # Cria o diretório /data
 sudo mkdir /data
 
