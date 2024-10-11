@@ -299,11 +299,6 @@ TimeoutSec=300
 WantedBy=multi-user.target
 EOF
 
-# Recarrega e reinicia os serviços
-sudo systemctl daemon-reload
-sudo systemctl restart lndg-controller.service
-sudo systemctl restart lndg.service
-
 # Cria o serviço do lnbits
 sudo bash -c 'cat <<EOF > /etc/systemd/system/lnbits.service
 [Unit]
@@ -320,12 +315,19 @@ Restart=always
 WantedBy=multi-user.target
 EOF'
 
+# Recarrega e reinicia os serviços
+sudo systemctl daemon-reload
+sudo systemctl enable lndg-controller.service
+sudo systemctl start lndg-controller.service
+sudo systemctl enable lndg.service
+sudo systemctl start lndg.service
+
 # Volta ao diretório home
 cd 
 
-# Instalação do lnbits por script
+## Instalação do lnbits por script
+# instala o poetry
 sudo apt install python3-poetry &&
-#!/bin/bash
 
 # Check install has not already run
 if [ ! -d lnbits/data ]; then
