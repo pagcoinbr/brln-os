@@ -340,6 +340,8 @@ Execute:
 ./bitcoind.sh
 ```
 
+Copie a seguinte linha do terminal em um bloco de notas: rpcauth=minibolt:5s4d2d6w2s6d4s5s...
+
 Agora abra com o comando:
 ```bash
 nano -l +48 /home/admin/.bitcoin/bitcoin.conf
@@ -348,7 +350,7 @@ e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2
 
 Execute:
 ```bash
-sudo systemctl restart bitcoin
+sudo systemctl restart bitcoind
 ```
 Execute:
 ```bash
