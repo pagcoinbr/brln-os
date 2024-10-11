@@ -215,6 +215,22 @@ sudo systemctl start thunderhub
 sudo systemctl reload nginx
 
 ## Inicio da intalação do LNDG
+# Configura o nginx no lndg
+sudo tee /etc/nginx/sites-available/lndg-reverse-proxy.conf > /dev/null  <<EOF
+server {
+  listen 8889 ssl;
+  error_page 497 =301 https://$host:$server_port$request_uri;
+
+  location / {
+    proxy_pass http://127.0.0.1:8889;
+  }
+}
+EOF
+sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo ufw allow 8889/tcp comment 'allow lndg SSL from anywhere'
+
 # Volta à home
 cd
 git clone https://github.com/cryptosharks131/lndg.git
@@ -296,6 +312,22 @@ sudo systemctl start lndg.service
 
 # Volta ao diretório home
 cd 
+
+# Configura o nginx do lnbits
+sudo tee /etc/nginx/sites-available/lnbits-reverse-proxy.conf > /dev/null  <<EOF
+server {
+  listen 5000 ssl;
+  error_page 497 =301 https://$host:$server_port$request_uri;
+
+  location / {
+    proxy_pass http://127.0.0.1:5000;
+  }
+}
+EOF
+sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo ufw allow 5000/tcp comment 'allow lnbits SSL from anywhere'
 
 ## Instalação do lnbits por script
 # instala o poetry
