@@ -256,7 +256,7 @@ echo 'SUA SENHA DO LNDG ESTÁ SENDO CRIADA ISTO PODE DEMORAR ALGUNS MINUTOS
 ###APÓS A INSTALAÇÃO VENHA E COPIE A SENHA PARA ACESSAR O LNDG###'
 
 # Executa o script de inicialização e captura a senha gerada
-SENHA_LNDG=$(.venv/bin/python initialize.py --whitenoise)
+.venv/bin/python initialize.py --whitenoise
 
 # Cria o service para o backend
 sudo tee /etc/systemd/system/lndg-controller.service > /dev/null <<EOF
@@ -324,7 +324,7 @@ EOF'
 cd 
 
 # Instalação do lnbits por script
-wget https://raw.githubusercontent.com/lnbits/lnbits/main/lnbits.sh && sudo apt install python3-poetry &&
+git clone https://github.com/REDACTED_USERbtc/lnbits.sh.git && sudo apt install python3-poetry &&
 chmod +x lnbits.sh &&
 ./lnbits.sh
 
