@@ -5,7 +5,6 @@
 # Ultima edição: 07/10/2024
 
 # Define as variáveis
-GITHUB_CRIPTOSHARK=https://github.com/cryptosharks131/lndg.git
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 read -sp "Digite a senha para ThunderHub: " senha
@@ -216,40 +215,20 @@ sudo systemctl start thunderhub
 sudo systemctl reload nginx
 
 ## Inicio da intalação do LNDG
-# Atualiza os pacotes do sistema
-sudo apt update && sudo apt full-upgrade -y
-
-# Verifica se o git está instalado, caso contrário, instala
-if ! command -v git &> /dev/null
-then
-    echo "Git não encontrado, instalando..."
-    sudo apt install git -y
-fi
-
 # Volta à home
 cd
 
 # Clona o repositório, se ainda não estiver clonado
-if [ ! -d "$LNDG_DIR" ]; then
-    git clone $GITHUB_CRIPTOSHARK && cd lndg
-else
-    echo "O repositório já foi clonado."
-    cd lndg
-fi
+git clone https://github.com/cryptosharks131/lndg.git 
 
 # Instala o virtualenv (ou python3-venv) se não estiver instalado
-if ! command -v virtualenv &> /dev/null
-then
-    echo "Instalando virtualenv..."
-    sudo apt install virtualenv -y
-fi
+sudo apt install virtualenv -y
 
 # Configura o ambiente virtual
 virtualenv -p python3 .venv
 
 # Ativa o ambiente virtual e instala as dependências
-source .venv/bin/activate
-pip install -r requirements.txt
+.venv/bin/pip install -r requirements.txt
 echo 'SUA SENHA DO LNDG ESTÁ SENDO CRIADA ISTO PODE DEMORAR ALGUNS MINUTOS
 ###APÓS A INSTALAÇÃO VENHA E COPIE A SENHA PARA ACESSAR O LNDG###'
 
@@ -380,4 +359,4 @@ export HOST=0.0.0.0
 # Inicia o serviço do lnbits
 sudo systemctl enable lnbits.service
 sudo systemctl start lnbits.service
-echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal, Thunderhub (porta 4002), lndg (porta 8889) e o lnbits (porta 5000)"
+echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal, Thunderhub (porta 4002), lndg (porta 8889) e o lnbits (localhost:5000)"
