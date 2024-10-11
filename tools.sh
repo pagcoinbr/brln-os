@@ -324,11 +324,60 @@ EOF'
 cd 
 
 # Instalação do lnbits por script
-git clone https://github.com/REDACTED_USERbtc/lnbits.sh.git && sudo apt install python3-poetry &&
-chmod +x lnbits.sh &&
-./lnbits.sh
+sudo apt install python3-poetry &&
+#!/bin/bash
+
+# Check install has not already run
+if [ ! -d lnbits/data ]; then
+
+  # Update package list and install prerequisites non-interactively
+  sudo apt update -y
+  sudo apt install -y software-properties-common
+  
+  # Add the deadsnakes PPA repository non-interactively
+  sudo add-apt-repository -y ppa:deadsnakes/ppa
+  
+  # Install Python 3.9 and distutils non-interactively
+  sudo apt install -y python3.9 python3.9-distutils
+
+  # Install Poetry
+  curl -sSL https://install.python-poetry.org | python3.9 -
+
+  # Add Poetry to PATH for the current session
+  export PATH="/home/$USER/.local/bin:$PATH"
+
+  if [ ! -d lnbits/wallets ]; then
+    # Clone the LNbits repository
+    git clone https://github.com/lnbits/lnbits.git
+    if [ $? -ne 0 ]; then
+      echo "Failed to clone the repository ... FAIL"
+      exit 1
+    fi
+    # Ensure we are in the lnbits directory
+    cd lnbits || { echo "Failed to cd into lnbits ... FAIL"; exit 1; }
+  fi
+
+  git checkout main
+  # Make data folder
+  mkdir data
+
+  # Copy the .env.example to .env
+  cp .env.example .env
+
+elif [ ! -d lnbits/wallets ]; then
+  # cd into lnbits
+  cd lnbits || { echo "Failed to cd into lnbits ... FAIL"; exit 1; }
+fi
+
+# Install the dependencies using Poetry
+poetry env use python3.9
+poetry install --only main
+
+# Set environment variables for LNbits
+export LNBITS_ADMIN_UI=true
+export HOST=0.0.0.0
 
 # Inicia o serviço do lnbits
 sudo systemctl enable lnbits.service
 sudo systemctl start lnbits.service
-echo "Sua senha de primeiro acesso ao lndg é $SENHA_LNDG"
+echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis, Thunderhub (porta 4002), lndg (porta 8889) e o lnbits (porta 5000)"
