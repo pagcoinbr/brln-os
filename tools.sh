@@ -326,7 +326,7 @@ EOF'
 cd 
 
 # Instalação do lnbits por script
-wget https://raw.githubusercontent.com/lnbits/lnbits/main/lnbits.sh && curl -sSL sudo apt install python3-poetry &&
+wget https://raw.githubusercontent.com/lnbits/lnbits/main/lnbits.sh && sudo apt install python3-poetry &&
 chmod +x lnbits.sh &&
 ./lnbits.sh
 
