@@ -252,13 +252,11 @@ virtualenv -p python3 .venv
 # Ativa o ambiente virtual e instala as dependências
 source .venv/bin/activate
 pip install -r requirements.txt
-SENHA_LNDG=(pip install whitenoise)
-
 echo 'SUA SENHA DO LNDG ESTÁ SENDO CRIADA ISTO PODE DEMORAR ALGUNS MINUTOS
 ###APÓS A INSTALAÇÃO VENHA E COPIE A SENHA PARA ACESSAR O LNDG###'
 
-# Executa o script de inicialização
-.venv/bin/python initialize.py --whitenoise
+# Executa o script de inicialização e captura a senha gerada
+SENHA_LNDG=$(.venv/bin/python initialize.py --whitenoise)
 
 # Cria o service para o backend
 sudo tee /etc/systemd/system/lndg-controller.service > /dev/null <<EOF
@@ -333,5 +331,4 @@ chmod +x lnbits.sh &&
 # Inicia o serviço do lnbits
 sudo systemctl enable lnbits.service
 sudo systemctl start lnbits.service
-Echo "Sua senha de primeiro acesso ao lndg é $SENHA_LNDG"
-
+echo "Sua senha de primeiro acesso ao lndg é $SENHA_LNDG"
