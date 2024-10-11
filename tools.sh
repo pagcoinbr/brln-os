@@ -218,6 +218,7 @@ sudo systemctl reload nginx
 # Verifica o status do serviço ThunderHub
 sudo systemctl status thunderhub
 
+## Inicio da intalação do LNDG
 # Atualiza os pacotes do sistema
 sudo apt update && sudo apt full-upgrade -y
 
