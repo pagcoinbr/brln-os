@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sudo apt update && sudo apt full-upgrade -y
+
 # Navega para o diretório temporário
 cd /tmp
 
