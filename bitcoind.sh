@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Atualiza a lista de pacotes e faz upgrade
 sudo apt update && sudo apt full-upgrade -y
 
 # Navega para o diretório temporário
