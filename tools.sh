@@ -217,18 +217,13 @@ sudo systemctl reload nginx
 ## Inicio da intalação do LNDG
 # Volta à home
 cd
-
-# Clona o repositório, se ainda não estiver clonado
-git clone https://github.com/cryptosharks131/lndg.git 
-
-# Instala o virtualenv (ou python3-venv) se não estiver instalado
-sudo apt install virtualenv -y
-
-# Configura o ambiente virtual
+git clone https://github.com/cryptosharks131/lndg.git
+cd lndg
+sudo apt install virtualenv
 virtualenv -p python3 .venv
-
-# Ativa o ambiente virtual e instala as dependências
 .venv/bin/pip install -r requirements.txt
+.venv/bin/pip install whitenoise
+.venv/bin/python initialize.py -wn
 echo 'SUA SENHA DO LNDG ESTÁ SENDO CRIADA ISTO PODE DEMORAR ALGUNS MINUTOS
 ###APÓS A INSTALAÇÃO VENHA E COPIE A SENHA PARA ACESSAR O LNDG###'
 
