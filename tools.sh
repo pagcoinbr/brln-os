@@ -103,8 +103,6 @@ sudo systemctl enable bos-telegram.service
 # Atualiza os pacotes do sistema
 sudo apt update && sudo apt full-upgrade -y
 
-
-
 # Verifica se os pré-requisitos estão instalados
 node -v
 npm -v
