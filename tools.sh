@@ -208,11 +208,9 @@ sudo systemctl reload nginx
 # Configura o nginx no lndg
 sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lndg-reverse-proxy.conf
 server {
-  listen 8889 ssl;
-  error_page 497 =301 https://$host:$server_port$request_uri;
-
+  listen 4001;
   location / {
-    proxy_pass http://127.0.0.1:8889;
+    proxy_pass http://localhost:8889;
   }
 }
 EOF"
@@ -307,11 +305,9 @@ cd
 # Configura o nginx do lnbits
 sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lnbits-reverse-proxy.conf
 server {
-  listen 5000 ssl;
-  error_page 497 =301 https://$host:$server_port$request_uri;
-
+  listen 4003;
   location / {
-    proxy_pass http://127.0.0.1:5000;
+    proxy_pass http://localhost:5000;
   }
 }
 EOF"
