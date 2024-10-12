@@ -216,7 +216,7 @@ EOF"
 sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
-sudo ufw allow 8889/tcp comment 'allow lndg SSL from anywhere'
+sudo ufw allow 4001/tcp comment 'allow lndg SSL from anywhere'
 
 # Volta à home
 cd
@@ -313,7 +313,7 @@ EOF"
 sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
-sudo ufw allow 5000/tcp comment 'allow lnbits SSL from anywhere'
+sudo ufw allow 4003/tcp comment 'allow lnbits SSL from anywhere'
 
 ## Instalação do lnbits por script
 # instala o poetry
