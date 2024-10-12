@@ -322,9 +322,9 @@ sudo systemctl status bos-telegram.service
 ```
 
 - Pronto o **bos** está pronto para ser usado no Telegram,
-* você também pode acessar seu **lndg** pelo endereço, no navegador, `localhost:8889`
-- O **Thunderhub** por `ipdoservidor:4002` (Ex. 192.168.0.101:4002)
-* E o **lnbits** pode ser acessado pelo IP `127.0.0.1:5000`
+* você também pode acessar seu **lndg** pelo endereço, no navegador, `seuiplocal:4001`
+- O **Thunderhub** por `seuiplocal:4002` (Ex. 192.168.0.101:4002)
+* E o **lnbits** pode ser acessado pelo IP `seuiplocal:4003`
 
 ## Instalando e sincronizando o seu proprio bitcoin core (opcional)
 
