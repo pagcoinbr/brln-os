@@ -1,4 +1,4 @@
-#!/bin/bash
+e#!/bin/bash
 # Script criado por PagcoinBTC
 # PGP: 9585 831e 06ac 0821
 # Ultima edição: 26/09/2024
@@ -262,6 +262,13 @@ bitcoind.rpcuser=$bitcoind_rpcuser
 bitcoind.rpcpass=$bitcoind_rpcpass
 bitcoind.zmqpubrawblock=$bitcoind_zmqpubrawblock
 bitcoind.zmqpubrawtx=$bitcoind_zmqpubrawtx
+
+#[Bitcoind]
+#bitcoind.rpchost=127.0.0.1:8332
+#bitcoind.rpcuser=admin
+#bitcoind.rpcpass=admin
+#bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
+#bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 
 [protocol]
 protocol.wumbo-channels=true
