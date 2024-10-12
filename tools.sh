@@ -203,20 +203,8 @@ sudo systemctl start thunderhub
 sudo systemctl reload nginx
 
 ## Inicio da intalação do LNDG
-# Configura o nginx no lndg
-sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lndg-reverse-proxy.conf
-server {
-  listen 4001;
-  location / {
-    proxy_pass http://localhost:8889;
-  }
-}
-EOF"
-
-sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-sudo ufw allow 4001/tcp comment 'allow lndg SSL from anywhere'
+# Configura o firewall no lndg
+sudo ufw allow 8889/tcp comment 'allow lndg SSL from anywhere'
 
 # Volta à home
 cd
