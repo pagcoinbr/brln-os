@@ -1,4 +1,4 @@
-e#!/bin/bash
+#!/bin/bash
 # Script criado por PagcoinBTC
 # PGP: 9585 831e 06ac 0821
 # Ultima edição: 26/09/2024
