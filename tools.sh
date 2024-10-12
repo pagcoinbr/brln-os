@@ -307,7 +307,7 @@ cd
 # Configura o nginx do lnbits
 sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lnbits-reverse-proxy.conf
 server {
-  listen 5001 ssl;
+  listen 5000 ssl;
   error_page 497 =301 https://$host:$server_port$request_uri;
 
   location / {
