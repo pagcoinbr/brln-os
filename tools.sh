@@ -132,9 +132,7 @@ npm run build
 # Configura o nginx
 sudo tee /etc/nginx/sites-available/thunderhub-reverse-proxy.conf > /dev/null  <<EOF
 server {
-  listen 4002 ssl;
-  error_page 497 =301 https://$host:$server_port$request_uri;
-
+  listen 4002;
   location / {
     proxy_pass http://127.0.0.1:3000;
   }
