@@ -153,8 +153,6 @@ cp .env .env.local
 sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .env.local
 
 # Cria a configuração da conta
-# Criar um novo arquivo thubConfig.yaml
-
 # Criar ou sobrescrever o arquivo thubConfig.yaml com o conteúdo inicial
 bash -c "cat <<EOF > thubConfig.yaml
 masterPassword: 'PASSWORD'
@@ -208,7 +206,7 @@ sudo systemctl reload nginx
 
 ## Inicio da intalação do LNDG
 # Configura o nginx no lndg
-sudo tee /etc/nginx/sites-available/lndg-reverse-proxy.conf > /dev/null  <<EOF
+sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lndg-reverse-proxy.conf
 server {
   listen 8889 ssl;
   error_page 497 =301 https://$host:$server_port$request_uri;
@@ -217,7 +215,8 @@ server {
     proxy_pass http://127.0.0.1:8889;
   }
 }
-EOF
+EOF"
+
 sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
@@ -306,16 +305,17 @@ sudo systemctl start lndg.service
 cd 
 
 # Configura o nginx do lnbits
-sudo tee /etc/nginx/sites-available/lnbits-reverse-proxy.conf > /dev/null  <<EOF
+sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lnbits-reverse-proxy.conf
 server {
-  listen 5000 ssl;
+  listen 5001 ssl;
   error_page 497 =301 https://$host:$server_port$request_uri;
 
   location / {
     proxy_pass http://127.0.0.1:5000;
   }
 }
-EOF
+EOF"
+
 sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
