@@ -360,4 +360,4 @@ export HOST=0.0.0.0
 # Inicia o serviço do lnbits
 sudo systemctl enable lnbits.service
 sudo systemctl start lnbits.service
-echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal, Thunderhub (porta 4002), lndg (porta 4001) e o lnbits (porta 4003)"
+echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal, Thunderhub (porta 4002), lndg (porta 8889) e o lnbits (porta 4003)"
