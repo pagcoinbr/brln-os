@@ -173,6 +173,7 @@ ls -la
 # Instala o PostgreSQL
 sudo apt update && sudo apt full-upgrade
 sudo install -d /usr/share/postgresql-common/pgdg
+sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
 sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 sudo apt update && sudo apt install postgresql postgresql-contrib
 
@@ -188,9 +189,6 @@ else
   sudo systemctl start postgresql
   sudo systemctl enable postgresql
 fi
-
-# Cria o usuário admin no PostgreSQL
-sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';"
 
 # Exibe aviso ao usuário sobre a senha
 echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
@@ -319,15 +317,15 @@ watchtower.active=true
 [routing]
 routing.strictgraphpruning=true
 
-[db]
+[bolt]
 ## Database
-db.backend=postgres
+# Set the next value to false to disable auto-compact DB
+# and fast boot and comment the next line
+db.bolt.auto-compact=true
+# Uncomment to do DB compact at every LND reboot (default: 168h)
+#db.bolt.auto-compact-min-age=0h
 
-[postgres]
-db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
-db.postgres.timeout=0
-
-## High fee environment setting (Optional)
+## High fee environment (Optional)
 # (default: CONSERVATIVE) Uncomment the next 2 lines
 #[Bitcoind]
 #bitcoind.estimatemode=ECONOMICAL
