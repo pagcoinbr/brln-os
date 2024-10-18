@@ -4,11 +4,21 @@
 # PGP: 9585 831e 06ac 0821
 # Ultima edição: 26/09/2024
 
+# Define as variáveis da URL do repositório do Tor
+TOR_LINIK=https://deb.torproject.org/torproject.org
+TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
+# Define a variável de versão do LND
+LND_VERSION=0.18.3
+
 # Atualiza a lista de pacotes e faz upgrade
 sudo apt update && sudo apt full-upgrade -y
 
 # Cria o diretório /data
-sudo mkdir /data
+if [[ -d /data ]]; then
+  echo "/data já existe."
+else
+  sudo mkdir /data
+fi
 
 # Muda a propriedade do diretório /data para o usuário admin
 sudo chown admin:admin /data
@@ -86,11 +96,11 @@ sudo apt update && sudo apt full-upgrade -y
 sudo apt install -y apt-transport-https
 
 # Cria o arquivo de repositório do Tor e adiciona o conteúdo
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org jammy main
-deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
+deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
 
 # Baixa e instala a chave GPG do repositório Tor
-sudo su -c "wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
+sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
 
 # Atualiza a lista de pacotes e instala o Tor e a chave do Tor Project
 sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
@@ -102,46 +112,45 @@ sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
 sudo systemctl reload tor
 
 # Verifica se o Tor está ouvindo nas portas corretas
-TOR_PORTS=$(sudo ss -tulpn | grep LISTEN | grep tor)
-
-if echo "$TOR_PORTS" | grep -q "127.0.0.1:9050" && echo "$TOR_PORTS" | grep -q "127.0.0.1:9051"; then
-    echo "Tor está configurado corretamente e ouvindo nas portas 9050 e 9051."
-    # Adiciona o repositório e instala o i2pd
-    wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -
-    sudo apt update && sudo apt install -y i2pd
-    echo "i2pd instalado com sucesso."
+if sudo ss -tulpn | grep -q "127.0.0.1:9050" && sudo ss -tulpn | grep -q "127.0.0.1:9051"; then
+  echo "Tor está configurado corretamente e ouvindo nas portas 9050 e 9051."
+  # Adiciona o repositório e instala o i2pd
+  wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -
+  sudo apt update && sudo apt install -y i2pd
+  echo "i2pd instalado com sucesso."
 else
-    echo "Erro: Tor não está ouvindo nas portas corretas."
+  echo "Erro: Tor não está ouvindo nas portas corretas."
 fi
 
 # Navega para o diretório /tmp
-cd /tmp
-
-# Define a variável de ambiente de versão temporária
-VERSION=0.18.3
+if [[ ! -d /tmp ]]; then
+  mkdir /tmp
+  else
+  echo "Diretório /tmp já existe."
+fi
 
 # Baixa os arquivos necessários
-wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/lnd-linux-amd64-v$VERSION-beta.tar.gz
-wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/manifest-v$VERSION-beta.txt.ots
-wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/manifest-v$VERSION-beta.txt
-wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/manifest-roasbeef-v$VERSION-beta.sig.ots
-wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/manifest-roasbeef-v$VERSION-beta.sig
+wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
+wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
+wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
+wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
 
 # Verifica o checksum dos arquivos
-sha256sum --check manifest-v$VERSION-beta.txt --ignore-missing
+sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
 
 # Importa a chave GPG do roasbeef e verifica a assinatura
 curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
-gpg --verify manifest-roasbeef-v$VERSION-beta.sig manifest-v$VERSION-beta.txt
+gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
 
 # Extrai os binários
-tar -xzf lnd-linux-amd64-v$VERSION-beta.tar.gz
+tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
 
 # Instala os binários
-sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$VERSION-beta/lnd lnd-linux-amd64-v$VERSION-beta/lncli
+sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
 
 # Limpa os arquivos temporários
-sudo rm -r lnd-linux-amd64-v$VERSION-beta lnd-linux-amd64-v$VERSION-beta.tar.gz manifest-roasbeef-v$VERSION-beta.sig manifest-roasbeef-v$VERSION-beta.sig.ots manifest-v$VERSION-beta.txt manifest-v$VERSION-beta.txt.ots
+sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
 
 sudo usermod -aG debian-tor admin
 sudo chmod 640 /run/tor/control.authcookie
@@ -161,12 +170,34 @@ ln -s /data/bitcoin /home/lnd/.bitcoin
 # Lista os arquivos e diretórios com detalhes
 ls -la
 
+# Instala o PostgreSQL
+sudo apt update && sudo apt full-upgrade
+sudo install -d /usr/share/postgresql-common/pgdg
+sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+sudo apt update && sudo apt install postgresql postgresql-contrib
+
+# Cria o diretório /data/postgresql
+if [[ -d /data/postgresdb ]]; then
+  echo "/data/postgresdb já existe."
+else
+  sudo mkdir -p /data/postgresdb/17
+  sudo chown -R admin:admin /data/postgresdb
+  sudo chmod -R 700 /data/postgresdb
+  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
+  sudo sed -i "s|^#data_directory =.*|data_directory = '/data/postgresdb/17'|" /etc/postgresql/17/main/postgresql.conf
+  sudo systemctl start postgresql
+  sudo systemctl enable postgresql
+fi
+
+# Cria o usuário admin no PostgreSQL
+sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';"
+
 # Exibe aviso ao usuário sobre a senha
 echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
 
 # Solicita a senha ao usuário
 while true; do
-    read -s -p "Escolha uma senha para a carteira Lightning: " password
+    read -p "Escolha uma senha para a carteira Lightning: " password
     echo
     if [ ${#password} -ge 8 ]; then
         break
@@ -183,12 +214,8 @@ chmod 600 /data/lnd/password.txt
 
 # Solicita ao usuário as variáveis necessárias
 read -p "Digite o alias: " alias
-read -p "Digite o bitcoind.rpchost: " bitcoind_rpchost
 read -p "Digite o bitcoind.rpcuser: " bitcoind_rpcuser
 read -s -p "Digite o bitcoind.rpcpass: " bitcoind_rpcpass
-echo
-read -p "Digite o bitcoind.zmqpubrawblock: " bitcoind_zmqpubrawblock
-read -p "Digite o bitcoind.zmqpubrawtx: " bitcoind_zmqpubrawtx
 
 # Cria o arquivo de configuração lnd.conf
 cat << EOF > /data/lnd/lnd.conf
@@ -258,16 +285,17 @@ bitcoin.node=bitcoind
 #bitcoin.timelockdelta=144
 
 [Bitcoind]
-bitcoind.rpchost=$bitcoind_rpchost
+bitcoind.rpchost=REDACTED_HOST:8085
 bitcoind.rpcuser=$bitcoind_rpcuser
 bitcoind.rpcpass=$bitcoind_rpcpass
-bitcoind.zmqpubrawblock=$bitcoind_zmqpubrawblock
-bitcoind.zmqpubrawtx=$bitcoind_zmqpubrawtx
+bitcoind.zmqpubrawblock=tcp://REDACTED_HOST:28332
+bitcoind.zmqpubrawtx=tcp://REDACTED_HOST:28333
+
 
 #[Bitcoind]
 #bitcoind.rpchost=127.0.0.1:8332
-#bitcoind.rpcuser=admin
-#bitcoind.rpcpass=admin
+#bitcoind.rpcuser=bitcoin
+#bitcoind.rpcpass=bitcoin
 #bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
 #bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 
@@ -291,15 +319,15 @@ watchtower.active=true
 [routing]
 routing.strictgraphpruning=true
 
-[bolt]
+[db]
 ## Database
-# Set the next value to false to disable auto-compact DB
-# and fast boot and comment the next line
-db.bolt.auto-compact=true
-# Uncomment to do DB compact at every LND reboot (default: 168h)
-#db.bolt.auto-compact-min-age=0h
+db.backend=postgres
 
-## High fee environment (Optional)
+[postgres]
+db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
+db.postgres.timeout=0
+
+## High fee environment setting (Optional)
 # (default: CONSERVATIVE) Uncomment the next 2 lines
 #[Bitcoind]
 #bitcoind.estimatemode=ECONOMICAL
