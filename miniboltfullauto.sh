@@ -9,43 +9,30 @@ TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 # Define a variável de versão do LND
 LND_VERSION=0.18.3
+MAIN_DIR=/data
+LN_DDIR=/data/lnd
 
-# Atualiza a lista de pacotes e faz upgrade
-sudo apt update && sudo apt full-upgrade -y
+update_and_upgrade() {
+  sudo apt update && sudo apt full-upgrade -y
+}
 
-# Cria o diretório /data
-if [[ -d /data ]]; then
-  echo "/data já existe."
-else
-  sudo mkdir /data
-fi
+create_main_dir() {
+  [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
+  sudo chown admin:admin $MAIN_DIR
+}
 
-# Muda a propriedade do diretório /data para o usuário admin
-sudo chown admin:admin /data
+configure_ufw() {
+  sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
+  sudo ufw logging off
+  sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
+  sudo ufw enable
+}
 
-# Modifica o arquivo /etc/default/ufw para desativar o IPv6
-sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
-
-# Desativa o log do ufw
-sudo ufw logging off
-
-# Permite conexões SSH na porta 22 de qualquer lugar
-sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
-
-# Habilita o ufw
-sudo ufw enable
-
-# Instala o nginx-full
-sudo apt install nginx-full
-
-# Gera o certificado autoassinado e a chave privada
-sudo openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/CN=localhost" -days 3650
-
-# Faz backup do arquivo de configuração original do Nginx
-sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
-
-# Cria um novo arquivo de configuração do Nginx
-sudo bash -c 'cat << EOF > /etc/nginx/nginx.conf
+install_nginx() {
+  sudo apt install nginx-full
+  sudo openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/CN=localhost" -days 3650
+  sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
+  sudo bash -c 'cat << EOF > /etc/nginx/nginx.conf
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -75,148 +62,76 @@ stream {
   include /etc/nginx/streams-enabled/*.conf;
 }
 EOF'
+  sudo mkdir -p /etc/nginx/streams-available /etc/nginx/streams-enabled
+  sudo rm /etc/nginx/sites-available/default
+  sudo rm /etc/nginx/sites-enabled/default
+  sudo nginx -t
+  sudo systemctl reload nginx
+}
 
-# Cria os diretórios streams-available e streams-enabled
-sudo mkdir -p /etc/nginx/streams-available /etc/nginx/streams-enabled
-
-# Remove os arquivos de configuração padrão dos sites disponíveis e habilitados
-sudo rm /etc/nginx/sites-available/default
-sudo rm /etc/nginx/sites-enabled/default
-
-# Testa a configuração do Nginx
-sudo nginx -t
-
-# Recarrega o Nginx
-sudo systemctl reload nginx
-
-# Atualiza a lista de pacotes e faz upgrade
-sudo apt update && sudo apt full-upgrade -y
-
-# Instala apt-transport-https
-sudo apt install -y apt-transport-https
-
-# Cria o arquivo de repositório do Tor e adiciona o conteúdo
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
+install_tor() {
+  sudo apt install -y apt-transport-https
+  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
 deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
-
-# Baixa e instala a chave GPG do repositório Tor
-sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
-
-# Atualiza a lista de pacotes e instala o Tor e a chave do Tor Project
-sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
-
-# Edita o arquivo de configuração do Tor para descomentar a linha ControlPort 9051
-sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
-
-# Recarrega o serviço do Tor
-sudo systemctl reload tor
-
-# Verifica se o Tor está ouvindo nas portas corretas
-if sudo ss -tulpn | grep -q "127.0.0.1:9050" && sudo ss -tulpn | grep -q "127.0.0.1:9051"; then
-  echo "Tor está configurado corretamente e ouvindo nas portas 9050 e 9051."
-  # Adiciona o repositório e instala o i2pd
-  wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -
-  sudo apt update && sudo apt install -y i2pd
-  echo "i2pd instalado com sucesso."
-else
-  echo "Erro: Tor não está ouvindo nas portas corretas."
-fi
-
-# Navega para o diretório /tmp
-if [[ ! -d /tmp ]]; then
-  mkdir /tmp
+  sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
+  sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
+  sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
+  sudo systemctl reload tor
+  if sudo ss -tulpn | grep -q "127.0.0.1:9050" && sudo ss -tulpn | grep -q "127.0.0.1:9051"; then
+    echo "Tor está configurado corretamente e ouvindo nas portas 9050 e 9051."
+    wget -q -O - https://repo.i2pd.xyz/.help/add_repo | sudo bash -s -
+    sudo apt update && sudo apt install -y i2pd
+    echo "i2pd instalado com sucesso."
   else
-  echo "Diretório /tmp já existe."
-fi
+    echo "Erro: Tor não está ouvindo nas portas corretas."
+  fi
+}
 
-# Baixa os arquivos necessários
-wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
-wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
-wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
-wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
+download_lnd() {
+  if [[ ! -d /tmp ]]; then
+    mkdir /tmp
+  else
+    echo "Diretório /tmp já existe."
+  fi
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
+  sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
+  curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
+  gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
+  tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
+  sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+}
 
-# Verifica o checksum dos arquivos
-sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
-
-# Importa a chave GPG do roasbeef e verifica a assinatura
-curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
-gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
-
-# Extrai os binários
-tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-
-# Instala os binários
-sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
-
-# Limpa os arquivos temporários
-sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
-
-sudo usermod -aG debian-tor admin
-sudo chmod 640 /run/tor/control.authcookie
-sudo chmod 750 /run/tor
-
-# Adiciona o usuário lnd aos grupos bitcoin e debian-tor
-sudo usermod -a -G debian-tor admin
-
-# Cria o diretório /data/lnd e define as permissões
-sudo mkdir -p /data/lnd
-sudo chown -R admin:admin /data/lnd
-
-# Cria links simbólicos
-ln -s /data/lnd /home/lnd/.lnd
-ln -s /data/bitcoin /home/lnd/.bitcoin
-
-# Lista os arquivos e diretórios com detalhes
-ls -la
-
-# Instala o PostgreSQL
-sudo apt update && sudo apt full-upgrade
-sudo install -d /usr/share/postgresql-common/pgdg
-sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
-sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-sudo apt update && sudo apt install postgresql postgresql-contrib
-
-# Cria o diretório /data/postgresql
-if [[ -d /data/postgresdb ]]; then
-  echo "/data/postgresdb já existe."
-else
-  sudo mkdir -p /data/postgresdb/17
-  sudo chown -R admin:admin /data/postgresdb
-  sudo chmod -R 700 /data/postgresdb
-  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
-  sudo sed -i "s|^#data_directory =.*|data_directory = '/data/postgresdb/17'|" /etc/postgresql/17/main/postgresql.conf
-  sudo systemctl start postgresql
-  sudo systemctl enable postgresql
-fi
-
-# Exibe aviso ao usuário sobre a senha
-echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
-
-# Solicita a senha ao usuário
-while true; do
+configure_lnd() {
+  sudo usermod -aG debian-tor admin
+  sudo chmod 640 /run/tor/control.authcookie
+  sudo chmod 750 /run/tor
+  sudo usermod -a -G debian-tor admin
+  sudo mkdir -p $LN_DDIR
+  sudo chown -R admin:admin $LN_DDIR
+  ln -s $LN_DDIR /home/lnd/.lnd
+  ln -s $MAIN_DIR/bitcoin /home/lnd/.bitcoin
+  ls -la
+  echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
+  while true; do
     read -p "Escolha uma senha para a carteira Lightning: " password
     echo
     if [ ${#password} -ge 8 ]; then
-        break
+      break
     else
-        echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
+      echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
-done
-
-# Salva a senha no arquivo password.txt
-echo "$password" > /data/lnd/password.txt
-
-# Define permissões adequadas para o arquivo de senha
-chmod 600 /data/lnd/password.txt
-
-# Solicita ao usuário as variáveis necessárias
-read -p "Digite o alias: " alias
-read -p "Digite o bitcoind.rpcuser: " bitcoind_rpcuser
-read -s -p "Digite o bitcoind.rpcpass: " bitcoind_rpcpass
-
-# Cria o arquivo de configuração lnd.conf
-cat << EOF > /data/lnd/lnd.conf
+  done
+  echo "$password" > $LN_DDIR/password.txt
+  chmod 600 $LN_DDIR/password.txt
+  read -p "Digite o alias: " alias
+  read -p "Digite o bitcoind.rpcuser: " bitcoind_rpcuser
+  read -s -p "Digite o bitcoind.rpcpass: " bitcoind_rpcpass
+  cat << EOF > $LN_DDIR/lnd.conf
 # MiniBolt: lnd configuration
 # /data/lnd/lnd.conf
 
@@ -335,17 +250,15 @@ tor.active=true
 tor.v3=true
 tor.streamisolation=true
 EOF
+  echo "Configuração concluída com sucesso!"
+  ln -s $LN_DDIR /home/admin/.lnd
+  sudo chmod -R g+X $LN_DDIR
+  sudo chmod 640 /run/tor/control.authcookie
+  sudo chmod 750 /run/tor
+}
 
-echo "Configuração concluída com sucesso!"
-
-# Allow user "admin" to work with LND
-ln -s /data/lnd /home/admin/.lnd
-sudo chmod -R g+X /data/lnd
-sudo chmod 640 /run/tor/control.authcookie
-sudo chmod 750 /run/tor
-
-# Cria o arquivo de serviço systemd para o lnd
-sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
+create_lnd_service() {
+  sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
 # MiniBolt: systemd unit for lnd
 # /etc/systemd/system/lnd.service
 
@@ -382,15 +295,76 @@ MemoryDenyWriteExecute=true
 [Install]
 WantedBy=multi-user.target
 EOF'
+  ln -s $LN_DDIR /home/admin/.lnd
+  sudo chmod -R g+X $LN_DDIR
+  sudo chmod 640 /run/tor/control.authcookie
+  sudo chmod 750 /run/tor
+  sudo systemctl enable lnd
+  sudo systemctl start lnd
+  echo "Execute o comando: lncli --tlscertpath /data/lnd/tls.cert.tmp create, Digite a senha 2x para confirmar e pressione 'n' e 'enter', para criar uma nova carteira."
+}
 
-# Allow user "admin" to work with LND
-ln -s /data/lnd /home/admin/.lnd
-sudo chmod -R g+X /data/lnd
-sudo chmod 640 /run/tor/control.authcookie
-sudo chmod 750 /run/tor
+main() {
+  update_and_upgrade
+  create_main_dir
+  configure_ufw
+  install_nginx
+  install_tor
+  download_lnd
+  configure_lnd
+  create_lnd_service
+}
 
-# Habilita e inicia o serviço lnd
-sudo systemctl enable lnd
-sudo systemctl start lnd
+menu() {
+  echo "Escolha uma opção:"
+  echo "1) Instalação completa do MiniBolt"
+  echo "2) Atualizar e atualizar pacotes"
+  echo "3) Criar diretório principal"
+  echo "4) Configurar UFW"
+  echo "5) Instalar Nginx"
+  echo "6) Instalar Tor"
+  echo "7) Baixar LND"
+  echo "8) Configurar LND"
+  echo "9) Criar serviço LND"
+  echo "0) Sair"
+  read -p "Opção: " option
 
-echo "Execute o comando: lncli --tlscertpath /data/lnd/tls.cert.tmp create, Digite a senha 2x para confirmar e pressione "n" e "enter", para criar uma nova carteira."
+  case $option in
+    1)
+      main
+      ;;
+    2)
+      update_and_upgrade
+      ;;
+    3)
+      create_main_dir
+      ;;
+    4)
+      configure_ufw
+      ;;
+    5)
+      install_nginx
+      ;;
+    6)
+      install_tor
+      ;;
+    7)
+      download_lnd
+      ;;
+    8)
+      configure_lnd
+      ;;
+    9)
+      create_lnd_service
+      ;;
+    0)
+      echo "Saindo..."
+      exit 0
+      ;;
+    *)
+      echo "Opção inválida!"
+      ;;
+  esac
+}
+
+menu
