@@ -65,7 +65,7 @@ Você receberá uma mensagem de erro de `not found`, ou algo semelhante.
 
 E depois de o seguinte comando, para copiar o repositório:
 ```bash
-git clone https://github.com/REDACTED_USERbtc/miniboltfullauto.git
+git clone https://github.com/REDACTED_USERbtc/brlnfullauto.git
 ```
 
 Agora acesse o diretório copiado, com o seguinte comando:
