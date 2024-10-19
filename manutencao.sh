@@ -118,8 +118,8 @@ lnbits_unninstall () {
 pacotes_do_sistema () {
   sudo apt update && sudo apt upgrade -y
   sudo systemctl reload tor
-  if sudo ss -tulpn | grep -q "
   echo "Os pacotes do sistema foram atualizados! Ex: Tor + i2pd + PostgreSQL"
+}
 
 menu() {
   echo "Escolha uma opção:"
@@ -135,6 +135,7 @@ menu() {
   echo "9) Desinstalar LNbits"
   echo "0) Sair"
   read -p "Opção: " option
+  }
 
   case $option in
     1)
