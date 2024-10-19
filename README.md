@@ -360,6 +360,19 @@ Ao final, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando 
 ```bash
 journalctl -fu bitcoind
 ```
+---
+###Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
+
+Na primeira vez que executar:
+```bash
+chmod +x manutencao.sh
+```
+e depois
+```bash
+./manutencao.sh
+```
+
+Escolha a opção que quiser atualiar e aguarde.
 
 ## ALERTAS:
 Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
