@@ -304,7 +304,7 @@ EOF'
   echo "Execute o comando:" 
   echo "lncli --tlscertpath /data/lnd/tls.cert.tmp create"
   echo "Depois, digite a senha 2x para confirmar e pressione 'n' para criar uma nova cateira, digite o "password" e pressione *enter* para criar uma nova carteira."
-}
+  }
 
 main() {
   update_and_upgrade
@@ -315,12 +315,8 @@ main() {
   download_lnd
   configure_lnd
   create_lnd_service
-} &> /dev/null & echo "Instalando LND... Por favor, aguarde."
-for timer in {10..1}; do echo -ne "Isso pode demorar... $timer\033[0K\r"; sleep 1; done; echo
-  wait
-  echo "LND atualizado!"
+  echo "LND Instalado!"
 }
-
 
 menu() {
   echo "Escolha uma opção:"
