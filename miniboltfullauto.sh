@@ -318,13 +318,12 @@ main() {
 menu() {
   echo "Escolha uma opção:"
   echo "1) Instalação completa do MiniBolt"
-  echo "2) Atualizar e atualizar pacotes"
-  echo "3) Criar diretório principal"
-  echo "4) Configurar UFW"
-  echo "5) Instalar Nginx"
-  echo "6) Instalar Tor"
+  echo "2) Atualizar pacotes"
+  echo "3) Instalar e configurar UFW"
+  echo "5) Instalar e configurar Nginx"
+  echo "6) Instalar e configurar Tor"
   echo "7) Baixar LND"
-  echo "8) Configurar LND"
+  echo "8) Configurar lnf.conf"
   echo "9) Criar serviço LND"
   echo "0) Sair"
   read -p "Opção: " option
