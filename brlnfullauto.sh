@@ -317,7 +317,7 @@ main() {
 
 menu() {
   echo "Escolha uma opção:"
-  echo "1) Instalação completa do MiniBolt"
+  echo "1) Instalação completa do BRLNBolt"
   echo "2) Configurar rede"
   echo "3) Baixa e instala o lnd"
   echo "0) Sair"
