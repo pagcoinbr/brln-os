@@ -63,7 +63,8 @@ head -n 3 /home/thunderhub/thunderhub/package.json | grep version
 }
 
 lndg_update () {
-  cd /lndg
+  cd
+  cd /home/admin/lndg
   sudo systemctl stop lndg.service
   sudo systemctl stop lndg-controller.service
   git pull
