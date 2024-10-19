@@ -71,7 +71,8 @@ pacotes_do_sistema () {
 menu() {
   echo "Escolha uma opção:"
   echo "1) Atualizar o LND"
-  echo "2) Atualizar o Bitcoind"
+  echo "2) Atualizar o Bitcoind (!ATENÇÃO!)"
+  echo "Antes de atualizar o Bitcoind, leia as notas de atualização"
   echo "3) Atualizar o Thunderhub"
   echo "4) Atualizar os pacotes do sistema"
   echo "0) Sair"
