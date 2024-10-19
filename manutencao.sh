@@ -59,8 +59,8 @@ thunderhub_update () {
   wait
   sudo systemctl start thunderhub
   echo "Thunderhub atualizado!"
-  head -n 3 /home/thunderhub/thunderhub/package.json | grep version
-{
+head -n 3 /home/thunderhub/thunderhub/package.json | grep version
+}
 
 lndg_update () {
   cd /lndg
@@ -71,8 +71,8 @@ lndg_update () {
   sudo systemctl daemon-reload
   sudo systemctl start lndg.service
   sudo systemctl start lndg-controller.service
-  echo "LNDg atualizado!"
-  {
+    echo "LNDg atualizado!"
+  }
 
 lnbits_update () {
   cd /lnbits
@@ -82,8 +82,8 @@ lnbits_update () {
   poetry install --only main
   sudo systemctl daemon-reload
   sudo systemctl start lnbits
-  echo "LNbits atualizado!"
-  {
+    echo "LNbits atualizado!"
+  }
 
 thunderhub_uninstall () {
   sudo systemctl stop thunderhub
@@ -135,7 +135,6 @@ menu() {
   echo "9) Desinstalar LNbits"
   echo "0) Sair"
   read -p "Opção: " option
-  }
 
   case $option in
     1)
@@ -177,5 +176,4 @@ menu() {
 
 lnd --version
 bitcoin-cli --version
-head -n 3 /home/thunderhub/thunderhub/package.json | grep version
 menu
