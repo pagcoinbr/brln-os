@@ -313,31 +313,22 @@ main() {
   download_lnd
   configure_lnd
   create_lnd_service
+} &> /dev/null & echo "Instalando LND... Por favor, aguarde."
+for timer in {10..1}; do echo -ne "Isso pode demorar... $timer\033[0K\r"; sleep 1; done; echo
+  wait
+  echo "LND atualizado!"
 }
+
 
 menu() {
   echo "Escolha uma opção:"
-  echo "1) Instalação completa do BRLNBolt"
-  echo "2) Configurar rede"
-  echo "3) Baixa e instala o lnd"
+  echo "1) Instalação automática do BRLNBolt"
   echo "0) Sair"
   read -p "Opção: " option
 
   case $option in
     1)
       main
-      ;;
-    2)
-      update_and_upgrade
-      create_main_dir
-      configure_ufw
-      install_nginx
-      install_tor
-      ;;
-    3)
-      download_lnd
-      configure_lnd
-      create_lnd_service
       ;;
     0)
       echo "Saindo..."
