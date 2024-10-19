@@ -62,6 +62,29 @@ thunderhub_update () {
   head -n 3 /home/thunderhub/thunderhub/package.json | grep version
 {
 
+lndg_update () {
+  cd /lndg
+  sudo systemctl stop lndg.service
+  sudo systemctl stop lndg-controller.service
+  git pull
+  .venv/bin/python manage.py migrate
+  sudo systemctl daemon-reload
+  sudo systemctl start lndg.service
+  sudo systemctl start lndg-controller.service
+  echo "LNDg atualizado!"
+  {
+
+lnbits_update () {
+  cd /lnbits
+  sudo systemctl stop lnbits
+  git pull
+  poetry self update
+  poetry install --only main
+  sudo systemctl daemon-reload
+  sudo systemctl start lnbits
+  echo "LNbits atualizado!"
+  {
+
 thunderhub_uninstall () {
   sudo systemctl stop thunderhub
   sudo systemctl disable thunderhub
@@ -101,13 +124,15 @@ pacotes_do_sistema () {
 menu() {
   echo "Escolha uma opção:"
   echo "1) Atualizar o LND"
-  echo "2) Atualizar o Bitcoind (!ATENÇÃO!)"
+  echo "2) Atualizar o Bitcoind ATENÇÃO"
   echo "Antes de atualizar o Bitcoind, leia as notas de atualização"
   echo "3) Atualizar o Thunderhub"
-  echo "4) Atualizar os pacotes do sistema"
-  echo "5) Desinstalar Thunderhub"
-  echo "6) Desinstalar LNDg"
-  echo "7) Desinstalar LNbits"
+  echo "4) Atualizar o LNDg"
+  echo "5) Atualizar o LNbits"
+  echo "6) Atualizar os pacotes do sistema"
+  echo "7) Desinstalar Thunderhub"
+  echo "8) Desinstalar LNDg"
+  echo "9) Desinstalar LNbits"
   echo "0) Sair"
   read -p "Opção: " option
 
@@ -122,15 +147,21 @@ menu() {
       thunderhub_update
       ;;
     4)
+      lndg_update
+      ;;
+    5)
+      lnbits_update
+      ;;
+    6)
       pacotes_do_sistema
       ;;
-    5)Desinstalar Thunderhub
+    7)
       thunderhub_uninstall
-      ;; 
-    6)Desinstalar LNDg
+      ;;
+    8)
       lndg_unninstall
       ;;
-    7)Desinstalar LNbits
+    9)
       lnbits_unninstall
       ;;
     0)
