@@ -25,7 +25,7 @@ configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
   sudo ufw logging off
   sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
-  sudo ufw enable
+  sudo ufw --force enable
 }
 
 install_nginx() {
