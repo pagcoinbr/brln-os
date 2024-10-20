@@ -232,13 +232,13 @@ watchtower.active=true
 [routing]
 routing.strictgraphpruning=true
 
-[db]
+[bolt]
 ## Database
-db.backend=postgres
-
-[postgres]
-db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
-db.postgres.timeout=0
+# Set the next value to false to disable auto-compact DB
+# and fast boot and comment the next line
+db.bolt.auto-compact=true
+# Uncomment to do DB compact at every LND reboot (default: 168h)
+#db.bolt.auto-compact-min-age=0h
 
 ## High fee environment (Optional)
 # (default: CONSERVATIVE) Uncomment the next 2 lines
