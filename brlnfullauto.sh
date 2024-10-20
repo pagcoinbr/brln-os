@@ -87,6 +87,22 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   fi
 }
 
+install_postgres() {
+  sudo apt update && sudo apt full-upgrade -y
+  sudo install -d /usr/share/postgresql-common/pgdg
+  sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+  sudo apt update && sudo apt install -y postgresql postgresql-contrib
+  psql -V
+  sudo mkdir -p /data/postgresdb/17
+  sudo chown -R $USER:$USER /data/postgresdb
+  sudo chmod -R 700 /data/postgresdb
+  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
+  sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+  sudo sed -i '42s|.*|data_directory = '\''/data/postgresdb/17'\''|' /etc/postgresql/17/main/postgresql.conf
+  sudo systemctl restart postgresql
+  sudo systemctl enable postgresql
+}
+
 download_lnd() {
   if [[ ! -d /tmp ]]; then
     mkdir /tmp
