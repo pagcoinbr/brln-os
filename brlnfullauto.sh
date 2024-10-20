@@ -29,7 +29,7 @@ configure_ufw() {
 }
 
 install_nginx() {
-  sudo apt install nginx-full
+  sudo apt install -y nginx-full
   sudo openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/CN=localhost" -days 3650
   sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
   sudo bash -c 'cat << EOF > /etc/nginx/nginx.conf
