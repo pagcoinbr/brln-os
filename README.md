@@ -343,7 +343,7 @@ Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se v
 Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
 
 ---
-#####Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
+##### Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
 **A lightining não é brinquedo, use com responsabilidade.**
 Boas transações!
 
