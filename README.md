@@ -292,6 +292,36 @@ Ao final, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando 
 ```bash
 journalctl -fu bitcoind
 ```
+
+## Instalando o TailScale VPN - (Opcional)
+
+Para instalar o **TailScale VPN**, execute o seguinte comando no terminal:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+Após a instalação, inicie o TailScale com o comando:
+
+```bash
+sudo tailscale up
+```
+
+O terminal fornecerá um link. Esse link deve ser transcrito, letra por letra, no navegador de outro dispositivo, preferencialmente no computador que será utilizado para realizar o acesso SSH ao servidor.
+
+Crie uma conta na tailscale e adicione o dispositivo.
+
+Em seguida baixe o tailscale pelo link (https://tailscale.com/download/windows) e faça o login com a sua conta recém criada.
+Pronto, agora você já pode fazer o acesso via ssh no servidor, digitando no Terminal do Windows o seguinte comando:
+
+```bash
+ssh temp@ip.do.tailscale
+```
+
+Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando Windows, deve estar na sua barra de icones próximo ao relógio.
+
+Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
+
 ---
 ###Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
 
