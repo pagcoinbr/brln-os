@@ -72,7 +72,7 @@ lndg_update () {
   }
 
 lnbits_update () {
-  cd /lnbits
+  cd /home/admin/lnbits
   sudo systemctl stop lnbits
   git pull
   poetry self update
