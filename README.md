@@ -9,6 +9,7 @@ Este tutorial aborda a instalação rápida de um nó Lightning utilizando a con
 
 **Passos para instalação:**
 Baixar a imagem do Ubuntu Server: Acesse o site oficial (https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente à última versão do Ubuntu Server.
+
 Criar um pendrive de boot: Utilize o Balena Etcher, Rufus ou outro software de sua preferência para gravar a imagem ISO no pendrive.
 
 **Instalação do sistema:**
