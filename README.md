@@ -89,17 +89,10 @@ Em seguida, execute o programa com o seguinte comando:
 ```bash
 ./brlnfullauto.sh
 ```
-**Observe que você deve responder `  y  ` sempre que solicitado.** 
 
-***
+As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 25Gb inicialmente. Saiba mais sobre o projeto em: https://services.br-ln.com/
 
-**Atenção, no registro das credenciais é onde acontecem a maior parte dos erros, copie os dados ou escreva-os com atenção!!!**
-
-***
-
-As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 50 Gb na pior das hipoteses. Saiba mais sobre o projeto em: https://services.br-ln.com/
-
-Caso você tenha errado alguma credencial voce pode apertar `Ctrl + C` e começar novamente ou corrigi-la após a instalação, editando o arquivo de configuração com o seguinte comando:
+Caso você tenha errado alguma credencial voce pode corrigi-la após a instalação editando o arquivo de configuração com o seguinte comando:
 ```bash
 nano /data/lnd/lnd.conf
 ```
