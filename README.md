@@ -184,7 +184,7 @@ Agora você já deve estar pronto para ver as informações do seu node com o se
  ```bash
 lncli getinfo
 ```
-## Instalando Noderunners Tools.
+## Instalando Noderunner ToolBox.
 
 Este script vai instalar o bos + Thunderhub + lndg + lnbits, depois basta configura-los.
 
