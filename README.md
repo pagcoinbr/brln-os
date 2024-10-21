@@ -351,7 +351,7 @@ Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailsc
 Em caso de problemas técnicos, envie uma mensagem para suporte.brln@gmail.com
 
 ### Bibliografia:
-1- https://github.com/cryptosharks131/lndg - Cryptosharks131 - lndg
-2- https://github.com/lnbits/lnbits/tree/main - Lnbits
-3- https://minibolt.minibolt.info/ - O grande poço de conhecimento.
-4- https://plebnet.wiki/wiki/Main_Page - Uma pena ter saído do ar.
+###### 1- https://github.com/cryptosharks131/lndg - Cryptosharks131 - lndg
+###### 2- https://github.com/lnbits/lnbits/tree/main - Lnbits
+###### 3- https://minibolt.minibolt.info/ - O grande poço de conhecimento.
+###### 4- https://plebnet.wiki/wiki/Main_Page - Uma pena ter saído do ar.
