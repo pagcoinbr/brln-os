@@ -19,7 +19,7 @@ Quando solicitado a inserir as credenciais de login, use as seguintes informaç�
 
 Nome: `temp`
 
-Nome do servidor: `minibolt`
+Nome do servidor: `brlnbolt`
 
 Usuário: `temp`
 
