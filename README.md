@@ -382,3 +382,9 @@ Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida
 Boas transações!
 
 Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
+
+### Bibliografia:
+1- https://github.com/cryptosharks131/lndg - Cryptosharks131 - lndg
+2- https://github.com/lnbits/lnbits/tree/main - Lnbits
+3- https://minibolt.minibolt.info/ - O grande poço de conhecimento.
+4- https://plebnet.wiki/wiki/Main_Page - Uma pena ter saído do ar.
