@@ -210,7 +210,7 @@ Ao final da instalação você precisa recarregar a sessão. Para isso, de o seg
 
 Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
 
-### Agora vamos criar um **bot** (abreviação de "robot") para poder monitorar o movimento do node pelo Telegram.
+### Agora vamos criar um **bot** para poder monitorar o node pelo Telegram.
 
 Primeiramente acesse a loja do seu smartphone e instale o app do Telegram:
 - [Play store](https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1)
@@ -220,14 +220,14 @@ Agora acesse a ferramenta de criação de bots do Telegram no seguinte endereço
 ```bash
 /newbot
 ```
-e siga os passos para a criação de um bot no Telegram, após o término copie o ´ token ´ entregue, ele será necessária para o próximo passo.
+e siga os passos para a criação de um bot no Telegram, após o término copie a APItoken entregue, ele será necessária para o próximo passo.
 
 Agora retorne ao terminal do seu computador e de o comando:
 ```bash
 bos telegram
 ```
 
-Cole o token fornecido pelo BotFathter do Telegram e pressione ` Enter `, volte para o bot recém criado no telegram e envie o seguinte comando: ´ /start `.
+Cole a APItoken fornecido pelo BotFathter do Telegram, no terminal e pressione ` Enter `, volte para o bot recém criado no telegram e envie o seguinte comando: `/start ` e depois `connect`.
 
 Ele vai te responder algo como: `🤖 Connection code is: ########`
 
@@ -255,6 +255,8 @@ Agora verifique se o serviço está funcionando, com o seguinte comando:
 ```bash
 sudo systemctl status bos-telegram.service
 ```
+
+Use **Ctrl + C** para sair.
 
 - Pronto o **bos** está pronto para ser usado no Telegram,
 * você também pode acessar seu **lndg** pelo endereço, no navegador, `seuiplocal:4001`
