@@ -70,7 +70,7 @@ git clone https://github.com/REDACTED_USERbtc/brlnfullauto.git
 
 Agora acesse o diretório copiado, com o seguinte comando:
 ```bash
-cd miniboltfullauto
+cd brlnfullauto
 ```
 
 
@@ -80,11 +80,11 @@ Até agora fizemos a parte mais dificil que não pode ser automatizada por scrip
 
 Execute o seguinte comando para aplicar as permições necessárias ao programa:
 ```bash
-chmod +x miniboltfullauto.sh
+chmod +x brlnfullauto.sh
 ```
 Em seguida, execute o programa com o seguinte comando:
 ```bash
-./miniboltfullauto.sh
+./brlnfullauto.sh
 ```
 **Observe que você deve responder `  y  ` sempre que solicitado.** 
 
