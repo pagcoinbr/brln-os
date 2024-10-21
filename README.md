@@ -4,7 +4,7 @@ Instale um node lightning standalone em menos de uma hora. Tome as rédeas da re
 <img src="https://i.postimg.cc/G3PgL0vj/DALL-E-2024-10-20-23-13-33-A-realistic-black-armored-medieval-knight-riding-an-electrified-compute.webp" alt="Cavaleiro medieval" width="300"/>
 
 Este tutorial aborda a instalação rápida de um nó Lightning utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial (https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. Porém caso você já tenha, este script pode ser utilizado para criação do seu node lnd com um bitcoin core na rede local ou mesmo na máquina local, de graça!
-
+---
 ## Instalando o Ubuntu Server - (Obrigatório)
 
 **Passos para instalação:**
@@ -27,8 +27,7 @@ Nome do servidor: `brlnbolt`
 Usuário: `temp`
 
 Senha: Escolha uma senha de sua preferência.
-
-
+---
 **Finalização da instalação:**
 
 Após concluir a instalação, realize o reboot e remova o pendrive.
@@ -64,9 +63,15 @@ Uma vez logado, de o seguinte comando:
 ```bash
 sudo userdel -rf temp
 ```
-Você receberá uma mensagem de erro de `not found`, ou algo semelhante.
+Você receberá uma mensagem de erro de `not found`, ou algo semelhante, se tudo correr bem.
 
-E depois de o seguinte comando, para copiar o repositório:
+---
+
+## Instalação do Lightning Network Daemon (lnd) - (Obrigatório)
+
+Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
+
+Primeiro de o seguinte comando, para clonar o repositório:
 ```bash
 git clone https://github.com/REDACTED_USERbtc/brlnfullauto.git
 ```
@@ -75,11 +80,6 @@ Agora acesse o diretório copiado, com o seguinte comando:
 ```bash
 cd brlnfullauto
 ```
-
-
-## Instalação do Lightning Network Daemon (lnd) - (Obrigatório)
-
-Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
 Execute o seguinte comando para aplicar as permições necessárias ao programa:
 ```bash
