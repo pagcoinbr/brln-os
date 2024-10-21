@@ -46,20 +46,16 @@ wait
 }
 
 thunderhub_update () {
-  cd /tmp
   read -p "Deseja atualizar o Thunderhub para qual versão? (Ex: 0.13.0) " THUB_VERSION
   sudo systemctl stop thunderhub
+  cd
   cd thunderhub
-  {
   git pull https://github.com/apotdevin/thunderhub.git v$THUB_VERSION
   npm install
   npm run build
-  } &> /dev/null &
-  echo "Atualizando Thunderhub... Por favor, aguarde."
-  wait
   sudo systemctl start thunderhub
   echo "Thunderhub atualizado!"
-head -n 3 /home/thunderhub/thunderhub/package.json | grep version
+head -n 3 /home/admin/thunderhub/package.json | grep version
 }
 
 lndg_update () {
