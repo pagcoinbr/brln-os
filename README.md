@@ -343,10 +343,9 @@ Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se v
 Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
 
 ---
-##### Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
-**A lightining não é brinquedo, use com responsabilidade.**
-Boas transações!
-
+###### Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
+###### **A lightining não é brinquedo, use com responsabilidade.**
+###### Boas transações!
 ###### Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
 ---
 Em caso de problemas técnicos, envie uma mensagem para suporte.brln@gmail.com
