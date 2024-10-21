@@ -29,13 +29,13 @@ Usuário: `temp`
 Senha: Escolha uma senha de sua preferência.
 
 ---
+## Preparando o sistema - (Obrigatório)
+
 **Finalização da instalação:**
 
 Após concluir a instalação, realize o reboot e remova o pendrive.
 Caso uma mensagem de erro seja exibida no boot, pressione `Enter` para continuar.
 Agora, sem o pendrive conectado, o sistema deve inicializar corretamente.
-
-## Preparando o sistema - (Obrigatório)
 
 Agora vamos criar o usuário admin, para isso, de o seguinte comando: 
 
