@@ -225,12 +225,12 @@ lncli getinfo
 Este script vai instalar o bos + Thunderhub + lndg + lnbits, depois basta configura-los.
 
 ```bash
-chmod +x tools.sh
+chmod +x toolbox.sh
 ```
 
 Em seguinda:
 ```bash
-./tools.sh
+./toolbox.sh
 ```
 
 ## Instalando o TailScale VPN - (Opcional)
