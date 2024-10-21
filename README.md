@@ -27,6 +27,7 @@ Nome do servidor: `brlnbolt`
 Usuário: `temp`
 
 Senha: Escolha uma senha de sua preferência.
+
 ---
 **Finalização da instalação:**
 
