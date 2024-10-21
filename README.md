@@ -257,6 +257,19 @@ sudo systemctl status bos-telegram.service
 - O **Thunderhub** por `seuiplocal:4002` (Ex. 192.168.0.101:4002)
 * E o **lnbits** pode ser acessado pelo IP `seuiplocal:4003`
 
+###Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
+
+Na primeira vez que executar:
+```bash
+chmod +x manutencao.sh
+```
+e depois
+```bash
+./manutencao.sh
+```
+
+Escolha a opção que quiser atualiar ou desinstalar e aguarde a operação ser completa.
+
 ## Instalando e sincronizando o seu proprio bitcoin core (opcional)
 
 Com o próximo script vamos instalar o bitcoin core, o coração de toda nossa operação. *Fique atento aos comandos a serem dados a final do script, eles são necessários para o sucesso da intalação correta.*
@@ -321,20 +334,6 @@ ssh temp@ip.do.tailscale
 Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando Windows, deve estar na sua barra de icones próximo ao relógio.
 
 Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
-
----
-###Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
-
-Na primeira vez que executar:
-```bash
-chmod +x manutencao.sh
-```
-e depois
-```bash
-./manutencao.sh
-```
-
-Escolha a opção que quiser atualiar e aguarde.
 
 ---
 #####Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
