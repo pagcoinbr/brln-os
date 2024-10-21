@@ -77,7 +77,7 @@ cd brlnfullauto
 ```
 
 
-# Instalação do Lightning Network Daemon (lnd) - (Obrigatório)
+## Instalação do Lightning Network Daemon (lnd) - (Obrigatório)
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
@@ -101,7 +101,7 @@ Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no ar
 sudo systemctl restart lnd
 ```
 ---
-##No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
+## No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
 
 # Configurando a carteira - (Obrigatório)
 
