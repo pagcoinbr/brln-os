@@ -336,8 +336,8 @@ e depois
 
 Escolha a opção que quiser atualiar e aguarde.
 
-## ALERTAS:
-Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
+---
+#####Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
 **A lightining não é brinquedo, use com responsabilidade.**
 Boas transações!
 
