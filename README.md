@@ -192,12 +192,13 @@ Este script vai instalar o bos + Thunderhub + lndg + lnbits, depois basta config
 ```bash
 chmod +x toolbox.sh
 ```
-[![toolbox.png](https://i.postimg.cc/qqR3C0f6/toolbox.png)](https://postimg.cc/k604k0g7)
 
 Em seguinda:
 ```bash
 ./toolbox.sh
 ```
+
+[![toolbox.png](https://i.postimg.cc/qqR3C0f6/toolbox.png)](https://postimg.cc/k604k0g7)
 
 escolha a opção numero 1, digite a *senha de acesso do Thunderhub* e cole o *nome do seu Node Lightning*.
 
