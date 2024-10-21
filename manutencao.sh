@@ -118,6 +118,15 @@ pacotes_do_sistema () {
   echo "Os pacotes do sistema foram atualizados! Ex: Tor + i2pd + PostgreSQL"
 }
 
+os_update () {
+  echo "Atualizando o sistema operacional..."
+  sudo apt update && sudo apt upgrade -y
+  sudo apt dist-upgrade -y
+  sudo apt autoremove -y
+  sudo apt clean
+  echo "Sistema operacional atualizado!"
+}
+
 menu() {
   echo "Escolha uma opção:"
   echo "1) Atualizar o LND"
@@ -130,6 +139,7 @@ menu() {
   echo "7) Desinstalar Thunderhub"
   echo "8) Desinstalar LNDg"
   echo "9) Desinstalar LNbits"
+  echo "10) Atualizar o sistema operacional"
   echo "0) Sair"
   read -p "Opção: " option
 
@@ -160,6 +170,9 @@ menu() {
       ;;
     9)
       lnbits_unninstall
+      ;;
+    10)
+      os_update
       ;;
     0)
       echo "Saindo..."
