@@ -267,6 +267,7 @@ e depois
 ```bash
 ./manutencao.sh
 ```
+<img src="https://i.postimg.cc/Wpn8FbZz/manutencao.png" alt="manutencao" width="800"/>
 
 Escolha a opção que quiser atualiar ou desinstalar e aguarde a operação ser completa.
 
