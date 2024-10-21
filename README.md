@@ -89,16 +89,19 @@ Em seguida, execute o programa com o seguinte comando:
 ```bash
 ./brlnfullauto.sh
 ```
-
+---
 As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 25Gb inicialmente. Saiba mais sobre o projeto em: https://services.br-ln.com/
 
 Caso você tenha errado alguma credencial voce pode corrigi-la após a instalação editando o arquivo de configuração com o seguinte comando:
 ```bash
-nano /data/lnd/lnd.conf
+nano -l +66 /data/lnd/lnd.conf
 ```
-Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar.
-
-**No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.**
+Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar, e reinicie o serviço:
+```bash
+sudo systemctl restart lnd
+```
+---
+##No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
 
 # Configurando a carteira - (Obrigatório)
 
@@ -106,7 +109,7 @@ Agora, de o seguinte comando:
 ```bash
 lncli --tlscertpath /data/lnd/tls.cert.tmp create
 ```
-Digite duas vezes a mesma senha escolhida no script anterior, para confirmar e pressione `  n  ` e `  enter  `.
+Digite duas vezes a mesma senha escolhida no script anterior, para confirmar e pressione `n`  para criar uma nova carteira, digite uma *senha* para sua frase de 24 palavras e pressione `enter`.
 
 **Exemplo de resultado esperado:**
 
