@@ -179,47 +179,12 @@ Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (ancho
 lines 1-21/21 (END)
 ```
 
-### Caso sua carteira ainda esteja "locked", você pode tentar verificar estas coisas, antes de precisar começar novamente:
-
-A primeira coisa a se fazer é esperar o lnd sincronizar, de o seguinte comando: 
-
-```bash
-sudo journalctl -xeu lnd
-```
-- Se a ultima saída for algo como `Started rescan from block 0000000...`, aguarde cerca de 2-5 minutos e tente novamente o seguinte comando:
-```bash
-sudo systemctl status lnd.service
-```
-
-- Se a situação persistir, verifique o arquivo de configuração para se sertificar se a senha que você acabou de digitar, está correta e caso não esteja, corrija-a. Para isso, utilize o seguinte comando:
-```bash
-nano /data/lnd/lnd.conf
-```
-Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar.
-- Se a situação persistir, verifique novamente o arquivo de configuração e verifique as credenciais do ` [Bitcond] `, visto que é bastante comum erros na hora de informar estes parâmetros.
-```bash
-nano /data/lnd/lnd.conf
-```
-Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar.
-
-Agora vamos reiniciar o serviço do ` lnd ` com o seguinte comando:
-
-```bash
-sudo systemctl restart lnd
-```
-
- E verificar novamente o status do ` lnd ` para verificar se agora a wallet aparece como: `unlocked`
- 
- ```bash
- sudo systemctl status lnd.service
- ```
-
 Agora você já deve estar pronto para ver as informações do seu node com o seguinte comando: 
 
  ```bash
 lncli getinfo
 ```
-# Instalando Noderunners Tools.
+## Instalando Noderunners Tools.
 
 Este script vai instalar o bos + Thunderhub + lndg + lnbits, depois basta configura-los.
 
@@ -232,39 +197,7 @@ Em seguinda:
 ./toolbox.sh
 ```
 
-## Instalando o TailScale VPN - (Opcional)
-
-Para instalar o **TailScale VPN**, execute o seguinte comando no terminal:
-
-```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-```
-
-Após a instalação, inicie o TailScale com o comando:
-
-```bash
-sudo tailscale up
-```
-
-O terminal fornecerá um link. Esse link deve ser transcrito, letra por letra, no navegador de outro dispositivo, preferencialmente no computador que será utilizado para realizar o acesso SSH ao servidor.
-
-Crie uma conta na tailscale e adicione o dispositivo.
-
-Em seguida baixe o tailscale pelo link (https://tailscale.com/download/windows) e faça o login com a sua conta recém criada.
-Pronto, agora você já pode fazer o acesso via ssh no servidor, digitando no Terminal do Windows o seguinte comando:
-
-```bash
-ssh temp@ip.do.tailscale
-```
-
-Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando Windows, deve estar na sua barra de icones próximo ao relógio.
-
-Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
-
-
-Digite a *senha de acesso do Thunderhub* e cole o *nome do seu Node Lightning*.
-
-*A instalação do whitenoise pode ser demorada, portanto, tenha paciência.
+escolha a opção numero 1, digite a *senha de acesso do Thunderhub* e cole o *nome do seu Node Lightning*.
 
 Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
 ```bash
