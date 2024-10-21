@@ -3,14 +3,13 @@ Instale um node lightning standalone em menos de uma hora. Tome as rédeas da re
 
 <img src="https://i.postimg.cc/G3PgL0vj/DALL-E-2024-10-20-23-13-33-A-realistic-black-armored-medieval-knight-riding-an-electrified-compute.webp" alt="Cavaleiro medieval" width="300"/>
 
-Este tutorial aborda a instalação rápida de um nó Lightning utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial (https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. 
-
+Este tutorial aborda a instalação rápida de um nó Lightning utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial (https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. Porém caso você já tenha, este script pode ser utilizado para criação do seu node lnd com um bitcoin core na rede local ou mesmo na máquina local, de graça!
 
 ## Instalando o Ubuntu Server - (Obrigatório)
 
 **Passos para instalação:**
 Baixar a imagem do Ubuntu Server: Acesse o site oficial (https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente à última versão do Ubuntu Server.
-Criar um pendrive de boot: Utilize o Balena Etcher ou outro software de sua preferência para gravar a imagem ISO no pendrive.
+Criar um pendrive de boot: Utilize o Balena Etcher, Rufus ou outro software de sua preferência para gravar a imagem ISO no pendrive.
 
 **Instalação do sistema:**
 
