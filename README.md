@@ -82,7 +82,7 @@ Agora acesse o diretório copiado, com o seguinte comando:
 cd brlnfullauto
 ```
 
-Execute o seguinte comando para aplicar as permições necessárias ao programa:
+Execute o seguinte comando para aplicar as permissões necessárias ao programa:
 ```bash
 chmod +x brlnfullauto.sh
 ```
