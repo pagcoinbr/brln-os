@@ -264,4 +264,48 @@ main () {
   install_lnbits
 }
 
-main
+menu() {
+  echo "Escolha uma opção:"
+  echo "1) Instalação automática do toolbox"
+  echo "2) Atualizar pacotes do sistema"
+  echo "3) Instalar NodeJS"
+  echo "4) Instalar Balance of Satoshis"
+  echo "5) Instalar ThunderHub"
+  echo "6) Instalar LNDG"
+  echo "7) Instalar LNbits"
+  echo "0) Sair"
+  read -p "Opção: " option
+
+  case $option in
+    1)
+      main
+      ;;
+    2)
+      system_update
+      ;;
+    3)
+      install_nodejs
+      ;;
+    4)
+      install_bos
+      ;;
+    5)
+      install_thunderhub
+      ;;
+    6)
+      install_lndg
+      ;;
+    7)
+      install_lnbits
+      ;;
+    0)
+      echo "Saindo..."
+      exit 0
+      ;;
+    *)
+      echo "Opção inválida!"
+      ;;
+  esac
+}
+
+menu
