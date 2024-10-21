@@ -103,7 +103,7 @@ sudo systemctl restart lnd
 ---
 ## No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
 
-# Configurando a carteira - (Obrigatório)
+### Configurando a carteira - (Obrigatório)
 
 Agora, de o seguinte comando:
 ```bash
