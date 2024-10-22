@@ -36,9 +36,8 @@ bitcoind --version
 # Remove os arquivos de instalação temporários
 sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
 
-sudo adduser admin debian-tor
-
 # Cria a pasta de dados do Bitcoin
+cd
 mkdir /data/bitcoin
 
 # Muda a propriedade da pasta de dados para o usuário admin
