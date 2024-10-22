@@ -4,6 +4,7 @@
 sudo apt update && sudo apt full-upgrade -y
 
 # Navega para o diretório temporário
+cd
 cd /tmp
 
 # Define a versão do Bitcoin Core
