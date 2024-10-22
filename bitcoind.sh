@@ -7,7 +7,7 @@ sudo apt update && sudo apt full-upgrade -y
 cd /tmp
 
 # Define a versão do Bitcoin Core
-VERSION=27.1
+VERSION=28.0
 
 # Baixa os binários e assinaturas
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
