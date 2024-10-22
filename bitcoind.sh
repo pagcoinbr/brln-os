@@ -38,15 +38,10 @@ sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS 
 
 # Cria a pasta de dados do Bitcoin
 cd
-mkdir /data/bitcoin
+sudo mkdir -p /data/bitcoin
 
 # Muda a propriedade da pasta de dados para o usuário admin
 sudo chown admin:admin /data/bitcoin
-
-# Cria o link simbólico para o diretório de configuração do Bitcoin
-ln -s /data/bitcoin /home/admin/.bitcoin
-
-#!/bin/bash
 
 # Navega para o diretório de configuração do Bitcoin
 cd /home/admin/.bitcoin
@@ -163,6 +158,9 @@ EOF"
 # Habilita e inicia o serviço bitcoind
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
+
+# Cria o link simbólico para o diretório de configuração do Bitcoin
+ln -s /data/bitcoin /home/admin/.bitcoin
 
 # Cria o link simbólico para o diretório de configuração do Bitcoin
 ln -s /data/bitcoin /home/admin/.bitcoin
