@@ -130,7 +130,7 @@ configure_lnd() {
   chmod 600 $LN_DDIR/password.txt
   read -p "Digite o alias: " alias
   read -p "Digite o bitcoind.rpcuser: " bitcoind_rpcuser
-  read -p "Digite o bitcoind.rpcpass: " bitcoind_rpcpass
+  read -sp "Digite o bitcoind.rpcpass: " bitcoind_rpcpass
   cat << EOF > $LN_DDIR/lnd.conf
 # MiniBolt: lnd configuration
 # /data/lnd/lnd.conf
