@@ -1,4 +1,4 @@
-# 1... 2... 3... Node Lightning
+# BRLN Bolt
 Instale um node lightning standalone em menos de uma hora. Tome as rédeas da rede lightning.
 
 <img src="https://i.postimg.cc/G3PgL0vj/DALL-E-2024-10-20-23-13-33-A-realistic-black-armored-medieval-knight-riding-an-electrified-compute.webp" alt="Cavaleiro medieval" width="300"/>
