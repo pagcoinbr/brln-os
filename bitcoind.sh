@@ -49,7 +49,7 @@ cd /home/admin/.bitcoin
 # Cria o arquivo de configuração bitcoin.conf
 sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
-# /home/admin/.bitcoin/bitcoin.conf
+# /home/bitcoin/.bitcoin/bitcoin.conf
 
 # Bitcoin daemon
 server=1
@@ -62,7 +62,7 @@ disablewallet=1
 debug=tor
 #debug=i2p
 
-# Assign to the cookie file read permission
+# Assign to the cookie file read permission to the Bitcoin group users
 startupnotify=chmod g+r /home/admin/.bitcoin/.cookie
 
 # Disable debug.log
@@ -95,7 +95,16 @@ proxy=127.0.0.1:9050
 #i2psam=127.0.0.1:7656
 
 # Connections
-rpcauth=
+#rpcauth=admin:admin
+rpcuser=admin
+rpcpassword=admin
+rpcallowip=127.0.0.1
+rpcbind=127.0.0.1
+zmqpubrawblock=tcp://127.0.0.1:28332
+zmqpubrawtx=tcp://127.0.0.1:28333
+
+# Enable ZMQ blockhash notification (for Fulcrum)
+zmqpubhashblock=tcp://127.0.0.1:8433
 
 # Initial block download optimizations (set dbcache size in megabytes 
 # (4 to 16384, default: 300) according to the available RAM of your device,
