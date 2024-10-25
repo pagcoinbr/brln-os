@@ -90,7 +90,7 @@ Em seguida, execute o programa com o seguinte comando:
 ```bash
 ./brlnfullauto.sh
 ```
-[![brlnfullauto.png](https://i.postimg.cc/v83782R6/brlnfullauto.png)](https://postimg.cc/5jQQn32x)
+[![brlnfullauto.png](https://i.postimg.cc/GhjnZGfz/brlnfullauto.png)](https://postimg.cc/rKzH40Mt)
 ---
 As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 25Gb inicialmente. Saiba mais sobre o projeto em: https://services.br-ln.com/
 
@@ -256,6 +256,25 @@ Agora verifique se o serviço está funcionando, com o seguinte comando:
 sudo systemctl status bos-telegram.service
 ```
 
+O resultado esperado é o seguinte:
+
+```bash
+admin@minibolt:~$ sudo systemctl status bos-telegram.service 
+[sudo] password for admin: 
+● bos-telegram.service - bos-telegram
+     Loaded: loaded (/etc/systemd/system/bos-telegram.service; enabled; preset: enabled)
+     Active: active (running) since Thu 2024-10-24 08:52:24 UTC; 17h ago
+   Main PID: 2761 (node)
+      Tasks: 11 (limit: 38305)
+     Memory: 101.2M (peak: 131.5M)
+        CPU: 9.469s
+     CGroup: /system.slice/bos-telegram.service
+             └─2761 node /home/admin/.npm-global/bin/bos telegram --use-small-units --connect 1463539064
+
+Oct 24 08:51:50 minibolt systemd[1]: bos-telegram.service: Scheduled restart job, restart counter is at 1.
+Oct 24 08:52:24 minibolt systemd[1]: Started bos-telegram.service - bos-telegram.
+```
+
 Use **Ctrl + C** para sair.
 
 - Pronto o **bos** está pronto para ser usado no Telegram,
@@ -281,34 +300,29 @@ Escolha a opção que quiser atualiar ou desinstalar e aguarde a operação ser 
 
 Com o próximo script vamos instalar o bitcoin core, o coração de toda nossa operação. *Fique atento aos comandos a serem dados a final do script, eles são necessários para o sucesso da intalação correta.*
 
-Execute:
-```bash
-chmod +x bitcoind.sh
-```
+Caso você ainda não esteja no diretório brlnfullauto, execute:
 
-Execute:
 ```bash
-./bitcoind.sh
+cd 
 ```
-
-Copie a seguinte linha do terminal em um bloco de notas: rpcauth=minibolt:5s4d2d6w2s6d4s5s...
-
-Agora abra com o comando:
+E depois:
 ```bash
-nano -l +48 /home/admin/.bitcoin/bitcoin.conf
+cd brlnfullauto/
 ```
-e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida:
-
-Execute:
+E por fim:
 ```bash
-sudo systemctl restart bitcoind
+./brlnfullauto.sh
 ```
-Execute:
+Escolha a opção 3, digite seu usuário e senha para acesso ao bitcoin core e aguarde o final da instalação.
+
+Verifique se a instalação foi corretamente feita com:
 ```bash
 sudo systemctl status bitcoind
 ```
 
-Ao final, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando o comando:
+Saia com *Ctrl + C*
+
+Em alguns dias, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando o comando:
 ```bash
 journalctl -fu bitcoind
 ```
