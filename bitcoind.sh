@@ -95,7 +95,6 @@ proxy=127.0.0.1:9050
 #i2psam=127.0.0.1:7656
 
 # Connections
-#rpcauth=admin:admin
 rpcuser=bitcoin
 rpcpassword=bitcoin
 rpcallowip=127.0.0.1
