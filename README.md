@@ -273,7 +273,7 @@ admin@minibolt:~$ sudo systemctl status bos-telegram.service
      Memory: 101.2M (peak: 131.5M)
         CPU: 9.469s
      CGroup: /system.slice/bos-telegram.service
-             └─2761 node /home/admin/.npm-global/bin/bos telegram --use-small-units --connect 1463539064
+             └─2761 node /home/admin/.npm-global/bin/bos telegram --use-small-units --connect <connect-code-aqui>
 
 Oct 24 08:51:50 minibolt systemd[1]: bos-telegram.service: Scheduled restart job, restart counter is at 1.
 Oct 24 08:52:24 minibolt systemd[1]: Started bos-telegram.service - bos-telegram.
