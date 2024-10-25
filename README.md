@@ -286,7 +286,7 @@ Use **Ctrl + C** para sair.
 - O **Thunderhub** por `seuiplocal:4002` (Ex. 192.168.0.101:4002)
 * E o **lnbits** pode ser acessado pelo IP `seuiplocal:4003`
 
-###Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
+### Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
 
 Na primeira vez que executar:
 ```bash
