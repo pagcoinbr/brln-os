@@ -1,7 +1,9 @@
 # BRLN Bolt
+
 <div style="text-align: center;">
   [![Logo-Branco.png](https://i.postimg.cc/JzWSxq5P/Logo-Branco.png)](https://postimg.cc/hfpCPVwd)
 </div>
+
 Este tutorial aborda a instalação rápida de um nó Lightning (segunda camada do Bitcoin) utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial [BRLN Server Bot](https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. Porém caso você já tenha, este script pode ser utilizado para criação do seu node lnd com um bitcoin core na rede local ou mesmo na máquina local, de graça!
 
 ---
