@@ -1,52 +1,25 @@
 #!/bin/bash
 
-# Atualiza a lista de pacotes e faz upgrade
+read -p "Escolha e digite seu usuário para o Bitcoin:" bitcoin_user
+read -p "Escolha e digite sua senha para o Bitcoin:" bitcoin_pass
 sudo apt update && sudo apt full-upgrade -y
-
-# Navega para o diretório temporário
 cd
 cd /tmp
-
-# Define a versão do Bitcoin Core
 VERSION=28.0
-
-# Baixa os binários e assinaturas
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
-
-# Verifica o checksum
 sha256sum --ignore-missing --check SHA256SUMS
-
-# Importa as chaves GPG dos mantenedores do Bitcoin Core
 curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
-
-# Verifica a assinatura das checksums
 gpg --verify SHA256SUMS.asc
-
-# Descompacta o arquivo tar
 tar -xvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-
-# Instala os binários
 sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
-
-# Verifica a instalação
 bitcoind --version
-
-# Remove os arquivos de instalação temporários
 sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
-
-# Cria a pasta de dados do Bitcoin
 cd
 sudo mkdir -p /data/bitcoin
-
-# Muda a propriedade da pasta de dados para o usuário admin
 sudo chown admin:admin /data/bitcoin
-
-# Navega para o diretório de configuração do Bitcoin
 cd /home/admin/.bitcoin
-
-# Cria o arquivo de configuração bitcoin.conf
 sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
 # /home/bitcoin/.bitcoin/bitcoin.conf
@@ -95,8 +68,8 @@ proxy=127.0.0.1:9050
 #i2psam=127.0.0.1:7656
 
 # Connections
-rpcuser=bitcoin
-rpcpassword=bitcoin
+rpcuser=$bitcoin_user
+rpcpassword=$bitcoin_pass
 rpcallowip=127.0.0.1
 rpcbind=127.0.0.1
 zmqpubrawblock=tcp://127.0.0.1:28332
@@ -112,13 +85,9 @@ zmqpubhashblock=tcp://127.0.0.1:8433
 dbcache=2048
 blocksonly=1
 EOF"
-
-# Ajusta as permissões do arquivo de configuração
 sudo chown -R admin:admin /home/admin/.bitcoin
 sudo chmod 750 /home/admin/.bitcoin
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-
-# Cria o serviço systemd para o bitcoind
 sudo bash -c "cat <<EOF > /etc/systemd/system/bitcoind.service
 # MiniBolt: systemd unit for bitcoind
 # /etc/systemd/system/bitcoind.service
@@ -162,24 +131,6 @@ SystemCallArchitectures=native
 [Install]
 WantedBy=multi-user.target
 EOF"
-
-# Habilita e inicia o serviço bitcoind
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
-
-# Cria o link simbólico para o diretório de configuração do Bitcoin
-ln -s /data/bitcoin /home/admin/.bitcoin
-
-# Cria o link simbólico para o diretório de configuração do Bitcoin
-ln -s /data/bitcoin /home/admin/.bitcoin
-
-# Baixa o script de autenticação RPC
-wget -q https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py -O rpcauth.py
-
-# Garante que o script está executável
-chmod +x rpcauth.py
-
-# Gera o rpcauth usando o script python baixado
-python3 rpcauth.py minibolt
-
-echo acesse: "<nano -l +48 /home/admin/.bitcoin/bitcoin.conf> e cole o usuario em frente a linha de conexao rpc Ex: rpcauth=minibolt:5s4d2d6w2s6d4s5s..., salve com Ctl+x e Enter. Em seguida rode <sudo systemctl restart bitcoind> e <sudo systemctl status bitcoind>."
+sudo systemctl start bitcoind
