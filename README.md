@@ -4,12 +4,12 @@
 Este tutorial aborda a instalação rápida de um nó Lightning (segunda camada do Bitcoin) utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial [BRLN Server Bot](https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. Porém caso você já tenha, este script pode ser utilizado para criação do seu node lnd com um bitcoin core na rede local ou mesmo na máquina local, de graça!
 
 ---
-## Instalando o Ubuntu Server - (Obrigatório)
+## Instalando o Ubuntu Server 24.04 - (Obrigatório)
 
 **Passos para instalação:**
-Baixar a imagem do Ubuntu Server: Acesse o site oficial (https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente à última versão do Ubuntu Server.
+Baixar a imagem do Ubuntu Server: Acesse o site oficial [Clicando aqui](https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente a versão do Ubuntu Server 24.04.
 
-Criar um pendrive de boot: Utilize o Balena Etcher, Rufus ou outro software de sua preferência para gravar a imagem ISO no pendrive.
+Criar um pendrive de boot: Utilize o **Balena Etcher**, **Rufus** ou outro software de sua preferência para gravar a imagem ISO no pendrive.
 
 **Instalação do sistema:**
 
