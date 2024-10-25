@@ -445,28 +445,39 @@ sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
 }
 
-main() {
-  update_and_upgrade
-  create_main_dir
-  configure_ufw
-  install_nginx
-  install_tor
-  install_postgres
-  download_lnd
+install_lnd() {
+    download_lnd
   configure_lnd
   create_lnd_service
   echo "LND Instalado!"
 }
 
+system_preparation() {
+  update_and_upgrade
+  create_main_dir
+  configure_ufw
+  install_nginx
+  install_tor
+}
+
 menu() {
   echo "Escolha uma opção:"
-  echo "1) Instalação automática do BRLNBolt"
+  echo "1) Preparação do sistema"
+  echo "2) Instalação do BRLNBolt"
+  echo "3) Instalação do Bitcoin Daemon"
   echo "0) Sair"
   read -p "Opção: " option
 
   case $option in
     1)
-      main
+      system_preparation
+      menu
+      ;;
+    2)
+      install_lnd
+      ;;
+    3)
+      install_bitcoin
       ;;
     0)
       echo "Saindo..."
