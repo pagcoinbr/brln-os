@@ -1,7 +1,7 @@
 # BRLN Bolt
 Instale um node lightning standalone em menos de uma hora. Tome as rédeas da rede lightning.
 
-<img src="https://i.postimg.cc/G3PgL0vj/DALL-E-2024-10-20-23-13-33-A-realistic-black-armored-medieval-knight-riding-an-electrified-compute.webp" alt="Cavaleiro medieval" width="300"/>
+[![Copy-of-g-u-pdf-Adesivo-Redondo-5x5cm-pdf.png](https://i.postimg.cc/SQChfw7B/Copy-of-g-u-pdf-Adesivo-Redondo-5x5cm-pdf.png)](https://postimg.cc/F1r89C6p)
 
 Este tutorial aborda a instalação rápida de um nó Lightning utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial (https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. Porém caso você já tenha, este script pode ser utilizado para criação do seu node lnd com um bitcoin core na rede local ou mesmo na máquina local, de graça!
 ---
