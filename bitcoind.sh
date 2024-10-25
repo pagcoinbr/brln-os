@@ -96,8 +96,8 @@ proxy=127.0.0.1:9050
 
 # Connections
 #rpcauth=admin:admin
-rpcuser=admin
-rpcpassword=admin
+rpcuser=bitcoin
+rpcpassword=bitcoin
 rpcallowip=127.0.0.1
 rpcbind=127.0.0.1
 zmqpubrawblock=tcp://127.0.0.1:28332
