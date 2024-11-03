@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Script criado por PagcoinBTC
-# PGP: 9585 831e 06ac 0821
-# Ultima edição: 07/10/2024
+# Ultima edição: 02/11/2024
 
 # Define as variáveis
 LNDG_DIR=/home/admin/lndg
