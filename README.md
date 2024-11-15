@@ -78,7 +78,7 @@ Até agora fizemos a parte mais dificil que não pode ser automatizada por scrip
 
 Primeiro de o seguinte comando, para clonar o repositório:
 ```bash
-git clone https://github.com/REDACTED_USERbtc/brlnfullauto.git
+git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
 ```
 
 Agora acesse o diretório copiado, com o seguinte comando:
