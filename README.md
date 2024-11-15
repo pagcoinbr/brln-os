@@ -97,7 +97,17 @@ Em seguida, execute o programa com o seguinte comando:
 **Faça apenas a instalação 1 e 2**
 [![brlnfullauto.png](https://i.postimg.cc/GhjnZGfz/brlnfullauto.png)](https://postimg.cc/rKzH40Mt)
 ---
-As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 25Gb inicialmente. Saiba mais sobre o projeto em: https://services.br-ln.com/
+As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 25Gb inicialmente. Após realizar a associação, acesse o bot: https://t.me/brlnbtcserver_bot
+
+Envie a mensagem:
+
+```bash
+\linkemail <seu@email.com>
+```
+
+```bash
+\generate <usuário>
+```
 
 Caso você tenha errado alguma credencial voce pode corrigi-la após a instalação editando o arquivo de configuração com o seguinte comando:
 ```bash
