@@ -328,7 +328,7 @@ sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS 
 cd
 sudo mkdir -p /data/bitcoin
 sudo chown admin:admin /data/bitcoin
-ln -s /data/bitcoin /home/bitcoin/.bitcoin
+ln -s /data/bitcoin /home/admin/.bitcoin
 sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
 # /home/bitcoin/.bitcoin/bitcoin.conf
