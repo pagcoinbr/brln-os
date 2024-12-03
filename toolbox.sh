@@ -254,6 +254,27 @@ sudo systemctl start lnbits.service
 echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal), Thunderhub (porta 4002), lndg (porta 8889)"
 }
 
+meu_primeiro_canal () {
+# Solicita o valor local do canal
+read -p "Digite o tamanho do canal (min. 50.000 sats): " chansize
+
+# Solicita a taxa de satoshis por vbyte
+read -p "Digite a taxa de satoshis por vbyte: " satpervbyte
+
+# Conecta ao nó remoto
+lncli connect 03477b0f9679de60b3a803b47294e37b4c14a383564afded973114134623d2ec82@owczcn2vcq5gs5bn5rv3vadtcob3yq34ywnqwglnkejsftdlkc5a4vyd.onion:9735
+
+# Executa o comando lncli openchannel com os valores fornecidos
+lncli openchannel --node_key 03477b0f9679de60b3a803b47294e37b4c14a383564afded973114134623d2ec82 --local_amt $chansize --sat_per_vbyte $satpervbyte
+
+# Verifica se o comando foi executado com sucesso
+if [ $? -eq 0 ]; then
+  echo "Canal aberto com sucesso!"
+else
+  echo "Falha ao abrir o canal."
+fi
+}
+
 main () {
   system_update
   install_nodejs
@@ -265,12 +286,13 @@ main () {
 menu() {
   echo "Escolha uma opção:"
   echo "1) Instalação automática do toolbox"
-  echo "2) Atualizar pacotes do sistema"
-  echo "3) Instalar NodeJS"
-  echo "4) Instalar Balance of Satoshis"
-  echo "5) Instalar ThunderHub"
-  echo "6) Instalar LNDG"
-  echo "7) Instalar LNbits" (Instável)
+  echo "2) Abrir canal com a BRLN HUB"
+  echo "3) Atualizar pacotes do sistema"
+  echo "4) Instalar NodeJS"
+  echo "5) Instalar Balance of Satoshis"
+  echo "6) Instalar ThunderHub"
+  echo "7) Instalar LNDG"
+  echo "8) Instalar LNbits (Instável)"
   echo "0) Sair"
   read -p "Opção: " option
 
@@ -279,21 +301,24 @@ menu() {
       main
       ;;
     2)
-      system_update
+      meu_primeiro_canal
       ;;
     3)
-      install_nodejs
+      system_update
       ;;
     4)
-      install_bos
+      install_nodejs
       ;;
     5)
-      install_thunderhub
+      install_bos
       ;;
     6)
-      install_lndg
+      install_thunderhub
       ;;
     7)
+      install_lndg
+      ;;
+    8)
       install_lnbits
       ;;
     0)
