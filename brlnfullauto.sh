@@ -28,47 +28,6 @@ configure_ufw() {
   sudo ufw --force enable
 }
 
-install_nginx() {
-  sudo apt install -y nginx-full
-  sudo openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/CN=localhost" -days 3650
-  sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
-  sudo bash -c 'cat << EOF > /etc/nginx/nginx.conf
-user www-data;
-worker_processes auto;
-pid /run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
-
-events {
-  worker_connections 768;
-}
-
-http {
-  ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-  ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-  ssl_session_cache shared:HTTP-TLS:1m;
-  ssl_session_timeout 4h;
-  ssl_protocols TLSv1.2 TLSv1.3;
-  ssl_prefer_server_ciphers on;
-  include /etc/nginx/sites-enabled/*.conf;
-}
-
-stream {
-  ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-  ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-  ssl_session_cache shared:STREAM-TLS:1m;
-  ssl_session_timeout 4h;
-  ssl_protocols TLSv1.2 TLSv1.3;
-  ssl_prefer_server_ciphers on;
-  include /etc/nginx/streams-enabled/*.conf;
-}
-EOF'
-  sudo mkdir -p /etc/nginx/streams-available /etc/nginx/streams-enabled
-  sudo rm /etc/nginx/sites-available/default
-  sudo rm /etc/nginx/sites-enabled/default
-  sudo nginx -t
-  sudo systemctl reload nginx
-}
-
 install_tor() {
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
@@ -426,7 +385,6 @@ system_preparation() {
   update_and_upgrade
   create_main_dir
   configure_ufw
-  install_nginx
   install_tor
 }
 
