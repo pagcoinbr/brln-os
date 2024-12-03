@@ -203,7 +203,7 @@ lncli getinfo
 ```
 ## Instalando Noderunner ToolBox.
 
-Este script vai instalar o bos + Thunderhub + lndg + lnbits, depois basta configura-los.
+Este script vai instalar o bos + Thunderhub + lndg, depois basta configura-los.
 
 ```bash
 chmod +x toolbox.sh
@@ -295,7 +295,6 @@ Use **Ctrl + C** para sair.
 - Pronto o **bos** está pronto para ser usado no Telegram,
 * você também pode acessar seu **lndg** pelo endereço, no navegador, `seuiplocal:4001`
 - O **Thunderhub** por `seuiplocal:4002` (Ex. 192.168.0.101:4002)
-* E o **lnbits** pode ser acessado pelo IP `seuiplocal:4003`
 
 ### Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
 
