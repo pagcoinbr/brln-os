@@ -260,7 +260,6 @@ main () {
   install_bos
   install_thunderhub
   install_lndg
-  install_lnbits
 }
 
 menu() {
