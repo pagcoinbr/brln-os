@@ -18,7 +18,7 @@ install_nodejs() {
 }
 
 install_bos() {
-  read -p "Digite o alias do seu node: " nome_do_seu_node
+  read -p "Digite o nome do seu node (sem tags como | BRLN): " nome_do_seu_node
   mkdir -p ~/.npm-global
   npm config set prefix '~/.npm-global'
 if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
@@ -251,7 +251,7 @@ export LNBITS_ADMIN_UI=true
 export HOST=0.0.0.0
 sudo systemctl enable lnbits.service
 sudo systemctl start lnbits.service
-echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal, Thunderhub (porta 4002), lndg (porta 8889) e o lnbits (porta 4003)"
+echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal), Thunderhub (porta 4002), lndg (porta 8889)"
 }
 
 main () {
@@ -270,7 +270,7 @@ menu() {
   echo "4) Instalar Balance of Satoshis"
   echo "5) Instalar ThunderHub"
   echo "6) Instalar LNDG"
-  echo "7) Instalar LNbits"
+  echo "7) Instalar LNbits" (Instável)
   echo "0) Sair"
   read -p "Opção: " option
 
