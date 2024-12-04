@@ -9,6 +9,7 @@ VERSION_THUB=0.13.31
 
 system_update() {
   sudo apt update && sudo apt full-upgrade -y
+  lncli connect 03477b0f9679de60b3a803b47294e37b4c14a383564afded973114134623d2ec82@owczcn2vcq5gs5bn5rv3vadtcob3yq34ywnqwglnkejsftdlkc5a4vyd.onion:9735
 }
 
 install_nodejs() {
