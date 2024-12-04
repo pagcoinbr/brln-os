@@ -230,6 +230,8 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
+  sleep 10
+  lncli connect 03477b0f9679de60b3a803b47294e37b4c14a383564afded973114134623d2ec82@owczcn2vcq5gs5bn5rv3vadtcob3yq34ywnqwglnkejsftdlkc5a4vyd.onion:9735
   echo "Execute o comando:" 
   echo "lncli --tlscertpath /data/lnd/tls.cert.tmp create"
   echo "Depois, digite a senha 2x para confirmar e pressione 'n' para criar uma nova cateira, digite o "password" e pressione *enter* para criar uma nova carteira."
