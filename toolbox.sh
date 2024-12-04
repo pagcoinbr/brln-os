@@ -9,7 +9,6 @@ VERSION_THUB=0.13.31
 
 system_update() {
   sudo apt update && sudo apt full-upgrade -y
-  lncli connect 03477b0f9679de60b3a803b47294e37b4c14a383564afded973114134623d2ec82@owczcn2vcq5gs5bn5rv3vadtcob3yq34ywnqwglnkejsftdlkc5a4vyd.onion:9735
 }
 
 install_nodejs() {
@@ -85,7 +84,17 @@ install_thunderhub() {
   sudo apt update && sudo apt full-upgrade -y
   npm install
   npm run build
-sudo ufw allow 3000/tcp comment 'allow ThunderHub SSL from anywhere'
+  sudo tee /etc/nginx/sites-available/thunderhub-reverse-proxy.conf > /dev/null  <<EOF
+server {
+  listen 4002;
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+  }
+}
+EOF
+sudo ln -s /etc/nginx/sites-available/thunderhub-reverse-proxy.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo ufw allow 4002/tcp comment 'allow ThunderHub SSL from anywhere'
 cp .env .env.local
 sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .env.local
 bash -c "cat <<EOF > thubConfig.yaml
@@ -127,6 +136,9 @@ PrivateDevices=true
 [Install]
 WantedBy=multi-user.target
 EOF'
+sudo systemctl enable thunderhub
+sudo systemctl start thunderhub
+sudo systemctl reload nginx
 }
 
 install_lndg () {
@@ -181,6 +193,65 @@ sudo systemctl enable lndg-controller.service
 sudo systemctl start lndg-controller.service
 sudo systemctl enable lndg.service
 sudo systemctl start lndg.service
+}
+
+install_lnbits() {
+sudo bash -c 'cat <<EOF > /etc/systemd/system/lnbits.service
+[Unit]
+Description=LNbits Service
+After=network.target
+
+[Service]
+ExecStart=/home/admin/.local/bin/poetry run lnbits
+WorkingDirectory=/home/admin/lnbits
+User=admin
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+cd 
+sudo bash -c "cat <<EOF > /etc/nginx/sites-available/lnbits-reverse-proxy.conf
+server {
+  listen 4003;
+  location / {
+    proxy_pass http://localhost:5000;
+  }
+}
+EOF"
+sudo ln -s /etc/nginx/sites-available/lnbits-reverse-proxy.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+sudo ufw allow 4003/tcp comment 'allow lnbits SSL from anywhere'
+if [ ! -d lnbits/data ]; then
+  sudo apt update -y
+  sudo apt install -y software-properties-common
+  sudo add-apt-repository -y ppa:deadsnakes/ppa
+  sudo apt install -y python3.9 python3.9-distutils
+  curl -sSL https://install.python-poetry.org | python3.9 -
+  export PATH="/home/$USER/.local/bin:$PATH"
+  if [ ! -d lnbits/wallets ]; then
+    git clone https://github.com/lnbits/lnbits.git
+    if [ $? -ne 0 ]; then
+      echo "Failed to clone the repository ... FAIL"
+      exit 1
+    fi
+    cd lnbits || { echo "Failed to cd into lnbits ... FAIL"; exit 1; }
+  fi
+  git checkout main
+  mkdir data
+  cp .env.example .env
+elif [ ! -d lnbits/wallets ]; then
+  # cd into lnbits
+  cd lnbits || { echo "Failed to cd into lnbits ... FAIL"; exit 1; }
+fi
+poetry env use python3.9
+poetry install --only main
+export LNBITS_ADMIN_UI=true
+export HOST=0.0.0.0
+sudo systemctl enable lnbits.service
+sudo systemctl start lnbits.service
+echo "Sua instalação do Minibolt Tools está completa, você dispões dos seguintes softwares, Balance of satoshis (usando: bos telegram no terminal), Thunderhub (porta 4002), lndg (porta 8889)"
 }
 
 meu_primeiro_canal () {
