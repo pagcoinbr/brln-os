@@ -294,7 +294,7 @@ Use **Ctrl + C** para sair.
 
 - Pronto o **bos** está pronto para ser usado no Telegram,
 * você também pode acessar seu **lndg** pelo endereço, no navegador, `seuiplocal:4001`
-- O **Thunderhub** por `seuiplocal:4002` (Ex. 192.168.0.101:4002)
+- O **Thunderhub** por `seuiplocal:3000` (Ex. 192.168.0.101:3000)
 
 ### Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
 
