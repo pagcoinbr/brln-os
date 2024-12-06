@@ -393,8 +393,7 @@ system_preparation() {
 menu() {
   echo "Escolha uma opção:"
   echo "1) Preparação do sistema"
-  echo "2) Instalação do BRLNBolt"
-  echo "3) Instalação do Bitcoin (Instável!)"
+  echo "2) Instalação do Node Lightnning"
   echo "0) Sair"
   read -p "Opção: " option
 
