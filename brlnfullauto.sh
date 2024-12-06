@@ -260,7 +260,7 @@ sudo mkdir -p /data/bitcoin
 sudo chown admin:admin /data/bitcoin
 ln -s /data/bitcoin /home/admin/.bitcoin
 sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
-# MiniBolt: bitcoind configuration
+# BRLN: bitcoind configuration
 # /home/bitcoin/.bitcoin/bitcoin.conf
 
 # Bitcoin daemon
