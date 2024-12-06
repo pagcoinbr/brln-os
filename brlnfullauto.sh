@@ -339,7 +339,7 @@ After=network-online.target
 [Service]
 ExecStart=/usr/local/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \\
                                   -conf=/home/admin/.bitcoin/bitcoin.conf \\
-                                  -datadir=/home/admin/.bitcoin
+                                  -datadir=/data/bitcoin
 # Process management
 ####################
 Type=exec
