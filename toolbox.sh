@@ -127,6 +127,8 @@ PrivateDevices=true
 [Install]
 WantedBy=multi-user.target
 EOF'
+sudo systemctl start thunderhub
+sudo systemctl enable thunderhub
 }
 
 install_lndg () {
