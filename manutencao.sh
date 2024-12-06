@@ -85,7 +85,7 @@ lnbits_update () {
 thunderhub_uninstall () {
   sudo systemctl stop thunderhub
   sudo systemctl disable thunderhub
-  sudo rm -rf /home/thunderhub/thunderhub
+  sudo rm -rf /home/admin/thunderhub
   sudo rm -rf /etc/systemd/system/thunderhub.service
   sudo rm -rf /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
   echo "Thunderhub desinstalado!"
