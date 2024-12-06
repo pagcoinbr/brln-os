@@ -327,6 +327,7 @@ EOF"
 sudo chown -R admin:admin /home/admin/.bitcoin
 sudo chmod 750 /home/admin/.bitcoin
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
+ln -s /data/bitcoin /home/admin/.bitcoin
 sudo bash -c "cat <<EOF > /etc/systemd/system/bitcoind.service
 # MiniBolt: systemd unit for bitcoind
 # /etc/systemd/system/bitcoind.service
@@ -337,9 +338,11 @@ Requires=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \\
-                                  -conf=/home/admin/.bitcoin/bitcoin.conf \\
-                                  -datadir=/data/bitcoin
+ExecStart=/usr/local/bin/bitcoind -daemon \
+                                  -pid=/run/bitcoind/bitcoind.pid \
+                                  -conf=/home/bitcoin/.bitcoin/bitcoin.conf \
+                                  -datadir=/home/bitcoin/.bitcoin \
+                                  -startupnotify="chmod g+r /home/bitcoin/.bitcoin/.cookie"
 # Process management
 ####################
 Type=exec
@@ -373,6 +376,7 @@ EOF"
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
+ln -s /data/bitcoin /home/admin/.bitcoin
 }
 
 install_lnd() {
