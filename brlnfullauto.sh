@@ -238,7 +238,6 @@ EOF'
   }
 
 install_bitcoin () {
-#!/bin/bash
 
 read -p "Escolha e digite seu usuário para o Bitcoin:" bitcoin_user
 read -p "Escolha e digite sua senha para o Bitcoin:" bitcoin_pass
