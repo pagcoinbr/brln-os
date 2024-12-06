@@ -105,7 +105,7 @@ restlisten=0.0.0.0:8080
 rpclisten=localhost:10009
 
 # Password: automatically unlock wallet with the password in this file
-wallet-unlock-password-file=/ext_data/lnd/password.txt
+wallet-unlock-password-file=/data/lnd/password.txt
 wallet-unlock-allow-create=true
 
 # Automatically regenerate certificate when near expiration
