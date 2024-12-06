@@ -124,14 +124,14 @@ sudo systemctl restart lnd
 
 Agora, de o seguinte comando:
 ```bash
-lncli --tlscertpath /data/lnd/tls.cert.tmp create
+lncli create
 ```
 Digite duas vezes a mesma senha escolhida no script anterior, para confirmar e pressione `n`  para criar uma nova carteira, digite uma *senha* para sua frase de 24 palavras e pressione `enter`.
 
 **Exemplo de resultado esperado:**
 
 ```bash
-lnd@minibolt:~$ lncli --tlscertpath /data/lnd/tls.cert.tmp create
+lnd@minibolt:~$ lncli create
 Input wallet password:
 Confirm password:
 
