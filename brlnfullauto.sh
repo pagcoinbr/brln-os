@@ -376,7 +376,6 @@ EOF"
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
-ln -s /data/bitcoin /home/admin/.bitcoin
 }
 
 install_lnd() {
