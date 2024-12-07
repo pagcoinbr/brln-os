@@ -74,7 +74,6 @@ configure_lnd() {
   sudo chown -R admin:admin $LN_DDIR
   ln -s $LN_DDIR /home/admin/.lnd
   ln -s $MAIN_DIR/bitcoin /home/admin/.bitcoin
-  ls -la
   echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
   while true; do
     read -p "Escolha uma senha para a carteira Lightning: " password
@@ -230,8 +229,6 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
-  sleep 10
-  lncli connect 03477b0f9679de60b3a803b47294e37b4c14a383564afded973114134623d2ec82@owczcn2vcq5gs5bn5rv3vadtcob3yq34ywnqwglnkejsftdlkc5a4vyd.onion:9735
   echo "Execute o comando:" 
   echo "lncli create"
   echo "Depois, digite a senha 2x para confirmar e pressione 'n' para criar uma nova cateira, digite o "password" e pressione *enter* para criar uma nova carteira."
