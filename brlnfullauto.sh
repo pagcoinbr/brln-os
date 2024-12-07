@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Script criado por PagcoinBTC
-# PGP: 9585 831e 06ac 0821
-# Ultima edição: 26/09/2024
-
 # Define as variáveis da URL do repositório do Tor
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
