@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Script criado por PagcoinBTC
-# Ultima edição: 02/11/2024
-
 # Define as variáveis
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
