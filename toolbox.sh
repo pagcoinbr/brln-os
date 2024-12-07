@@ -220,7 +220,6 @@ menu() {
   echo "5) Instalar Balance of Satoshis"
   echo "6) Instalar ThunderHub"
   echo "7) Instalar LNDG"
-  echo "8) Instalar LNbits (Instável!)"
   echo "0) Sair"
   read -p "Opção: " option
 
@@ -245,9 +244,6 @@ menu() {
       ;;
     7)
       install_lndg
-      ;;
-    8)
-      install_lnbits
       ;;
     0)
       echo "Saindo..."
