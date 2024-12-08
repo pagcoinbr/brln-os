@@ -249,9 +249,8 @@ sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitc
 bitcoind --version
 sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
 cd
-sudo mkdir -p /data/bitcoin
+sudo mkdir /data/bitcoin
 sudo chown admin:admin /data/bitcoin
-ln -s /data/bitcoin /home/admin/.bitcoin
 sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
 # BRLN: bitcoind configuration
 # /home/bitcoin/.bitcoin/bitcoin.conf
@@ -321,6 +320,7 @@ sudo chown -R admin:admin /home/admin/.bitcoin
 sudo chmod 750 /home/admin/.bitcoin
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
 ln -s /data/bitcoin /home/admin/.bitcoin
+chmod g+r /data/bitcoin/debug.log
 sudo bash -c "cat <<EOF > /etc/systemd/system/bitcoind.service
 # MiniBolt: systemd unit for bitcoind
 # /etc/systemd/system/bitcoind.service
