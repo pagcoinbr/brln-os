@@ -316,11 +316,6 @@ zmqpubhashblock=tcp://127.0.0.1:8433
 dbcache=2048
 blocksonly=1
 EOF"
-sudo chown -R admin:admin /home/admin/.bitcoin
-sudo chmod 750 /home/admin/.bitcoin
-sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-ln -s /data/bitcoin /home/admin/.bitcoin
-chmod g+r /data/bitcoin/debug.log
 sudo bash -c "cat <<EOF > /etc/systemd/system/bitcoind.service
 # MiniBolt: systemd unit for bitcoind
 # /etc/systemd/system/bitcoind.service
@@ -366,6 +361,11 @@ SystemCallArchitectures=native
 [Install]
 WantedBy=multi-user.target
 EOF"
+sudo chown -R admin:admin /home/admin/.bitcoin
+sudo chmod 750 /home/admin/.bitcoin
+sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
+ln -s /data/bitcoin /home/admin/.bitcoin
+chmod g+r /data/bitcoin/debug.log
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
