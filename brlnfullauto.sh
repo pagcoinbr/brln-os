@@ -365,7 +365,6 @@ sudo chown -R admin:admin /home/admin/.bitcoin
 sudo chmod 750 /home/admin/.bitcoin
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
 ln -s /data/bitcoin /home/admin/.bitcoin
-chmod g+r /data/bitcoin/debug.log
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
