@@ -363,7 +363,7 @@ Em seguida baixe o tailscale pelo link (https://tailscale.com/download/windows) 
 Pronto, agora você já pode fazer o acesso via ssh no servidor, digitando no Terminal do Windows o seguinte comando:
 
 ```bash
-ssh temp@ip.do.tailscale
+ssh admin@ip.do.tailscale
 ```
 
 Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando Windows, deve estar na sua barra de icones próximo ao relógio.
