@@ -24,47 +24,6 @@ configure_ufw() {
   sudo ufw --force enable
 }
 
-install_nginx() {
-  sudo apt install -y nginx-full
-  sudo openssl req -x509 -nodes -newkey rsa:4096 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/CN=localhost" -days 3650
-  sudo mv /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak
-  sudo bash -c 'cat << EOF > /etc/nginx/nginx.conf
-user www-data;
-worker_processes auto;
-pid /run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
-
-events {
-  worker_connections 768;
-}
-
-http {
-  ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-  ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-  ssl_session_cache shared:HTTP-TLS:1m;
-  ssl_session_timeout 4h;
-  ssl_protocols TLSv1.2 TLSv1.3;
-  ssl_prefer_server_ciphers on;
-  include /etc/nginx/sites-enabled/*.conf;
-}
-
-stream {
-  ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-  ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
-  ssl_session_cache shared:STREAM-TLS:1m;
-  ssl_session_timeout 4h;
-  ssl_protocols TLSv1.2 TLSv1.3;
-  ssl_prefer_server_ciphers on;
-  include /etc/nginx/streams-enabled/*.conf;
-}
-EOF'
-  sudo mkdir -p /etc/nginx/streams-available /etc/nginx/streams-enabled
-  sudo rm /etc/nginx/sites-available/default
-  sudo rm /etc/nginx/sites-enabled/default
-  sudo nginx -t
-  sudo systemctl reload nginx
-}
-
 install_tor() {
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
@@ -109,9 +68,8 @@ configure_lnd() {
   sudo usermod -a -G debian-tor admin
   sudo mkdir -p $LN_DDIR
   sudo chown -R admin:admin $LN_DDIR
-  ln -s $LN_DDIR /home/lnd/.lnd
-  ln -s $MAIN_DIR/bitcoin /home/lnd/.bitcoin
-  ls -la
+  ln -s $LN_DDIR /home/admin/.lnd
+  ln -s $MAIN_DIR/bitcoin /home/admin/.bitcoin
   echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
   while true; do
     read -p "Escolha uma senha para a carteira Lightning: " password
@@ -128,123 +86,93 @@ configure_lnd() {
   read -p "Digite o bitcoind.rpcuser: " bitcoind_rpcuser
   read -p "Digite o bitcoind.rpcpass: " bitcoind_rpcpass
   cat << EOF > $LN_DDIR/lnd.conf
-# MiniBolt: lnd configuration
+# BRLN: lnd configuration
 # /data/lnd/lnd.conf
 
 [Application Options]
-restlisten=0.0.0.0:8080
-# Up to 32 UTF-8 characters, accepts emojis i.e ⚡🧡​ https://emojikeyboard.top/
-alias=$alias
-# You can choose the color you want at https://www.color-hex.com/
-color=#ff9900
+alias=$alias | BR⚡LN
+debuglevel=info
+maxpendingchannels=3
 
-# Automatically unlock wallet with the password in this file
+# Rest and gRPC API to LAN
+# Rest Externo para acesso Zeus Wallet
+restlisten=0.0.0.0:8080
+rpclisten=localhost:10009
+
+# Password: automatically unlock wallet with the password in this file
 wallet-unlock-password-file=/data/lnd/password.txt
 wallet-unlock-allow-create=true
 
-# The TLS private key will be encrypted to the node's seed
-tlsencryptkey=true
-
 # Automatically regenerate certificate when near expiration
 tlsautorefresh=true
-
-# Do not include the interface IPs or the system hostname in TLS certificate
+# Do not include the interface IPs or the system hostname in TLS certificate.
 tlsdisableautofill=true
 
-## Channel settings
-# (Optional) Minimum channel size. Uncomment and set whatever you want
-# (default: 20000 sats)
-#minchansize=20000
+#FOR CLEARNET USE ONLY - Uncomment and fill out with your address
+#listen=0.0.0.0:9740
+#externalhosts=myadress.ddns.net:9740
 
-## High fee environment (Optional)
-# (default: 10 sat/byte)
-#max-commit-fee-rate-anchors=50
-#max-channel-fee-allocation=1
-
-## Communication
+# Channel settings
+bitcoin.basefee=1000
+bitcoin.feerate=500
+minchansize=50000
+maxchansize=10000000
 accept-keysend=true
 accept-amp=true
-
-## Rebalancing
+coop-close-target-confs=288
+bitcoin.defaultchanconfs=2
+bitcoin.timelockdelta=80
 allow-circular-route=true
+bitcoin.defaultchanconfs=2
+max-cltv-expiry=2016
+max-commit-fee-rate-anchors=100
 
-## Descomente as ultimas duas linhas e mude seu endereço ddns para ativar o modo hibrido.
-# specify an interface (IPv4/IPv6) and port (default 9735) to listen on
-# listen on IPv4 interface or listen=[::1]:9736 on IPv6 interface
-# listen=[::1]:9736
-#listen=0.0.0.0:9735
-#externalhosts=meu.ddns.no-ip:9735
+routing.strictgraphpruning=true
+rpcmiddleware.enable=true
+routerrpc.minrtprob=0.001
+routerrpc.apriori.hopprob=0.7
+routerrpc.apriori.weight=0.3
+routerrpc.apriori.penaltyhalflife=2h
+routerrpc.attemptcost=10
+routerrpc.attemptcostppm=100
+routerrpc.maxmchistory=100000
+caches.channel-cache-size=100000
 
-## Performance
+# Watchtower
+wtclient.active=true
+
+# Performance
+sync-freelist=false
 gc-canceled-invoices-on-startup=true
 gc-canceled-invoices-on-the-fly=true
-ignore-historical-gossip-filters=true
+ignore-historical-gossip-filters=1
+stagger-initial-reconnect=true
+payments-expiration-grace-period=10000h
+
+# Database
+[bolt]
+db.bolt.auto-compact=false
+db.bolt.auto-compact-min-age=0h
 
 [Bitcoin]
 bitcoin.mainnet=true
 bitcoin.node=bitcoind
 
-# Fee settings - default LND base fee = 1000 (mSat), fee rate = 1 (ppm)
-# You can choose whatever you want e.g ZeroFeeRouting (0,0) or ZeroBaseFee (0,X)
-#bitcoin.basefee=1000
-#bitcoin.feerate=1
+[bitcoind]
 
-# The CLTV delta we will subtract from a forwarded HTLC's timelock value
-# (default: 80)
-#bitcoin.timelockdelta=144
-
-[Bitcoind]
+#Bitcoin VPS
 bitcoind.rpchost=REDACTED_HOST:8085
 bitcoind.rpcuser=$bitcoind_rpcuser
 bitcoind.rpcpass=$bitcoind_rpcpass
 bitcoind.zmqpubrawblock=tcp://REDACTED_HOST:28332
 bitcoind.zmqpubrawtx=tcp://REDACTED_HOST:28333
 
-
-#[Bitcoind]
-#bitcoind.rpchost=127.0.0.1:8332
-#bitcoind.rpcuser=bitcoin
-#bitcoind.rpcpass=bitcoin
-#bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
-#bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
-
-[protocol]
-protocol.wumbo-channels=true
-protocol.option-scid-alias=true
-protocol.simple-taproot-chans=true
-
-[wtclient]
-## Watchtower client settings
-wtclient.active=true
-
-# (Optional) Specify the fee rate with which justice transactions will be signed
-# (default: 10 sat/byte)
-#wtclient.sweep-fee-rate=10
-
-[watchtower]
-## Watchtower server settings
-watchtower.active=true
-
-[routing]
-routing.strictgraphpruning=true
-
-[bolt]
-## Database
-# Set the next value to false to disable auto-compact DB
-# and fast boot and comment the next line
-db.bolt.auto-compact=true
-# Uncomment to do DB compact at every LND reboot (default: 168h)
-#db.bolt.auto-compact-min-age=0h
-
-## High fee environment (Optional)
-# (default: CONSERVATIVE) Uncomment the next 2 lines
-#[Bitcoind]
-#bitcoind.estimatemode=ECONOMICAL
-
 [tor]
+# If clearnet active, change the 2 lines below to true and false
+tor.skip-proxy-for-clearnet-targets=false
+tor.streamisolation=true
 tor.active=true
 tor.v3=true
-tor.streamisolation=true
 EOF
   echo "Configuração concluída com sucesso!"
   ln -s $LN_DDIR /home/admin/.lnd
@@ -303,6 +231,7 @@ EOF'
   }
 
 install_bitcoin () {
+
 read -p "Escolha e digite seu usuário para o Bitcoin:" bitcoin_user
 read -p "Escolha e digite sua senha para o Bitcoin:" bitcoin_pass
 sudo apt update && sudo apt full-upgrade -y
@@ -320,8 +249,9 @@ sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitc
 bitcoind --version
 sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
 cd
-sudo mkdir /data/bitcoin
+sudo mkdir -p /data/bitcoin
 sudo chown admin:admin /data/bitcoin
+ln -s /data/bitcoin /home/admin/.bitcoin
 sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
 # BRLN: bitcoind configuration
 # /home/bitcoin/.bitcoin/bitcoin.conf
@@ -387,6 +317,10 @@ zmqpubhashblock=tcp://127.0.0.1:8433
 dbcache=2048
 blocksonly=1
 EOF"
+sudo chown -R admin:admin /home/admin/.bitcoin
+sudo chmod 750 /home/admin/.bitcoin
+sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
+ln -s /data/bitcoin /home/admin/.bitcoin
 sudo bash -c "cat <<EOF > /etc/systemd/system/bitcoind.service
 # MiniBolt: systemd unit for bitcoind
 # /etc/systemd/system/bitcoind.service
@@ -432,10 +366,6 @@ SystemCallArchitectures=native
 [Install]
 WantedBy=multi-user.target
 EOF"
-sudo chown -R admin:admin /home/admin/.bitcoin
-sudo chmod 750 /home/admin/.bitcoin
-sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-ln -s /data/bitcoin /home/admin/.bitcoin
 sudo systemctl daemon-reload
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
