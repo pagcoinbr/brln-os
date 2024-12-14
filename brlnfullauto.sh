@@ -69,7 +69,6 @@ configure_lnd() {
   sudo mkdir -p $LN_DDIR
   sudo chown -R admin:admin $LN_DDIR
   ln -s $LN_DDIR /home/admin/.lnd
-  ln -s $MAIN_DIR/bitcoin /home/admin/.bitcoin
   echo "AVISO: Salve a senha que você escolher para a carteira Lightning. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
   while true; do
     read -p "Escolha uma senha para a carteira Lightning: " password
