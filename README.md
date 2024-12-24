@@ -94,7 +94,6 @@ Em seguida, execute o programa com o seguinte comando:
 ```bash
 ./brlnfullauto.sh
 ```
----
 As credenciais que são solicitadas neste script, podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo permitindo já fazer as primeiras configurações do seu nó, antes do término do download da blockchain. Após realizar a associação em https://br-ln.com.br, acesse o bot: https://t.me/brlnbtcserver_bot
 
 Envie a mensagem:
