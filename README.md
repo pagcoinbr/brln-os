@@ -94,19 +94,6 @@ Em seguida, execute o programa com o seguinte comando:
 ```bash
 ./brlnfullauto.sh
 ```
-**Faça as instalações 1, 2 e 3, nesta ordem.**
-```bash
-admin@brlnbolt:~$ ./brlnfullauto.sh
-##############################################
-@  Siga os passos, fazendo a instalação na   @
-@          odem sugerida 1, 2 e 3.           @
-##############################################
- Escolha uma opção:
- 1) Preparação de Rede Privada (Tor + Ip2).
- 2) Instalar Lightning Node.
- 3) Instalar Bitcoin Node.
- 0) Sair
-```
 ---
 As credenciais que são solicitadas neste script, podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo permitindo já fazer as primeiras configurações do seu nó, antes do término do download da blockchain. Após realizar a associação em https://br-ln.com.br, acesse o bot: https://t.me/brlnbtcserver_bot
 
@@ -120,6 +107,35 @@ Envie a mensagem:
 \generate <usuário>
 ```
 
+**Selecione a opção numero 1 e inicie a intalação preenchendo com os dados solicitados**
+
+```bash
+admin@brlnbolt:~$ ./brln.sh
+🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟
+
+⚡ Este script instalará:
+  🛠️ Nó Lightning Standalone
+  🏗️ Bitcoin Core
+  🖥️ Ferramentas de administração:
+    - ThunderHub
+    - Balance of Satoshis (BOS)
+    - LNDG
+
+📝 Escolha uma opção:
+   1- Instalação do BRLN Bolt
+   2- Alterne Bitcoin Local/Remoto
+   0- Sair
+
+👉 Digite sua escolha: 1
+🚀 Iniciando a instalação...
+Digite a senha para ThunderHub: <senha_thunderhub>
+Digite o alias: <nome_do_seu_nó>
+Digite o bitcoind.rpcuser: <rpc_user_BRLN_aqui>
+Digite o bitcoind.rpcpass: <sua_senha_BRLN_aqui>
+Escolha sua senha do Bitcoin Core: <senha_rpcauth>
+```
+---
+
 Caso você tenha errado alguma credencial voce pode corrigi-la após a instalação editando o arquivo de configuração com o seguinte comando:
 ```bash
 nano -l +66 /data/lnd/lnd.conf
@@ -129,51 +145,9 @@ Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no ar
 sudo systemctl restart lnd
 ```
 ---
-## No próximo passo vamos criar a carteira lightning, pegue um papel e uma caneta para anotar sua frase secreta.
 
-### Configurando a carteira - (Obrigatório)
+Veja o estado do serviço com o seguinte comando:
 
-Agora, de o seguinte comando:
-```bash
-lncli create
-```
-Digite duas vezes a mesma senha escolhida no script anterior, para confirmar e pressione `n`  para criar uma nova carteira, digite uma *senha* para sua frase de 24 palavras e pressione `enter`.
-
-**Exemplo de resultado esperado:**
-
-```bash
-lnd@minibolt:~$ lncli create
-Input wallet password:
-Confirm password:
-
-Do you have an existing cipher seed mnemonic or extended master root key you want to use?
-Enter 'y' to use an existing cipher seed mnemonic, 'x' to use an extended master root key
-or 'n' to create a new seed (Enter y/x/n): n
-
-Your cipher seed can optionally be encrypted.
-Input your passphrase if you wish to encrypt it (or press enter to proceed without a cipher seed passphrase):
-
-Generating fresh cipher seed...
-
-!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
-
----------------BEGIN LND CIPHER SEED---------------
-
- 1. absent    2. drive     3. grape    4. inject
- 5. nut       6. pencil    7. cloud    8. rude
- 9. stomach  10. decline  11. kidney  12. various
-13. spawn    14. harvest  15. wage    16. shield
-17. debate   18. boring   19. assist  20. foster
-21. slender  22. tent     23. deputy  24. any
-
----------------END LND CIPHER SEED-----------------
-
-!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
-
-lnd successfully initialized!
-```
-
-Veja o estado do service com o seguinte comando:
 ```bash
 sudo systemctl status lnd.service
 ```
@@ -212,29 +186,13 @@ Agora você já deve estar pronto para ver as informações do seu node com o se
  ```bash
 lncli getinfo
 ```
-## Instalando Noderunner ToolBox.
 
-Este script vai instalar o bos + Thunderhub + lndg, depois basta configura-los.
-
-```bash
-chmod +x toolbox.sh
-```
-
-Em seguinda:
-```bash
-./toolbox.sh
-```
-
-[![toolbox.png](https://i.postimg.cc/qqR3C0f6/toolbox.png)](https://postimg.cc/k604k0g7)
-
-escolha a opção numero 1, digite a *senha de acesso do Thunderhub* e cole o *nome do seu Node Lightning*.
-
-Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
+#Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
 ```bash
 . ~/.profile
 ```
 
-Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
+#Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
 
 ### Agora vamos criar um **bot** para poder monitorar o node pelo Telegram.
 
@@ -306,7 +264,7 @@ Use **Ctrl + C** para sair.
 - Pronto o **bos** está pronto para ser usado no Telegram,
 * você também pode acessar seu **lndg** pelo endereço, no navegador, `seuiplocal:8889`
 - O **Thunderhub** por `seuiplocal:3000` (Ex. 192.168.0.101:3000)
-
+---
 ### Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
 
 Na primeira vez que executar:
