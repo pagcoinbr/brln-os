@@ -94,8 +94,9 @@ Em seguida, execute o programa com o seguinte comando:
 ```bash
 ./brlnfullauto.sh
 ```
+**Faça as instalações 1, 2 e 3, nesta ordem.**
 ```bash
-**Faça apenas a instalação 1, 2 e 3.**
+admin@brlnbolt:~$ ./brlnfullauto.sh
 ##############################################
 @  Siga os passos, fazendo a instalação na   @
 @          odem sugerida 1, 2 e 3.           @
