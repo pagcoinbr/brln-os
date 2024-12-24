@@ -72,7 +72,7 @@ Você receberá uma mensagem de erro de `not found`, ou algo semelhante, se tudo
 
 ---
 
-## Instalação do Lightning Network Daemon (lnd) - (Obrigatório)
+## Instalação BRLN Bolt + Bitcoin Core (Local) - (Obrigatório)
 
 Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
 
