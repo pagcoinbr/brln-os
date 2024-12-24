@@ -108,7 +108,7 @@ admin@brlnbolt:~$ ./brlnfullauto.sh
  0) Sair
 ```
 ---
-As credenciais que serão solicitadas no próximo script podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo que não exige instalação local da blockchain e reduz drasticamente a alocação de disco de algo em torno de 600/700Gb para algo em torno de 25Gb inicialmente. Após realizar a associação, acesse o bot: https://t.me/brlnbtcserver_bot
+As credenciais que são solicitadas neste script, podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo permitindo já fazer as primeiras configurações do seu nó, antes do término do download da blockchain. Após realizar a associação em https://br-ln.com.br, acesse o bot: https://t.me/brlnbtcserver_bot
 
 Envie a mensagem:
 
