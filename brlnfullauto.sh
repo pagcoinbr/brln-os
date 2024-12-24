@@ -229,45 +229,48 @@ EOF'
   echo "Depois, digite a senha 2x para confirmar e pressione 'n' para criar uma nova cateira, digite o "password" e pressione *enter* para criar uma nova carteira."
   }
 
-install_bitcoin () {
-
-read -p "Escolha e digite seu usuário para o Bitcoin:" bitcoin_user
-read -p "Escolha e digite sua senha para o Bitcoin:" bitcoin_pass
-sudo apt update && sudo apt full-upgrade -y
-cd
-cd /tmp
-VERSION=28.0
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
-sha256sum --ignore-missing --check SHA256SUMS
-curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
-gpg --verify SHA256SUMS.asc
-tar -xvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
-bitcoind --version
-sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
-cd
-sudo mkdir -p /data/bitcoin
-sudo chown admin:admin /data/bitcoin
-ln -s /data/bitcoin /home/admin/.bitcoin
-sudo bash -c "cat <<EOF > /home/admin/.bitcoin/bitcoin.conf
-# BRLN: bitcoind configuration
-# /home/bitcoin/.bitcoin/bitcoin.conf
+install_bitcoind() {
+    read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
+    cd /tmp
+    VERSION=28.0
+    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
+    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
+    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
+    sha256sum --ignore-missing --check SHA256SUMS
+    curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
+    gpg --verify SHA256SUMS.asc
+    tar -xzvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
+    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
+    sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
+    sudo mkdir -p /data/bitcoin
+    sudo chown admin:admin /data/bitcoin
+    ln -s /data/bitcoin /home/admin/.bitcoin
+    cd /home/admin/.bitcoin
+    wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
+    python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth
+    cat << EOF > /home/admin/.bitcoin/bitcoin.conf
+# MiniBolt: bitcoind configuration
+# /data/bitcoin/bitcoin.conf
 
 # Bitcoin daemon
 server=1
 txindex=1
 
-# Disable integrated Bitcoin Core wallet
+# Append comment to the user agent string
+uacomment=MiniBolt node
+
+# Suppress a breaking RPC change that may prevent LND from starting up
+deprecatedrpc=warnings
+
+# Disable integrated wallet
 disablewallet=1
 
 # Additional logs
 debug=tor
-#debug=i2p
+debug=i2p
 
 # Assign to the cookie file read permission to the Bitcoin group users
-startupnotify=chmod g+r /home/admin/.bitcoin/.cookie
+rpccookieperms=group
 
 # Disable debug.log
 nodebuglogfile=1
@@ -296,31 +299,18 @@ bind=127.0.0.1
 proxy=127.0.0.1:9050
 
 ## I2P SAM proxy to reach I2P peers and accept I2P connections
-#i2psam=127.0.0.1:7656
+i2psam=127.0.0.1:7656
 
 # Connections
-rpcuser=$bitcoin_user
-rpcpassword=$bitcoin_pass
-rpcallowip=127.0.0.1
-rpcbind=127.0.0.1
+$rpcauth
 zmqpubrawblock=tcp://127.0.0.1:28332
 zmqpubrawtx=tcp://127.0.0.1:28333
 
-# Enable ZMQ blockhash notification (for Fulcrum)
-zmqpubhashblock=tcp://127.0.0.1:8433
-
-# Initial block download optimizations (set dbcache size in megabytes 
-# (4 to 16384, default: 300) according to the available RAM of your device,
-# recommended: dbcache=1/2 x RAM available e.g: 4GB RAM -> dbcache=2048)
-# Remember to comment after IBD (Initial Block Download)!
-dbcache=2048
-blocksonly=1
-EOF"
-sudo chown -R admin:admin /home/admin/.bitcoin
-sudo chmod 750 /home/admin/.bitcoin
+whitelist=download@127.0.0.1          # for Electrs
+# Initial block download optimizations
+EOF
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-ln -s /data/bitcoin /home/admin/.bitcoin
-sudo bash -c "cat <<EOF > /etc/systemd/system/bitcoind.service
+sudo tee /etc/systemd/system/bitcoind.service > /dev/null << EOF
 # MiniBolt: systemd unit for bitcoind
 # /etc/systemd/system/bitcoind.service
 
@@ -330,14 +320,14 @@ Requires=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/bitcoind -daemon \
-                                  -pid=/run/bitcoind/bitcoind.pid \
-                                  -conf=/home/bitcoin/.bitcoin/bitcoin.conf \
-                                  -datadir=/home/bitcoin/.bitcoin \
-                                  -startupnotify="chmod g+r /home/bitcoin/.bitcoin/.cookie"
+ExecStart=/usr/local/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
+                                                                    -conf=/home/admin/.bitcoin/bitcoin.conf \
+                                                                    -datadir=/home/admin/.bitcoin \
+                                                                    -startupnotify='systemd-notify --ready' \
+                                                                    -shutdownnotify='systemd-notify --status="Stopping"'
 # Process management
 ####################
-Type=exec
+Type=notify
 NotifyAccess=all
 PIDFile=/run/bitcoind/bitcoind.pid
 
@@ -364,10 +354,11 @@ SystemCallArchitectures=native
 
 [Install]
 WantedBy=multi-user.target
-EOF"
-sudo systemctl daemon-reload
+EOF
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
+sudo ss -tulpn | grep bitcoind
+echo "Bitcoind instalado com sucesso!"
 }
 
 install_lnd() {
@@ -385,22 +376,32 @@ system_preparation() {
 }
 
 menu() {
+  echo "##############################################"
+  echo "@  Siga os passos, fazendo a instalação na   @"
+  echo "@          odem sugerida 1, 2 e 3.           @"
+  echo "##############################################"
   echo "Escolha uma opção:"
-  echo "1) Preparação do sistema"
-  echo "2) Instalação do Node Lightnning"
+  echo "1) Preparação de Rede Privada (Tor + Ip2)."
+  echo "2) Instalar Lightning Node."
+  echo "3) Instalar Bitcoin Node."
   echo "0) Sair"
   read -p "Opção: " option
 
   case $option in
     1)
       system_preparation
+      echo "Instale o Lightning Node (2)"
       menu
       ;;
     2)
       install_lnd
+      echo "instale o Bitcoin Node (3)"
+      menu
       ;;
     3)
       install_bitcoin
+      echo "Término da instalação"
+      exit 0
       ;;
     0)
       echo "Saindo..."
