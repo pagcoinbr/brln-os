@@ -185,13 +185,13 @@ Agora você já deve estar pronto para ver as informações do seu node com o se
  ```bash
 lncli getinfo
 ```
-
-#Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
+---
+## Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
 ```bash
 . ~/.profile
 ```
 
-#Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
+## Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
 
 ### Agora vamos criar um **bot** para poder monitorar o node pelo Telegram.
 
