@@ -399,7 +399,7 @@ menu() {
       menu
       ;;
     3)
-      install_bitcoin
+      install_bitcoind
       echo "Término da instalação"
       exit 0
       ;;
