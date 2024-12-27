@@ -686,8 +686,9 @@ menu() {
   echo "    - LNDG"
   echo
   echo "📝 Escolha uma opção:"
-  echo "   1- Instalação do BRLN Bolt"
+  echo "   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo "   2- Alterne Bitcoin Local/Remoto"
+  echo "   3- Instalar Bitcoin Core (Tor + BTCd)"
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -700,6 +701,13 @@ menu() {
     2)
       manage_bitcoin_node
       ;;
+    3)
+      read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
+      update_and_upgrade
+      create_main_dir
+      configure_ufw
+      install_tor
+      install_bitcoind
     0)
       echo "👋 Saindo... Até a próxima!"
       exit 0
