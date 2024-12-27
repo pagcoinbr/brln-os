@@ -708,6 +708,7 @@ menu() {
       configure_ufw
       install_tor
       install_bitcoind
+      ;;
     0)
       echo "👋 Saindo... Até a próxima!"
       exit 0
