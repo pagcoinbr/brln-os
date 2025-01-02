@@ -277,6 +277,9 @@ EOF'
   }
 
 install_bitcoind() {
+     if [[ -d /data/bitcoin ]]; then
+      echo "O Bitcoin Core já está instalado."
+    else
     cd /tmp
     VERSION=28.0
     wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
