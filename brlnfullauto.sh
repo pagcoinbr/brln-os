@@ -656,8 +656,8 @@ manage_bitcoin_node() {
 
 main() {
 read -p "Digite a senha para ThunderHub: " senha
-read -p "Digite seu alias(nome do nó): " alias
-read -p "Digite o bitcoind.rpcuser(BRLN): " bitcoind_rpcuser
+read -p "Digite seu alias(nome do nó): " "alias"
+read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
 read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
 read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
     update_and_upgrade
