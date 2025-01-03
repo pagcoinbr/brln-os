@@ -11,6 +11,12 @@ LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 
 update_and_upgrade() {
+read -p "Voce deseja atualizar e fazer upgrade do sistema? (y/n): " choice
+if [ "$choice" = "y" ]; then
+  sudo apt update && sudo apt full-upgrade -y
+else
+  echo "Pulando atualização e upgrade do sistema."
+fi
 sudo apt update && sudo apt full-upgrade -y
 }
 
@@ -27,6 +33,9 @@ configure_ufw() {
 }
 
 install_tor() {
+    if [[ -d /etc/tor ]]; then
+    echo "Tor já está instalado."
+    else
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
 deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
@@ -42,14 +51,13 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   else
     echo "Erro: Tor não está ouvindo nas portas corretas."
   fi
+fi
 }
 
 download_lnd() {
-  if [[ ! -d /tmp ]]; then
-    mkdir /tmp
+  if [[ -d /etc/systemd/system/lnd.service ]]; then
+    echo "LND já está instalado."
   else
-    echo "Diretório /tmp já existe."
-  fi
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
@@ -65,9 +73,13 @@ download_lnd() {
   tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+fi
 }
 
 configure_lnd() {
+    if [[ -d /etc/systemd/system/lnd.service ]]; then
+    echo "LND já está configurado."
+    else
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -200,9 +212,13 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
+fi
 }
 
 create_lnd_service() {
+if [[ -d /etc/systemd/system/lnd.service ]]; then
+    echo "O serviço LND já existe."
+    else
   sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
 # MiniBolt: systemd unit for lnd
 # /etc/systemd/system/lnd.service
@@ -244,12 +260,10 @@ EOF'
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-    while true; do
-    read -p "Escolha uma senha para a carteira Lightning: " password
+    until [ ${#password} -ge 8 ]; do
+    read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
     echo
-    if [ ${#password} -ge 8 ]; then
-      break
-    else
+    if [ ${#password} -lt 8 ]; then
       echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
   done
@@ -274,11 +288,12 @@ EOF'
         ;;
     esac
   done
+  fi
   }
 
 install_bitcoind() {
-     if [[ -d /data/bitcoin ]]; then
-      echo "O Bitcoin Core já está instalado."
+if [[ -d /data/bitcoin ]]; then
+    echo "Bitcoind já está instalado."
     else
     cd /tmp
     VERSION=28.0
@@ -408,15 +423,22 @@ sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
 sudo ss -tulpn | grep bitcoind
 echo "Bitcoind instalado com sucesso!"
+fi
 }
 
 install_nodejs() {
+if [[ -d ~/.npm-global ]]; then
+    echo "Node.js já está instalado."
+    else
   curl -sL https://deb.nodesource.com/setup_21.x | sudo -E bash -
   sudo apt-get install nodejs -y
-  
+fi
 }
 
 install_bos() {
+if [[ -d ~/.npm-global ]]; then
+    echo "Balance of Satoshis já está instalado."
+    else
   mkdir -p ~/.npm-global
   npm config set prefix '~/.npm-global'
 if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
@@ -468,9 +490,13 @@ EOF"
   sudo systemctl daemon-reload
   sudo systemctl start bos-telegram.service
   sudo systemctl enable bos-telegram.service
+fi
 }
 
 install_thunderhub() {
+if [[ -d ~/thunderhub ]]; then
+    echo "ThunderHub já está instalado."
+    else
   node -v
   npm -v
   sudo apt update && sudo apt full-upgrade -y
@@ -525,9 +551,14 @@ WantedBy=multi-user.target
 EOF'
 sudo systemctl start thunderhub.service
 sudo systemctl enable thunderhub.service
+fi
 }
 
 install_lndg () {
+if [[ -d $LNDG_DIR ]]; then
+    echo "LNDG já está instalado."
+    else
+sudo apt install -y python3-pip python3-venv
 sudo ufw allow 8889/tcp comment 'allow lndg SSL from anywhere'
 cd
 git clone https://github.com/cryptosharks131/lndg.git
@@ -579,6 +610,7 @@ sudo systemctl enable lndg-controller.service
 sudo systemctl start lndg-controller.service
 sudo systemctl enable lndg.service
 sudo systemctl start lndg.service
+fi
 }
 
 manage_bitcoin_node() {
@@ -659,7 +691,7 @@ manage_bitcoin_node() {
 
 main() {
 read -p "Digite a senha para ThunderHub: " senha
-read -p "Digite seu alias(nome do nó): " "alias"
+read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
 read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
 read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
 read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
