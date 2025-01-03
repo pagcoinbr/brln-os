@@ -11,7 +11,7 @@ LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 
 update_and_upgrade() {
-read -p "Voce deseja atualizar e fazer upgrade do sistema? (y/n): " choice
+#read -p "Voce deseja atualizar e fazer upgrade do sistema? (y/n): " choice
 if [ "$choice" = "y" ]; then
   sudo apt update && sudo apt full-upgrade -y
 else
