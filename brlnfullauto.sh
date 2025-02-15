@@ -567,7 +567,7 @@ sudo apt install -y virtualenv
 virtualenv -p python3 .venv
 .venv/bin/pip install -r requirements.txt
 .venv/bin/pip install whitenoise
-.venv/bin/python initialize.py --whitenoise
+.venv/bin/python3 initialize.py --whitenoise
 sudo tee /etc/systemd/system/lndg-controller.service > /dev/null <<EOF
 [Unit]
 Description=Controlador de backend para Lndg
