@@ -576,7 +576,7 @@ Description=Controlador de backend para Lndg
 Environment=PYTHONUNBUFFERED=1
 User=admin
 Group=admin
-ExecStart=$LNDG_DIR/.venv/bin/python $LNDG_DIR/controller.py
+ExecStart=$LNDG_DIR/.venv/bin/python3 $LNDG_DIR/controller.py
 StandardOutput=append:/var/log/lndg-controller.log
 StandardError=append:/var/log/lndg-controller.log
 Restart=always
@@ -595,7 +595,7 @@ Environment=PYTHONUNBUFFERED=1
 User=admin
 Group=admin
 WorkingDirectory=$LNDG_DIR
-ExecStart=$LNDG_DIR/.venv/bin/python $LNDG_DIR/manage.py runserver 0.0.0.0:8889
+ExecStart=$LNDG_DIR/.venv/bin/python3 $LNDG_DIR/manage.py runserver 0.0.0.0:8889
 StandardOutput=append:/var/log/lndg.log
 StandardError=append:/var/log/lndg.log
 Restart=always
