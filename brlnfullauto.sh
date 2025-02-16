@@ -511,15 +511,14 @@ sudo ufw allow 3000/tcp comment 'allow ThunderHub SSL from anywhere'
 cp .env .env.local
 sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .env.local
 bash -c "cat <<EOF > thubConfig.yaml
-masterPassword: 'PASSWORD'
+masterPassword: '$senha'
 accounts:
   - name: 'MiniBolt'
     serverUrl: '127.0.0.1:10009'
     macaroonPath: '/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon'
     certificatePath: '/data/lnd/tls.cert'
-    password: '[E] ThunderHub password'
+    password: '$senha'
 EOF"
-sed -i "7s|\[E\] ThunderHub password|$senha|" thubConfig.yaml
 sudo bash -c 'cat <<EOF > /etc/systemd/system/thunderhub.service
 # MiniBolt: systemd unit for Thunderhub
 # /etc/systemd/system/thunderhub.service
