@@ -690,7 +690,11 @@ manage_bitcoin_node() {
 
 main() {
 read -p "Digite a senha para ThunderHub: " senha
-read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
+read -p "Digite o nome do seu Nó: " "alias"
+if [[ "$alias" =~ [[:space:]] ]]; then
+  echo "❌ Alias não pode conter espaços. Tente novamente."
+  exit 1
+fi
 read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
 read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
 read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
@@ -753,5 +757,9 @@ menu() {
   esac
 }
 
-
+for cmd in curl wget gpg tar systemctl ufw python3 pip; do
+  if ! command -v $cmd &> /dev/null; then
+    echo "❌ Comando '$cmd' não encontrado. Por favor, instale antes de continuar."
+    exit 1
+  fi
 menu
