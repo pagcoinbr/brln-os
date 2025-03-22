@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define as variáveis da URL do repositório do Tor
-TOR_LINIK=https://deb.torproject.org/torproject.org
-TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
+TOR_LINK=https://deb.torproject.org/torproject.org
+TOR_GPG_LINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 # Define a variável de versão do LND
 LND_VERSION=0.18.3
 MAIN_DIR=/data
@@ -37,9 +37,9 @@ install_tor() {
     echo "Tor já está instalado."
     else
   sudo apt install -y apt-transport-https
-  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
-deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
-  sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
+  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINK jammy main
+deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
+  sudo su -c "wget -qO- $TOR_GPG_LINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
   sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
   sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
   sudo systemctl reload tor
