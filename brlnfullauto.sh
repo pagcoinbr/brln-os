@@ -55,7 +55,7 @@ fi
 }
 
 download_lnd() {
-  if [[ -d /etc/systemd/system/lnd.service ]]; then
+  if [[ -f /etc/systemd/system/lnd.service ]]; then
     echo "LND já está instalado."
   else
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
