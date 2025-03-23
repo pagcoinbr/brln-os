@@ -801,3 +801,4 @@ for cmd in curl wget gpg tar systemctl ufw python3 pip; do
     exit 1
   fi
 menu
+}
