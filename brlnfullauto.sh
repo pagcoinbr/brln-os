@@ -51,29 +51,66 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   else
     echo "Erro: Tor não está ouvindo nas portas corretas."
   fi
-fi
 }
 
 download_lnd() {
-  if [[ -f /etc/systemd/system/lnd.service ]]; then
-    echo "LND já está instalado."
-  else
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
-  sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
-  curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
-  gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
-  if [ $? -ne 0 ]; then
-    echo "####################################################################################### WARNING: GPG SIGNATURE NOT VERIFIED.##################################################################################################################################################"
-    exit 1
-  fi
-  tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
-  sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+set -e
+
+# 🎨 Cores para saída
+GREEN='\033[0;32m'
+NC='\033[0m' # Sem cor
+
+echo -e "${GREEN}📦 Iniciando compilação segura do LND (última versão disponível)...${NC}"
+
+# 1. Instalar dependências do sistema
+echo -e "${GREEN}🔧 Instalando dependências...${NC}"
+sudo apt update && sudo apt install -y \
+  git make gcc g++ \
+  autoconf automake libtool \
+  build-essential \
+  pkg-config \
+  libgmp-dev \
+  golang-go \
+  curl
+
+# 2. Configurar ambiente Go
+echo -e "${GREEN}🌱 Configurando ambiente Go...${NC}"
+if ! grep -q 'GOPATH' ~/.bashrc; then
+  echo 'export GOPATH=$HOME/gocode' >> ~/.bashrc
+  echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
 fi
+export GOPATH=$HOME/gocode
+export PATH=$PATH:$GOPATH/bin
+mkdir -p "$GOPATH"
+
+# 3. Buscar versão mais recente via API do GitHub
+echo -e "${GREEN}🔍 Buscando versão mais recente do LND via GitHub...${NC}"
+LND_TAG=$(curl -s https://api.github.com/repos/lightningnetwork/lnd/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')
+echo -e "${GREEN}📦 Última versão encontrada: $LND_TAG${NC}"
+
+# 4. Clonar o repositório LND
+echo -e "${GREEN}📥 Clonando o repositório do LND...${NC}"
+cd ~
+rm -rf lnd
+git clone https://github.com/lightningnetwork/lnd.git
+cd lnd
+git checkout "$LND_TAG"
+
+# 5. Compilar com as tags para RPCs completas
+echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
+make clean
+make build TAGS="signrpc walletrpc chainrpc routerrpc"
+
+# 6. Instalar binários
+echo -e "${GREEN}📂 Instalando binários em /usr/local/bin...${NC}"
+sudo install -m 0755 -o root -g root -t /usr/local/bin ./lnd ./lncli
+
+# 7. Verificação
+echo -e "${GREEN}✅ Compilação concluída com sucesso! Versões instaladas:${NC}"
+lnd --version
+lncli --version
+
+echo -e "${GREEN}⚡ O LND foi compilado com sucesso e está pronto para uso!${NC}"
 }
 
 configure_lnd() {
