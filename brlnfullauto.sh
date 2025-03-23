@@ -71,8 +71,19 @@ sudo apt update && sudo apt install -y \
   build-essential \
   pkg-config \
   libgmp-dev \
-  golang-go \
   curl
+
+# Instalar Go 1.22 manualmente (necessário para o LND moderno)
+echo -e "${GREEN}📥 Instalando Go 1.22.0...${NC}"
+cd /tmp
+wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+sudo rm -rf /usr/local/go
+sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+
+# Exportar o novo Go para a sessão atual e futura
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+export PATH=$PATH:/usr/local/go/bin
+
 
 # 2. Configurar ambiente Go
 echo -e "${GREEN}🌱 Configurando ambiente Go...${NC}"
