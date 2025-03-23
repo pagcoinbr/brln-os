@@ -51,6 +51,7 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   else
     echo "Erro: Tor não está ouvindo nas portas corretas."
   fi
+  fi
 }
 
 download_lnd() {
