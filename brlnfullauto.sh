@@ -83,6 +83,7 @@ sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
 # Exportar o novo Go para a sessão atual e futura
 echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
 export PATH=$PATH:/usr/local/go/bin
+. ~/.bashrc
 
 
 # 2. Configurar ambiente Go
