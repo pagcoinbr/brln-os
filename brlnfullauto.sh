@@ -795,10 +795,4 @@ menu() {
   esac
 }
 
-for cmd in curl wget gpg tar systemctl ufw python3 pip; do
-  if ! command -v $cmd &> /dev/null; then
-    echo "❌ Comando '$cmd' não encontrado. Por favor, instale antes de continuar."
-    exit 1
-  fi
 menu
-}
