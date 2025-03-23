@@ -96,6 +96,8 @@ rm -rf lnd
 git clone https://github.com/lightningnetwork/lnd.git
 cd lnd
 git checkout "$LND_TAG"
+# Corrigir erro do go.mod com versão mal formatada
+sed -i 's/go 1\.22\.6/go 1.22/' go.mod
 
 # 5. Compilar com as tags para RPCs completas
 echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
