@@ -116,10 +116,6 @@ echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
 make clean
 make install TAGS="signrpc walletrpc chainrpc routerrpc"
 
-# 6. Instalar binários
-echo -e "${GREEN}📂 Instalando binários em /usr/local/bin...${NC}"
-sudo install -m 0755 -o root -g root -t /usr/local/bin ./lnd ./lncli
-
 # 7. Verificação
 echo -e "${GREEN}✅ Compilação concluída com sucesso! Versões instaladas:${NC}"
 lnd --version
