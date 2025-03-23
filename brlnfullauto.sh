@@ -114,7 +114,7 @@ sed -i 's/go 1\.22\.6/go 1.22/' go.mod
 # 5. Compilar com as tags para RPCs completas
 echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
 make clean
-make build TAGS="signrpc walletrpc chainrpc routerrpc"
+make TAGS="signrpc walletrpc chainrpc routerrpc"
 
 # 6. Instalar binários
 echo -e "${GREEN}📂 Instalando binários em /usr/local/bin...${NC}"
