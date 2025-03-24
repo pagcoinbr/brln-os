@@ -743,6 +743,7 @@ manage_bitcoin_node() {
 }
 
 main() {
+whoami=
 read -p "Digite a senha para ThunderHub: " senha
 read -p "Digite o nome do seu Nó: " "alias"
 if [[ "$alias" =~ [[:space:]] ]]; then
