@@ -17,12 +17,11 @@ if [ "$choice" = "y" ]; then
 else
   echo "Pulando atualização e upgrade do sistema."
 fi
-sudo apt update && sudo apt full-upgrade -y
 }
 
 create_main_dir() {
   [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
-  sudo chown admin:admin $MAIN_DIR
+  sudo chown $USER:$USER $MAIN_DIR
 }
 
 configure_ufw() {
@@ -114,7 +113,14 @@ sed -i 's/go 1\.22\.6/go 1.22/' go.mod
 # 5. Compilar com as tags para RPCs completas
 echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
 make clean
-make install TAGS="signrpc walletrpc chainrpc routerrpc"
+make install TAGS="signrpc walletrpc chainrpc routerrpc" > /home/user/
+
+sudo mv /home/admin/gocode/bin/lncli /usr/local/bin/
+sudo mv /home/admin/gocode/bin/lnd /usr/local/bin/
+
+# Garante que estão com permissão de execução
+sudo chmod +x /usr/local/bin/lncli
+sudo chmod +x /usr/local/bin/lnd
 
 # 7. Verificação
 echo -e "${GREEN}✅ Compilação concluída com sucesso! Versões instaladas:${NC}"
