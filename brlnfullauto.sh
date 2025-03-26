@@ -131,7 +131,7 @@ echo -e "${GREEN}⚡ O LND foi compilado com sucesso e está pronto para uso!${N
 }
 
 configure_lnd() {
-    if [[ -d /etc/systemd/system/lnd.service ]]; then
+    if [[ -f /etc/systemd/system/lnd.service ]]; then
     echo "LND já está configurado."
     else
   sudo usermod -aG debian-tor admin
