@@ -272,7 +272,6 @@ EOF'
   sudo systemctl enable lnd
   sudo systemctl start lnd
   sleep 10
-  fi
 }
 
 create_wallet() {
