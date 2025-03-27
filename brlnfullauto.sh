@@ -1,28 +1,28 @@
 #!/bin/bash
 
 # Define as variáveis da URL do repositório do Tor
-TOR_LINK=https://deb.torproject.org/torproject.org
-TOR_GPG_LINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
+TOR_LINIK=https://deb.torproject.org/torproject.org
+TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 # Define a variável de versão do LND
 LND_VERSION=0.18.3
 MAIN_DIR=/data
 LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
-USER=(whoami)
 
 update_and_upgrade() {
-read -p "Voce deseja atualizar e fazer upgrade do sistema? (y/n): " choice
+#read -p "Voce deseja atualizar e fazer upgrade do sistema? (y/n): " choice
 if [ "$choice" = "y" ]; then
   sudo apt update && sudo apt full-upgrade -y
 else
   echo "Pulando atualização e upgrade do sistema."
 fi
+sudo apt update && sudo apt full-upgrade -y
 }
 
 create_main_dir() {
   [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
-  sudo chown $USER:$USER $MAIN_DIR
+  sudo chown admin:admin $MAIN_DIR
 }
 
 configure_ufw() {
@@ -37,9 +37,9 @@ install_tor() {
     echo "Tor já está instalado."
     else
   sudo apt install -y apt-transport-https
-  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINK jammy main
-deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
-  sudo su -c "wget -qO- $TOR_GPG_LINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
+  echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
+deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
+  sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
   sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
   sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
   sudo systemctl reload tor
@@ -51,94 +51,42 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   else
     echo "Erro: Tor não está ouvindo nas portas corretas."
   fi
-  fi
+fi
 }
 
 download_lnd() {
-set -e
-
-# 🎨 Cores para saída
-GREEN='\033[0;32m'
-NC='\033[0m' # Sem cor
-
-echo -e "${GREEN}📦 Iniciando compilação segura do LND (última versão disponível)...${NC}"
-
-# 1. Instalar dependências do sistema
-echo -e "${GREEN}🔧 Instalando dependências...${NC}"
-sudo apt update && sudo apt install -y \
-  git make gcc g++ \
-  autoconf automake libtool \
-  build-essential \
-  pkg-config \
-  libgmp-dev \
-  curl
-
-# Instalar Go 1.22 manualmente (necessário para o LND moderno)
-echo -e "${GREEN}📥 Instalando Go 1.22.0...${NC}"
-cd /tmp
-wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go
-sudo tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
-
-# Exportar o novo Go para a sessão atual e futura
-echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
-export PATH=$PATH:/usr/local/go/bin
-. ~/.bashrc
-
-
-# 2. Configurar ambiente Go
-echo -e "${GREEN}🌱 Configurando ambiente Go...${NC}"
-if ! grep -q 'GOPATH' ~/.bashrc; then
-  echo 'export GOPATH=$HOME/gocode' >> ~/.bashrc
-  echo 'export PATH=$PATH:$GOPATH/bin' >> ~/.bashrc
+  if [[ -d /etc/systemd/system/lnd.service ]]; then
+    echo "LND já está instalado."
+  else
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
+  sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
+  curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
+  gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
+  if [ $? -ne 0 ]; then
+    echo "####################################################################################### WARNING: GPG SIGNATURE NOT VERIFIED.##################################################################################################################################################"
+    exit 1
+  fi
+  tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
+  sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
 fi
-export GOPATH=$HOME/gocode
-export PATH=$PATH:$GOPATH/bin
-mkdir -p "$GOPATH"
-
-# 3. Buscar versão mais recente via API do GitHub
-echo -e "${GREEN}🔍 Buscando versão mais recente do LND via GitHub...${NC}"
-LND_TAG=$(curl -s https://api.github.com/repos/lightningnetwork/lnd/releases/latest | grep -oP '"tag_name":\s*"\K[^"]+')
-echo -e "${GREEN}📦 Última versão encontrada: $LND_TAG${NC}"
-
-# 4. Clonar o repositório LND
-echo -e "${GREEN}📥 Clonando o repositório do LND...${NC}"
-cd /data/$LN_DDIR
-git clone https://github.com/lightningnetwork/lnd.git
-cd lnd
-git checkout "$LND_TAG"
-# Corrigir erro do go.mod com versão mal formatada
-sed -i 's/go 1\.22\.6/go 1.22/' go.mod
-
-# 5. Compilar com as tags para RPCs completas
-echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
-make clean
-make install TAGS="signrpc walletrpc chainrpc routerrpc"
-
-sudo mv /home/admin/gocode/bin/lncli /usr/local/bin/
-sudo mv /home/admin/gocode/bin/lnd /usr/local/bin/
-
-# Garante que estão com permissão de execução
-sudo chmod +x /usr/local/bin/lncli
-sudo chmod +x /usr/local/bin/lnd
-
-# 7. Verificação
-echo -e "${GREEN}✅ Compilação concluída com sucesso! Versões instaladas:${NC}"
-lnd --version
-lncli --version
-
-echo -e "${GREEN}⚡ O LND foi compilado com sucesso e está pronto para uso!${NC}"
 }
 
 configure_lnd() {
-    if [[ -f /etc/systemd/system/lnd.service ]]; then
+    if [[ -d /etc/systemd/system/lnd.service ]]; then
     echo "LND já está configurado."
     else
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo usermod -a -G debian-tor admin
+  sudo mkdir -p $LN_DDIR
   sudo chown -R admin:admin $LN_DDIR
+  ln -s $LN_DDIR /home/admin/.lnd
   cat << EOF > $LN_DDIR/lnd.conf
 # MiniBolt: lnd configuration
 # /data/admin/lnd.conf
@@ -260,6 +208,7 @@ tor.active=true
 tor.v3=true
 EOF
   echo "Configuração concluída com sucesso!"
+  ln -s $LN_DDIR /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -267,7 +216,7 @@ fi
 }
 
 create_lnd_service() {
-if [[ -f /etc/systemd/system/lnd.service ]]; then
+if [[ -d /etc/systemd/system/lnd.service ]]; then
     echo "O serviço LND já existe."
     else
   sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
@@ -283,7 +232,7 @@ ExecStop=/usr/local/bin/lncli stop
 
 # Process management
 ####################
-#Restart=on-failure
+Restart=on-failure
 RestartSec=60
 Type=notify
 TimeoutStartSec=1200
@@ -307,6 +256,7 @@ MemoryDenyWriteExecute=true
 [Install]
 WantedBy=multi-user.target
 EOF'
+  ln -s $LN_DDIR /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -740,11 +690,7 @@ manage_bitcoin_node() {
 
 main() {
 read -p "Digite a senha para ThunderHub: " senha
-read -p "Digite o nome do seu Nó: " "alias"
-if [[ "$alias" =~ [[:space:]] ]]; then
-  echo "❌ Alias não pode conter espaços. Tente novamente."
-  exit 1
-fi
+read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
 read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
 read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
 read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
@@ -806,5 +752,6 @@ menu() {
       ;;
   esac
 }
+
 
 menu
