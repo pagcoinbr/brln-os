@@ -41,6 +41,12 @@ Agora vamos criar o usuário admin, para isso, de o seguinte comando:
 sudo adduser --gecos "" admin
 ```
 
+Caso receba o erro: `fatal: The group 'admin' already exists.`, você precisa fazer:
+
+```bash
+sudo adduser --gecos "" --ingroup admin admin
+```
+
 Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha para o usuário admin, que estamos criando. 
 
 Depois copie e cole no terminal:
