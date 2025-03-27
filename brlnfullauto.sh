@@ -103,8 +103,7 @@ echo -e "${GREEN}📦 Última versão encontrada: $LND_TAG${NC}"
 
 # 4. Clonar o repositório LND
 echo -e "${GREEN}📥 Clonando o repositório do LND...${NC}"
-cd ~
-rm -rf lnd
+cd /data/$LN_DDIR
 git clone https://github.com/lightningnetwork/lnd.git
 cd lnd
 git checkout "$LND_TAG"
