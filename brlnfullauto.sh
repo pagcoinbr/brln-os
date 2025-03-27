@@ -9,6 +9,7 @@ MAIN_DIR=/data
 LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
+USER=(whoami)
 
 update_and_upgrade() {
 read -p "Voce deseja atualizar e fazer upgrade do sistema? (y/n): " choice
@@ -113,7 +114,7 @@ sed -i 's/go 1\.22\.6/go 1.22/' go.mod
 # 5. Compilar com as tags para RPCs completas
 echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
 make clean
-make install TAGS="signrpc walletrpc chainrpc routerrpc" > /home/user/
+make install TAGS="signrpc walletrpc chainrpc routerrpc" > /home/user/lnd_compilation.log 2>&1
 
 sudo mv /home/admin/gocode/bin/lncli /usr/local/bin/
 sudo mv /home/admin/gocode/bin/lnd /usr/local/bin/
@@ -270,7 +271,7 @@ fi
 }
 
 create_lnd_service() {
-if [[ -d /etc/systemd/system/lnd.service ]]; then
+if [[ -f /etc/systemd/system/lnd.service ]]; then
     echo "O serviço LND já existe."
     else
   sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
@@ -743,7 +744,6 @@ manage_bitcoin_node() {
 }
 
 main() {
-whoami=
 read -p "Digite a senha para ThunderHub: " senha
 read -p "Digite o nome do seu Nó: " "alias"
 if [[ "$alias" =~ [[:space:]] ]]; then
