@@ -262,7 +262,6 @@ tor.active=true
 tor.v3=true
 EOF
   echo "Configuração concluída com sucesso!"
-  ln -s $LN_DDIR /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
