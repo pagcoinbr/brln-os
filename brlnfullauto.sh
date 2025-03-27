@@ -232,7 +232,7 @@ ExecStop=/usr/local/bin/lncli stop
 
 # Process management
 ####################
-Restart=on-failure
+#Restart=on-failure
 RestartSec=60
 Type=notify
 TimeoutStartSec=1200
