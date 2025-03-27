@@ -139,7 +139,6 @@ configure_lnd() {
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo usermod -a -G debian-tor admin
-  sudo mkdir -p $LN_DDIR
   sudo chown -R admin:admin $LN_DDIR
   cat << EOF > $LN_DDIR/lnd.conf
 # MiniBolt: lnd configuration
