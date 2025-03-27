@@ -58,9 +58,9 @@ Em seguida faça o `logout` ou `exit` para retornar ao usuário `temp`
 
 Agora que criamos um novo usuário "admin", vamos fazer o login neste novo usuário, novamente e apagar o usuário "temp" anterior.
 
-Mais uma vez faça o comando, agora com o user admin:
+Entre como usuário admin:
 ```bash
-ssh admin@ip.do.servidor
+sudo su - admin
 ```
 
 Uma vez logado, de o seguinte comando: 
