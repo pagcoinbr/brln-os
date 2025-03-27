@@ -291,7 +291,6 @@ create_wallet() {
         ;;
     esac
   done
-  fi
 }
 
 install_bitcoind() {
