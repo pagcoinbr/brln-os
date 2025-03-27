@@ -309,7 +309,6 @@ MemoryDenyWriteExecute=true
 [Install]
 WantedBy=multi-user.target
 EOF'
-  ln -s $LN_DDIR /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
