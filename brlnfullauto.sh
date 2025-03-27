@@ -114,7 +114,7 @@ sed -i 's/go 1\.22\.6/go 1.22/' go.mod
 # 5. Compilar com as tags para RPCs completas
 echo -e "${GREEN}⚙️ Compilando com suporte total a RPC...${NC}"
 make clean
-make install TAGS="signrpc walletrpc chainrpc routerrpc" > /home/$user/lnd_compilation.log 2>&1
+make install TAGS="signrpc walletrpc chainrpc routerrpc"
 
 sudo mv /home/admin/gocode/bin/lncli /usr/local/bin/
 sudo mv /home/admin/gocode/bin/lnd /usr/local/bin/
