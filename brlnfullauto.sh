@@ -292,7 +292,7 @@ create_wallet() {
     esac
   done
   fi
-  }
+}
 
 install_bitcoind() {
 if [[ -d /data/bitcoin ]]; then
