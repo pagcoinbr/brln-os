@@ -216,7 +216,7 @@ fi
 }
 
 create_lnd_service() {
-if [[ -d /etc/systemd/system/lnd.service ]]; then
+if [[ -f /etc/systemd/system/lnd.service ]]; then
     echo "O serviço LND já existe."
     else
   sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
@@ -272,6 +272,7 @@ EOF'
   sudo systemctl enable lnd
   sudo systemctl start lnd
   sleep 10
+fi
 }
 
 create_wallet() {
