@@ -743,7 +743,6 @@ menu() {
   echo "   5- Instalar Balance of Satoshis (Exige LND)"
   echo "   6- Instalar Thunderhub (Exige LND)"
   echo "   7- Instalar Lndg (Exige LND)"
-  echo "   8- Instalar LNbits"
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
