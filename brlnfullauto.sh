@@ -748,6 +748,10 @@ menu() {
       install_bitcoind
       ;;
     4)
+      read -p "Digite a senha para ThunderHub: " senha
+      read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
+      read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+      read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
       update_and_upgrade
       create_main_dir
       configure_ufw
@@ -755,6 +759,10 @@ menu() {
       download_lnd
       configure_lnd
       create_lnd_service
+      install_nodejs
+      install_bos
+      install_thunderhub
+      install_lndg
       ;;
     0)
       echo "👋 Saindo... Até a próxima!"
