@@ -480,9 +480,9 @@ After=lnd.service
 [Service]
 ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect <seu_connect_code_aqui>
 User=admin
-Restart=always
+#Restart=always
 TimeoutSec=120
-RestartSec=30
+#RestartSec=30
 StandardOutput=null
 StandardError=journal
 Environment=BOS_DEFAULT_LND_PATH=/data/lnd
