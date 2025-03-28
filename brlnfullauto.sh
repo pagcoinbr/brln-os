@@ -727,7 +727,10 @@ menu() {
   echo "   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo "   2- Alterne Bitcoin Local/Remoto"
   echo "   3- Instalar Bitcoin Core (Tor + BTCd)"
-  echo "   4- Instalar Node Lightning (Bitcoinless) - Exige bitcoin core externo."
+  echo "   4- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
+  echo "   5- Instalar Balance of Satoshis (Exige LND)"
+  echo "   6- Instalar Thunderhub (Exige LND)"
+  echo "   7- Instalar Lndg (Exige LND)"
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -759,6 +762,18 @@ menu() {
       download_lnd
       configure_lnd
       create_lnd_service
+      create_wallet
+      ;;
+    5)
+      install_nodejs
+      install_bos
+      ;;
+    6)
+      read -p "Digite a senha para ThunderHub: " senha
+      install_thunderhub
+      ;;
+    7)
+      install_lndg
       ;;
     0)
       echo "👋 Saindo... Até a próxima!"
