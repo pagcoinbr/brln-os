@@ -233,9 +233,9 @@ ExecStop=/usr/local/bin/lncli stop
 # Process management
 ####################
 #Restart=on-failure
-RestartSec=60
-Type=notify
-TimeoutStartSec=1200
+#RestartSec=60
+#Type=notify
+#TimeoutStartSec=1200
 TimeoutStopSec=3600
 
 # Directory creation and permissions
