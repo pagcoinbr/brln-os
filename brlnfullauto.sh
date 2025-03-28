@@ -727,6 +727,7 @@ menu() {
   echo "   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo "   2- Alterne Bitcoin Local/Remoto"
   echo "   3- Instalar Bitcoin Core (Tor + BTCd)"
+  echo "   4- Instalar Node Lightning (Bitcoinless) - Exige bitcoin core externo."
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
