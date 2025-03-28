@@ -231,7 +231,8 @@ systemctl daemon-reload
 Escolha a opção 1 e digite a senha do seu usuário linux.
 
 ```bash
-sudo systemctl restart bos-telegram.service
+sudo systemctl enable bos-telegram.service
+sudo systemctl start bos-telegram.service
 ```
 
 Agora verifique se o serviço está funcionando, com o seguinte comando:
