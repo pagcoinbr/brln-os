@@ -755,6 +755,7 @@ menu() {
       download_lnd
       configure_lnd
       create_lnd_service
+      ;;
     0)
       echo "👋 Saindo... Até a próxima!"
       exit 0
