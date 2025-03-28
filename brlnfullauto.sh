@@ -689,6 +689,20 @@ manage_bitcoin_node() {
     done
 }
 
+lnbits_install() {
+sudo apt update
+sudo apt install python3-venv
+python3 -m venv myenv
+source myenv/bin/activate
+curl -L -o poetry-2.1.1.tar.gz https://github.com/python-poetry/poetry/releases/download/2.1.1/poetry-2.1.1.tar.gz
+tar -xzf poetry-2.1.1.tar.gz -C $HOME/.poetry/bin --strip-components=1
+ls
+mkdir poetry-src
+tar -xzf poetry-2.1.1.tar.gz -C poetry-src --strip-components=1
+cd poetry-src
+pip install .
+}
+
 main() {
 read -p "Digite a senha para ThunderHub: " senha
 read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
@@ -729,6 +743,7 @@ menu() {
   echo "   5- Instalar Balance of Satoshis (Exige LND)"
   echo "   6- Instalar Thunderhub (Exige LND)"
   echo "   7- Instalar Lndg (Exige LND)"
+  echo "   8- Instalar LNbits"
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -772,6 +787,9 @@ menu() {
       ;;
     7)
       install_lndg
+      ;;
+    8)
+      lnbits_install
       ;;
     0)
       echo "👋 Saindo... Até a próxima!"
