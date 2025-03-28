@@ -491,8 +491,6 @@ Environment=BOS_DEFAULT_LND_PATH=/data/lnd
 WantedBy=multi-user.target
 EOF"
   sudo systemctl daemon-reload
-  sudo systemctl start bos-telegram.service
-  sudo systemctl enable bos-telegram.service
 fi
 }
 
