@@ -821,9 +821,11 @@ menu() {
       configure_ufw
       install_tor
       install_nodejs
+      menu
       ;;
     3)
       manage_bitcoin_node
+      menu
       ;;
     4)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
@@ -832,6 +834,7 @@ menu() {
       configure_ufw
       install_tor
       install_bitcoind
+      menu
       ;;
     5)
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
@@ -841,19 +844,24 @@ menu() {
       configure_lnd
       create_lnd_service
       create_wallet
+      menu
       ;;
     6)
       install_bos
+      menu
       ;;
     7)
       read -p "Digite a senha para ThunderHub: " senha
       install_thunderhub
+      menu
       ;;
     8)
       install_lndg
+      menu
       ;;
     9)
       lnbits_install
+      menu
       ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
