@@ -789,11 +789,13 @@ menu() {
   echo "    - LNDG"
   echo
   echo "📝 Escolha uma opção:"
+  echo
   echo "   Instalação Automática:"
   echo "   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
+  echo
   echo "   Instalação Manual:"
   echo "   2- Instalar Pre-requisitos (Obrigatório para as opções 3-9)"
-  echo "   3- Alterne Bitcoin Local/Remoto"
+  echo "   3- Alternar Bitcoin Local/Remoto"
   echo "   4- Instalar Bitcoin Core (Tor + BTCd)"
   echo "   5- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
   echo "   6- Instalar Balance of Satoshis (Exige LND)"
