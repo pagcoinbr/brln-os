@@ -763,8 +763,8 @@ main() {
 read -p "Digite a senha para ThunderHub: " senha
 read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
 read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-read -p -s "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
-read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
+read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
     update_and_upgrade
     create_main_dir
     configure_ufw
