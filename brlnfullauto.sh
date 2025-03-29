@@ -778,37 +778,37 @@ read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
 }
 
 menu() {
-  echo "🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟"
+  echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
-  echo "⚡ Este script instalará:"
-  echo "  🛠️ Nó Lightning Standalone"
-  echo "  🏗️ Bitcoin Core"
-  echo "  🖥️ Ferramentas de administração:"
-  echo "    - ThunderHub"
-  echo "    - Balance of Satoshis (BOS)"
-  echo "    - LNDG"
+  echo -e "${YELLOW}⚡ Este script instalará:${NC}"
+  echo -e "  ${GREEN}🛠️ Nó Lightning Standalone${NC}"
+  echo -e "  ${GREEN}🏗️ Bitcoin Core${NC}"
+  echo -e "  ${GREEN}🖥️ Ferramentas de administração:${NC}"
+  echo -e "    ${BLUE}- ThunderHub${NC}"
+  echo -e "    ${BLUE}- Balance of Satoshis (BOS)${NC}"
+  echo -e "    ${BLUE}- LNDG${NC}"
   echo
-  echo "📝 Escolha uma opção:"
+  echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo "   Instalação Automática:"
-  echo "   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
+  echo -e "   ${MAGENTA}Instalação Automática:${NC}"
+  echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo
-  echo "   Instalação Manual:"
-  echo "   2- Instalar Pre-requisitos (Obrigatório para as opções 3-9)"
-  echo "   3- Alternar Bitcoin Local/Remoto"
-  echo "   4- Instalar Bitcoin Core (Tor + BTCd)"
-  echo "   5- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
-  echo "   6- Instalar Balance of Satoshis (Exige LND)"
-  echo "   7- Instalar Thunderhub (Exige LND)"
-  echo "   8- Instalar Lndg (Exige LND)"
-  echo "   9- Instalar LNbits (Exige LND)"
-  echo "   0- Sair"
+  echo -e "   ${MAGENTA}Instalação Manual:${NC}"
+  echo -e "   ${GREEN}2${NC}- Instalar Pre-requisitos (Obrigatório para as opções 3-9)"
+  echo -e "   ${GREEN}3${NC}- Alternar Bitcoin Local/Remoto"
+  echo -e "   ${GREEN}4${NC}- Instalar Bitcoin Core (Tor + BTCd)"
+  echo -e "   ${GREEN}5${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
+  echo -e "   ${GREEN}6${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}7${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}8${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}9${NC}- Instalar LNbits (Exige LND)"
+  echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
 
   case $option in
     1)
-      echo "🚀 Iniciando a instalação..."
+      echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
       main
       ;;
     2)
@@ -852,11 +852,11 @@ menu() {
       lnbits_install
       ;;
     0)
-      echo "👋 Saindo... Até a próxima!"
+      echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
       exit 0
       ;;
     *)
-      echo "❌ Opção inválida! Tente novamente."
+      echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
       ;;
   esac
 }
