@@ -839,7 +839,7 @@ menu() {
     5)
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-      read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+      read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
       download_lnd
       configure_lnd
       create_lnd_service
