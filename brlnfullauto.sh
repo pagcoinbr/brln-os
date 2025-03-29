@@ -690,17 +690,76 @@ manage_bitcoin_node() {
 }
 
 lnbits_install() {
+#!/bin/bash
+
+# Instalação do LNbits 1.0 automatizada
+# Execute como usuário comum (ex: admin), não como root
+
+set -e  # Para o script em caso de erro
+
+# VARIÁVEIS
+USER_HOME="/home/admin"
+LNBITS_DIR="$USER_HOME/lnbits"
+POETRY_BIN="$USER_HOME/.local/bin/poetry"
+SYSTEMD_FILE="/etc/systemd/system/lnbits.service"
+
+# Atualiza e instala dependências básicas
 sudo apt update
-sudo apt install python3-venv
+sudo apt install -y python3-venv pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
+
+# Cria ambiente virtual
+cd "$USER_HOME"
 python3 -m venv myenv
 source myenv/bin/activate
-curl -L -o poetry-2.1.1.tar.gz https://github.com/python-poetry/poetry/releases/download/2.1.1/poetry-2.1.1.tar.gz
-tar -xzf poetry-2.1.1.tar.gz -C $HOME/.poetry/bin --strip-components=1
-ls
-mkdir poetry-src
-tar -xzf poetry-2.1.1.tar.gz -C poetry-src --strip-components=1
-cd poetry-src
-pip install .
+
+# Instala Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$USER_HOME/.bashrc"
+source "$USER_HOME/.bashrc"
+
+# Verifica versão do Poetry
+"$POETRY_BIN" self update
+"$POETRY_BIN" --version
+
+# Clona o repositório LNbits
+git clone https://github.com/lnbits/lnbits.git "$LNBITS_DIR"
+sudo chown -R admin:admin "$LNBITS_DIR"
+
+# Entra no diretório e instala dependências
+cd "$LNBITS_DIR"
+git checkout main
+"$POETRY_BIN" install --only main
+
+# Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
+cp .env.example .env
+sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
+
+# Cria o serviço systemd
+sudo tee "$SYSTEMD_FILE" > /dev/null <<EOF
+[Unit]
+Description=LNbits
+# Wants=lnd.service
+# After=lnd.service
+
+[Service]
+WorkingDirectory=$LNBITS_DIR
+ExecStart=$POETRY_BIN run lnbits
+User=admin
+Restart=always
+TimeoutSec=120
+RestartSec=30
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Ativa e inicia o serviço
+sudo systemctl daemon-reload
+sudo systemctl enable lnbits.service
+sudo systemctl start lnbits.service
+
+echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 main() {
@@ -743,6 +802,7 @@ menu() {
   echo "   5- Instalar Balance of Satoshis (Exige LND)"
   echo "   6- Instalar Thunderhub (Exige LND)"
   echo "   7- Instalar Lndg (Exige LND)"
+  echo "   8- Instalar LNbits (Exige LND)"
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
