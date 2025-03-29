@@ -699,30 +699,24 @@ SYSTEMD_FILE="/etc/systemd/system/lnbits.service"
 
 # Atualiza e instala dependências básicas
 sudo apt update
-sudo apt install -y python3-venv pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
+sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
 
-# Cria ambiente virtual
-cd "$USER_HOME"
-python3 -m venv myenv
-source myenv/bin/activate
-
-# Instala Poetry
+# Instala Poetry (não precisa ativar venv manual)
 curl -sSL https://install.python-poetry.org | python3 -
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$USER_HOME/.bashrc"
-source "$USER_HOME/.bashrc"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Verifica versão do Poetry
-"$POETRY_BIN" self update
+"$POETRY_BIN" self update || true
 "$POETRY_BIN" --version
 
 # Clona o repositório LNbits
 git clone https://github.com/lnbits/lnbits.git "$LNBITS_DIR"
 sudo chown -R admin:admin "$LNBITS_DIR"
 
-# Entra no diretório e instala dependências
+# Entra no diretório e instala dependências com Poetry
 cd "$LNBITS_DIR"
 git checkout main
-source "$USER_HOME/.bashrc"
 "$POETRY_BIN" install
 
 # Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
@@ -730,19 +724,11 @@ cp .env.example .env
 sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
 # Criar o script de inicialização dinâmico
-cat > "$LNBITS_DIR/start-lnbits.sh" <<'EOF'
+cat > "$LNBITS_DIR/start-lnbits.sh" <<EOF
 #!/bin/bash
-
-cd $USER_HOME/lnbits
-
-# Garante que o poetry está no PATH
-export PATH="$HOME/.local/bin:$PATH"
-
-# Descobre o path do ambiente virtual criado pelo Poetry
-VENV_PATH=$(poetry env info --path)
-
-# Executa o binário do LNbits dentro do ambiente virtual
-exec "$VENV_PATH/bin/lnbits"
+cd $LNBITS_DIR
+export PATH="\$HOME/.local/bin:\$PATH"
+exec $POETRY_BIN run lnbits
 EOF
 
 # Torna o script executável
