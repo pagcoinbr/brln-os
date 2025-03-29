@@ -793,7 +793,7 @@ menu() {
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${MAGENTAInstalação Automática:${NC}"
+  echo -e "   ${MAGENTA}Instalação Automática:${NC}"
   echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo
   echo -e "   ${GREEN}2${NC}- Alternar Bitcoin Local/Remoto"
