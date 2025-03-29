@@ -109,7 +109,7 @@ Envie a mensagem:
 **Selecione a opção numero 1 e inicie a intalação preenchendo com os dados solicitados**
 
 ```bash
-admin@brlnbolt:~$ ./brln.sh
+admin@minibolt:~/brlnfullauto$ ./brlnfullauto.sh
 🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟
 
 ⚡ Este script instalará:
@@ -121,17 +121,21 @@ admin@brlnbolt:~$ ./brln.sh
     - LNDG
 
 📝 Escolha uma opção:
-   1- Instalação do BRLN Bolt
+   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)
    2- Alterne Bitcoin Local/Remoto
+   3- Instalar Bitcoin Core (Tor + BTCd)
+   4- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo.
+   5- Instalar Balance of Satoshis (Exige LND)
+   6- Instalar Thunderhub (Exige LND)
+   7- Instalar Lndg (Exige LND)
    0- Sair
 
-👉 Digite sua escolha: 1
-🚀 Iniciando a instalação...
-Digite a senha para ThunderHub: <senha_thunderhub>
-Digite o alias: <nome_do_seu_nó>
-Digite o bitcoind.rpcuser: <rpc_user_BRLN_aqui>
-Digite o bitcoind.rpcpass: <sua_senha_BRLN_aqui>
-Escolha sua senha do Bitcoin Core: <senha_rpcauth>
+👉 Digite sua escolha: 4
+Digite a senha do Thunderhub:
+Digite o nome do seu Nó (NÃO USE ESPAÇO!): 
+Digite o bitcoind.rpcuser(BRLN): 
+Digite o bitcoind.rpcpass(BRLN):
+Digite a senha do bitcoin core: 
 ```
 ---
 
