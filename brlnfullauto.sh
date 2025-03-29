@@ -790,13 +790,14 @@ menu() {
   echo
   echo "📝 Escolha uma opção:"
   echo "   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
-  echo "   2- Alterne Bitcoin Local/Remoto"
-  echo "   3- Instalar Bitcoin Core (Tor + BTCd)"
-  echo "   4- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
-  echo "   5- Instalar Balance of Satoshis (Exige LND)"
-  echo "   6- Instalar Thunderhub (Exige LND)"
-  echo "   7- Instalar Lndg (Exige LND)"
-  echo "   8- Instalar LNbits (Exige LND)"
+  echo "   2- Instalar Pre-requisitos (NodeJS + Tor + UFW)"
+  echo "   3- Alterne Bitcoin Local/Remoto"
+  echo "   4- Instalar Bitcoin Core (Tor + BTCd)"
+  echo "   5- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
+  echo "   6- Instalar Balance of Satoshis (Exige LND)"
+  echo "   7- Instalar Thunderhub (Exige LND)"
+  echo "   8- Instalar Lndg (Exige LND)"
+  echo "   9- Instalar LNbits (Exige LND)"
   echo "   0- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -807,9 +808,16 @@ menu() {
       main
       ;;
     2)
-      manage_bitcoin_node
+      update_and_upgrade
+      create_main_dir
+      configure_ufw
+      install_tor
+      install_nodejs
       ;;
     3)
+      manage_bitcoin_node
+      ;;
+    4)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
       update_and_upgrade
       create_main_dir
@@ -817,31 +825,26 @@ menu() {
       install_tor
       install_bitcoind
       ;;
-    4)
+    5)
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-      read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
-      update_and_upgrade
-      create_main_dir
-      configure_ufw
-      install_tor
-      install_nodejs
+      read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
       download_lnd
       configure_lnd
       create_lnd_service
       create_wallet
       ;;
-    5)
+    6)
       install_bos
       ;;
-    6)
+    7)
       read -p "Digite a senha para ThunderHub: " senha
       install_thunderhub
       ;;
-    7)
+    8)
       install_lndg
       ;;
-    8)
+    9)
       lnbits_install
       ;;
     0)
