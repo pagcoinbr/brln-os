@@ -731,6 +731,7 @@ sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
 # Criar o script de inicialização dinâmico
 cat > "$LNBITS_DIR/start-lnbits.sh" <<'EOF'
+#!/bin/bash
 
 cd $USER_HOME/lnbits
 
