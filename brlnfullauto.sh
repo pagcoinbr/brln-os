@@ -684,8 +684,6 @@ manage_bitcoin_node() {
 }
 
 lnbits_install() {
-#!/bin/bash
-
 # Instalação do LNbits 1.0 automatizada
 # Execute como usuário comum (ex: admin), não como root
 
