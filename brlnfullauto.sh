@@ -842,6 +842,7 @@ menu() {
       ;;
     6)
       read -p "Digite a senha para ThunderHub: " senha
+      install_nodejs
       install_thunderhub
       ;;
     7)
