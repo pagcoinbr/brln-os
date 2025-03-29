@@ -729,16 +729,33 @@ source "$USER_HOME/.bashrc"
 cp .env.example .env
 sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
+# Criar o script de inicialização dinâmico
+cat > "$LNBITS_DIR/start-lnbits.sh" <<'EOF'
+
+cd $USER_HOME/lnbits
+
+# Garante que o poetry está no PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# Descobre o path do ambiente virtual criado pelo Poetry
+VENV_PATH=$(poetry env info --path)
+
+# Executa o binário do LNbits dentro do ambiente virtual
+exec "$VENV_PATH/bin/lnbits"
+EOF
+
+# Torna o script executável
+chmod +x "$LNBITS_DIR/start-lnbits.sh"
+
 # Cria o serviço systemd
 sudo tee "$SYSTEMD_FILE" > /dev/null <<EOF
 [Unit]
 Description=LNbits
-# Wants=lnd.service
-# After=lnd.service
+After=network.target
 
 [Service]
 WorkingDirectory=$LNBITS_DIR
-ExecStart=$POETRY_BIN run lnbits
+ExecStart=$LNBITS_DIR/start-lnbits.sh
 User=admin
 Restart=always
 TimeoutSec=120
