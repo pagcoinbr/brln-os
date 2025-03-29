@@ -831,18 +831,17 @@ menu() {
       create_main_dir
       configure_ufw
       install_tor
+      install_nodejs
       download_lnd
       configure_lnd
       create_lnd_service
       create_wallet
       ;;
     5)
-      install_nodejs
       install_bos
       ;;
     6)
       read -p "Digite a senha para ThunderHub: " senha
-      install_nodejs
       install_thunderhub
       ;;
     7)
