@@ -722,7 +722,7 @@ sudo chown -R admin:admin "$LNBITS_DIR"
 # Entra no diretório e instala dependências
 cd "$LNBITS_DIR"
 git checkout main
-"$POETRY_BIN" install --only main
+"$POETRY_BIN" install
 
 # Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
 cp .env.example .env
