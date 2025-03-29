@@ -715,9 +715,6 @@ source "$USER_HOME/.bashrc"
 "$POETRY_BIN" self update
 "$POETRY_BIN" --version
 
-# Verifica a existência do poetry click
-poetry install
-
 # Clona o repositório LNbits
 git clone https://github.com/lnbits/lnbits.git "$LNBITS_DIR"
 sudo chown -R admin:admin "$LNBITS_DIR"
@@ -726,7 +723,7 @@ sudo chown -R admin:admin "$LNBITS_DIR"
 cd "$LNBITS_DIR"
 git checkout main
 source "$USER_HOME/.bashrc"
-poetry install
+"$POETRY_BIN" install
 
 # Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
 cp .env.example .env
