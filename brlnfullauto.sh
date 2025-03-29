@@ -10,6 +10,15 @@ LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 
+# Cores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+NC='\033[0m' # Sem cor
+
 update_and_upgrade() {
 sudo apt update && sudo apt full-upgrade -y
 }
@@ -793,12 +802,13 @@ menu() {
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${MAGENTA}Instalação Automática:${NC}"
+  echo -e "   ${MAGENTAInstalação Automática:${NC}"
   echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo
+  echo -e "   ${GREEN}2${NC}- Alternar Bitcoin Local/Remoto"
+  echo
   echo -e "   ${MAGENTA}Instalação Manual:${NC}"
-  echo -e "   ${GREEN}2${NC}- Instalar Pre-requisitos (Obrigatório para as opções 3-9)"
-  echo -e "   ${GREEN}3${NC}- Alternar Bitcoin Local/Remoto"
+  echo -e "   ${GREEN}3${NC}- Instalar Pre-requisitos (Obrigatório para as opções 3-9)"
   echo -e "   ${GREEN}4${NC}- Instalar Bitcoin Core (Tor + BTCd)"
   echo -e "   ${GREEN}5${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
   echo -e "   ${GREEN}6${NC}- Instalar Balance of Satoshis (Exige LND)"
@@ -815,16 +825,16 @@ menu() {
       main
       ;;
     2)
+      manage_bitcoin_node
+      menu
+      ;;
+    3)
       update_and_upgrade
       create_main_dir
       configure_ufw
       install_tor
       install_nodejs
-      menu
-      ;;
-    3)
-      manage_bitcoin_node
-      menu
+      menu      
       ;;
     4)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
