@@ -764,7 +764,8 @@ menu() {
   echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar Thunderhub (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}8${NC}- Instalar LNbits (Exige LND)"
+  echo -e "   ${GREEN}8${NC}- Instalar LNbits"
+  echo -e "   ${MAGENTA}- Tailscale VPN"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -816,6 +817,10 @@ menu() {
       ;;
     8)
       lnbits_install
+      menu
+      ;;
+    9)
+      tailscale_vpn
       menu
       ;;
     0)
