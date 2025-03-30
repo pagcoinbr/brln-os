@@ -283,7 +283,6 @@ e depois
 ```bash
 ./manutencao.sh
 ```
-<img src="https://i.postimg.cc/Wpn8FbZz/manutencao.png" alt="manutencao" width="600"/>
 
 Escolha a opção que quiser atualiar ou desinstalar e aguarde a operação ser completa.
 
@@ -316,6 +315,24 @@ Saia com *Ctrl + C*
 Em alguns dias, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando o comando:
 ```bash
 journalctl -fu bitcoind
+```
+```
+admin@brlnbolt:~/brlnfullauto$ ./manutencao.sh
+./manutencao.sh: line 174: lnd: command not found
+./manutencao.sh: line 175: bitcoin-cli: command not found
+Escolha uma opção:
+1) Atualizar o LND
+2) Atualizar o Bitcoind ATENÇÃO
+Antes de atualizar o Bitcoind, leia as notas de atualização
+3) Atualizar o Thunderhub
+4) Atualizar o LNDg
+5) Atualizar o LNbits
+6) Atualizar os pacotes do sistema
+7) Desinstalar Thunderhub
+8) Desinstalar LNDg
+9) Desinstalar LNbits
+0) Sair
+Opção: 
 ```
 
 ## Instalando o TailScale VPN - (Opcional)
