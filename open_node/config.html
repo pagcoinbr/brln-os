@@ -47,6 +47,15 @@
             margin-top: 30px;
             display: inline-block;
         }
+
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            text-align: left;
+            max-height: 300px;
+            overflow: auto;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -64,20 +73,11 @@
     </div>
 
     <div class="section">
-        <h2>🔁 Reiniciar Serviços</h2>
-        <button class="botao" onclick="executarComando('restart-lnd')">Reiniciar LND</button>
-        <button class="botao" onclick="executarComando('restart-bitcoind')">Reiniciar Bitcoind</button>
-        <button class="botao" onclick="executarComando('restart-tor')">Reiniciar Tor</button>
-    </div>
-
-    <div class="section">
-        <h2>🛠️ Editar Configurações</h2>
-        <button class="botao" onclick="executarComando('editar-lndconf')">Editar lnd.conf</button>
-    </div>
-
-    <div class="section">
-        <h2>💻 Acesso SSH Local</h2>
-        <button class="botao" onclick="executarComando('abrir-ssh')">Acessar via SSH</button>
+        <h2>📜 Logs</h2>
+        <button class="botao" onclick="verLog('lnd')">Log do LND</button>
+        <button class="botao" onclick="verLog('bitcoind')">Log do Bitcoind</button>
+        <button class="botao" onclick="verLog('tor')">Log do Tor</button>
+        <pre id="logSaida">Selecione um serviço para ver o log.</pre>
     </div>
 
     <a href="index.html" class="back botao" style="background-color:#007bff;">⬅️ Voltar</a>
@@ -95,14 +95,16 @@
                 });
         }
 
-        function executarComando(acao) {
+        function verLog(servico) {
             fetch('/cgi-bin/execute.sh', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ acao: acao })
+                body: JSON.stringify({ acao: 'log-' + servico })
             })
-            .then(res => res.json())
-            .then(data => alert(data.resultado));
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById("logSaida").innerText = data;
+            });
         }
     </script>
 
