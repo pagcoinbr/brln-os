@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Configurações do Node</title>
+    <link rel="icon" type="image/png" href="logopreto.png">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .botao {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .botao:hover {
+            background-color: #218838;
+        }
+
+        .section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .status {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .back {
+            margin-top: 30px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚙️ Painel de Configurações do Node</h1>
+
+    <div class="section">
+        <h2>📊 Status do Sistema</h2>
+        <div id="cpu" class="status">CPU: ...</div>
+        <div id="ram" class="status">RAM: ...</div>
+        <div id="lnd" class="status">LND: ...</div>
+        <div id="bitcoind" class="status">Bitcoind: ...</div>
+        <div id="tor" class="status">Tor: ...</div>
+        <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
+    </div>
+
+    <div class="section">
+        <h2>🔁 Reiniciar Serviços</h2>
+        <button class="botao" onclick="executarComando('restart-lnd')">Reiniciar LND</button>
+        <button class="botao" onclick="executarComando('restart-bitcoind')">Reiniciar Bitcoind</button>
+        <button class="botao" onclick="executarComando('restart-tor')">Reiniciar Tor</button>
+    </div>
+
+    <div class="section">
+        <h2>🛠️ Editar Configurações</h2>
+        <button class="botao" onclick="executarComando('editar-lndconf')">Editar lnd.conf</button>
+    </div>
+
+    <div class="section">
+        <h2>💻 Acesso SSH Local</h2>
+        <button class="botao" onclick="executarComando('abrir-ssh')">Acessar via SSH</button>
+    </div>
+
+    <a href="index.html" class="back botao" style="background-color:#007bff;">⬅️ Voltar</a>
+
+    <script>
+        function atualizarStatus() {
+            fetch('/cgi-bin/status.sh')
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("cpu").innerText = "CPU: " + data.cpu;
+                    document.getElementById("ram").innerText = "RAM: " + data.ram;
+                    document.getElementById("lnd").innerText = "LND: " + data.lnd;
+                    document.getElementById("bitcoind").innerText = "Bitcoind: " + data.bitcoind;
+                    document.getElementById("tor").innerText = "Tor: " + data.tor;
+                });
+        }
+
+        function executarComando(acao) {
+            fetch('/cgi-bin/execute.sh', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ acao: acao })
+            })
+            .then(res => res.json())
+            .then(data => alert(data.resultado));
+        }
+    </script>
+
+</body>
+</html>
