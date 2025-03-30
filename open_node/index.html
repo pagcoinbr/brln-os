@@ -69,7 +69,7 @@
 
     <script>
         function runScript(command) {
-            fetch('/run-script', {
+            fetch('/cgi-bin/exec.sh', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ command: command })
