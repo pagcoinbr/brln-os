@@ -759,6 +759,43 @@ sudo systemctl start lnbits.service
 echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
+tailscale_vpn () {
+# Instalação do Tailscale VPN
+curl -fsSL https://tailscale.com/install.sh | sh
+sleep 5
+
+# Instala o qrencode para gerar QR codes
+sudo apt install qrencode -y
+
+log_file="tailscale_up.log"
+rm -f "$log_file" # remove log antigo se existir
+
+# 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
+echo "▶️ Iniciando 'tailscale up' em background..."
+(sudo tailscale up > "$log_file" 2>&1) &
+
+# 2️⃣ Espera alguns segundos pra dar tempo de gerar a saída
+sleep 3
+
+# 3️⃣ Tenta extrair o link de autenticação do log
+echo "🔍 Procurando o link de autenticação..."
+url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
+
+if [[ -n "$url" ]]; then
+    echo "✅ Link encontrado: $url"
+    echo "📲 QR Code:"
+    echo "$url" | qrencode -t ANSIUTF8
+else
+    echo "❌ Não foi possível encontrar o link no log."
+    cat "$log_file"
+fi
+
+# 4️⃣ Aguarda a finalização do tailscale up
+echo "⏳ Aguardando autenticação para finalizar o comando..."
+wait
+echo "✅ tailscale up finalizado."
+}
+
 main() {
 read -p "Digite a senha para ThunderHub: " senha
 read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
