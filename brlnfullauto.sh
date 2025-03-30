@@ -23,12 +23,12 @@ sudo systemctl restart apache2
 sudo mkdir -p /var/www/html/cgi-bin
 
 # Criar symlinks para os scripts existentes
-sudo ln -sf /home/$USER/brlnfullauto/web/status.sh /var/www/html/cgi-bin/status.sh
-sudo ln -sf /home/$USER/brlnfullauto/web/execute.sh /var/www/html/cgi-bin/exec.sh
+sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh
+sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh
 
 # Garantir permissões de execução
-sudo chmod +x /home/$USER/brlnfullauto/web/status.sh
-sudo chmod +x /home/$USER/brlnfullauto/web/execute.sh
+sudo chmod +x /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh
+sudo chmod +x /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh
 }
 
 create_main_dir() {
