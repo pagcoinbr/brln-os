@@ -21,6 +21,9 @@ sudo systemctl restart apache2
 
 # Criar diretório CGI se não existir
 sudo mkdir -p /var/www/html/cgi-bin
+sudo cp ~/brlnfullauto/open_node/config.html /var/www/html/index.html
+sudo cp ~/brlnfullauto/open_node/*.png /var/www/html/
+
 
 # Criar symlinks para os scripts existentes
 sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh /var/www/html/cgi-bin/status.sh
