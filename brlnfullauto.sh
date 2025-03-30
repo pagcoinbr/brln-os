@@ -12,6 +12,22 @@ VERSION_THUB=0.13.31
 
 update_and_upgrade() {
 sudo apt update && sudo apt full-upgrade -y
+# Instalar Apache
+sudo apt update
+sudo apt install apache2 -y
+sudo a2enmod cgid
+sudo systemctl restart apache2
+
+# Criar diretório CGI se não existir
+sudo mkdir -p /var/www/html/cgi-bin
+
+# Criar symlinks para os scripts existentes
+sudo ln -sf /home/admin/brlnfullauto/web/status.sh /var/www/html/cgi-bin/status.sh
+sudo ln -sf /home/admin/brlnfullauto/web/execute.sh /var/www/html/cgi-bin/exec.sh
+
+# Garantir permissões de execução
+sudo chmod +x /home/admin/brlnfullauto/web/status.sh
+sudo chmod +x /home/admin/brlnfullauto/web/execute.sh
 }
 
 create_main_dir() {
