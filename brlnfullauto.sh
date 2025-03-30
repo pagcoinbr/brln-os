@@ -12,9 +12,10 @@ VERSION_THUB=0.13.31
 USER=admin
 
 update_and_upgrade() {
+APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
+# Atualizar o sistema e instalar dependências
 sudo apt update && sudo apt full-upgrade -y
 # Instalar Apache
-sudo apt update
 sudo apt install apache2 -y
 sudo a2enmod cgid
 sudo systemctl restart apache2
@@ -22,9 +23,23 @@ sudo systemctl restart apache2
 # Criar diretório CGI se não existir
 sudo mkdir -p /var/www/html/cgi-bin
 sudo rm /var/www/html/index.html
-sudo cp ~/brlnfullauto/open_node/config.html /var/www/html/index.html
+sudo cp ~/brlnfullauto/open_node/index.html /var/www/html/index.html
+sudo cp ~/brlnfullauto/open_node/config.html /var/www/html/config.html
+sudo cp ~/brlnfullauto/open_node/status.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/open_node/cgi-bin/execute.sh /usr/lib/cgi-bin/
 sudo cp ~/brlnfullauto/open_node/*.png /var/www/html/
 
+# Verifica se já existe o bloco <Directory "/var/www/html/cgi-bin">
+if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
+    echo "Adicionando bloco de configuração CGI ao Apache..."
+
+    # Adiciona o bloco antes da última linha </VirtualHost>
+    sudo sed -i '/<\/VirtualHost>/i \
+    <Directory "/var/www/html/cgi-bin">\n\
+        Options +ExecCGI\n\
+        AddHandler cgi-script .sh\n\
+    </Directory>\n' "$APACHE_CONF"
+fi
 
 # Criar symlinks para os scripts existentes
 sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh /var/www/html/cgi-bin/status.sh
