@@ -607,82 +607,6 @@ sudo systemctl start lndg.service
 fi
 }
 
-manage_bitcoin_node() {
-    # Caminho do arquivo de configuração e arquivos para apagar
-    local LND_CONF="/home/admin/.lnd/lnd.conf"
-    local FILES_TO_DELETE=(
-        "/home/admin/.lnd/tls.cert"
-        "/home/admin/.lnd/tls.key"
-        "/home/admin/.lnd/v3_onion_private_key"
-    )
-
-    # Função interna para comentar linhas 73 a 78
-    comment_lines() {
-        sed -i '73,78 s/^/#/' "$LND_CONF"
-    }
-
-    # Função interna para descomentar linhas 73 a 78
-    decomment_lines() {
-        sed -i '73,78 s/^#//' "$LND_CONF"
-    }
-
-    # Função interna para apagar os arquivos
-    delete_files() {
-        for file in "${FILES_TO_DELETE[@]}"; do
-            if [ -f "$file" ]; then
-                rm -f "$file"
-                echo "Deleted: $file"
-            else
-                echo "File not found: $file"
-            fi
-        done
-    }
-
-    # Função interna para reiniciar o serviço LND
-    restart_lnd() {
-        sudo systemctl restart lnd
-        if [ $? -eq 0 ]; then
-            echo "LND service restarted successfully."
-        else
-            echo "Failed to restart LND service."
-        fi
-    }
-
-    # Exibir o menu para o usuário
-    while true; do
-        echo "Escolha uma opção:"
-        echo "1) Trocar para o Bitcoin Core local"
-        echo "2) Trocar para o node Bitcoin remoto"
-        echo "3) Sair"
-        read -p "Digite sua escolha: " choice
-
-        case $choice in
-            1)
-                echo "Trocando para o Bitcoin Core local..."
-                comment_lines
-                delete_files
-                restart_lnd
-                echo "Trocado para o Bitcoin Core local."
-                ;;
-            2)
-                echo "Trocando para o node Bitcoin remoto..."
-                decomment_lines
-                delete_files
-                restart_lnd
-                echo "Trocado para o node Bitcoin remoto."
-                ;;
-            3)
-                echo "Saindo."
-                break
-                ;;
-            *)
-                echo "Escolha inválida. Por favor, tente novamente."
-                ;;
-        esac
-        echo ""
-    done
-}
-
 lnbits_install() {
 # Instalação do LNbits 1.0 automatizada
 # Execute como usuário comum (ex: admin), não como root
@@ -833,16 +757,14 @@ menu() {
   echo -e "   ${MAGENTA}Instalação Automática:${NC}"
   echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo
-  echo -e "   ${GREEN}2${NC}- Alternar Bitcoin Local/Remoto"
-  echo
   echo -e "   ${MAGENTA}Instalação Manual:${NC}"
-  echo -e "   ${GREEN}3${NC}- Instalar Pre-requisitos (Obrigatório para as opções 3-9)"
-  echo -e "   ${GREEN}4${NC}- Instalar Bitcoin Core (Tor + BTCd)"
-  echo -e "   ${GREEN}5${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
-  echo -e "   ${GREEN}6${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}7${NC}- Instalar Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}8${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}9${NC}- Instalar LNbits (Exige LND)"
+  echo -e "   ${GREEN}2${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
+  echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core (Tor + BTCd)"
+  echo -e "   ${GREEN}4${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
+  echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}7${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}8${NC}- Instalar LNbits (Exige LND)"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -853,10 +775,6 @@ menu() {
       main
       ;;
     2)
-      manage_bitcoin_node
-      menu
-      ;;
-    3)
       update_and_upgrade
       create_main_dir
       configure_ufw
@@ -864,7 +782,7 @@ menu() {
       install_nodejs
       menu      
       ;;
-    4)
+    3)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
       update_and_upgrade
       create_main_dir
@@ -873,7 +791,7 @@ menu() {
       install_bitcoind
       menu
       ;;
-    5)
+    4)
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
       read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
@@ -883,20 +801,20 @@ menu() {
       create_wallet
       menu
       ;;
-    6)
+    5)
       install_bos
       menu
       ;;
-    7)
+    6)
       read -p "Digite a senha para ThunderHub: " senha
       install_thunderhub
       menu
       ;;
-    8)
+    7)
       install_lndg
       menu
       ;;
-    9)
+    8)
       lnbits_install
       menu
       ;;
