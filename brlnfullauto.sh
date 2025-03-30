@@ -9,6 +9,7 @@ MAIN_DIR=/data
 LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
+USER=admin
 
 update_and_upgrade() {
 sudo apt update && sudo apt full-upgrade -y
@@ -22,7 +23,7 @@ sudo systemctl restart apache2
 sudo mkdir -p /var/www/html/cgi-bin
 
 # Criar symlinks para os scripts existentes
-sudo ln -sf /home/admin/brlnfullauto/web/status.sh /var/www/html/cgi-bin/status.sh
+sudo ln -sf /home//brlnfullauto/web/status.sh /var/www/html/cgi-bin/status.sh
 sudo ln -sf /home/admin/brlnfullauto/web/execute.sh /var/www/html/cgi-bin/exec.sh
 
 # Garantir permissões de execução
