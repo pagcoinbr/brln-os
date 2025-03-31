@@ -57,6 +57,10 @@ sudo chmod +x /usr/local/bin/update_bitcoind.sh
 sudo chmod +x /usr/local/bin/toogle_bitcoin.sh
 sudo chmod +x /usr/local/bin/unistall.sh
 sudo chmod +x /usr/local/bin/update_apt.sh
+
+sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+www-data ALL=(ALL) NOPASSWD: /usr/local/bin/toogle_bitcoin.sh, /usr/local/bin/update_lnd.sh, /usr/local/bin/update_lndg.sh, /usr/local/bin/update_thunderhub.sh, /usr/local/bin/update_lnbits.sh, /usr/local/bin/update_bitcoind.sh, /usr/local/bin/unistall.sh, /usr/local/bin/update_apt.sh
+EOF
 }
 
 create_main_dir() {
