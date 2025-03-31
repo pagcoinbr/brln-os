@@ -9,9 +9,58 @@ MAIN_DIR=/data
 LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
+USER=admin
 
 update_and_upgrade() {
+APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
+# Atualizar o sistema e instalar dependências
 sudo apt update && sudo apt full-upgrade -y
+# Instalar Apache
+sudo apt install apache2 -y
+sudo a2enmod cgid
+sudo systemctl restart apache2
+
+# Criar diretório CGI se não existir
+sudo mkdir -p /var/www/html/cgi-bin
+sudo rm /var/www/html/index.html
+sudo cp ~/brlnfullauto/html/index.html /var/www/html/index.html
+sudo cp ~/brlnfullauto/html/config.html /var/www/html/config.html
+sudo cp ~/brlnfullauto/html/status.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/html/cgi-bin/execute.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/html/adm_scripts/*.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/html/*.png /var/www/html/
+
+# Verifica se já existe o bloco <Directory "/var/www/html/cgi-bin">
+if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
+    echo "Adicionando bloco de configuração CGI ao Apache..."
+
+    # Adiciona o bloco antes da última linha </VirtualHost>
+    sudo sed -i '/<\/VirtualHost>/i \
+    <Directory "/var/www/html/cgi-bin">\n\
+        Options +ExecCGI\n\
+        AddHandler cgi-script .sh\n\
+    </Directory>\n' "$APACHE_CONF"
+fi
+
+# Criar symlinks para os scripts existentes
+sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh /var/www/html/cgi-bin/status.sh
+sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh /var/www/html/cgi-bin/execute.sh
+
+# Garantir permissões de execução
+sudo chmod +x /usr/lib/cgi-bin/status.sh
+sudo chmod +x /usr/lib/cgi-bin/execute.sh
+sudo chmod +x /usr/local/bin/update_lnd.sh
+sudo chmod +x /usr/local/bin/update_lndg.sh
+sudo chmod +x /usr/local/bin/update_thunderhub.sh
+sudo chmod +x /usr/local/bin/update_lnbits.sh
+sudo chmod +x /usr/local/bin/update_bitcoind.sh
+sudo chmod +x /usr/local/bin/toogle_bitcoin.sh
+sudo chmod +x /usr/local/bin/unistall.sh
+sudo chmod +x /usr/local/bin/update_apt.sh
+
+sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+www-data ALL=(ALL) NOPASSWD: /usr/local/bin/toogle_bitcoin.sh, /usr/local/bin/update_lnd.sh, /usr/local/bin/update_lndg.sh, /usr/local/bin/update_thunderhub.sh, /usr/local/bin/update_lnbits.sh, /usr/local/bin/update_bitcoind.sh, /usr/local/bin/unistall.sh, /usr/local/bin/update_apt.sh
+EOF
 }
 
 create_main_dir() {
@@ -765,7 +814,7 @@ menu() {
   echo -e "   ${GREEN}6${NC}- Instalar Thunderhub (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}8${NC}- Instalar LNbits"
-  echo -e "   ${MAGENTA}- Tailscale VPN"
+  echo -e "   ${GREEN}9${NC}- Tailscale VPN"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
