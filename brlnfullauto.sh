@@ -12,111 +12,51 @@ VERSION_THUB=0.13.31
 USER=admin
 
 update_and_upgrade() {
-set -e  # ⛔ PARA tudo se der erro
-
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-SRC_DIR="/home/$USER/brlnfullauto/html"
-CGI_BIN="/usr/lib/cgi-bin"
-ADM_SCRIPTS_DIR="$SRC_DIR/adm_scripts"
-
-echo "🛠️ Atualizando sistema e instalando Apache..."
+# Atualizar o sistema e instalar dependências
 sudo apt update && sudo apt full-upgrade -y
+# Instalar Apache
 sudo apt install apache2 -y
 sudo a2enmod cgid
 sudo systemctl restart apache2
 
-echo "📁 Configurando diretórios do painel web..."
-sudo mkdir -p "$CGI_BIN"
-sudo rm -f /var/www/html/index.html
+# Criar diretório CGI se não existir
+sudo mkdir -p /var/www/html/cgi-bin
+sudo rm /var/www/html/index.html
+sudo cp ~/brlnfullauto/open_node/index.html /var/www/html/index.html
+sudo cp ~/brlnfullauto/open_node/config.html /var/www/html/config.html
+sudo cp ~/brlnfullauto/open_node/status.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/open_node/cgi-bin/execute.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/open_node/adm_scripts/*.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/open_node/*.png /var/www/html/
 
-# Copiar arquivos HTML e imagens
-sudo cp "$SRC_DIR/index.html" /var/www/html/index.html
-sudo cp "$SRC_DIR/config.html" /var/www/html/config.html
-sudo cp "$SRC_DIR"/*.png /var/www/html/
-
-# Copiar CGI scripts principais
-sudo cp "$SRC_DIR/cgi-bin/status.sh" "$CGI_BIN/"
-sudo cp "$SRC_DIR/cgi-bin/execute.sh" "$CGI_BIN/"
-
-# Tornar CGI executáveis
-sudo chmod +x "$CGI_BIN/status.sh"
-sudo chmod +x "$CGI_BIN/execute.sh"
-
-# Adicionar bloco CGI ao Apache (caso não exista)
+# Verifica se já existe o bloco <Directory "/var/www/html/cgi-bin">
 if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
-  echo "🧩 Adicionando bloco CGI à config do Apache..."
-  sudo sed -i '/<\/VirtualHost>/i \
-<Directory "/var/www/html/cgi-bin">\n\
-  Options +ExecCGI\n\
-  AddHandler cgi-script .sh\n\
-</Directory>\n' "$APACHE_CONF"
+    echo "Adicionando bloco de configuração CGI ao Apache..."
+
+    # Adiciona o bloco antes da última linha </VirtualHost>
+    sudo sed -i '/<\/VirtualHost>/i \
+    <Directory "/var/www/html/cgi-bin">\n\
+        Options +ExecCGI\n\
+        AddHandler cgi-script .sh\n\
+    </Directory>\n' "$APACHE_CONF"
 fi
 
-# 🔐 Adicionar permissões para os scripts de administração
-echo "🔐 Configurando sudoers para www-data..."
+# Criar symlinks para os scripts existentes
+sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh /var/www/html/cgi-bin/status.sh
+sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh /var/www/html/cgi-bin/execute.sh
 
-SUDOERS_FILE="/etc/sudoers.d/www-data-brln"
-
-# Apagar arquivo sudoers antigo, se existir
-sudo rm -f "$SUDOERS_FILE"
-sudo touch "$SUDOERS_FILE"
-sudo chmod 440 "$SUDOERS_FILE"
-
-ADM_SCRIPTS=$(find "$ADM_SCRIPTS_DIR" -type f -name "*.sh")
-
-echo "www-data ALL=(ALL) NOPASSWD: \\" | sudo tee "$SUDOERS_FILE" > /dev/null
-for script in $ADM_SCRIPTS; do
-  echo "  $script,\\" | sudo tee -a "$SUDOERS_FILE" > /dev/null
-done
-
-# Remover última vírgula
-sudo sed -i '$ s/\\//' "$SUDOERS_FILE"
-
-# Tornar todos os scripts administrativos executáveis
-echo "🔧 Tornando todos os scripts executáveis..."
-for script in $ADM_SCRIPTS; do
-  sudo chmod +x "$script"
-done
-
-echo "✅ Painel web BRLN instalado e configurado com sucesso!"
-
-echo "📦 Instalando scripts administrativos em /usr/local/bin..."
-
-# Lista de scripts administrativos
-ADM_SCRIPTS_LIST=(
-  update_lnd.sh
-  update_bitcoind.sh
-  update_thunderhub.sh
-  update_lndg.sh
-  update_lnbits.sh
-  update_apt.sh
-  toogle_bitcoin.sh
-)
-
-for script in "${ADM_SCRIPTS_LIST[@]}"; do
-  SRC="$ADM_SCRIPTS_DIR/$script"
-  DST="/usr/local/bin/$script"
-
-  if [ -f "$SRC" ]; then
-    sudo cp "$SRC" "$DST"
-    sudo chmod +x "$DST"
-    echo "✅ Instalado: $script"
-  else
-    echo "⚠️ Script não encontrado: $script"
-  fi
-done
-
-# Criar arquivo sudoers para www-data
-echo "www-data ALL=(ALL) NOPASSWD: \\" | sudo tee "$SUDOERS_FILE" > /dev/null
-
-for script in "${ADM_SCRIPTS_LIST[@]}"; do
-  echo "  /usr/local/bin/$script,\\" | sudo tee -a "$SUDOERS_FILE" > /dev/null
-done
-
-# Remove a última barra invertida
-sudo sed -i '$ s/\\$//' "$SUDOERS_FILE"
-
-echo "✅ Permissões configuradas para www-data em: $SUDOERS_FILE"
+# Garantir permissões de execução
+sudo chmod +x /usr/lib/cgi-bin/status.sh
+sudo chmod +x /usr/lib/cgi-bin/execute.sh
+sudo chmod +x /usr/local/bin/update_lnd.sh
+sudo chmod +x /usr/local/bin/update_lndg.sh
+sudo chmod +x /usr/local/bin/update_thunderhub.sh
+sudo chmod +x /usr/local/bin/update_lnbits.sh
+sudo chmod +x /usr/local/bin/update_bitcoind.sh
+sudo chmod +x /usr/local/bin/toogle_bitcoin.sh
+sudo chmod +x /usr/local/bin/unistall.sh
+sudo chmod +x /usr/local/bin/update_apt.sh
 }
 
 create_main_dir() {
