@@ -60,6 +60,8 @@ SUDOERS_FILE="/etc/sudoers.d/www-data-brln"
 
 # Apagar arquivo sudoers antigo, se existir
 sudo rm -f "$SUDOERS_FILE"
+sudo touch "$SUDOERS_FILE"
+sudo chmod 440 "$SUDOERS_FILE"
 
 ADM_SCRIPTS=$(find "$ADM_SCRIPTS_DIR" -type f -name "*.sh")
 
