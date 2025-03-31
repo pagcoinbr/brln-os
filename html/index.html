@@ -1,91 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="logopreto.png">
-    <title>BRLN Open Node</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="logopreto.png" />
+  <title>BRLN Open Node</title>
+  <style>
+    body {
+      background-image: url('sky.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      font-family: Arial, sans-serif;
+      color: black;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
 
-    <!-- Estilos (CSS) são colocados no <head> -->
-    <style>
-        body {
-            background-image: url('sky.png'); /* Caminho da imagem */
-            background-size: cover; /* Faz a imagem cobrir toda a tela */
-            background-position: center; /* Centraliza a imagem */
-            background-repeat: no-repeat; /* Evita repetição da imagem */
-            background-attachment: fixed; /* Mantém a imagem fixa ao rolar a página */
-            text-align: center;
-            font-family: Arial, sans-serif;
-            color: rgb(0, 0, 0); /* Altera a cor do texto para ficar visível */
-        }
-        
-        .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: row
-            margin-top: 20px;
-        }
+    img {
+      max-width: 70%;
+      margin: 20px auto;
+    }
 
-        .botao {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            margin: 10px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-            display: inline-block;
-            transition: background 0.3s;
-        }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px;
+    }
 
-        .botao:hover {
-            background-color: #0056b3;
-        }
+    .botao {
+      background-color: #28a745; /* Verde */
+      color: white;
+      border: none;
+      padding: 15px 25px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      min-width: 150px;
+      box-sizing: border-box;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      max-width: 90%;
+      flex: 1 1 200px; /* Flex-grow, flex-shrink, flex-basis */
+      transition: background 0.3s;
+    }
 
-        img {
-            max-width: 900px;
-            margin-top: 1px;
-        }
-    </style>
+    .botao:hover {
+      background-color: #1e7e34;
+    }
+
+    .footer-links {
+      margin-top: 20px;
+    }
+
+    .footer-links a {
+      display: inline-block;
+      margin: 5px 10px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .botao {
+        font-size: 14px;
+        padding: 12px 20px;
+        min-width: 120px;
+      }
+    }
+  </style>
 </head>
 <body>
-    
-    <img src="BRLNlogo.png" alt="BRLN logo">
 
-    <!-- Os botões FICAM no <body>, pois são parte do conteúdo -->
-        <div class="container">
-            <a href="http://minibolt:8889" class="botao">LNDG</a>
-            <a href="http://minibolt:3000" class="botao">Thunderhub</a>
-            <a href="https://amboss.space" class="botao">AMBOSS</a>
-            <a href="https://brlnbtc.substack.com/p/nocoes-basicas-brln-bolt" class="botao">Documentation</a>
-            <a href="config.html" class="botao">⚙️ Configurações</a>
-        
+  <img src="BRLNlogo.png" alt="BRLN logo" />
 
-    <div id="output"></div>
+  <div class="container" id="botoes">
+    <a id="lndg" class="botao" href="#">LNDG</a>
+    <a id="thub" class="botao" href="#">Thunderhub</a>
+    <a id="lnbits" class="botao" href="#">LNbits</a>
+    <a href="https://amboss.space" class="botao">AMBOSS</a>
+    <a href="https://mempool.space" class="botao">Mempool</a>
+    <a href="config.html" class="botao">⚙️ Configurações</a>
+  </div>
 
-    <script>
-        function runScript(command) {
-            fetch('/cgi-bin/exec.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: command })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("output").innerText = data.output || data.error;
-            })
-            .catch(error => console.error("Erro:", error));
-        }
-    </script>
+  <div class="footer-links">
+    <a href="https://brln.gitbook.io/brln-bolt">BRLN Bolt</a>
+    <a href="https://br-ln.com">BRLN Home</a>
+    <a href="https://services.br-ln.com">BRLN Services</a>
+  </div>
 
-    </div>
-        <a href="https://brln.gitbook.io/brln-bolt">BRLN Bolt</a> 
-        <a href="https://br-ln.com">BRLN Home</a> 
-        <a href="https://services.br-ln.com">BRLN services</a>
-    </div>
+  <script>
+    // Busca o IP do arquivo ip.txt
+    fetch('/ip.txt')
+      .then(response => response.text())
+      .then(ip => {
+        ip = ip.trim();
+        document.getElementById('lndg').href = `http://${ip}:8889`;
+        document.getElementById('thub').href = `http://${ip}:3000`;
+        document.getElementById('lnbits').href = `http://${ip}:5000`;
+      })
+      .catch(err => {
+        console.error("Erro ao buscar IP:", err);
+      });
+  </script>
+
 </body>
 </html>
