@@ -23,12 +23,12 @@ sudo systemctl restart apache2
 # Criar diretório CGI se não existir
 sudo mkdir -p /var/www/html/cgi-bin
 sudo rm /var/www/html/index.html
-sudo cp ~/brlnfullauto/open_node/index.html /var/www/html/index.html
-sudo cp ~/brlnfullauto/open_node/config.html /var/www/html/config.html
-sudo cp ~/brlnfullauto/open_node/status.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/open_node/cgi-bin/execute.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/open_node/adm_scripts/*.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/open_node/*.png /var/www/html/
+sudo cp ~/brlnfullauto/html/index.html /var/www/html/index.html
+sudo cp ~/brlnfullauto/html/config.html /var/www/html/config.html
+sudo cp ~/brlnfullauto/html/status.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/html/cgi-bin/execute.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/html/adm_scripts/*.sh /usr/lib/cgi-bin/
+sudo cp ~/brlnfullauto/html/*.png /var/www/html/
 
 # Verifica se já existe o bloco <Directory "/var/www/html/cgi-bin">
 if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
