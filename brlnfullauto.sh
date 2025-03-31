@@ -13,41 +13,107 @@ USER=admin
 
 update_and_upgrade() {
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-# Atualizar o sistema e instalar dependências
+ADM_SCRIPTS_DIR="/home/$USER/BRLNFULLAUTO/html/adm_scripts"
+CGI_BIN_DIR="/var/www/html/cgi-bin"
+
+echo "🛠️ Atualizando sistema e instalando Apache..."
 sudo apt update && sudo apt full-upgrade -y
-# Instalar Apache
 sudo apt install apache2 -y
 sudo a2enmod cgid
 sudo systemctl restart apache2
 
-# Criar diretório CGI se não existir
-sudo mkdir -p /var/www/html/cgi-bin
-sudo rm /var/www/html/index.html
-sudo cp ~/brlnfullauto/open_node/index.html /var/www/html/index.html
-sudo cp ~/brlnfullauto/open_node/config.html /var/www/html/config.html
-sudo cp ~/brlnfullauto/open_node/status.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/open_node/cgi-bin/execute.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/open_node/*.png /var/www/html/
+echo "📁 Configurando diretórios do painel web..."
+sudo mkdir -p "$CGI_BIN_DIR"
+sudo rm -f /var/www/html/index.html
 
-# Verifica se já existe o bloco <Directory "/var/www/html/cgi-bin">
+# Copiar arquivos HTML e imagens
+sudo cp ~/BRLNFULLAUTO/html/index.html /var/www/html/
+sudo cp ~/BRLNFULLAUTO/html/config.html /var/www/html/
+sudo cp ~/BRLNFULLAUTO/html/*.png /var/www/html/
+
+# Copiar CGI scripts principais
+sudo cp ~/BRLNFULLAUTO/html/cgi-bin/status.sh /usr/lib/cgi-bin/
+sudo cp ~/BRLNFULLAUTO/html/cgi-bin/execute.sh /usr/lib/cgi-bin/
+
+# Tornar CGI executáveis
+sudo chmod +x /usr/lib/cgi-bin/status.sh
+sudo chmod +x /usr/lib/cgi-bin/execute.sh
+
+# Criar symlinks para o CGI
+sudo ln -sf /usr/lib/cgi-bin/status.sh "$CGI_BIN_DIR/status.sh"
+sudo ln -sf /usr/lib/cgi-bin/execute.sh "$CGI_BIN_DIR/execute.sh"
+
+# Adicionar bloco CGI ao Apache (caso não exista)
 if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
-    echo "Adicionando bloco de configuração CGI ao Apache..."
-
-    # Adiciona o bloco antes da última linha </VirtualHost>
-    sudo sed -i '/<\/VirtualHost>/i \
-    <Directory "/var/www/html/cgi-bin">\n\
-        Options +ExecCGI\n\
-        AddHandler cgi-script .sh\n\
-    </Directory>\n' "$APACHE_CONF"
+  echo "🧩 Adicionando bloco CGI à config do Apache..."
+  sudo sed -i '/<\/VirtualHost>/i \
+<Directory "/var/www/html/cgi-bin">\n\
+  Options +ExecCGI\n\
+  AddHandler cgi-script .sh\n\
+</Directory>\n' "$APACHE_CONF"
 fi
 
-# Criar symlinks para os scripts existentes
-sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh /var/www/html/cgi-bin/status.sh
-sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh /var/www/html/cgi-bin/execute.sh
+# 🔐 Adicionar permissões para os scripts de administração
+echo "🔐 Configurando sudoers para www-data..."
 
-# Garantir permissões de execução
-sudo chmod +x /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh
-sudo chmod +x /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh
+SUDOERS_FILE="/etc/sudoers.d/www-data-brln"
+
+ADM_SCRIPTS=$(find "$ADM_SCRIPTS_DIR" -type f -name "*.sh")
+
+echo "www-data ALL=(ALL) NOPASSWD: \\" | sudo tee "$SUDOERS_FILE" > /dev/null
+for script in $ADM_SCRIPTS; do
+  echo "  $script,\\" | sudo tee -a "$SUDOERS_FILE" > /dev/null
+done
+
+# Remover última vírgula
+sudo sed -i '$ s/\\//' "$SUDOERS_FILE"
+
+# Tornar todos os scripts administrativos executáveis
+echo "🔧 Tornando todos os scripts executáveis..."
+for script in $ADM_SCRIPTS; do
+  sudo chmod +x "$script"
+done
+
+echo "✅ Painel web BRLN instalado e configurado com sucesso!"
+
+echo "📦 Instalando scripts administrativos em /usr/local/bin..."
+
+# Lista de scripts administrativos
+ADM_SCRIPTS=(
+  update_lnd.sh
+  update_bitcoind.sh
+  update_thunderhub.sh
+  update_lndg.sh
+  update_lnbits.sh
+  update_apt.sh
+  toogle_bitcoin.sh
+)
+
+for script in "${ADM_SCRIPTS[@]}"; do
+  SRC="/home/$USER/brlnfullauto/html/adm_scripts/$script"
+  DST="/usr/local/bin/$script"
+
+  if [ -f "$SRC" ]; then
+    sudo cp "$SRC" "$DST"
+    sudo chmod +x "$DST"
+    echo "✅ Instalado: $script"
+  else
+    echo "⚠️ Script não encontrado: $script"
+  fi
+done
+
+# Criar arquivo sudoers para www-data
+SUDOERS_FILE="/etc/sudoers.d/www-data-brln"
+echo "www-data ALL=(ALL) NOPASSWD: \\" | sudo tee "$SUDOERS_FILE" > /dev/null
+
+for script in "${ADM_SCRIPTS[@]}"; do
+  echo "  /usr/local/bin/$script,\\" | sudo tee -a "$SUDOERS_FILE" > /dev/null
+done
+
+# Remove a última barra invertida
+sudo sed -i '$ s/\\//' "$SUDOERS_FILE"
+
+echo "✅ Permissões configuradas para www-data em: $SUDOERS_FILE"
 }
 
 create_main_dir() {
@@ -801,7 +867,7 @@ menu() {
   echo -e "   ${GREEN}6${NC}- Instalar Thunderhub (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}8${NC}- Instalar LNbits"
-  echo -e "   ${MAGENTA}- Tailscale VPN"
+  echo -e "   ${MAGENTA}9${NC}- Tailscale VPN"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option

@@ -15,6 +15,14 @@ case "$acao" in
     log-tor)
         journalctl -u tor -n 50 --no-pager 2>/dev/null
         ;;
+    update-lnd)
+        OUT=$(sudo /usr/local/bin/update-lnd.sh 2>&1)
+        echo "{\"log\": \"$(echo "$OUT" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\\n/\\\\n/g')\"}"
+        ;;
+    toggle-bitcoin)
+        OUT=$(sudo /usr/local/bin/toggle_bitcoin.sh 2>&1)
+        echo "$OUT"
+        ;;
     *)
         echo "Ação não reconhecida."
         ;;

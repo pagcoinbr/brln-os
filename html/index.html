@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="logopreto.png">
+    <title>BRLN Open Node</title>
+
+    <!-- Estilos (CSS) são colocados no <head> -->
+    <style>
+        body {
+            background-image: url('sky.png'); /* Caminho da imagem */
+            background-size: cover; /* Faz a imagem cobrir toda a tela */
+            background-position: center; /* Centraliza a imagem */
+            background-repeat: no-repeat; /* Evita repetição da imagem */
+            background-attachment: fixed; /* Mantém a imagem fixa ao rolar a página */
+            text-align: center;
+            font-family: Arial, sans-serif;
+            color: rgb(0, 0, 0); /* Altera a cor do texto para ficar visível */
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row
+            margin-top: 20px;
+        }
+
+        .botao {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+
+        .botao:hover {
+            background-color: #0056b3;
+        }
+
+        img {
+            max-width: 900px;
+            margin-top: 1px;
+        }
+    </style>
+</head>
+<body>
+    
+    <img src="BRLNlogo.png" alt="BRLN logo">
+
+    <!-- Os botões FICAM no <body>, pois são parte do conteúdo -->
+        <div class="container">
+            <a href="http://minibolt:8889" class="botao">LNDG</a>
+            <a href="http://minibolt:3000" class="botao">Thunderhub</a>
+            <a href="https://amboss.space" class="botao">AMBOSS</a>
+            <a href="https://brlnbtc.substack.com/p/nocoes-basicas-brln-bolt" class="botao">Documentation</a>
+            <a href="config.html" class="botao">⚙️ Configurações</a>
+        
+
+    <div id="output"></div>
+
+    <script>
+        function runScript(command) {
+            fetch('/cgi-bin/exec.sh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("output").innerText = data.output || data.error;
+            })
+            .catch(error => console.error("Erro:", error));
+        }
+    </script>
+
+    </div>
+        <a href="https://brln.gitbook.io/brln-bolt">BRLN Bolt</a> 
+        <a href="https://br-ln.com">BRLN Home</a> 
+        <a href="https://services.br-ln.com">BRLN services</a>
+    </div>
+</body>
+</html>
