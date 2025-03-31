@@ -66,12 +66,23 @@ www-data ALL=(ALL) NOPASSWD: \\
 EOF
 
 echo "✅ Interface web do node Lightning instalada com sucesso!"
+}
 
+create_main_dir() {
+  if [[ -d $MAIN_DIR ]]; then
+    echo "Diretório $MAIN_DIR já existe."
+  else
+    sudo mkdir -p $MAIN_DIR
+    sudo chown -R $USER:$USER $MAIN_DIR
+    echo "Diretório $MAIN_DIR criado e permissões definidas."
+  fi
+  sudo chmod -R 755 $MAIN_DIR
+  sudo chown -R $USER:$USER $MAIN_DIR
+  sudo chmod g+X $MAIN_DIR
 }
 
 configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
-  sudo ufw logging off
   sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
   sudo ufw --force enable
 }
