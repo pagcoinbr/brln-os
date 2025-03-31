@@ -80,9 +80,9 @@
   <img src="BRLNlogo.png" alt="BRLN logo" />
 
   <div class="container" id="botoes">
-    <a id="lndg" class="botao" href="#">LNDG</a>
-    <a id="thub" class="botao" href="#">Thunderhub</a>
-    <a id="lnbits" class="botao" href="#">LNbits</a>
+    <button class="botao" onclick="abrirApp(8889)">LNDG</button>
+    <button class="botao" onclick="abrirApp(3000)">Thunderhub</button>
+    <button class="botao" onclick="abrirApp(5000)">LNbits</button>
     <a href="https://amboss.space" class="botao">AMBOSS</a>
     <a href="https://mempool.space" class="botao">Mempool</a>
     <a href="config.html" class="botao">⚙️ Configurações</a>
@@ -95,18 +95,10 @@
   </div>
 
   <script>
-    // Busca o IP do arquivo ip.txt
-    fetch('/ip.txt')
-      .then(response => response.text())
-      .then(ip => {
-        ip = ip.trim();
-        document.getElementById('lndg').href = `http://${ip}:8889`;
-        document.getElementById('thub').href = `http://${ip}:3000`;
-        document.getElementById('lnbits').href = `http://${ip}:5000`;
-      })
-      .catch(err => {
-        console.error("Erro ao buscar IP:", err);
-      });
+    function abrirApp(porta) {
+      const ip = window.location.hostname;
+      window.open(`http://${ip}:${porta}`, '_blank');
+    }
   </script>
 
 </body>
