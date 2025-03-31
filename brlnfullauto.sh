@@ -12,7 +12,6 @@ VERSION_THUB=0.13.31
 USER=admin
 
 update_and_upgrade() {
-#!/bin/bash
 set -e  # ⛔ PARA tudo se der erro
 
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
