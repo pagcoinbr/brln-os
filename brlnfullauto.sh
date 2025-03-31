@@ -12,9 +12,13 @@ VERSION_THUB=0.13.31
 USER=admin
 
 update_and_upgrade() {
+#!/bin/bash
+set -e  # ⛔ PARA tudo se der erro
+
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-ADM_SCRIPTS_DIR="/home/$USER/BRLNFULLAUTO/html/adm_scripts"
-CGI_BIN_DIR="/var/www/html/cgi-bin"
+SRC_DIR="/home/$USER/brlnfullauto/html"
+CGI_BIN="/usr/lib/cgi-bin"
+ADM_SCRIPTS_DIR="$SRC_DIR/adm_scripts"
 
 echo "🛠️ Atualizando sistema e instalando Apache..."
 sudo apt update && sudo apt full-upgrade -y
@@ -23,25 +27,21 @@ sudo a2enmod cgid
 sudo systemctl restart apache2
 
 echo "📁 Configurando diretórios do painel web..."
-sudo mkdir -p "$CGI_BIN_DIR"
+sudo mkdir -p "$CGI_BIN"
 sudo rm -f /var/www/html/index.html
 
 # Copiar arquivos HTML e imagens
-sudo cp ~/BRLNFULLAUTO/html/index.html /var/www/html/
-sudo cp ~/BRLNFULLAUTO/html/config.html /var/www/html/
-sudo cp ~/BRLNFULLAUTO/html/*.png /var/www/html/
+sudo cp "$SRC_DIR/index.html" /var/www/html/index.html
+sudo cp "$SRC_DIR/config.html" /var/www/html/config.html
+sudo cp "$SRC_DIR"/*.png /var/www/html/
 
 # Copiar CGI scripts principais
-sudo cp ~/BRLNFULLAUTO/html/cgi-bin/status.sh /usr/lib/cgi-bin/
-sudo cp ~/BRLNFULLAUTO/html/cgi-bin/execute.sh /usr/lib/cgi-bin/
+sudo cp "$SRC_DIR/cgi-bin/status.sh" "$CGI_BIN/"
+sudo cp "$SRC_DIR/cgi-bin/execute.sh" "$CGI_BIN/"
 
 # Tornar CGI executáveis
-sudo chmod +x /usr/lib/cgi-bin/status.sh
-sudo chmod +x /usr/lib/cgi-bin/execute.sh
-
-# Criar symlinks para o CGI
-sudo ln -sf /usr/lib/cgi-bin/status.sh "$CGI_BIN_DIR/status.sh"
-sudo ln -sf /usr/lib/cgi-bin/execute.sh "$CGI_BIN_DIR/execute.sh"
+sudo chmod +x "$CGI_BIN/status.sh"
+sudo chmod +x "$CGI_BIN/execute.sh"
 
 # Adicionar bloco CGI ao Apache (caso não exista)
 if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
@@ -57,6 +57,9 @@ fi
 echo "🔐 Configurando sudoers para www-data..."
 
 SUDOERS_FILE="/etc/sudoers.d/www-data-brln"
+
+# Apagar arquivo sudoers antigo, se existir
+sudo rm -f "$SUDOERS_FILE"
 
 ADM_SCRIPTS=$(find "$ADM_SCRIPTS_DIR" -type f -name "*.sh")
 
@@ -79,7 +82,7 @@ echo "✅ Painel web BRLN instalado e configurado com sucesso!"
 echo "📦 Instalando scripts administrativos em /usr/local/bin..."
 
 # Lista de scripts administrativos
-ADM_SCRIPTS=(
+ADM_SCRIPTS_LIST=(
   update_lnd.sh
   update_bitcoind.sh
   update_thunderhub.sh
@@ -89,8 +92,8 @@ ADM_SCRIPTS=(
   toogle_bitcoin.sh
 )
 
-for script in "${ADM_SCRIPTS[@]}"; do
-  SRC="/home/$USER/brlnfullauto/html/adm_scripts/$script"
+for script in "${ADM_SCRIPTS_LIST[@]}"; do
+  SRC="$ADM_SCRIPTS_DIR/$script"
   DST="/usr/local/bin/$script"
 
   if [ -f "$SRC" ]; then
@@ -103,10 +106,9 @@ for script in "${ADM_SCRIPTS[@]}"; do
 done
 
 # Criar arquivo sudoers para www-data
-SUDOERS_FILE="/etc/sudoers.d/www-data-brln"
 echo "www-data ALL=(ALL) NOPASSWD: \\" | sudo tee "$SUDOERS_FILE" > /dev/null
 
-for script in "${ADM_SCRIPTS[@]}"; do
+for script in "${ADM_SCRIPTS_LIST[@]}"; do
   echo "  /usr/local/bin/$script,\\" | sudo tee -a "$SUDOERS_FILE" > /dev/null
 done
 
@@ -867,7 +869,7 @@ menu() {
   echo -e "   ${GREEN}6${NC}- Instalar Thunderhub (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}8${NC}- Instalar LNbits"
-  echo -e "   ${MAGENTA}9${NC}- Tailscale VPN"
+  echo -e "   ${GREEN}9${NC}- Tailscale VPN"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
