@@ -115,7 +115,7 @@ for script in "${ADM_SCRIPTS_LIST[@]}"; do
 done
 
 # Remove a última barra invertida
-sudo sed -i '$ s/\\//' "$SUDOERS_FILE"
+sudo sed -i '$ s/\\$//' "$SUDOERS_FILE"
 
 echo "✅ Permissões configuradas para www-data em: $SUDOERS_FILE"
 }
