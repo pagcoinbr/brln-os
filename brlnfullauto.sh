@@ -63,6 +63,9 @@ www-data ALL=(ALL) NOPASSWD: \\
   /usr/local/bin/update_apt.sh
 EOF
 
+# Abre a posta 80 no UFW
+sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
+
 echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
