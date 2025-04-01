@@ -11,9 +11,7 @@ LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 USER=admin
 
-system_base() {
-set -e  # Interrompe o script em caso de erro
-
+update_and_upgrade() {
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
@@ -69,20 +67,13 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 create_main_dir() {
-  if [[ -d $MAIN_DIR ]]; then
-    echo "Diretório $MAIN_DIR já existe."
-  else
-    sudo mkdir -p $MAIN_DIR
-    sudo chown -R $USER:$USER $MAIN_DIR
-    echo "Diretório $MAIN_DIR criado e permissões definidas."
-  fi
-  sudo chmod -R 755 $MAIN_DIR
-  sudo chown -R $USER:$USER $MAIN_DIR
-  sudo chmod g+X $MAIN_DIR
+  [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
+  sudo chown admin:admin $MAIN_DIR
 }
 
 configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
+  sudo ufw logging off
   sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
   sudo ufw --force enable
 }
@@ -787,7 +778,7 @@ read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
 read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
 read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
 read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-    system_base
+    update_and_upgrade
     create_main_dir
     configure_ufw
     install_tor
@@ -819,7 +810,7 @@ menu() {
   echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo
   echo -e "   ${MAGENTA}Instalação Manual:${NC}"
-  echo -e "   ${GREEN}2${NC}- Instalar Rede + Interface (Obrigatório para as opções 2-8)"
+  echo -e "   ${GREEN}2${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
   echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core (Tor + BTCd)"
   echo -e "   ${GREEN}4${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
   echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
@@ -837,7 +828,7 @@ menu() {
       main
       ;;
     2)
-      system_base
+      update_and_upgrade
       create_main_dir
       configure_ufw
       install_tor
@@ -846,7 +837,7 @@ menu() {
       ;;
     3)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
-      system_base
+      update_and_upgrade
       create_main_dir
       configure_ufw
       install_tor
