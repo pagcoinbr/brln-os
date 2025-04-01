@@ -751,7 +751,8 @@ echo "▶️ Iniciando 'tailscale up' em background..."
 (sudo tailscale up > "$log_file" 2>&1) &
 
 # 2️⃣ Espera alguns segundos pra dar tempo de gerar a saída
-sleep 3
+echo "⏳ Aguardando a autenticação..."
+sleep 10
 
 # 3️⃣ Tenta extrair o link de autenticação do log
 echo "🔍 Procurando o link de autenticação..."
