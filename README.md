@@ -64,7 +64,7 @@ ssh temp@192.168.1.100 <- coloque seu ip aqui.
 
 Depois disso, você verá o terminal do seu node, podendo controlar tudo por lá.
 
-### Para encontrar o ip da sua máquina na rede local, faça o comando ->
+*Para encontrar o ip da sua máquina na rede local, faça o comando:*
 ```
 ip a
 ```
