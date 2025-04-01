@@ -11,66 +11,78 @@ LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 USER=admin
 
-update_and_upgrade() {
+system_base() {
+set -e  # Interrompe o script em caso de erro
+
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-# Atualizar o sistema e instalar dependências
+HTML_SRC=~/brlnfullauto/html
+CGI_DST="/usr/lib/cgi-bin"
+WWW_HTML="/var/www/html"
+ADM_SCRIPTS="/usr/local/bin"
+
+# Atualizar sistema e instalar Apache + módulos
 sudo apt update && sudo apt full-upgrade -y
-# Instalar Apache
 sudo apt install apache2 -y
-sudo a2enmod cgid
+sudo a2enmod cgid dir
 sudo systemctl restart apache2
 
-# Criar diretório CGI se não existir
-sudo mkdir -p /var/www/html/cgi-bin
-sudo rm /var/www/html/index.html
-sudo cp ~/brlnfullauto/html/index.html /var/www/html/index.html
-sudo cp ~/brlnfullauto/html/config.html /var/www/html/config.html
-sudo cp ~/brlnfullauto/html/status.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/html/cgi-bin/execute.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/html/adm_scripts/*.sh /usr/lib/cgi-bin/
-sudo cp ~/brlnfullauto/html/*.png /var/www/html/
+# Criar diretórios e mover arquivos
+sudo mkdir -p "$CGI_DST"
+sudo rm -f "$WWW_HTML/index.html"
+sudo cp "$HTML_SRC/index.html" "$WWW_HTML/"
+sudo cp "$HTML_SRC/config.html" "$WWW_HTML/"
+sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
+sudo cp "$HTML_SRC/cgi-bin/status.sh" "$CGI_DST/"
+sudo cp "$HTML_SRC/cgi-bin/execute.sh" "$CGI_DST/"
+sudo cp "$HTML_SRC/adm_scripts/"*.sh "$ADM_SCRIPTS/"
 
-# Verifica se já existe o bloco <Directory "/var/www/html/cgi-bin">
+# Corrigir permissões de execução
+sudo chmod +x "$CGI_DST/"*.sh
+for script in "$ADM_SCRIPTS"/*.sh; do
+  sudo chmod +x "$script"
+done
+
+# Configurar o Apache para permitir CGI no diretório
 if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
     echo "Adicionando bloco de configuração CGI ao Apache..."
-
-    # Adiciona o bloco antes da última linha </VirtualHost>
     sudo sed -i '/<\/VirtualHost>/i \
-    <Directory "/var/www/html/cgi-bin">\n\
-        Options +ExecCGI\n\
-        AddHandler cgi-script .sh\n\
-    </Directory>\n' "$APACHE_CONF"
+<Directory "/var/www/html/cgi-bin">\n\
+    Options +ExecCGI\n\
+    AddHandler cgi-script .sh\n\
+</Directory>\n' "$APACHE_CONF"
 fi
 
-# Criar symlinks para os scripts existentes
-sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/status.sh /var/www/html/cgi-bin/status.sh
-sudo ln -sf /home/$USER/brlnfullauto/open_node/cgi-bin/execute.sh /var/www/html/cgi-bin/execute.sh
-
-# Garantir permissões de execução
-sudo chmod +x /usr/lib/cgi-bin/status.sh
-sudo chmod +x /usr/lib/cgi-bin/execute.sh
-sudo chmod +x /usr/local/bin/update_lnd.sh
-sudo chmod +x /usr/local/bin/update_lndg.sh
-sudo chmod +x /usr/local/bin/update_thunderhub.sh
-sudo chmod +x /usr/local/bin/update_lnbits.sh
-sudo chmod +x /usr/local/bin/update_bitcoind.sh
-sudo chmod +x /usr/local/bin/toogle_bitcoin.sh
-sudo chmod +x /usr/local/bin/unistall.sh
-sudo chmod +x /usr/local/bin/update_apt.sh
-
+# Permissões de sudo para www-data nos scripts permitidos
 sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
-www-data ALL=(ALL) NOPASSWD: /usr/local/bin/toogle_bitcoin.sh, /usr/local/bin/update_lnd.sh, /usr/local/bin/update_lndg.sh, /usr/local/bin/update_thunderhub.sh, /usr/local/bin/update_lnbits.sh, /usr/local/bin/update_bitcoind.sh, /usr/local/bin/unistall.sh, /usr/local/bin/update_apt.sh
+www-data ALL=(ALL) NOPASSWD: \\
+  /usr/local/bin/toogle_bitcoin.sh, \\
+  /usr/local/bin/update_lnd.sh, \\
+  /usr/local/bin/update_lndg.sh, \\
+  /usr/local/bin/update_thunderhub.sh, \\
+  /usr/local/bin/update_lnbits.sh, \\
+  /usr/local/bin/update_bitcoind.sh, \\
+  /usr/local/bin/uninstall.sh, \\
+  /usr/local/bin/update_apt.sh
 EOF
+
+echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 create_main_dir() {
-  [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
-  sudo chown admin:admin $MAIN_DIR
+  if [[ -d $MAIN_DIR ]]; then
+    echo "Diretório $MAIN_DIR já existe."
+  else
+    sudo mkdir -p $MAIN_DIR
+    sudo chown -R $USER:$USER $MAIN_DIR
+    echo "Diretório $MAIN_DIR criado e permissões definidas."
+  fi
+  sudo chmod -R 755 $MAIN_DIR
+  sudo chown -R $USER:$USER $MAIN_DIR
+  sudo chmod g+X $MAIN_DIR
 }
 
 configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
-  sudo ufw logging off
   sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
   sudo ufw --force enable
 }
@@ -775,7 +787,7 @@ read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
 read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
 read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
 read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-    update_and_upgrade
+    system_base
     create_main_dir
     configure_ufw
     install_tor
@@ -807,7 +819,7 @@ menu() {
   echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
   echo
   echo -e "   ${MAGENTA}Instalação Manual:${NC}"
-  echo -e "   ${GREEN}2${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
+  echo -e "   ${GREEN}2${NC}- Instalar Rede + Interface (Obrigatório para as opções 2-8)"
   echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core (Tor + BTCd)"
   echo -e "   ${GREEN}4${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
   echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
@@ -825,7 +837,7 @@ menu() {
       main
       ;;
     2)
-      update_and_upgrade
+      system_base
       create_main_dir
       configure_ufw
       install_tor
@@ -834,7 +846,7 @@ menu() {
       ;;
     3)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
-      update_and_upgrade
+      system_base
       create_main_dir
       configure_ufw
       install_tor
