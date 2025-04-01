@@ -1,4 +1,4 @@
-# BR⚡LN Bolt - Seu Node Lightning com Interface Web
+# BR⚡LN Bolt - Seu Node Lightning Standalone com Interface Web
 
 Bem-vindo ao **BR⚡LN Bolt**, um projeto da comunidade **BR⚡️LN - Brasil Lightning Network**, voltado para facilitar a instalação e administração de nós Lightning com uma interface simples, intuitiva e acessível diretamente pelo navegador.
 
