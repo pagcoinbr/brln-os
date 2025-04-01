@@ -23,6 +23,8 @@ O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
 - ⚙️ Painel web interativo
 - 🤖 Integração com Telegram via BOS
 
+[![photo-2025-04-01-13-21-50.jpg](https://i.postimg.cc/5tGrFMLh/photo-2025-04-01-13-21-50.jpg)](https://postimg.cc/JyNx9vTx)
+
 ---
 
 ## 🚀 Instalação passo a passo
@@ -176,7 +178,7 @@ Você verá botões para acessar:
 - MEMPOOL
 - Configurações
 
-[photo-2025-04-01-13-21-50.jpg](https://postimg.cc/JyNx9vTx)
+[![photo-2025-04-01-13-21-50.jpg](https://i.postimg.cc/5tGrFMLh/photo-2025-04-01-13-21-50.jpg)](https://postimg.cc/JyNx9vTx)
 Imagem 1 - Menu principal do BR⚡LN Bolt
 
 Se conseguiu acessar a interface gráfica, seu node está quase pronto, basta realizar mais algumas etapas para configurar a conexão com o telegram, assim podendo acompanhar todos os eventos que acontecem no seu node.
@@ -196,7 +198,7 @@ Primeiramente acesse a loja do seu smartphone e instale o app do Telegram e crie
 
 1. No Telegram, pesquise: [@BotFather](https://t.me/BotFather)
 2. Crie seu bot com o comando `/newbot`, copie a API token exibida na mensagem e acesse o link no topo da mensagem para abrir o chat com seu novo bot recém criado. 
-[Captura-de-tela-2025-04-01-132927.png](https://postimg.cc/8Fk3mLBt)
+[![Captura-de-tela-2025-04-01-132927.png](https://i.postimg.cc/9fyhVp45/Captura-de-tela-2025-04-01-132927.png)](https://postimg.cc/8Fk3mLBt)
 Imagem 2 - Exemplo de criação de bot no telegram
 
 3. Em seguida no terminal, digite:
@@ -219,7 +221,7 @@ sudo nano -l +12 /etc/systemd/system/bos-telegram.service
 
 Vá até o fim da linha e apague *<seu_connect_code_aqui>* (removendo também as chaves <>) e coloque no lugar o **Connection code** obtido no seu bot do telegram. Saia salvando com *Ctrl + X*, pressione *y* e depois *Enter* para confirmar.
 
-[Captura-de-tela-2025-04-01-151857.png](https://postimg.cc/xJBYLhLv)
+[![Captura-de-tela-2025-04-01-151857.png](https://i.postimg.cc/wMjvYdvG/Captura-de-tela-2025-04-01-151857.png)](https://postimg.cc/xJBYLhLv)
 Imagem 3 - Exemplo da alteração do arquivo de serviço do bos telegram.
 
 Agora de o seguintes comandos, para reiniciar o serviço:
