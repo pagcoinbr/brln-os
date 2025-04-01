@@ -64,7 +64,7 @@ ssh temp@192.168.1.100 <- coloque seu ip aqui.
 
 Depois disso, você verá o terminal do seu node, podendo controlar tudo por lá.
 
-*Para encontrar o ip da sua máquina na rede local, faça o comando:*
+*- Para encontrar o ip da sua máquina na rede local, faça o comando:*
 ```
 ip a
 ```
@@ -72,7 +72,7 @@ Você verá uma saída parecida com essa:
 ```
 enp4s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
     link/ether e8:9c:25:7c:0b:8e brd ff:ff:ff:ff:ff:ff
-    inet 192.168.0.104/24 metric 100 brd 192.168.0.255 scope global enp4s0 <- **Seu ip está aqui.**
+    inet 192.168.0.100/24 metric 100 brd 192.168.0.255 scope global enp4s0 <- **Seu ip está no início desta linha.**
        valid_lft forever preferred_lft forever
     inet6 fe80::ea9c:25ff:fe7c:b8e/64 scope link 
        valid_lft forever preferred_lft forever
