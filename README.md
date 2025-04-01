@@ -1,379 +1,295 @@
-# BRLN Bolt
+# BR⚡LN Bolt - Seu Node Lightning Standalone com Interface Web
 
-Este tutorial aborda a instalação rápida de um nó Lightning (segunda camada do Bitcoin) utilizando a conexão RPC (Remote Procedure Call), permitindo a abertura dos primeiros canais em menos de 30 minutos. Para acessar este serviço, os membros do BRLN devem realizar o cadastro por meio do bot oficial [BRLN Server Bot](https://t.me/brlnbtcserver_bot), utilizando o comando /generate para obter as credenciais de acesso. Este serviço é oferecido separadamente, com condições especiais para os membros do BR⚡️LN. Porém caso você já tenha, este script pode ser utilizado para criação do seu node lnd com um bitcoin core na rede local ou mesmo na máquina local, de graça!
-
----
-## Instalando o Ubuntu Server 24.04 - (Obrigatório)
-
-**Passos para instalação:**
-Baixar a imagem do Ubuntu Server: Acesse o site oficial [Clicando aqui](https://ubuntu.com/download/server) e faça o download da imagem ISO correspondente a versão do Ubuntu Server 24.04.
-
-Criar um pendrive de boot: Utilize o **Balena Etcher**, **Rufus** ou outro software de sua preferência para gravar a imagem ISO no pendrive.
-
-**Instalação do sistema:**
-
-Inicie o computador a partir do pendrive e siga os passos para instalar o Ubuntu Server.
-Durante a instalação, certifique-se de marcar a opção `[x] OpenSSH Server` para habilitar o acesso remoto ao servidor via SSH.
-
-**Configuração de credenciais:**
-Quando solicitado a inserir as credenciais de login, use as seguintes informações:
-
-Nome: `temp`
-
-Nome do servidor: `brlnbolt`
-
-Usuário: `temp`
-
-Senha: Escolha uma senha de sua preferência.
+Bem-vindo ao **BR⚡LN Bolt**, um projeto da comunidade **BR⚡️LN - Brasil Lightning Network**, voltado para facilitar a instalação e administração de nós Lightning com uma interface simples, intuitiva e acessível diretamente pelo navegador.
 
 ---
-## Preparando o sistema - (Obrigatório)
 
-**Finalização da instalação:**
+## 🌎 Quem somos
 
-Após concluir a instalação, realize o reboot e remova o pendrive.
-Caso uma mensagem de erro seja exibida no boot, pressione `Enter` para continuar.
-Agora, sem o pendrive conectado, o sistema deve inicializar corretamente.
+A **BR⚡LN** é uma comunidade brasileira comprometida com a educação, adoção e soberania no uso do Bitcoin e da Lightning Network. Nosso objetivo é **empoderar indivíduos e empresas** com ferramentas fáceis de usar, sempre com foco em descentralização e privacidade.
 
-Agora vamos criar o usuário admin, para isso, de o seguinte comando: 
+---
+
+## 🧰 O que é o BR⚡LN Bolt?
+
+O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
+
+- ⚡ Lightning Daemon (LND)
+- ₿ Bitcoin Core (bitcoind)
+- 🔒 Tor
+- 📊 Thunderhub
+- 📬 LNDg
+- 🧪 LNbits
+- ⚙️ Painel web interativo
+- 🤖 Integração com Telegram via BOS
+
+[![photo-2025-04-01-13-21-50.jpg](https://i.postimg.cc/5tGrFMLh/photo-2025-04-01-13-21-50.jpg)](https://postimg.cc/JyNx9vTx)
+
+---
+
+## 🚀 Instalação passo a passo
+
+### 1. 📥 Instale o Ubuntu Server 24.04
+
+- Faça o download em: https://ubuntu.com/download/server
+- Grave a ISO em um pendrive com [Balena Etcher](https://etcher.io) ou [Rufus](https://rufus.ie)
+- Instale com as opções padrões, **ativando o OpenSSH Server** quando solicitado.
+
+### 2. 🧑 Crie o usuário TEMP durante a instalação
+
+Durante a instalação inicial:
+
+- Nome: `temp`
+- Hostname: `brlnbolt`
+- Usuário: `temp`
+- Senha: escolha a sua.
+
+Após o primeiro login, fazendo o SSH com o IP atual da máquina como explicado a seguir, siga com os próximos comandos para criar o usuário final.
+
+Fazendo a primeira conexão via SSH:
+
+## 🔐 O que é SSH?
+
+**SSH (Secure Shell)** é um protocolo que permite **acessar e controlar outro computador pela rede, de forma segura**, usando criptografia.
+
+### 🧠 Em outras palavras:
+Com o SSH, você pode **entrar no terminal de outro computador**, como se estivesse sentado na frente dele, mesmo que ele esteja do outro lado do mundo 🌍.
+
+## 💡 Exemplo prático:
+Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este `192.168.1.100`. Se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
+
+```bash
+ssh temp@192.168.1.100 <- coloque seu IP aqui.
+```
+
+Depois disso, você verá o terminal do seu node, podendo controlar tudo por lá.
+
+*- Para encontrar o IP da sua máquina na rede local, faça o comando:*
+```
+ip a
+```
+Você verá uma saída parecida com essa:
+```
+enp4s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+   link/ether e8:9c:25:7c:0b:8e brd ff:ff:ff:ff:ff:ff
+   inet 192.168.0.100/24 metric 100 brd 192.168.0.255 scope global enp4s0 <- **Seu IP está no início desta linha.**
+      valid_lft forever preferred_lft forever
+   inet6 fe80::ea9c:25ff:fe7c:b8e/64 scope link 
+      valid_lft forever preferred_lft forever
+```
+No caso, o IP é `192.168.0.104`, então o comando para fazer SSH será:
+
+```bash
+ssh temp@192.168.0.104 <- coloque seu IP aqui.
+```
+
+---
+
+### 3. 👤 Crie o usuário `admin`
+ATENÇÃO! Apenas é necessário 1 destes comandos. Caso ele permita você criar o usuário admin e solicite escolher a nova senha do usuário admin, você já pode passar para a próxima etapa.
+
+Entre com o usuário `temp` e execute:
 
 ```bash
 sudo adduser --gecos "" admin
 ```
-
 Caso receba o erro: `fatal: The group 'admin' already exists.`, você precisa fazer:
 
 ```bash
 sudo adduser --gecos "" --ingroup admin admin
 ```
 
-Ele vai te pedir a senha atual, que você escolheu na instalação do sistema e em seguida digite duas vezes a nova senha para o usuário admin, que estamos criando. 
-
-Depois copie e cole no terminal:
+Caso ainda receba o mesmo erro, tente:
 ```bash
-sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin
+sudo passwd admin
 ```
 
-Em seguida faça o `logout` ou `exit` para retornar ao usuário `temp`
+ATENÇÃO! Apenas é necessário 1 destes comandos. Caso ele permita você criar e solicite escolher a nova senha do usuário admin, você já pode passar para a próxima etapa.
 
-Agora que criamos um novo usuário "admin", vamos fazer o login neste novo usuário, novamente e apagar o usuário "temp" anterior.
+```bash
+sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+```
 
-Entre como usuário admin:
+Depois, troque para o usuário `admin`:
+
 ```bash
 sudo su - admin
 ```
 
-Uma vez logado, de o seguinte comando: 
+E remova o usuário temporário:
 
 ```bash
 sudo userdel -rf temp
 ```
-Você receberá uma mensagem de erro de `not found`, ou algo semelhante, se tudo correr bem.
 
 ---
 
-## Instalação BRLN Bolt + Bitcoin Core (Local) - (Obrigatório)
+### 4. 📦 Instale o BR⚡LN Bolt
 
-Até agora fizemos a parte mais dificil que não pode ser automatizada por scripts, de agora em diante você vai seguir este passo a passo:
+Clone o projeto:
 
-Primeiro de o seguinte comando, para clonar o repositório:
 ```bash
 git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
-```
-
-Agora acesse o diretório copiado, com o seguinte comando:
-```bash
 cd brlnfullauto
-```
-
-Execute o seguinte comando para aplicar as permissões necessárias ao programa:
-```bash
 chmod +x brlnfullauto.sh
-```
-Em seguida, execute o programa com o seguinte comando:
-```bash
 ./brlnfullauto.sh
 ```
-### As credenciais que são solicitadas neste script, podem ser adquiridas pelo nosso plano mensal de conexão segura por rpc para um bitcoind externo permitindo já fazer as primeiras configurações do seu nó, antes do término do download da blockchain. Após realizar a associação em https://br-ln.com.br, acesse o bot: https://t.me/brlnbtcserver_bot
 
-Envie a mensagem:
-
-```bash
-\linkemail <seu@email.com>
-```
-
-```bash
-\generate <usuário>
-```
-
-**Selecione a opção numero 1 e inicie a intalação preenchendo com os dados solicitados**
-
-```bash
-🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟
-
-⚡ Este script instalará:
-  🛠️ Nó Lightning Standalone
-  🏗️ Bitcoin Core
-  🖥️ Ferramentas de administração:
-    - ThunderHub
-    - Balance of Satoshis (BOS)
-    - LNDG
-
-📝 Escolha uma opção:
-
-   Instalação Automática:
-   1- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)
-
-   2- Alternar Bitcoin Local/Remoto
-
-   Instalação Manual:
-   3- Instalar Pre-requisitos (Obrigatório para as opções 3-9)
-   4- Instalar Bitcoin Core (Tor + BTCd)
-   5- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo.
-   6- Instalar Balance of Satoshis (Exige LND)
-   7- Instalar Thunderhub (Exige LND)
-   8- Instalar Lndg (Exige LND)
-   9- Instalar LNbits (Exige LND)
-   0- Sair
-
-👉 Digite sua escolha: 
-```
 ---
 
-Caso você tenha errado alguma credencial voce pode corrigi-la após a instalação editando o arquivo de configuração com o seguinte comando:
+## 🧭 Como usar o menu
+
+Você verá um menu com as seguintes opções:
+
 ```bash
-nano -l +66 /data/lnd/lnd.conf
+Instalação Automática
+1 - Instalação do BR⚡LN Bolt (Tor + LND + BTCd + Ferramentas)
+
+Instalação Manual
+2 - Instalar Rede + Interface (Obrigatório para as opções 2-8)
+3 - Instalar Bitcoin Core (Tor + BTCd)
+4 - Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo
+5 - Instalar Balance of Satoshis (Exige LND)
+6 - Instalar Thunderhub (Exige LND)
+7 - Instalar Lndg (Exige LND)
+8 - Instalar LNbits
+9 - Tailscale VPN
+0 - Sair
 ```
-Saia do modo de edição digitando: `CTRL + X` e se você fez alterações no arquivo, digite ` Y ` para salvar, e reinicie o serviço:
-```bash
-sudo systemctl restart lnd
-```
+
+> **Recomendado**: use a opção **1** para instalar tudo automaticamente. Apesar de ela não contemplar o Tailscale VPN e o LNbits, eles podem ser instalados à parte escolhendo a opção 8 e 9.
+
 ---
 
-Veja o estado do serviço com o seguinte comando:
+## 🖥️ Acesse o painel via navegador
 
-```bash
-sudo systemctl status lnd.service
+Depois da instalação, acesse:
+
+```
+http://192.168.0.104 <- coloque seu IP aqui.
 ```
 
-**Exemplo de resultado esperado:**
+Você verá botões para acessar:
 
-```bash
-admin@minibolt:~$ sudo systemctl status lnd.service
-[sudo] password for admin:
-● lnd.service - Lightning Network Daemon
-     Loaded: loaded (/etc/systemd/system/lnd.service; enabled; preset: enabled)
-     Active: active (running) since Tue 2024-09-10 02:03:49 UTC; 1 week 0 days ago
-   Main PID: 124698 (lnd)
-     Status: "Wallet unlocked"
-      Tasks: 23 (limit: 38229)
-     Memory: 145.6M (peak: 286.0M)
-        CPU: 1h 30min 4.458s
-     CGroup: /system.slice/lnd.service
-             └─124698 /usr/local/bin/lnd
+- Thunderhub
+- LNDg
+- LNbits
+- AMBOSS
+- MEMPOOL
+- Configurações
 
-Sep 17 20:57:49 minibolt lnd[124698]: 2024-09-17 20:57:49.843 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-Sep 17 20:58:49 minibolt lnd[124698]: 2024-09-17 20:58:49.844 [INF] WTCL: (legacy) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-Sep 17 20:58:49 minibolt lnd[124698]: 2024-09-17 20:58:49.844 [INF] WTCL: (taproot) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquire>
-Sep 17 20:58:49 minibolt lnd[124698]: 2024-09-17 20:58:49.844 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-Sep 17 20:59:49 minibolt lnd[124698]: 2024-09-17 20:59:49.843 [INF] WTCL: (legacy) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-Sep 17 20:59:49 minibolt lnd[124698]: 2024-09-17 20:59:49.843 [INF] WTCL: (taproot) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquire>
-Sep 17 20:59:49 minibolt lnd[124698]: 2024-09-17 20:59:49.843 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (taproot) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquire>
-Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (legacy) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-Sep 17 21:00:49 minibolt lnd[124698]: 2024-09-17 21:00:49.843 [INF] WTCL: (anchor) Client stats: tasks(received=0 accepted=0 ineligible=0) sessions(acquired>
-lines 1-21/21 (END)
-```
+[![photo-2025-04-01-13-21-50.jpg](https://i.postimg.cc/5tGrFMLh/photo-2025-04-01-13-21-50.jpg)](https://postimg.cc/JyNx9vTx)
+Imagem 1 - Menu principal do BR⚡LN Bolt
 
-Agora você já deve estar pronto para ver as informações do seu node com o seguinte comando: 
+Se conseguiu acessar a interface gráfica, seu node está quase pronto. Basta realizar mais algumas etapas para configurar a conexão com o Telegram, assim podendo acompanhar todos os eventos que acontecem no seu node.
 
- ```bash
-lncli getinfo
-```
----
-## Ao final da instalação você precisa recarregar a sessão. Para isso, de o seguinte comando:
+## Ao final da instalação, volte no terminal para recarregar/atualizar a sessão atual. Para isso, dê o seguinte comando:
 ```bash
 . ~/.profile
 ```
+Em seguida, continue para a configuração do *bos telegram*.
+---
 
-## Alternativamente, você pode sair da sessão com ` exit ` e logar novamente.
+## 🔐 Configurar seu Telegram para alertas
 
-### Agora vamos criar um **bot** para poder monitorar o node pelo Telegram.
-
-Primeiramente acesse a loja do seu smartphone e instale o app do Telegram:
+Primeiramente, acesse a loja do seu smartphone e instale o app do Telegram e crie uma conta, caso você não tenha:
 - [Play store](https://play.google.com/store/apps/details?id=org.telegram.messenger&hl=pt_BR&pli=1)
 - [Apple store](https://apps.apple.com/br/app/telegram-messenger/id686449807)
 
-Agora acesse a ferramenta de criação de bots do Telegram no seguinte endereço: [Bot Father, no Telegram](https://t.me/BotFather) e crie um bot com o comando
-```bash
-/newbot
-```
-e siga os passos para a criação de um bot no Telegram, após o término copie a APItoken entregue, ele será necessária para o próximo passo.
+1. No Telegram, pesquise: [@BotFather](https://t.me/BotFather)
+2. Crie seu bot com o comando `/newbot`, copie a API token exibida na mensagem e acesse o link no topo da mensagem para abrir o chat com seu novo bot recém-criado. 
+[![Captura-de-tela-2025-04-01-132927.png](https://i.postimg.cc/9fyhVp45/Captura-de-tela-2025-04-01-132927.png)](https://postimg.cc/8Fk3mLBt)
+Imagem 2 - Exemplo de criação de bot no Telegram
 
-Agora retorne ao terminal do seu computador e de o comando:
+3. Em seguida, no terminal, digite:
 ```bash
 bos telegram
 ```
+4. Cole a API token fornecida pelo BotFather do Telegram no terminal e pressione `Enter`.
 
-Cole a APItoken fornecido pelo BotFathter do Telegram, no terminal e pressione ` Enter `, volte para o bot recém criado no telegram e envie o seguinte comando: `/start ` e depois `connect`.
+*ATENÇÃO!* A API token não é exibida quando colada na tela. Preste atenção para não colar duas vezes ou você pode obter um erro ao final do processo. Se isso acontecer, basta começar novamente o processo do comando `bos telegram`.
 
-Ele vai te responder algo como: `🤖 Connection code is: ########`
+5. Volte para o bot recém-criado no Telegram e envie o seguinte comando: `/start` e depois `/connect`.
+6. Ele vai te responder algo como: `🤖 Connection code is: ########`
+7. Cole o Connection code no terminal e pressione *Enter* novamente. Se tudo estiver correto, você vai receber uma resposta `🤖 Connected to <nome do seu node>` no chat do novo bot. Agora, volte para o terminal e pressione *Ctrl + C* para sair da execução do comando. Você já pode seguir para o próximo passo.
 
-Cole o Connection code no terminal e pressione enter novamente, se tudo estiver correto você vai receber uma resposta `🤖 Connected to <nome do seu node>`, agora pressione *Ctrl + C* para sair e você já pode seguir para o próximo passo.
+Para iniciar o serviço automaticamente e mantê-lo rodando em segundo plano, vamos inserir o connection code no arquivo de serviço com o comando:
 
-Acesse o arquivo:
 ```bash
 sudo nano -l +12 /etc/systemd/system/bos-telegram.service
 ```
 
-Vá até o fim da linha e apague *<seu_connect_code_aqui>* e coloque no lugar o **Connection code** obtido no seu bot do telegram. Saia salvando com *Ctrl + X* e pressione *y* para confirmar.
+Vá até o fim da linha e apague *<seu_connect_code_aqui>* (removendo também as chaves <>) e coloque no lugar o **Connection code** obtido no seu bot do Telegram. Saia salvando com *Ctrl + X*, pressione *y* e depois *Enter* para confirmar.
 
-Agora de o seguintes comandos, para reiniciar o serviço:
+[![Captura-de-tela-2025-04-01-151857.png](https://i.postimg.cc/wMjvYdvG/Captura-de-tela-2025-04-01-151857.png)](https://postimg.cc/xJBYLhLv)
+Imagem 3 - Exemplo da alteração do arquivo de serviço do bos telegram.
+
+Agora, dê os seguintes comandos para reiniciar o serviço:
 ```bash
 systemctl daemon-reload
 ```
 
-Escolha a opção 1 e digite a senha do seu usuário linux.
+```bash
+sudo systemctl enable bos-telegram
+sudo systemctl start bos-telegram
+```
+Pronto, agora você receberá novamente a mensagem `🤖 Connected to <nome do seu node>` se tudo tiver corrido bem.
+---
+
+## ⚠️ Corrigir `lnd.conf` se necessário
+
+Se errou alguma configuração, como a senha do bitcoind, edite com:
 
 ```bash
-sudo systemctl enable bos-telegram.service
-sudo systemctl start bos-telegram.service
+nano /data/lnd/lnd.conf
 ```
 
-Agora verifique se o serviço está funcionando, com o seguinte comando:
-```bash
-sudo systemctl status bos-telegram.service
-```
-
-O resultado esperado é o seguinte:
+Depois, reinicie o LND:
 
 ```bash
-admin@minibolt:~$ sudo systemctl status bos-telegram.service 
-[sudo] password for admin: 
-● bos-telegram.service - bos-telegram
-     Loaded: loaded (/etc/systemd/system/bos-telegram.service; enabled; preset: enabled)
-     Active: active (running) since Thu 2024-10-24 08:52:24 UTC; 17h ago
-   Main PID: 2761 (node)
-      Tasks: 11 (limit: 38305)
-     Memory: 101.2M (peak: 131.5M)
-        CPU: 9.469s
-     CGroup: /system.slice/bos-telegram.service
-             └─2761 node /home/admin/.npm-global/bin/bos telegram --use-small-units --connect <connect-code-aqui>
-
-Oct 24 08:51:50 minibolt systemd[1]: bos-telegram.service: Scheduled restart job, restart counter is at 1.
-Oct 24 08:52:24 minibolt systemd[1]: Started bos-telegram.service - bos-telegram.
+sudo systemctl restart lnd
 ```
-
-Use **Ctrl + C** para sair.
-
-- Pronto o **bos** está pronto para ser usado no Telegram,
-* você também pode acessar seu **lndg** pelo endereço, no navegador, `seuiplocal:8889`
-- O **Thunderhub** por `seuiplocal:3000` (Ex. 192.168.0.101:3000)
-
-Caso não inicie o thunderhub ao final da atualização use o comando `sudo systemctl start thunderhub`
 
 ---
-### Esta ultima ferramenta serve para atualizar os programas do seu BRLNBolt, USE COM SABEDORIA, atualizar o *bitcoind* pode ser um erro caso não tenha lido as notas de atualização.
 
-Na primeira vez que executar:
-```bash
-chmod +x manutencao.sh
-```
-e depois
-```bash
-./manutencao.sh
-```
+## ✅ Verifique se está tudo certo
 
-Escolha a opção que quiser atualiar ou desinstalar e aguarde a operação ser completa.
-
-## Instalando e sincronizando o seu proprio bitcoin core (opcional)
-
-Com o próximo script vamos instalar o bitcoin core, o coração de toda nossa operação. *Fique atento aos comandos a serem dados a final do script, eles são necessários para o sucesso da intalação correta.*
-
-Caso você ainda não esteja no diretório brlnfullauto, execute:
+Execute:
 
 ```bash
-cd 
-```
-E depois:
-```bash
-cd brlnfullauto/
-```
-E por fim:
-```bash
-./brlnfullauto.sh
-```
-Escolha a opção 3, digite seu usuário e senha para acesso ao bitcoin core e aguarde o final da instalação.
-
-Verifique se a instalação foi corretamente feita com:
-```bash
-sudo systemctl status bitcoind
+lncli getinfo
 ```
 
-Saia com *Ctrl + C*
-
-Em alguns dias, seu Bitcoin Core já vai estar sincronizando, basta acompanhar usando o comando:
-```bash
-journalctl -fu bitcoind
-```
-```
-admin@brlnbolt:~/brlnfullauto$ ./manutencao.sh
-./manutencao.sh: line 174: lnd: command not found
-./manutencao.sh: line 175: bitcoin-cli: command not found
-Escolha uma opção:
-1) Atualizar o LND
-2) Atualizar o Bitcoind ATENÇÃO
-Antes de atualizar o Bitcoind, leia as notas de atualização
-3) Atualizar o Thunderhub
-4) Atualizar o LNDg
-5) Atualizar o LNbits
-6) Atualizar os pacotes do sistema
-7) Desinstalar Thunderhub
-8) Desinstalar LNDg
-9) Desinstalar LNbits
-0) Sair
-Opção: 
-```
-
-## Instalando o TailScale VPN - (Opcional)
-
-Para instalar o **TailScale VPN**, execute o seguinte comando no terminal:
-
-```bash
-curl -fsSL https://tailscale.com/install.sh | sh
-```
-
-Após a instalação, inicie o TailScale com o comando:
-
-```bash
-sudo tailscale up
-```
-
-O terminal fornecerá um link. Esse link deve ser transcrito, letra por letra, no navegador de outro dispositivo, preferencialmente no computador que será utilizado para realizar o acesso SSH ao servidor.
-
-Crie uma conta na tailscale e adicione o dispositivo.
-
-Em seguida baixe o tailscale pelo link (https://tailscale.com/download/windows) e faça o login com a sua conta recém criada.
-Pronto, agora você já pode fazer o acesso via ssh no servidor, digitando no Terminal do Windows o seguinte comando:
-
-```bash
-ssh admin@ip.do.tailscale
-```
-
-Este ipv4 é o que é fornecido sob o nome de "minibolt" no tailsacale, que se você estiver usando Windows, deve estar na sua barra de icones próximo ao relógio.
-
-Assim você pode acessar qualquer serviço de fora de casa usando o ip do tailscale, ao invés do ip da rede local.
+Você deve ver o status do seu node Lightning rodando!
 
 ---
-###### Apesar de muitas ferramentas serem opcionais, elas são imprescindíveis na vida de um node runner, recomendamos a sua intalação.
-###### **A lightining não é brinquedo, use com responsabilidade.**
-###### Boas transações!
-###### Por segurança, aos que tiverem conhecimento para, sugiro revisão dos scripts. Aos leigos infelizmente é necessário um pouco de confiança, mas esta instalação é livre de malwares e com uma capacidade de te fornecer uma gama de possibilidades, se feita corretamente. Para mais informações sobre o projeto de emancipação pelo bitcoin, acesse: https://br-ln.com/ e faça sua associação para o nosso clube lightning do Brasil hoje mesmo!
----
-###### Em caso de problemas técnicos, envie uma mensagem para suporte.brln@gmail.com
 
-### Bibliografia:
-###### 1- https://github.com/cryptosharks131/lndg - Cryptosharks131 - lndg
-###### 2- https://github.com/lnbits/lnbits/tree/main - Lnbits
-###### 3- https://minibolt.minibolt.info/ - O grande poço de conhecimento.
-###### 4- https://plebnet.wiki/wiki/Main_Page - Uma pena ter saído do ar.
+## 🛰️ Use Tailscale VPN (acesso remoto)
+
+Para acessar seu node de qualquer lugar, instale a opção 9. Ao final, será exibido um QR code.
+
+Escaneie o QR code no app de câmera do seu celular. Isso vai te levar ao site de login do Tailscale. Faça login no navegador com email ou entre com sua conta Google.  
+Baixe o app para [Android](https://play.google.com/store/apps/details?id=com.tailscale.ipn) ou [iOS](https://apps.apple.com/us/app/tailscale/id1470499037).
+
+Em seguida, basta copiar o IPV4 no app do Tailscale e colar no seu navegador. Pronto, seu node pode ser acessado até mesmo fora de casa!
+
+---
+
+## 🤝 Suporte e Comunidade
+
+- Site: https://services.br-ln.com
+- Email: suporte.brln@gmail.com
+
+---
+
+## ⚡ Vamos rodar um node soberano!
+
+Com o BR⚡LN Bolt, você tem controle, praticidade e soberania.  
+Com a Lightning Network, você faz parte da revolução monetária global.
+
+**Seja bem-vindo à descentralização!** ⚡🇧🇷
+
+---
+
+> Feito com amor pela comunidade BR⚡LN.  
+> Compartilhe, instale, rode e nos ajude a construir um futuro livre!
