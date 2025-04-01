@@ -330,6 +330,7 @@ EOF'
 fi
 }
 
+
 create_wallet() {
   echo "###############################################################################################"
   echo "Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova cateira ou "y" para recuperar uma carteira antiga com 24 palavras, digite o "password" caso queira proteger sua frade de 24 palavras com uma senha e pressione *enter* para criar uma nova carteira."
