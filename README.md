@@ -56,7 +56,7 @@ Fazendo a primeira conexão via SSH:
 Com o SSH, você pode **entrar no terminal de outro computador**, como se estivesse sentado na frente dele, mesmo que ele esteja do outro lado do mundo 🌍.
 
 ## 💡 Exemplo prático:
-Se seu node BR⚡LN Bolt está na rede local com IP `192.168.1.100`, você pode acessá-lo com:
+Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP pacecido com este `192.168.1.100`, se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
 
 ```bash
 ssh temp@192.168.1.100 <- coloque seu ip aqui.
@@ -64,7 +64,7 @@ ssh temp@192.168.1.100 <- coloque seu ip aqui.
 
 Depois disso, você verá o terminal do seu node, podendo controlar tudo por lá.
 
- Para encontrar o ip da sua máquina na rede local, faça o comando ->
+### Para encontrar o ip da sua máquina na rede local, faça o comando ->
 ```
 ip a
 ```
