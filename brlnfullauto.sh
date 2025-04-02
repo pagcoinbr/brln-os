@@ -705,7 +705,7 @@ cat > "$LNBITS_DIR/start-lnbits.sh" <<EOF
 #!/bin/bash
 cd $LNBITS_DIR
 export PATH="\$HOME/.local/bin:\$PATH"
-exec $POETRY_BIN run lnbits
+exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
 EOF
 
 # Torna o script executável
