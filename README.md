@@ -183,6 +183,36 @@ Imagem 1 - Menu principal do BR⚡LN Bolt
 
 Se conseguiu acessar a interface gráfica, seu node está quase pronto. Basta realizar mais algumas etapas para configurar a conexão com o Telegram, assim podendo acompanhar todos os eventos que acontecem no seu node.
 
+---
+
+## ⚠️ Corrigir `lnd.conf` se necessário
+
+Se errou alguma configuração, como a senha do bitcoind, edite com:
+
+```bash
+nano /data/lnd/lnd.conf
+```
+
+Depois, reinicie o LND:
+
+```bash
+sudo systemctl restart lnd
+```
+
+---
+
+## ✅ Verifique se está tudo certo
+
+Execute:
+
+```bash
+lncli getinfo
+```
+
+Você deve ver o status do seu node Lightning rodando!
+
+---
+
 ## Ao final da instalação, volte no terminal para recarregar/atualizar a sessão atual. Para isso, dê o seguinte comando:
 ```bash
 . ~/.profile
@@ -234,33 +264,6 @@ sudo systemctl enable bos-telegram
 sudo systemctl start bos-telegram
 ```
 Pronto, agora você receberá novamente a mensagem `🤖 Connected to <nome do seu node>` se tudo tiver corrido bem.
----
-
-## ⚠️ Corrigir `lnd.conf` se necessário
-
-Se errou alguma configuração, como a senha do bitcoind, edite com:
-
-```bash
-nano /data/lnd/lnd.conf
-```
-
-Depois, reinicie o LND:
-
-```bash
-sudo systemctl restart lnd
-```
-
----
-
-## ✅ Verifique se está tudo certo
-
-Execute:
-
-```bash
-lncli getinfo
-```
-
-Você deve ver o status do seu node Lightning rodando!
 
 ---
 
