@@ -118,6 +118,24 @@ download_lnd() {
 }
 
 configure_lnd() {
+  echo -e "${GREEN}################################################################${NC}"
+  echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
+  echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+  echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
+  echo -e "${GREEN}################################################################${NC}"  
+  echo
+  read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
+  if [[ $use_brlnd == "yes" ]]; then
+    echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
+    read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+  elif [[ $use_brlnd == "no" ]]; then
+    echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
+  else
+    echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
+    exit 1
+  fi
+
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -299,24 +317,6 @@ EOF'
 }
 
 create_wallet() {
-  echo -e "${GREEN}################################################################${NC}"
-  echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
-  echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
-  echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
-  echo -e "${GREEN}################################################################${NC}"  
-  echo
-  read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
-  if [[ $use_brlnd == "yes" ]]; then
-    echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-    read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
-  elif
-  [[ $use_brlnd == "no" ]]; then
-    echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
-  else
-    echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
-    create_wallet
-  fi
   echo -e "${YELLOW}############################################################################################### ${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova carteira ${NC}"
   echo -e "${YELLOW}ou 'y' para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
