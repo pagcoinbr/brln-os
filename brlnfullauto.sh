@@ -126,7 +126,7 @@ fi
 }
 
 configure_lnd() {
-    if [[ -d /etc/systemd/system/lnd.service ]]; then
+    if [[ -d /data/lnd ]]; then
     echo "LND já está configurado."
     else
   sudo usermod -aG debian-tor admin
