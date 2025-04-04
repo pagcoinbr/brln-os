@@ -778,9 +778,13 @@ echo "✅ tailscale up finalizado."
 
 main() {
 read -p "Digite a senha para ThunderHub: " senha
-read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+read -p "${GREEN}Digite o nome do seu Nó (NÃO USE ESPAÇO!): ${NC}" "alias"	
+echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais${NC}"
+echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
+echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
+read -p "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}" "bitcoind_rpcuser"
+read -s -p "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}" "bitcoind_rpcpass"
 read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
     update_and_upgrade
     create_main_dir
@@ -850,8 +854,12 @@ menu() {
       ;;
     4)
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-      read -s -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais${NC}"
+      echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+      echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
+      echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
+      read -p "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}" "bitcoind_rpcuser"
+      read -s -p "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}" "bitcoind_rpcpass"
       download_lnd
       configure_lnd
       create_lnd_service
