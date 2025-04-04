@@ -954,6 +954,7 @@ menu() {
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
       echo -e "${GREEN}✅ Instalação sendo executada em segundo plano...${NC}"
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
+      echo -e "${YELLOW}Digite sua senha do usuário admin para continuar...${NC}"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
 
       update_and_upgrade >> install.log 2>&1
