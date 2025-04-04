@@ -957,7 +957,7 @@ menu() {
       echo -e "${YELLOW}✅ A nstalação será executada em segundo plano.${NC}"
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-      echo -e "${YELLOW}Digite sua senha do usuário admin para continuar...${NC}"
+      echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       update_and_upgrade >> install.log 2>&1
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
@@ -971,13 +971,12 @@ menu() {
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW}################################################################${NC}"
-      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais do 
+      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais do ${NC}"
       echo -e "${YELLOW} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
-      echo -e "${YELLOW} Caso você não seja membro, escolha a opção "no" na próxima pergunta.${NC}"
+      echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW} e prossiga.${NC}"
       echo -e "${YELLOW}################################################################${NC}"  
-      echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       echo
-      read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " "use_brlnd"
+      read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
       if [[ $use_brlnd == "yes" ]]; then
       echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
       read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
@@ -987,6 +986,7 @@ menu() {
       toogle_on
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
+      echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       install_bitcoind >> install.log 2>&1
       download_lnd >> install.log 2>&1
       configure_lnd >> install.log 2>&1
