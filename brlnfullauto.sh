@@ -983,13 +983,13 @@ menu() {
       read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
       else
       echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
-      toogle_on
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       install_bitcoind >> install.log 2>&1
       download_lnd >> install.log 2>&1
       configure_lnd >> install.log 2>&1
+      toogle_on >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
       create_wallet
       menu
