@@ -130,6 +130,8 @@ Clone o projeto:
 
 ```bash
 git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
+```
+```bash
 cd brlnfullauto
 chmod +x brlnfullauto.sh
 ./brlnfullauto.sh
