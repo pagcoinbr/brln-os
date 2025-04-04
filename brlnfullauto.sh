@@ -805,18 +805,15 @@ menu() {
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${MAGENTA}Instalação Automática:${NC}"
-  echo -e "   ${GREEN}1${NC}- Instalação do BRLN Bolt (Tor + LND + BTCd + Ferramentas)"
-  echo
-  echo -e "   ${MAGENTA}Instalação Manual:${NC}"
-  echo -e "   ${GREEN}2${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
-  echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core (Tor + BTCd)"
-  echo -e "   ${GREEN}4${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
-  echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}6${NC}- Instalar Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}7${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}8${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}9${NC}- Tailscale VPN"
+  echo -e "   ${GREEN}1${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
+  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core (Tor + BTCd)"
+  echo -e "   ${GREEN}3${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
+  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}7${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}8${NC}- Tailscale VPN"
+  echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -824,36 +821,17 @@ menu() {
   case $option in
     1)
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
-      touch ~/brlnfullauto/install.log
-      chmod +w ~/brlnfullauto/install.log
-      read -p "Digite a senha para ThunderHub: " senha
-      read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais"
-      echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
-      echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
-      echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
-      echo
-      read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " "use_brlnd"
-      if [[ $use_brlnd == "yes" ]]; then
-          echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-          read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-          read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
-      else
-          echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
-      fi
-      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      main > ~/brlnfullauto/install.log 2>&1 &
-      echo -e "${CYAN}🌟 A instalação está em andamento. Você pode acompanhar o progresso no arquivo install.log.${NC}"
-      ;;
-    2)
+      system_insider_script () {
       update_and_upgrade
       create_main_dir
       configure_ufw
       install_tor
       install_nodejs
+      }
+      system_insider_script >> ~/brlnfullauto/install.log 2>&1
       menu      
       ;;
-    3)
+    2)
       read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
       update_and_upgrade
       create_main_dir
@@ -862,7 +840,7 @@ menu() {
       install_bitcoind
       menu
       ;;
-    4)
+    3)
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
       touch ~/brlnfullauto/install.log
       chmod +w ~/brlnfullauto/install.log
@@ -875,40 +853,44 @@ menu() {
       echo
       read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " "use_brlnd"
       if [[ $use_brlnd == "yes" ]]; then
-        echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-        read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-        read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+      echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
+      read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+      read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
       else
-        echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
+      echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
+      lnd_insider_script () {
       download_lnd
       configure_lnd
       create_lnd_service
+      }
+      lnd_insider_script >> ~/brlnfullauto/install.log 2>&1
       create_wallet
       menu
       ;;
-    5)
+    4)
       install_bos
       menu
       ;;
-    6)
+    5)
       read -p "Digite a senha para ThunderHub: " senha
       install_thunderhub
       menu
       ;;
-    7)
+    6)
       install_lndg
       menu
       ;;
-    8)
+    7)
       lnbits_install
       menu
       ;;
-    9)
+    8)
       tailscale_vpn
       menu
       ;;
+    9) 
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
       exit 0
@@ -916,16 +898,5 @@ menu() {
     *)
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
       ;;
-  esac
-}
-
-# Cores
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-MAGENTA='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m' # Sem cor
-
-menu
+    esac
+  }
