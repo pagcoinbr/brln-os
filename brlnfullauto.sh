@@ -863,17 +863,14 @@ toogle_off () {
         echo "File not found: $file"
       fi
     done
-  }
 
   # Função interna para reiniciar o serviço LND
-  restart_lnd() {
     sudo systemctl restart lnd
     if [ $? -eq 0 ]; then
       echo "LND service restarted successfully."
     else
       echo "Failed to restart LND service."
     fi
-  }
 }
 
 submenu_opcoes() {
