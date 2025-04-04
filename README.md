@@ -269,7 +269,7 @@ Pronto, agora você receberá novamente a mensagem `🤖 Connected to <nome do s
 
 ## 🛰️ Use Tailscale VPN (acesso remoto)
 
-Para acessar seu node de qualquer lugar, instale a opção 9. Ao final, será exibido um QR code.
+Para acessar seu node de qualquer lugar, instale a opção 9. Ao final, será exibido um QR code. Caso receba um erro ao receber encontrar o link, realize a opção 9 novamente. Isso provavelmente vai funcionar.
 
 Escaneie o QR code no app de câmera do seu celular. Isso vai te levar ao site de login do Tailscale. Faça login no navegador com email ou entre com sua conta Google.  
 Baixe o app para [Android](https://play.google.com/store/apps/details?id=com.tailscale.ipn) ou [iOS](https://apps.apple.com/us/app/tailscale/id1470499037).
