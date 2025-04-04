@@ -322,20 +322,8 @@ create_wallet() {
   echo "$password" > $LN_DDIR/password.txt
   
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
-
   if [ $? -eq 0 ]; then
-    while true; do
-      read -p "Digite 'yes' para continuar a instalação do seu nó lightning: " confirm
-      case $confirm in
-        [Yy][Ee][Ss])
-          break
-          ;;
-        *)
-          echo "Por favor, digite 'yes' para continuar."
-          ;;
-      esac
-    done
-    echo "Carteira criada com sucesso!"
+    echo -e "${GREEN}Carteira criada com sucesso!${NC}"
   else
     echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, é normal receber a mensagem de erro: ${NC}"
     echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
