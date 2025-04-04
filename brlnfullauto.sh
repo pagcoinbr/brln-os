@@ -891,6 +891,7 @@ menu() {
       menu
       ;;
     9) 
+      ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
       exit 0
