@@ -124,7 +124,7 @@ configure_lnd() {
   sudo usermod -a -G debian-tor admin
   sudo mkdir -p $LN_DDIR
   sudo chown -R admin:admin $LN_DDIR
-  ln -s $LN_DDIR /home/admin/.lnd
+  ln -s ~/.lnd $LN_DDIR 
   cat << EOF > $LN_DDIR/lnd.conf
 # MiniBolt: lnd configuration
 # /data/admin/lnd.conf
