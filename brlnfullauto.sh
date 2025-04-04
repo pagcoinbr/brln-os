@@ -327,16 +327,15 @@ fi
 create_wallet() {
   echo -e "${YELLOW}############################################################################################### ${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova cateira ${NC}"
-  echo -e "${YELLOW}ou "y" para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
-  echo -e "${YELLOW}quer adicionar sua frase de 24 palavras com uma senha e pressione *enter* para criar uma nova carteira.${NC}" 
+  echo -e "${YELLOW}ou 'y' para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
+  echo -e "${YELLOW}quer adicionar sua frase de 24 palavras com uma senha e pressione ${RED}ENTER${NC}${YELLOW} para criar uma nova carteira.${NC}" 
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${NC}" 
   echo -e "${RED}Esta frase não pode ser recuperada se não for anotada agora. ${NC}" 
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
   echo -e "${YELLOW}############################################################################################### ${NC}"
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   while true; do
-    echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, ${NC}"
-    echo -e "${YELLOW}é normal receber a mensagem de erro: ${NC}"
+    echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, é normal receber a mensagem de erro: ${NC}"
     echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
     read -p "Digite 'yes' para continuar a instalação do seu nó lightning: " confirm
     case $confirm in
@@ -951,7 +950,7 @@ menu() {
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
       echo -e "${YELLOW}Isso pode demorar um pouco...${NC}"
-      echo -e "${YELLOW}Na pior das hipóteses, atpe 30 minutos...${NC}"
+      echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
       echo -e "${RED}Seja paciente!${NC}"
       install_tor >> install.log 2>&1
       install_nodejs >> install.log 2>&1
