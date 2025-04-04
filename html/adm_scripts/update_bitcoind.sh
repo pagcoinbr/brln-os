@@ -2,7 +2,7 @@
 cd /tmp
 
 # Obter a última versão do Bitcoin Core a partir da página oficial (estável)
-VERSION=$(curl -s https://bitcoincore.org/en/download/ | grep -oP 'bitcoin-core-\K[0-9.]+(?=</a>)' | head -n1)
+VERSION=$(curl -s https://bitcoincore.org/en/download/ | grep -o 'bitcoin-core-[0-9.]*' | sed 's/bitcoin-core-//' | head -n1)
 
 echo "Última versão do Bitcoin Core detectada: $VERSION"
 
