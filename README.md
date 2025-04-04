@@ -23,7 +23,7 @@ O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
 - ⚙️ Painel web interativo
 - 🤖 Integração com Telegram via BOS
 
-[![photo-2025-04-01-13-21-50.jpg](https://i.postimg.cc/5tGrFMLh/photo-2025-04-01-13-21-50.jpg)](https://postimg.cc/JyNx9vTx)
+[![Captura-de-tela-2025-04-03-232915.png](https://i.postimg.cc/ZYH8DC3b/Captura-de-tela-2025-04-03-232915.png)](https://postimg.cc/G9BT43qV)
 
 ---
 
@@ -178,7 +178,7 @@ Você verá botões para acessar:
 - MEMPOOL
 - Configurações
 
-[![photo-2025-04-01-13-21-50.jpg](https://i.postimg.cc/5tGrFMLh/photo-2025-04-01-13-21-50.jpg)](https://postimg.cc/JyNx9vTx)
+[![Captura-de-tela-2025-04-03-232915.png](https://i.postimg.cc/ZYH8DC3b/Captura-de-tela-2025-04-03-232915.png)](https://postimg.cc/G9BT43qV)
 Imagem 1 - Menu principal do BR⚡LN Bolt
 
 Se conseguiu acessar a interface gráfica, seu node está quase pronto. Basta realizar mais algumas etapas para configurar a conexão com o Telegram, assim podendo acompanhar todos os eventos que acontecem no seu node.
