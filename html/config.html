@@ -6,7 +6,11 @@
     <link rel="icon" type="image/png" href="logopreto.png">
     <style>
         body {
-            background: #f7f7f7;
+            background-image: url('sky.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             font-family: Arial, sans-serif;
             text-align: center;
             padding: 20px;
@@ -81,12 +85,6 @@
         <button class="botao" onclick="executarAcao('update-bitcoind')">Atualizar Bitcoind</button>
         <button class="botao" onclick="executarAcao('update-lnbits')">Atualizar LNbits</button>
         <button class="botao" onclick="executarAcao('update-apt')">Atualizar APT</button>
-    </div>
-
-    <div class="section">
-        <h2>🔀 Alternar Bitcoin Core</h2>
-        <button class="botao" onclick="alternarBitcoin()">🔁 Alternar Modo</button>
-        <div id="modoBitcoin">Modo atual: (aguardando)</div>
     </div>
 
     <a href="index.html" class="back botao">⬅️ Voltar</a>
