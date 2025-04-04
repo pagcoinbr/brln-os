@@ -821,12 +821,14 @@ menu() {
   case $option in
     1)
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
+      echo -e "${GREEN}✅ Instalação sendo executada em segundo plano...${NC}"
+      echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
+      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       update_and_upgrade >> install.log 2>&1
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
       install_tor >> install.log 2>&1
       install_nodejs >> install.log 2>&1
-      echo -e "${GREEN}✅ Instalação sendo executada em segundo plano...${NC}"
       wait
       echo -e "${GREEN}✅ Instalação concluída!${NC}"
       menu      
