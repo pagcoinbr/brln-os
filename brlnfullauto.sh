@@ -967,10 +967,13 @@ menu() {
       echo -e "${YELLOW}✅ A nstalação será executada em segundo plano.${NC}"
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-      echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
+      echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       update_and_upgrade >> install.log 2>&1
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
+      echo -e "${YELLOW}Isso pode demorar um pouco...${NC}"
+      echo -e "${YELLOW}Na pior das hipóteses, atpe 30 minutos...${NC}"
+      echo -e "${RED}Seja paciente!${NC}"
       install_tor >> install.log 2>&1
       install_nodejs >> install.log 2>&1
       wait
@@ -1002,7 +1005,6 @@ menu() {
       toogle_on >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
       create_wallet
-      wait
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
       ;;
