@@ -317,8 +317,10 @@ create_wallet() {
     fi
   done
 
-  echo "$password" > $LN_DDIR/password.txt
+  touch $LN_DDIR/password.txt
   chmod 600 $LN_DDIR/password.txt
+  echo "$password" > $LN_DDIR/password.txt
+  
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
 
   if [ $? -eq 0 ]; then
