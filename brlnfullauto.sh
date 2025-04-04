@@ -341,9 +341,6 @@ create_wallet() {
 }
 
 install_bitcoind() {
-if [[ -d /data/bitcoin ]]; then
-    echo "Bitcoind já está instalado."
-    else
     cd /tmp
     VERSION=28.0
     wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
@@ -472,7 +469,6 @@ sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
 sudo ss -tulpn | grep bitcoind
 echo "Bitcoind instalado com sucesso!"
-fi
 }
 
 install_nodejs() {
