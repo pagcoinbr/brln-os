@@ -821,14 +821,11 @@ menu() {
   case $option in
     1)
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
-      system_insider_script () {
       update_and_upgrade
       create_main_dir
       configure_ufw
       install_tor
       install_nodejs
-      }
-      system_insider_script >> ~/brlnfullauto/install.log 2>&1
       menu      
       ;;
     2)
@@ -860,11 +857,9 @@ menu() {
       echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      lnd_insider_script () {
       download_lnd
       configure_lnd
       create_lnd_service
-      }
       lnd_insider_script >> ~/brlnfullauto/install.log 2>&1
       create_wallet
       menu
@@ -901,3 +896,14 @@ menu() {
       ;;
     esac
   }
+
+# Cores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+NC='\033[0m' # Sem cor
+
+menu
