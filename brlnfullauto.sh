@@ -333,7 +333,7 @@ create_wallet() {
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
   echo -e "${YELLOW}############################################################################################### ${NC}"
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  if [[ $? -ge 1 ]]; then
+  if [[ $? -ne 0 ]]; then
      echo -e "${YELLOW} Se você você optou por usar o bitcoin local e recebeu o erro: ${NC}"	
     echo -e "${RED} ./brlnfullauto.sh: line 979: lncli: command not found ${NC}"
     echo -e "${RED} Este é uma saída normal, pois o lncli não está funcionando ainda. ${NC}" 
