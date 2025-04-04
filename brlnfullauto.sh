@@ -67,6 +67,7 @@ EOF
 sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
 
 echo "✅ Interface web do node Lightning instalada com sucesso!"
+}
 
 create_main_dir() {
   [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
@@ -948,14 +949,14 @@ menu() {
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
-      update_and_upgrade
-      create_main_dir
-      configure_ufw
+      update_and_upgrade >> install.log 2>&1
+      create_main_dir >> install.log 2>&1
+      configure_ufw >> install.log 2>&1
       echo -e "${YELLOW}Isso pode demorar um pouco...${NC}"
       echo -e "${YELLOW}Na pior das hipóteses, atpe 30 minutos...${NC}"
       echo -e "${RED}Seja paciente!${NC}"
-      install_tor
-      install_nodejs
+      install_tor >> install.log 2>&1
+      install_nodejs >> install.log 2>&1
       wait
       echo -e "${GREEN}✅ Instalação concluída!${NC}"
       menu      
@@ -979,11 +980,11 @@ menu() {
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
-      install_bitcoind
-      download_lnd
-      configure_lnd
-      toogle_on
-      create_lnd_service
+      install_bitcoind >> install.log 2>&1
+      download_lnd >> install.log 2>&1
+      configure_lnd >> install.log 2>&1
+      toogle_on >> install.log 2>&1
+      create_lnd_service >> install.log 2>&1
       create_wallet
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
