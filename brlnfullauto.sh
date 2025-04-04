@@ -334,9 +334,8 @@ create_wallet() {
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
   echo -e "${YELLOW}############################################################################################### ${NC}"
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  while true; do
-    echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, é normal receber a mensagem de erro: ${NC}"
-    echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
+  if [ $? -eq 0 ]; then
+     while true; do
     read -p "Digite 'yes' para continuar a instalação do seu nó lightning: " confirm
     case $confirm in
       [Yy][Ee][Ss])
@@ -347,6 +346,11 @@ create_wallet() {
         ;;
     esac
   done
+    echo "Carteira criada com sucesso!"
+  else
+    echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, é normal receber a mensagem de erro: ${NC}"
+    echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
+  fi
 }
 
 install_bitcoind() {
@@ -977,10 +981,12 @@ menu() {
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
+      echo -e "${YELLOW} instalando o bitcoind...${NC}"
       install_bitcoind >> install.log 2>&1
+      echo -e "${YELLOW} instalando o lnd...${NC}"
       download_lnd >> install.log 2>&1
+      echo -e "${YELLOW} configurando o lnd...${NC}"
       configure_lnd >> install.log 2>&1
-      toogle_on >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
       create_wallet
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
