@@ -777,23 +777,23 @@ echo "✅ tailscale up finalizado."
 }
 
 main() {
-read -p "$(echo -e "${GREEN}Digite a senha para ThunderHub: ${NC}")" senha
-read -p "$(echo -e "${GREEN}Digite o nome do seu Nó (NÃO USE ESPAÇO!): ${NC}")" "alias"	
-echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais${NC}"
+read -p "Digite a senha para ThunderHub: " senha
+read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"	
+echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais"
 echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
 echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
 echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
 echo
-read -p "$(echo -e "${RED} Você deseja utilizar o bitcoind da BRLN? (yes/no): ${NC}")" "use_brlnd"
+read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " "use_brlnd"
 if [[ $use_brlnd == "yes" ]]; then
-  echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-  read -p "$(echo -e "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}")" "bitcoind_rpcuser"
-  read -p "$(echo -e "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}")" "bitcoind_rpcpass"
+    echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
+    read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
 else
-  echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
+    echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
+    
 fi
-read -p "$(echo -e "${GREEN}Escolha sua senha do Bitcoin Core: ${NC}")" "rpcpsswd"
-}
+read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
     update_and_upgrade
     create_main_dir
     configure_ufw
@@ -810,14 +810,6 @@ read -p "$(echo -e "${GREEN}Escolha sua senha do Bitcoin Core: ${NC}")" "rpcpssw
 }
 
 menu() {
-  # Cores
-  RED='\033[0;31m'
-  GREEN='\033[0;32m'
-  YELLOW='\033[1;33m'
-  BLUE='\033[1;34m'
-  MAGENTA='\033[1;35m'
-  CYAN='\033[1;36m'
-  NC='\033[0m' # Sem cor
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
   echo -e "${YELLOW}⚡ Este script instalará:${NC}"
@@ -849,7 +841,10 @@ menu() {
   case $option in
     1)
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
-      main
+      touch ~/brlnfullauto/install.log
+      chmod +w ~/brlnfullauto/install.log
+      main > ~/brlnfullauto/install.log 2>&1 &
+      echo -e "${CYAN}🌟 A instalação está em andamento. Você pode acompanhar o progresso no arquivo install.log.${NC}"
       ;;
     2)
       update_and_upgrade
