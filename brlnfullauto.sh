@@ -323,25 +323,6 @@ EOF'
 fi
 }
 
-create_wallet() {
-  echo "###############################################################################################"
-  echo "Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova cateira ou "y" para recuperar uma carteira antiga com 24 palavras, digite o "password" caso queira proteger sua frade de 24 palavras com uma senha e pressione *enter* para criar uma nova carteira."
-  echo "AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! Esta frase não pode ser recuperada se não anotada agora. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
-  echo "###############################################################################################"
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  while true; do
-    read -p "Digite 'yes' para continuar a instalação do seu nó lightning após anotar a frase de 24 palavras: " confirm
-    case $confirm in
-      [Yy][Ee][Ss])
-        break
-        ;;
-      *)
-        echo "Por favor, digite 'yes' para continuar."
-        ;;
-    esac
-  done
-}
-
 install_bitcoind() {
 if [[ -d /data/bitcoin ]]; then
     echo "Bitcoind já está instalado."
@@ -971,7 +952,7 @@ menu() {
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${GREEN}################################################################${NC}"
-      echo -e "${GREEN} Asseguir você será solicitado a adicionar suas credenciais do ${NC}"
+      echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
       echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
       echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
       echo -e "${GREEN}################################################################${NC}"  
@@ -991,7 +972,22 @@ menu() {
       configure_lnd >> install.log 2>&1
       toogle_on >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
-      create_wallet
+      echo "###############################################################################################"
+      echo "Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova carteira ou 'y' para recuperar uma carteira antiga com 24 palavras, digite o 'password' caso queira proteger sua frase de 24 palavras com uma senha e pressione *enter* para criar uma nova carteira."
+      echo "AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! Esta frase não pode ser recuperada se não anotada agora. Caso contrário, você pode perder seus fundos. A senha deve ter pelo menos 8 caracteres."
+      echo "###############################################################################################"
+      lncli --tlscertpath /data/lnd/tls.cert.tmp create
+      while true; do
+      read -p "Digite 'yes' para continuar a instalação do seu nó lightning após anotar a frase de 24 palavras: " confirm
+      case $confirm in
+        [Yy][Ee][Ss])
+        break
+        ;;
+        *)
+        echo "Por favor, digite 'yes' para continuar."
+        ;;
+      esac
+      done
       menu
       ;;
     3)
