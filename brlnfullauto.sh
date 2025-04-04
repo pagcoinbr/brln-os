@@ -1002,6 +1002,8 @@ menu() {
       toogle_on >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
       create_wallet
+      wait
+      echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
       ;;
     3)
