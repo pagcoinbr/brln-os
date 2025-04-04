@@ -777,23 +777,23 @@ echo "✅ tailscale up finalizado."
 }
 
 main() {
-read -p "${GREEN}Digite a senha para ThunderHub: ${NC}" senha
-read -p "${GREEN}Digite o nome do seu Nó (NÃO USE ESPAÇO!): ${NC}" "alias"	
+read -p "$(echo -e "${GREEN}Digite a senha para ThunderHub: ${NC}")" senha
+read -p "$(echo -e "${GREEN}Digite o nome do seu Nó (NÃO USE ESPAÇO!): ${NC}")" "alias"	
 echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais${NC}"
 echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
 echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
 echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
 echo
-read -p "${RED} Você deseja utilizar o bitcoind da BRLN? (yes/no): ${NC}" "use_brlnd"
+read -p "$(echo -e "${RED} Você deseja utilizar o bitcoind da BRLN? (yes/no): ${NC}")" "use_brlnd"
 if [[ $use_brlnd == "yes" ]]; then
-    echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-    read -p "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}" "bitcoind_rpcuser"
-    read -p "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}" "bitcoind_rpcpass"
+  echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
+  read -p "$(echo -e "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}")" "bitcoind_rpcuser"
+  read -p "$(echo -e "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}")" "bitcoind_rpcpass"
 else
-    echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
-    
+  echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
 fi
-read -p "${GREEN}Escolha sua senha do Bitcoin Core: ${NC}" "rpcpsswd"
+read -p "$(echo -e "${GREEN}Escolha sua senha do Bitcoin Core: ${NC}")" "rpcpsswd"
+}
     update_and_upgrade
     create_main_dir
     configure_ufw
