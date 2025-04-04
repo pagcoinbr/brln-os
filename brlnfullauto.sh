@@ -97,7 +97,6 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   else
     echo "Erro: Tor não está ouvindo nas portas corretas."
   fi
-fi
 }
 
 download_lnd() {
@@ -116,7 +115,6 @@ download_lnd() {
   tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
-fi
 }
 
 configure_lnd() {
@@ -252,13 +250,9 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-fi
 }
 
 create_lnd_service() {
-if [[ -f /etc/systemd/system/lnd.service ]]; then
-    echo "O serviço LND já existe."
-    else
   sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
 # MiniBolt: systemd unit for lnd
 # /etc/systemd/system/lnd.service
@@ -300,7 +294,7 @@ EOF'
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-    until [ ${#password} -ge 8 ]; do
+  until [ ${#password} -ge 8 ]; do
     read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
     echo
     if [ ${#password} -lt 8 ]; then
@@ -312,7 +306,6 @@ EOF'
   sudo systemctl enable lnd
   sudo systemctl start lnd
   sleep 10
-fi
 }
 
 create_wallet() {
