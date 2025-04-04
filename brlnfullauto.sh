@@ -857,10 +857,10 @@ menu() {
       echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      install_bitcoind
-      download_lnd
-      configure_lnd
-      create_lnd_service
+      install_bitcoind >> install.log 2>&1
+      download_lnd >> install.log 2>&1
+      configure_lnd >> install.log 2>&1
+      create_lnd_service >> install.log 2>&1
       create_wallet
       menu
       ;;
