@@ -295,17 +295,35 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
-  sleep 10
+  sleep 20
 }
 
 create_wallet() {
+  echo -e "${GREEN}################################################################${NC}"
+  echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
+  echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+  echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
+  echo -e "${GREEN}################################################################${NC}"  
+  echo
+  read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
+  if [[ $use_brlnd == "yes" ]]; then
+    echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
+    read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+  elif
+  [[ $use_brlnd == "no" ]]; then
+    echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
+  else
+    echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
+    create_wallet
+  fi
   echo -e "${YELLOW}############################################################################################### ${NC}"
-  echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova cateira ${NC}"
+  echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova carteira ${NC}"
   echo -e "${YELLOW}ou 'y' para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
   echo -e "${YELLOW}quer adicionar sua frase de 24 palavras com uma senha e pressione ${RED}ENTER${NC}${YELLOW} para criar uma nova carteira.${NC}" 
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${NC}" 
   echo -e "${RED}Esta frase não pode ser recuperada se não for anotada agora. ${NC}" 
-  echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
+  echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node.${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
 
   until [ ${#password} -ge 8 ]; do
@@ -937,20 +955,6 @@ menu() {
     2)
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      echo -e "${GREEN}################################################################${NC}"
-      echo -e "${GREEN} Asseguir você será solicitado a adicionar suas credenciais do ${NC}"
-      echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
-      echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
-      echo -e "${GREEN}################################################################${NC}"  
-      echo
-      read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
-      if [[ $use_brlnd == "yes" ]]; then
-      echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-      read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-      read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
-      else
-      echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
-      fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
