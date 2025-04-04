@@ -294,15 +294,6 @@ EOF'
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-  until [ ${#password} -ge 8 ]; do
-    read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
-    echo
-    if [ ${#password} -lt 8 ]; then
-      echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
-    fi
-  done
-  echo "$password" > $LN_DDIR/password.txt
-  chmod 600 $LN_DDIR/password.txt
   sudo systemctl enable lnd
   sudo systemctl start lnd
   sleep 10
@@ -317,19 +308,31 @@ create_wallet() {
   echo -e "${RED}Esta frase não pode ser recuperada se não for anotada agora. ${NC}" 
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
   echo -e "${YELLOW}############################################################################################### ${NC}"
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  if [ $? -eq 0 ]; then
-     while true; do
-    read -p "Digite 'yes' para continuar a instalação do seu nó lightning: " confirm
-    case $confirm in
-      [Yy][Ee][Ss])
-        break
-        ;;
-      *)
-        echo "Por favor, digite 'yes' para continuar."
-        ;;
-    esac
+
+  until [ ${#password} -ge 8 ]; do
+    read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
+    echo
+    if [ ${#password} -lt 8 ]; then
+      echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
+    fi
   done
+
+  echo "$password" > $LN_DDIR/password.txt
+  chmod 600 $LN_DDIR/password.txt
+  lncli --tlscertpath /data/lnd/tls.cert.tmp create
+
+  if [ $? -eq 0 ]; then
+    while true; do
+      read -p "Digite 'yes' para continuar a instalação do seu nó lightning: " confirm
+      case $confirm in
+        [Yy][Ee][Ss])
+          break
+          ;;
+        *)
+          echo "Por favor, digite 'yes' para continuar."
+          ;;
+      esac
+    done
     echo "Carteira criada com sucesso!"
   else
     echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, é normal receber a mensagem de erro: ${NC}"
