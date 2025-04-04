@@ -70,7 +70,7 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 create_main_dir() {
-  [[ ! -d $MAIN_DIR ]] && sudo mkdir $MAIN_DIR
+  sudo mkdir $MAIN_DIR
   sudo chown admin:admin $MAIN_DIR
 }
 
@@ -82,9 +82,6 @@ configure_ufw() {
 }
 
 install_tor() {
-    if [[ -d /etc/tor ]]; then
-    echo "Tor já está instalado."
-    else
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
 deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
@@ -104,9 +101,6 @@ fi
 }
 
 download_lnd() {
-  if [[ -d /etc/systemd/system/lnd.service ]]; then
-    echo "LND já está instalado."
-  else
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
@@ -126,9 +120,6 @@ fi
 }
 
 configure_lnd() {
-    if [[ -d /data/lnd ]]; then
-    echo "LND já está configurado."
-    else
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
