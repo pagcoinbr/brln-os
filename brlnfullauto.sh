@@ -951,12 +951,13 @@ menu() {
 
   case $option in
     1)
-      echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
-      echo -e "${GREEN}✅ Instalação sendo executada em segundo plano...${NC}"
+      echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
+      touch ~/brlnfullauto/install.log
+      chmod +w ~/brlnfullauto/install.log
+      echo -e "${YELLOW}✅ A nstalação será executada em segundo plano.${NC}"
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
-      echo -e "${YELLOW}Digite sua senha do usuário admin para continuar...${NC}"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-
+      echo -e "${YELLOW}Digite sua senha do usuário admin para continuar...${NC}"
       update_and_upgrade >> install.log 2>&1
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
@@ -967,15 +968,12 @@ menu() {
       menu      
       ;;
     2)
-      echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
-      touch ~/brlnfullauto/install.log
-      chmod +w ~/brlnfullauto/install.log
-      read -p "Digite a senha para ThunderHub: " senha
+      echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais"
-      echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
-      echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
-      echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
+      echo -e "${YELLOW}################################################################${NC}"
+      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+      echo -e "${YELLOW} Caso você não seja membro, escolha a opção "no" na próxima pergunta.${NC}"
+      echo -e "${YELLOW}################################################################${NC}"  
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       echo
       read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " "use_brlnd"
@@ -985,6 +983,7 @@ menu() {
       read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
       else
       echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
+      toogle_on
       fi
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       install_bitcoind >> install.log 2>&1
