@@ -124,7 +124,7 @@ configure_lnd() {
   sudo usermod -a -G debian-tor admin
   sudo mkdir -p $LN_DDIR
   sudo chown -R admin:admin $LN_DDIR
-  ln -s ~/.lnd $LN_DDIR 
+  ln -s "$LN_DDIR" /home/admin/.lnd
   cat << EOF > $LN_DDIR/lnd.conf
 # MiniBolt: lnd configuration
 # /data/admin/lnd.conf
@@ -246,7 +246,6 @@ tor.active=true
 tor.v3=true
 EOF
   echo "Configuração concluída com sucesso!"
-  ln -s $LN_DDIR /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -290,7 +289,7 @@ MemoryDenyWriteExecute=true
 [Install]
 WantedBy=multi-user.target
 EOF'
-  ln -s $LN_DDIR /home/admin/.lnd
+  ln -s "$LN_DDIR" /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
