@@ -326,8 +326,8 @@ fi
 create_wallet() {
   echo -e "${YELLOW}############################################################################################### ${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova cateira ${NC}"
-  echo -e "${YELLOW}ou "y" para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se " ${NC}
-  echo -e "${YELLOW}quer adicionar sua frase de 24 palavras com uma senha e pressione *enter* para criar uma nova carteira." ${NC}
+  echo -e "${YELLOW}ou "y" para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
+  echo -e "${YELLOW}quer adicionar sua frase de 24 palavras com uma senha e pressione *enter* para criar uma nova carteira.${NC}" 
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${NC}" 
   echo -e "${RED}Esta frase não pode ser recuperada se não for anotada agora. ${NC}" 
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
@@ -350,7 +350,6 @@ create_wallet() {
     esac
   done
   fi
-}
 }
 
 install_bitcoind() {
