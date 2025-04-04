@@ -776,6 +776,139 @@ wait
 echo "✅ tailscale up finalizado."
 }
 
+toogle_bitcoin () {
+    # Exibir o menu para o usuário
+    while true; do
+        echo "Escolha uma opção:"
+        echo "1) Trocar para o Bitcoin Core local"
+        echo "2) Trocar para o node Bitcoin remoto"
+        echo "3) Sair"
+        read -p "Digite sua escolha: " choice
+
+        case $choice in
+            1)
+                echo "Trocando para o Bitcoin Core local..."
+                toogle_on
+                wait
+                echo "Trocado para o Bitcoin Core local."
+                ;;
+            2)
+                echo "Trocando para o node Bitcoin remoto..."
+                toogle_off
+                wait 
+                echo "Trocado para o node Bitcoin remoto."
+                ;;
+            3)
+                echo "Saindo."
+                menu
+                ;;
+            *)
+                echo "Escolha inválida. Por favor, tente novamente."
+                ;;
+        esac
+        echo ""
+    done
+}
+
+toogle_on () {
+  local LND_CONF="/home/admin/.lnd/lnd.conf"
+  local FILES_TO_DELETE=(
+    "/home/admin/.lnd/tls.cert"
+    "/home/admin/.lnd/tls.key"
+    "/home/admin/.lnd/v3_onion_private_key"
+  )
+
+  # Função interna para comentar linhas 73 a 78
+    sed -i '73,78 s/^/#/' "$LND_CONF"
+  # Função interna para apagar os arquivos
+    for file in "${FILES_TO_DELETE[@]}"; do
+      if [ -f "$file" ]; then
+        rm -f "$file"
+        echo "Deleted: $file"
+      else
+        echo "File not found: $file"
+      fi
+    done
+  # Função interna para reiniciar o serviço LND
+    sudo systemctl restart lnd
+    if [ $? -eq 0 ]; then
+      echo "LND service restarted successfully."
+    else
+      echo "Failed to restart LND service."
+    fi
+}
+
+toogle_off () {
+  local LND_CONF="/home/admin/.lnd/lnd.conf"
+  local FILES_TO_DELETE=(
+    "/home/admin/.lnd/tls.cert"
+    "/home/admin/.lnd/tls.key"
+    "/home/admin/.lnd/v3_onion_private_key"
+  )
+
+  # Função interna para descomentar linhas 73 a 78
+    sed -i '73,78 s/^#//' "$LND_CONF"
+  # Função interna para apagar os arquivos
+    for file in "${FILES_TO_DELETE[@]}"; do
+      if [ -f "$file" ]; then
+        rm -f "$file"
+        echo "Deleted: $file"
+      else
+        echo "File not found: $file"
+      fi
+    done
+  }
+
+  # Função interna para reiniciar o serviço LND
+  restart_lnd() {
+    sudo systemctl restart lnd
+    if [ $? -eq 0 ]; then
+      echo "LND service restarted successfully."
+    else
+      echo "Failed to restart LND service."
+    fi
+  }
+}
+
+submenu_opcoes() {
+  echo -e "${CYAN}🔧 Mais opções disponíveis:${NC}"
+  echo
+  echo -e "   ${GREEN}1${NC}- Reiniciar serviços lnd"
+  echo -e "   ${GREEN}2${NC}- Atualizar todos os pacotes do sistema"
+  echo -e "   ${GREEN}3${NC}- Ver status dos lnd"
+  echo -e "   ${RED}0${NC}- Voltar ao menu principal"
+  echo
+
+  read -p "👉 Digite sua escolha: " suboption
+
+  case $suboption in
+    1)
+      echo -e "${YELLOW}🔁 Reiniciando serviços...${NC}"
+      systemctl restart bitcoind lnd
+      echo -e "${GREEN}✅ Serviços reiniciados!${NC}"
+      submenu_opcoes
+      ;;
+    2)
+      echo -e "${YELLOW}⬆️ Atualizando pacotes...${NC}"
+      sudo apt update && sudo apt upgrade -y
+      echo -e "${GREEN}✅ Atualização concluída!${NC}"
+      submenu_opcoes
+      ;;
+    3)
+      echo -e "${CYAN}📋 Status dos serviços:${NC}"
+      systemctl status lnd --no-pager
+      submenu_opcoes
+      ;;
+    0)
+      menu
+      ;;
+    *)
+      echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
+      submenu_opcoes
+      ;;
+  esac
+}
+
 main() {
     update_and_upgrade
     create_main_dir
@@ -806,14 +939,13 @@ menu() {
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
   echo -e "   ${GREEN}1${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
-  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core (Tor + BTCd)"
-  echo -e "   ${GREEN}3${NC}- Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo."
-  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}7${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}8${NC}- Tailscale VPN"
-  echo -e "   ${GREEN}9${NC}- Mais opções"
+  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin + Lightning Daemon/LND"
+  echo -e "   ${GREEN}3${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}4${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}7${NC}- Instalar Tailscale VPN"
+  echo -e "   ${GREEN}8${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -824,6 +956,7 @@ menu() {
       echo -e "${GREEN}✅ Instalação sendo executada em segundo plano...${NC}"
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
+
       update_and_upgrade >> install.log 2>&1
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
@@ -834,10 +967,6 @@ menu() {
       menu      
       ;;
     2)
-      read -p "Escolha sua senha do Bitcoin Core: " rpcpsswd
-      menu
-      ;;
-    3)
       echo -e "${CYAN}🚀 Iniciando a instalação...${NC}"
       touch ~/brlnfullauto/install.log
       chmod +w ~/brlnfullauto/install.log
@@ -847,6 +976,7 @@ menu() {
       echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
       echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
       echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
+      echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       echo
       read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " "use_brlnd"
       if [[ $use_brlnd == "yes" ]]; then
@@ -864,28 +994,29 @@ menu() {
       create_wallet
       menu
       ;;
-    4)
+    3)
       install_bos
       menu
       ;;
-    5)
+    4)
       read -p "Digite a senha para ThunderHub: " senha
       install_thunderhub
       menu
       ;;
-    6)
+    5)
       install_lndg
       menu
       ;;
-    7)
+    6)
       lnbits_install
       menu
       ;;
-    8)
+    7)
       tailscale_vpn
       menu
       ;;
-    9) 
+    8)
+      submenu_opcoes
       ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
