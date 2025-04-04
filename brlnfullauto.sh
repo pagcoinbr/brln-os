@@ -844,6 +844,7 @@ menu() {
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       main > ~/brlnfullauto/install.log 2>&1 &
       echo -e "${CYAN}🌟 A instalação está em andamento. Você pode acompanhar o progresso no arquivo install.log.${NC}"
+      ;;
     2)
       update_and_upgrade
       create_main_dir
