@@ -333,13 +333,10 @@ create_wallet() {
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node." ${NC}
   echo -e "${YELLOW}############################################################################################### ${NC}"
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  if [[ $? -ne 0 ]]; then
-     echo -e "${YELLOW} Se você você optou por usar o bitcoin local e recebeu o erro: ${NC}"	
-    echo -e "${RED} ./brlnfullauto.sh: line 979: lncli: command not found ${NC}"
-    echo -e "${RED} Este é uma saída normal, pois o lncli não está funcionando ainda. ${NC}" 
-  else
   while true; do
-    read -p "Digite 'yes' para continuar a instalação do seu nó lightning após anotar a frase de 24 palavras: " confirm
+    echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, ${NC}"
+    echo -e "${YELLOW}é normal receber a mensagem de erro: ${RED}create_wallet: command not found ${NC}"
+    read -p "Digite 'yes' para continuar a instalação do seu nó lightning: " confirm
     case $confirm in
       [Yy][Ee][Ss])
         break
