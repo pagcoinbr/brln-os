@@ -56,10 +56,10 @@ Fazendo a primeira conexão via SSH:
 Com o SSH, você pode **entrar no terminal de outro computador**, como se estivesse sentado na frente dele, mesmo que ele esteja do outro lado do mundo 🌍.
 
 ## 💡 Exemplo prático:
-Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este `192.168.1.100`. Se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
+Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este `192.168.1.104`. Se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
 
 ```bash
-ssh temp@192.168.1.100 <- coloque seu IP aqui.
+ssh temp@192.168.1.104 <- coloque seu IP aqui.
 ```
 
 Depois disso, você verá o terminal do seu node, podendo controlar tudo por lá.
@@ -72,7 +72,7 @@ Você verá uma saída parecida com essa:
 ```
 enp4s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
    link/ether e8:9c:25:7c:0b:8e brd ff:ff:ff:ff:ff:ff
-   inet 192.168.0.100/24 metric 100 brd 192.168.0.255 scope global enp4s0 <- **Seu IP está no início desta linha.**
+   inet 192.168.0.104/24 metric 100 brd 192.168.0.255 scope global enp4s0 <- **Seu IP está no início desta linha.**
       valid_lft forever preferred_lft forever
    inet6 fe80::ea9c:25ff:fe7c:b8e/64 scope link 
       valid_lft forever preferred_lft forever
