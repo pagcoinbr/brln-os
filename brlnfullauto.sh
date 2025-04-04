@@ -970,11 +970,11 @@ menu() {
     2)
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      echo -e "${YELLOW}################################################################${NC}"
-      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais do ${NC}"
-      echo -e "${YELLOW} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
-      echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW} e prossiga.${NC}"
-      echo -e "${YELLOW}################################################################${NC}"  
+      echo -e "${GREEN}################################################################${NC}"
+      echo -e "${GREEN} Asseguir você será solicitado a adicionar suas credenciais do ${NC}"
+      echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+      echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
+      echo -e "${GREEN}################################################################${NC}"  
       echo
       read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
       if [[ $use_brlnd == "yes" ]]; then
