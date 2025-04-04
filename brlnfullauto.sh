@@ -10,14 +10,14 @@ LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 USER=admin
-
-update_and_upgrade() {
+LND_CONF="/home/admin/.lnd/lnd.conf"
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 ADM_SCRIPTS="/usr/local/bin"
 
+update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
 sudo apt update && sudo apt full-upgrade -y
 sudo apt install apache2 -y
@@ -777,15 +777,23 @@ echo "✅ tailscale up finalizado."
 }
 
 main() {
-read -p "Digite a senha para ThunderHub: " senha
+read -p "${GREEN}Digite a senha para ThunderHub: ${NC}" senha
 read -p "${GREEN}Digite o nome do seu Nó (NÃO USE ESPAÇO!): ${NC}" "alias"	
 echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais${NC}"
 echo -e "${YELLOW} do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
 echo -e "${YELLOW} Caso contrário, você pode se conectar ao bitcoin local ao final da instalação${NC}"
 echo -e "${YELLOW} com o script ${GREEN}./update_manager.sh${NC}"
-read -p "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}" "bitcoind_rpcuser"
-read -s -p "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}" "bitcoind_rpcpass"
-read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
+echo
+read -p "${RED} Você deseja utilizar o bitcoind da BRLN? (yes/no): ${NC}" "use_brlnd"
+if [[ $use_brlnd == "yes" ]]; then
+    echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
+    read -p "${BLUE}Digite o bitcoind.rpcuser(BRLN): ${NC}" "bitcoind_rpcuser"
+    read -p "${BLUE}Digite o bitcoind.rpcpass(BRLN): ${NC}" "bitcoind_rpcpass"
+else
+    echo -e "${RED} Você escolheu usar o bitcoind local! ${NC}"
+    
+fi
+read -p "${GREEN}Escolha sua senha do Bitcoin Core: ${NC}" "rpcpsswd"
     update_and_upgrade
     create_main_dir
     configure_ufw
