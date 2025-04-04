@@ -315,13 +315,12 @@ create_wallet() {
     if [ ${#password} -lt 8 ]; then
       echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
-  done
 
   touch $LN_DDIR/password.txt
   chmod 600 $LN_DDIR/password.txt
   echo "$password" > $LN_DDIR/password.txt
   
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
+  lncli --tlscertpath $LN_DDIR/tls.cert.tmp create
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}Carteira criada com sucesso!${NC}"
   else
@@ -919,7 +918,7 @@ menu() {
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       touch ~/brlnfullauto/install.log
       chmod +w ~/brlnfullauto/install.log
-      echo -e "${YELLOW}✅ A nstalação será executada em segundo plano.${NC}"
+      echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
       echo -e "${YELLOW}📝 Acompanhe o progresso usando o comando:"
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
