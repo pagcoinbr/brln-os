@@ -971,7 +971,8 @@ menu() {
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW}################################################################${NC}"
-      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais do bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
+      echo -e "${YELLOW} Asseguir você será solicitado a adicionar suas credenciais do 
+      echo -e "${YELLOW} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
       echo -e "${YELLOW} Caso você não seja membro, escolha a opção "no" na próxima pergunta.${NC}"
       echo -e "${YELLOW}################################################################${NC}"  
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
