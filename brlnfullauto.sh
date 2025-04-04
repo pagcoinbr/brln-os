@@ -314,6 +314,7 @@ create_wallet() {
     if [ ${#password} -lt 8 ]; then
       echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
+  done
 
   touch $LN_DDIR/password.txt
   chmod 600 $LN_DDIR/password.txt
