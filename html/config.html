@@ -122,18 +122,19 @@
         <div id="tor" class="status">Tor: ...</div>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
     </div>
-
     <div class="section">
         <h2>🔄 Status dos Serviços do Node:</h2>
         <h3>🪙 Bitcoind</h3>
-<label class="switch">
-  <input type="checkbox" id="toggle-bitcoind" onchange="alternarBitcoind()">
-  <span class="slider"></span>
-</label><h3>⚡ LND</h3>
-<label class="switch">
-  <input type="checkbox" id="toggle-bitcoind" onchange="alternarBitcoind()">
-  <span class="slider"></span>
-</label>
+        <label class="switch">
+            <input type="checkbox" id="toggle-bitcoind" onchange="alternarBitcoind()">
+            <span class="slider"></span>
+        </label>
+
+        <h3>⚡ LND</h3>
+        <label class="switch">
+            <input type="checkbox" id="toggle-lnd" onchange="alternarLnd()">
+            <span class="slider"></span>
+        </label>
     </div>
 
     <div class="section">
@@ -165,40 +166,54 @@
                 });
         }
 
-        function executarAcao(acao) {
-            fetch('/cgi-bin/execute.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ acao: acao })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("logAtualizacao").innerText = data.log || "Sem resposta.";
-                })
-                .catch(error => {
-                    document.getElementById("logAtualizacao").innerText = "Erro: " + error.message;
-                });
-        }
-
+    <script>
         function alternarBitcoind() {
             const estaLigado = document.getElementById("toggle-bitcoind").checked;
-            const acao = estaLigado ? 'enable_bitcoind.sh' : 'desligar-bitcoind';
+            const acao = estaLigado ? "ligar-bitcoind" : "desligar-bitcoind";
 
-            fetch('/cgi-bin/execute.sh', {
+            fetch('/cgi-bin/toogle_bitcoind.sh', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ acao: acao })
             })
-                .then(res => res.json())
-                .then(data => {
-                    alert(`Bitcoind foi ${estaLigado ? "ligado" : "desligado"} com sucesso.`);
-                })
-                .catch(error => {
-                    alert("Erro ao alternar Bitcoind: " + error.message);
-                });
+            .then(res => res.json())
+            .then(data => {
+                alert(data.mensagem || "Ação concluída.");
+            })
+            .catch(error => {
+                alert("Erro ao alternar Bitcoind: " + error.message);
+            });
         }
+
+        function alternarLnd() {
+            const estaLigado = document.getElementById("toggle-lnd").checked;
+            const acao = estaLigado ? "ligar-lnd" : "desligar-lnd";
+
+            fetch('/cgi-bin/toogle_lnd.sh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ acao: acao })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.mensagem || "Ação concluída.");
+            })
+            .catch(error => {
+                alert("Erro ao alternar LND: " + error.message);
+            });
+        }
+        .then(data => {
+            document.getElementById("cpu").innerText = "CPU: " + data.cpu;
+            document.getElementById("ram").innerText = "RAM: " + data.ram;
+            document.getElementById("lnd").innerText = "LND: " + data.lnd;
+            document.getElementById("bitcoind").innerText = "Bitcoind: " + data.bitcoind;
+            document.getElementById("tor").innerText = "Tor: " + data.tor;
+
+            document.getElementById("toggle-bitcoind").checked = (data.bitcoind === "ativo");
+            document.getElementById("toggle-lnd").checked = (data.lnd === "ativo");
+        });
     </script>
-    </script>
+</script>
 
 </body>
 </html>
