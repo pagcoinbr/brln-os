@@ -339,14 +339,13 @@ create_wallet() {
   sudo chmod 600 /data/lnd/password.txt
   cat << EOF > /data/lnd/password.txt
   $password
-
+EOF
+if [ -f /data/lnd/password.txt ]; then
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Carteira criada com sucesso!${NC}"
-  else
-    echo -e "${YELLOW}Caso receba o erro abaixo, basta aguardar 1 minuto e executar novamente o passo número 3.${NC}"
-    echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
-  fi
+else
+  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
+  exit 1
+fi
 }
 
 install_bitcoind() {
