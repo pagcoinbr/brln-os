@@ -15,7 +15,6 @@ APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-ADM_SCRIPTS="/usr/local/bin"
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
@@ -34,13 +33,11 @@ sudo rm -f "$ADM_SCRIPTS/"*.sh
 sudo cp "$HTML_SRC/index.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC/config.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
-sudo cp "$HTML_SRC/cgi-bin/status.sh" "$CGI_DST/"
-sudo cp "$HTML_SRC/cgi-bin/execute.sh" "$CGI_DST/"
-sudo cp "$HTML_SRC/adm_scripts/"*.sh "$ADM_SCRIPTS/"
+sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
 # Corrigir permissões de execução
-sudo chmod +x "$CGI_DST/"*.sh
-for script in "$ADM_SCRIPTS"/*.sh; do
+sudo chmod +x "$CGI_DST"/*.sh
+for script in "$CGI_DST"/*.sh; do
   sudo chmod +x "$script"
 done
 
