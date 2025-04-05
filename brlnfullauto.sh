@@ -59,11 +59,14 @@ fi
 echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
 SCRIPT_LIST=$(find /usr/lib/cgi-bin/ -maxdepth 1 -type f -name "*.sh" | sort | paste -sd ", \\" -)
 
-sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+if [ -n "$SCRIPT_LIST" ]; then
+  sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
 www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
-
-echo "Permissões atualizadas com sucesso!"
+  echo "Permissões atualizadas com sucesso!"
+else
+  echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
+fi
 
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
