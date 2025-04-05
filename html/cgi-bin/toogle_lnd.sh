@@ -2,7 +2,13 @@
 echo "Content-type: application/json"
 echo ""
 
-read -r input
+read_input() {
+  input=""
+  while IFS= read -r line; do
+    input="$input$line"
+  done
+}
+read_input
 
 if echo "$input" | grep -q '"acao":"ligar-lnd"'; then
     if sudo systemctl start lnd && sudo systemctl enable lnd; then
