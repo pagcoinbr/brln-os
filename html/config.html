@@ -160,13 +160,15 @@
                     document.getElementById("lnd").innerText = "LND: " + data.lnd;
                     document.getElementById("bitcoind").innerText = "Bitcoind: " + data.bitcoind;
                     document.getElementById("tor").innerText = "Tor: " + data.tor;
+
+                    document.getElementById("toggle-bitcoind").checked = (data.bitcoind === "ativo");
+                    document.getElementById("toggle-lnd").checked = (data.lnd === "ativo");
                 })
                 .catch(error => {
                     alert("Erro ao atualizar status: " + error.message);
                 });
         }
 
-    <script>
         function alternarBitcoind() {
             const estaLigado = document.getElementById("toggle-bitcoind").checked;
             const acao = estaLigado ? "ligar-bitcoind" : "desligar-bitcoind";
@@ -176,13 +178,13 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ acao: acao })
             })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.mensagem || "Ação concluída.");
-            })
-            .catch(error => {
-                alert("Erro ao alternar Bitcoind: " + error.message);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensagem || "Ação concluída.");
+                })
+                .catch(error => {
+                    alert("Erro ao alternar Bitcoind: " + error.message);
+                });
         }
 
         function alternarLnd() {
@@ -194,26 +196,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ acao: acao })
             })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.mensagem || "Ação concluída.");
-            })
-            .catch(error => {
-                alert("Erro ao alternar LND: " + error.message);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensagem || "Ação concluída.");
+                })
+                .catch(error => {
+                    alert("Erro ao alternar LND: " + error.message);
+                });
         }
-        .then(data => {
-            document.getElementById("cpu").innerText = "CPU: " + data.cpu;
-            document.getElementById("ram").innerText = "RAM: " + data.ram;
-            document.getElementById("lnd").innerText = "LND: " + data.lnd;
-            document.getElementById("bitcoind").innerText = "Bitcoind: " + data.bitcoind;
-            document.getElementById("tor").innerText = "Tor: " + data.tor;
-
-            document.getElementById("toggle-bitcoind").checked = (data.bitcoind === "ativo");
-            document.getElementById("toggle-lnd").checked = (data.lnd === "ativo");
-        });
     </script>
-</script>
 
 </body>
 </html>
