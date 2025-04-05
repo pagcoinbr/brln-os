@@ -954,20 +954,23 @@ menu() {
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
+      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
+      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
-      download_lnd >> install.log 2>&1
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+      download_lnd >> install.log 2>&1
       configure_lnd
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
-      install_bitcoind
-      echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
+      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
+      install_bitcoind >> install.log 2>&1
+      echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida e seu bitcoin!${NC}"
       menu
       ;;
     3)
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
+      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
       install_bos >> install.log 2>&1
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
@@ -989,7 +992,10 @@ menu() {
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
       install_lndg >> install.log 2>&1
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
+      echo
       cat ~/lndg/data/lndg-admin.txt
+      echo
+      echo -e "${YELLOW}📝 Você deve mudar essa senha após o final da instalação."
       echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
       ;;
