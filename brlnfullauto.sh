@@ -349,10 +349,10 @@ create_wallet() {
       echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
   done
-
+  
   touch /data/lnd/password.txt
   sudo chown admin:admin /data/lnd/password.txt
-  chmod 600 data/lnd/password.txt
+  chmod 600 /data/lnd/password.txt
   echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
