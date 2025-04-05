@@ -879,19 +879,19 @@ submenu_opcoes() {
 
   case $suboption in
     1)
-      echo -e "${YELLOW}🔁 Reiniciando serviços...${NC}"
-      systemctl restart bitcoind lnd
+      echo -e "${YELLOW}🏠🔁 Trocar para o bitcoin local...${NC}"
+      toogle_on
       echo -e "${GREEN}✅ Serviços reiniciados!${NC}"
       submenu_opcoes
       ;;
     2)
-      echo -e "${YELLOW}⬆️ Atualizando pacotes...${NC}"
-      sudo apt update && sudo apt upgrade -y
+      echo -e "${YELLOW}☁️🔁 Trocar para o bitcoin remoto...${NC}"
+      toogle_off
       echo -e "${GREEN}✅ Atualização concluída!${NC}"
       submenu_opcoes
       ;;
     3)
-      echo -e "${CYAN}📋 Status dos serviços:${NC}"
+      echo -e "${CYAN}📋 Status dos lnd${NC}"
       systemctl status lnd --no-pager
       submenu_opcoes
       ;;
@@ -908,13 +908,8 @@ submenu_opcoes() {
 menu() {
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
-  echo -e "${YELLOW}⚡ Este script instalará:${NC}"
-  echo -e "  ${GREEN}🛠️ Nó Lightning Standalone${NC}"
-  echo -e "  ${GREEN}🏗️ Bitcoin Core${NC}"
-  echo -e "  ${GREEN}🖥️ Ferramentas de administração:${NC}"
-  echo -e "    ${BLUE}- ThunderHub${NC}"
-  echo -e "    ${BLUE}- Balance of Satoshis (BOS)${NC}"
-  echo -e "    ${BLUE}- LNDG${NC}"
+  echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
+  echo -e "  ${GREEN}🛠️ ${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
