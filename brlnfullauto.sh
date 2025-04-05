@@ -314,7 +314,11 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
-  sleep 20
+  for i in {120..1}; do
+    echo -ne "Aguardando $i segundos...\r"
+    sleep 1
+  done
+  echo -ne "\n"
 }
 
 create_wallet() {
@@ -339,7 +343,7 @@ create_wallet() {
   chmod 600 $LN_DDIR/password.txt
   echo "$password" > $LN_DDIR/password.txt
   
-  lncli --tlscertpath $LN_DDIR/tls.cert.tmp create
+  lncli --tlscertpath /data/lnd/tls.cert.tmp create
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}Carteira criada com sucesso!${NC}"
   else
