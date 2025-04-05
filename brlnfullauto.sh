@@ -895,6 +895,11 @@ submenu_opcoes() {
       systemctl status lnd --no-pager
       submenu_opcoes
       ;;
+    4)
+      echo -e "${CYAN}📋 Status do bitcoind${NC}"
+      systemctl status bitcoind --no-pager
+      submenu_opcoes
+      ;;
     0)
       menu
       ;;
