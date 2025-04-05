@@ -753,9 +753,8 @@ touch "$log_file" # cria um novo log
 # 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
 echo "▶️ Iniciando 'tailscale up' em background..."
 (sudo tailscale up > "$log_file" 2>&1) &
-wait $!
 # 2️⃣ Aguarda a autenticação do Tailscale
-  for i in {10..1}; do
+  for i in {20..1}; do
     echo -ne "Aguardando $i segundos...\r"
     sleep 1
   done
