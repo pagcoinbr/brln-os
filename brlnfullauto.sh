@@ -885,7 +885,7 @@ submenu_opcoes() {
       submenu_opcoes
       ;;
     2)
-      echo -e "${YELLOW}☁️ 🔁 Trocar para o bitcoin remoto...${NC}"
+      echo -e "${YELLOW}🔁 ☁️ Trocar para o bitcoin remoto...${NC}"
       toogle_off
       echo -e "${GREEN}✅ Atualização concluída!${NC}"
       submenu_opcoes
