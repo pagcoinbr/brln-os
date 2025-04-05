@@ -342,17 +342,18 @@ create_wallet() {
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node.${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
 
-  until [ ${#password} -ge 8 ]; do
+  password=""
+  until [[ ${#password} -ge 8 ]]; do
     read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
     echo
-    if [ ${#password} -lt 8 ]; then
+    if [[ ${#password} -lt 8 ]]; then
       echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
   done
   
-  touch /data/lnd/password.txt
+  sudo touch /data/lnd/password.txt
   sudo chown admin:admin /data/lnd/password.txt
-  chmod 600 /data/lnd/password.txt
+  sudo chmod 600 /data/lnd/password.txt
   echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
