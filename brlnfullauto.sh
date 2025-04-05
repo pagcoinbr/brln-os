@@ -915,12 +915,13 @@ menu() {
   echo
   echo -e "   ${GREEN}1${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
   echo -e "   ${GREEN}2${NC}- Instalar Bitcoin + Lightning Daemon/LND"
-  echo -e "   ${GREEN}3${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}4${NC}- Instalar Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}6${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}7${NC}- Instalar Tailscale VPN"
-  echo -e "   ${GREEN}8${NC}- Mais opções"
+  echo -e "   ${GREEN}3${NC}- Criar carteira LND"
+  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}7${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
+  echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -968,7 +969,7 @@ menu() {
       sleep 5
       create_wallet
       ;;
-    3)
+    4)
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -976,7 +977,7 @@ menu() {
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
-    4)
+    5)
       read -p "Digite a senha para ThunderHub: " senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
@@ -986,7 +987,7 @@ menu() {
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
-    5)
+    6)
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -997,7 +998,7 @@ menu() {
       echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
       ;;
-    6)
+    7)
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -1006,14 +1007,14 @@ menu() {
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
-    7)
+    8)
       echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       tailscale_vpn
       menu
       ;;
-    8)
+    9)
       submenu_opcoes
       ;;
     0)
