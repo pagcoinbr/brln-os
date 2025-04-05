@@ -314,11 +314,6 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
-  for i in {120..1}; do
-    echo -ne "Aguardando $i segundos...\r"
-    sleep 1
-  done
-  echo -ne "\n"
 }
 
 create_wallet() {
@@ -961,9 +956,15 @@ menu() {
       echo -e "${YELLOW} instalando o lnd...${NC}"
       download_lnd >> install.log 2>&1
       btc_toogle_func
-      echo -e "${YELLOW} configurando o lnd...${NC}"
+      echo -e "${YELLOW} Configurando o lnd...${NC}"
+      echo -e "${YELLOW} Isso pode demorar um pouco...${NC}"
       configure_lnd >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
+      for i in {120..1}; do
+          echo -ne "Aguardando $i segundos...\r"
+          sleep 1
+      done
+      echo -ne "\n"
       create_wallet
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
