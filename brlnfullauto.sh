@@ -117,7 +117,7 @@ download_lnd() {
   sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
 }
 
-configure_lnd() {
+btc_toogle_func() {
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
@@ -135,7 +135,9 @@ configure_lnd() {
     echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
     exit 1
   fi
+}
 
+configure_lnd() {
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -263,7 +265,6 @@ tor.streamisolation=true
 tor.active=true
 tor.v3=true
 EOF
-  echo "Configuração concluída com sucesso!"
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -961,6 +962,7 @@ menu() {
       install_bitcoind >> install.log 2>&1
       echo -e "${YELLOW} instalando o lnd...${NC}"
       download_lnd >> install.log 2>&1
+      btc_toogle_func
       echo -e "${YELLOW} configurando o lnd...${NC}"
       configure_lnd >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
