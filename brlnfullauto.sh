@@ -41,16 +41,18 @@ for script in "$CGI_DST"/*.sh; do
   sudo chmod +x "$script"
 done
 
-# Configurar o Apache para permitir CGI no diretório
-if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
-    echo "Adicionando bloco de configuração CGI ao Apache..."
-    sudo sed -i '/<\/VirtualHost>/i \
-<Directory "/var/www/html/cgi-bin">\n\
-    Options +ExecCGI\n\
-    AddHandler cgi-script .sh\n\
+# Configurar o Apache para permitir CGI no diretório correto
+if ! grep -q 'Directory "/usr/lib/cgi-bin"' "$APACHE_CONF"; then
+  echo "Adicionando bloco de configuração CGI ao Apache..."
+  sudo sed -i '/<\/VirtualHost>/i \
+<Directory "/usr/lib/cgi-bin">\n\
+  AllowOverride None\n\
+  Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
+  Require all granted\n\
+  AddHandler cgi-script .sh\n\
 </Directory>\n' "$APACHE_CONF"
 else
-    echo "Bloco de configuração CGI já existe no Apache."
+  echo "Bloco de configuração CGI já existe no Apache."
 fi
 
 # Permissões de sudo para www-data nos scripts permitidos
