@@ -745,27 +745,25 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 
 tailscale_vpn () {
 # Instalação do Tailscale VPN
-curl -fsSL https://tailscale.com/install.sh | sh
-sleep 5
-
+curl -fsSL https://tailscale.com/install.sh | sh >> install.log 2>&1
 # Instala o qrencode para gerar QR codes
-sudo apt install qrencode -y
-
+sudo apt install qrencode -y >> install.log 2>&1
 log_file="tailscale_up.log"
 rm -f "$log_file" # remove log antigo se existir
-
+touch "$log_file" # cria um novo log
 # 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
 echo "▶️ Iniciando 'tailscale up' em background..."
 (sudo tailscale up > "$log_file" 2>&1) &
-
-# 2️⃣ Espera alguns segundos pra dar tempo de gerar a saída
-echo "⏳ Aguardando a autenticação..."
-sleep 10
-
+wait $!
+# 2️⃣ Aguarda a autenticação do Tailscale
+  for i in {10..1}; do
+    echo -ne "Aguardando $i segundos...\r"
+    sleep 1
+  done
+  echo -ne "\n"
 # 3️⃣ Tenta extrair o link de autenticação do log
 echo "🔍 Procurando o link de autenticação..."
 url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
-
 if [[ -n "$url" ]]; then
     echo "✅ Link encontrado: $url"
     echo "📲 QR Code:"
@@ -774,10 +772,8 @@ else
     echo "❌ Não foi possível encontrar o link no log."
     cat "$log_file"
 fi
-
 # 4️⃣ Aguarda a finalização do tailscale up
 echo "⏳ Aguardando autenticação para finalizar o comando..."
-wait
 echo "✅ tailscale up finalizado."
 }
 
@@ -948,7 +944,7 @@ menu() {
       update_and_upgrade >> install.log 2>&1
       create_main_dir >> install.log 2>&1
       configure_ufw >> install.log 2>&1
-      echo -e "${YELLOW}Isso pode demorar um pouco...${NC}"
+      echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
       echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
       echo -e "${RED}Seja paciente!${NC}"
       install_tor >> install.log 2>&1
@@ -975,23 +971,38 @@ menu() {
       menu
       ;;
     3)
-      install_bos
+      echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
+      install_bos >> install.log 2>&1
+      echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
     4)
       read -p "Digite a senha para ThunderHub: " senha
-      install_thunderhub
+      echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
+      sleep 1
+      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+      install_thunderhub >> install.log 2>&1
+      echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
     5)
-      install_lndg
+      echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
+      sleep 1
+      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+      install_lndg >> install.log 2>&1
+      echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
       ;;
     6)
-      lnbits_install
+      echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
+      sleep 1
+      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+      lnbits_install >> install.log 2>&1
+      echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
     7)
+      echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
       tailscale_vpn
       menu
       ;;
