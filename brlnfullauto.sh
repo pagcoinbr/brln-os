@@ -1030,7 +1030,7 @@ menu_manutencao() {
       ;;
     0)
       echo "Saindo..."
-      menu_opcoes
+      exit 0
       ;;
     *)
       echo "Opção inválida!"
