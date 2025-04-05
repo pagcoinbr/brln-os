@@ -15,7 +15,6 @@ APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-ADM_SCRIPTS="/usr/local/bin"
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
@@ -27,45 +26,62 @@ sudo systemctl restart apache2
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
 sudo rm -f "$WWW_HTML/index.html"
+sudo rm -f "$WWW_HTML/config.html"
+sudo rm -f "$WWW_HTML"/*.png
+sudo rm -f "$CGI_DST/"*.sh
+sudo rm -f "$ADM_SCRIPTS/"*.sh
 sudo cp "$HTML_SRC/index.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC/config.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
-sudo cp "$HTML_SRC/cgi-bin/status.sh" "$CGI_DST/"
-sudo cp "$HTML_SRC/cgi-bin/execute.sh" "$CGI_DST/"
-sudo cp "$HTML_SRC/adm_scripts/"*.sh "$ADM_SCRIPTS/"
+sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
 # Corrigir permissões de execução
-sudo chmod +x "$CGI_DST/"*.sh
-for script in "$ADM_SCRIPTS"/*.sh; do
+sudo chmod +x "$CGI_DST"/*.sh
+for script in "$CGI_DST"/*.sh; do
   sudo chmod +x "$script"
 done
 
-# Configurar o Apache para permitir CGI no diretório
-if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
-    echo "Adicionando bloco de configuração CGI ao Apache..."
-    sudo sed -i '/<\/VirtualHost>/i \
-<Directory "/var/www/html/cgi-bin">\n\
-    Options +ExecCGI\n\
-    AddHandler cgi-script .sh\n\
+# Configurar o Apache para permitir CGI no diretório correto
+if ! grep -q 'Directory "/usr/lib/cgi-bin"' "$APACHE_CONF"; then
+  echo "Adicionando bloco de configuração CGI ao Apache..."
+  sudo sed -i '/<\/VirtualHost>/i \
+<Directory "/usr/lib/cgi-bin">\n\
+  AllowOverride None\n\
+  Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
+  Require all granted\n\
+  AddHandler cgi-script .sh\n\
 </Directory>\n' "$APACHE_CONF"
+else
+  echo "Bloco de configuração CGI já existe no Apache."
 fi
 
 # Permissões de sudo para www-data nos scripts permitidos
-sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+if ! grep -q 'www-data ALL=(ALL) NOPASSWD' /etc/sudoers.d/www-data-scripts; then
+  echo "Adicionando permissões de sudo para www-data nos scripts..."
+  sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
 www-data ALL=(ALL) NOPASSWD: \\
-  /usr/local/bin/toogle_bitcoin.sh, \\
-  /usr/local/bin/update_lnd.sh, \\
-  /usr/local/bin/update_lndg.sh, \\
-  /usr/local/bin/update_thunderhub.sh, \\
-  /usr/local/bin/update_lnbits.sh, \\
-  /usr/local/bin/update_bitcoind.sh, \\
-  /usr/local/bin/uninstall.sh, \\
-  /usr/local/bin/update_apt.sh
+  /usr/lib/cgi-bin/toogle_bitcoind.sh, \\
+  /usr/lib/cgi-bin/toogle_lnd.sh, \\
+  /usr/lib/cgi-bin/update_lnd.sh, \\
+  /usr/lib/cgi-bin/update_lndg.sh, \\
+  /usr/lib/cgi-bin/update_thunderhub.sh, \\
+  /usr/lib/cgi-bin/update_lnbits.sh, \\
+  /usr/lib/cgi-bin/update_bitcoind.sh, \\
+  /usr/lib/cgi-bin/unistall.sh, \\
+  /usr/lib/cgi-bin/update_apt.sh
 EOF
+else
+  echo "Permissões de sudo já existem para www-data."
+fi
+
 
 # Abre a posta 80 no UFW
-sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
-
+if ! sudo ufw status | grep -q "80/tcp"; then
+  echo "Abrindo a porta 80 no UFW..."
+  sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
+else
+  echo "A porta 80 já está aberta no UFW."
+fi
 echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
@@ -314,11 +330,6 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
-  for i in {120..1}; do
-    echo -ne "Aguardando $i segundos...\r"
-    sleep 1
-  done
-  echo -ne "\n"
 }
 
 create_wallet() {
@@ -338,10 +349,11 @@ create_wallet() {
       echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
     fi
   done
-
-  touch $LN_DDIR/password.txt
-  chmod 600 $LN_DDIR/password.txt
-  echo "$password" > $LN_DDIR/password.txt
+  
+  touch /data/lnd/password.txt
+  sudo chown admin:admin /data/lnd/password.txt
+  chmod 600 /data/lnd/password.txt
+  echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   if [ $? -eq 0 ]; then
@@ -715,6 +727,9 @@ EOF
 # Torna o script executável
 chmod +x "$LNBITS_DIR/start-lnbits.sh"
 
+# Configurações do lnbits no ufw
+sudo ufw allow from 192.168.0.0/24 to any port 5000 proto tcp comment 'allow LNbits from local network'
+
 # Cria o serviço systemd
 sudo tee "$SYSTEMD_FILE" > /dev/null <<EOF
 [Unit]
@@ -822,10 +837,10 @@ toogle_on () {
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
-        rm -f "$file"
+        rm -f "$file" >> /dev/null 2>&1
         echo "Deleted: $file"
       else
-        echo "File not found: $file"
+        echo "File not found: $file" >> /dev/null 2>&1
       fi
     done
   # Função interna para reiniciar o serviço LND
@@ -920,12 +935,13 @@ menu() {
   echo
   echo -e "   ${GREEN}1${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
   echo -e "   ${GREEN}2${NC}- Instalar Bitcoin + Lightning Daemon/LND"
-  echo -e "   ${GREEN}3${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}4${NC}- Instalar Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}6${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}7${NC}- Instalar Tailscale VPN"
-  echo -e "   ${GREEN}8${NC}- Mais opções"
+  echo -e "   ${GREEN}3${NC}- Criar carteira LND"
+  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}7${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
+  echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -961,14 +977,19 @@ menu() {
       echo -e "${YELLOW} instalando o lnd...${NC}"
       download_lnd >> install.log 2>&1
       btc_toogle_func
-      echo -e "${YELLOW} configurando o lnd...${NC}"
+      echo -e "${YELLOW} Configurando o lnd...${NC}"
+      echo -e "${YELLOW} Isso pode demorar um pouco...${NC}"
       configure_lnd >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
-      create_wallet
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
       ;;
     3)
+      echo -e "${YELLOW}⚡ Iniciando a criação da carteira...${NC}"
+      sleep 5
+      create_wallet
+      ;;
+    4)
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -976,7 +997,7 @@ menu() {
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
-    4)
+    5)
       read -p "Digite a senha para ThunderHub: " senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
@@ -986,7 +1007,7 @@ menu() {
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
-    5)
+    6)
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -997,7 +1018,7 @@ menu() {
       echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
       ;;
-    6)
+    7)
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -1006,14 +1027,14 @@ menu() {
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
-    7)
+    8)
       echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       tailscale_vpn
       menu
       ;;
-    8)
+    9)
       submenu_opcoes
       ;;
     0)
