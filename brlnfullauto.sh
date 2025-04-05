@@ -55,23 +55,18 @@ else
   echo "Bloco de configuração CGI já existe no Apache."
 fi
 
-# Permissões de sudo para www-data nos scripts permitidos
-if ! grep -q 'www-data ALL=(ALL) NOPASSWD' /etc/sudoers.d/www-data-scripts; then
-  echo "Adicionando permissões de sudo para www-data nos scripts..."
+# Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
+echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
+
+SCRIPT_LIST=$(find /usr/lib/cgi-bin/ -maxdepth 1 -type f -name "*.sh" | sort | paste -sd ", " -)
+
+if [ -n "$SCRIPT_LIST" ]; then
   sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
-www-data ALL=(ALL) NOPASSWD: \\
-  /usr/lib/cgi-bin/toogle_bitcoind.sh, \\
-  /usr/lib/cgi-bin/toogle_lnd.sh, \\
-  /usr/lib/cgi-bin/update_lnd.sh, \\
-  /usr/lib/cgi-bin/update_lndg.sh, \\
-  /usr/lib/cgi-bin/update_thunderhub.sh, \\
-  /usr/lib/cgi-bin/update_lnbits.sh, \\
-  /usr/lib/cgi-bin/update_bitcoind.sh, \\
-  /usr/lib/cgi-bin/unistall.sh, \\
-  /usr/lib/cgi-bin/update_apt.sh
+www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
+  echo "Permissões atualizadas com sucesso!"
 else
-  echo "Permissões de sudo já existem para www-data."
+  echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
 fi
 
 
@@ -343,13 +338,6 @@ create_wallet() {
   echo -e "${YELLOW}############################################################################################### ${NC}"
 
   read -p "Digite sua senha do lnd(Lghtning Daemon): " password
-  until [[ ${#password} -ge 8 ]]; do
-    read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
-    echo
-    if [[ ${#password} -lt 8 ]]; then
-      echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
-    fi
-  done
   
   sudo touch /data/lnd/password.txt
   sudo chown admin:admin /data/lnd/password.txt
@@ -357,13 +345,12 @@ create_wallet() {
   cat << EOF > /data/lnd/password.txt
   $password
 EOF
+if [ -f /data/lnd/password.txt ]; then
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
-  if [ $? -eq 0 ]; then
-    echo -e "${GREEN}Carteira criada com sucesso!${NC}"
-  else
-    echo -e "${YELLOW}Caso receba o erro abaixo, basta aguardar 1 minuto e executar novamente o passo número 3.${NC}"
-    echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
-  fi
+else
+  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
+  exit 1
+fi
 }
 
 install_bitcoind() {
