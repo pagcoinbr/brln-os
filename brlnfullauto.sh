@@ -339,7 +339,7 @@ create_wallet() {
   sudo chmod 600 /data/lnd/password.txt
   cat << EOF > /data/lnd/password.txt
   $password
-EOF
+
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}Carteira criada com sucesso!${NC}"
