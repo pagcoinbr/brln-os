@@ -866,19 +866,20 @@ manutencao_script () {
   # Executa o script de manutenção
 lnd_update () {
   cd /tmp
-  read -p "Deseja atualizar o LND para qual versão? (Ex: 0.18.3) " LND_VERSION
+LND_VERSION=$(curl -s https://api.github.com/repos/lightningnetwork/lnd/releases/latest | grep -oP '"tag_name": "\Kv[0-9]+\.[0-9]+\.[0-9]+(?=-beta)')
+echo "$LND_VERSION"
 {
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
-    sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
+    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/lnd-linux-amd64-$LND_VERSION-beta.tar.gz
+    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-$LND_VERSION-beta.txt.ots
+    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-$LND_VERSION-beta.txt
+    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-roasbeef-$LND_VERSION-beta.sig.ots
+    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-roasbeef-$LND_VERSION-beta.sig
+    sha256sum --check manifest-$LND_VERSION-beta.txt --ignore-missing
     curl -s https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
-    gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
-    tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-    sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
-    sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+    gpg --verify manifest-roasbeef-$LND_VERSION-beta.sig manifest-$LND_VERSION-beta.txt
+    tar -xzf lnd-linux-amd64-$LND_VERSION-beta.tar.gz
+    sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-$LND_VERSION-beta/lnd lnd-linux-amd64-$LND_VERSION-beta/lncli
+    sudo rm -r lnd-linux-amd64-$LND_VERSION-beta lnd-linux-amd64-$LND_VERSION-beta.tar.gz manifest-roasbeef-$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
     sudo systemctl restart lnd
     cd
 } &> /dev/null &
@@ -889,7 +890,8 @@ wait
 
 bitcoin_update () {
   cd /tmp
-  read -p "Deseja atualizar o Bitcoind para qual versão? (Ex: 28.0) " LND_VERSION
+VERSION=$(curl -s https://bitcoincore.org/en/download/ | grep -oP 'bitcoin-core-\K[0-9]+\.[0-9]+' | head -n1)
+echo "$VERSION"
 {
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
 wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
@@ -904,9 +906,9 @@ sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS 
     sudo systemctl restart bitcoind
     cd
 } &> /dev/null &
-echo "Atualizando LND... Por favor, aguarde."
+echo "Atualizando Bitcon Core... Por favor, aguarde."
 wait
-  echo "LND atualizado!"
+  echo "Bitcoin Core atualizado!"
 }
 
 thunderhub_update () {
@@ -914,7 +916,7 @@ thunderhub_update () {
   sudo systemctl stop thunderhub
   cd
   cd thunderhub
-  git pull https://github.com/apotdevin/thunderhub.git v$THUB_VERSION
+  git pull https://github.com/apotdevin/thunderhub.git $THUB_VERSION
   npm install
   npm run build
   sudo systemctl start thunderhub
@@ -927,6 +929,7 @@ lndg_update () {
   cd /home/admin/lndg
   sudo systemctl stop lndg.service
   sudo systemctl stop lndg-controller.service
+  git stash
   git pull
   .venv/bin/python manage.py migrate
   sudo systemctl daemon-reload
@@ -938,6 +941,7 @@ lndg_update () {
 lnbits_update () {
   cd /home/admin/lnbits
   sudo systemctl stop lnbits
+  git stash
   git pull
   poetry self update
   poetry install --only main
@@ -1027,7 +1031,7 @@ menu_manutencao() {
       ;;
     0)
       echo "Saindo..."
-      /home/admin/brlnfullauto/brlnfullauto.sh
+      menu_opcoes
       ;;
     *)
       echo "Opção inválida!"
