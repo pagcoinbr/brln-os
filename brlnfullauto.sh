@@ -910,19 +910,21 @@ menu() {
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
   echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
-  echo -e "  ${GREEN}🛠️ ${NC}"
+  echo -e "  ${GREEN}🛠️ Bem vindo ao seu novo banco, ele é BRASILEIRO. ${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- Instalar Pre-requisitos (Obrigatório para as opções 2-8)"
-  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin + Lightning Daemon/LND"
-  echo -e "   ${GREEN}3${NC}- Criar carteira LND"
-  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}7${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
-  echo -e "   ${GREEN}9${NC}- Mais opções"
+  echo -e "   ${GREEN}1${NC}- Instalar Tor + nodejs + firewall"
+  echo -e "   ${GREEN}2${NC}- Instalar BTC + LND & criar carteira"
+  echo
+  echo -e "${YELLOW}3${NC}- Estas são as opções de instalação de aplicativos de administração:"
+  echo
+  echo -e "   ${GREEN}3${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}4${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}7${NC}- Instalar Tailscale VPN"
+  echo -e "   ${GREEN}8${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo
   read -p "👉 Digite sua escolha: " option
@@ -963,11 +965,6 @@ menu() {
       menu
       ;;
     3)
-      echo -e "${YELLOW}⚡ Iniciando a criação da carteira...${NC}"
-      sleep 5
-      create_wallet
-      ;;
-    4)
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -975,7 +972,7 @@ menu() {
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
-    5)
+    4)
       read -p "Digite a senha para ThunderHub: " senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
@@ -985,7 +982,7 @@ menu() {
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
-    6)
+    5)
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -996,7 +993,7 @@ menu() {
       echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
       ;;
-    7)
+    6)
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -1005,14 +1002,14 @@ menu() {
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
-    8)
+    7)
       echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       tailscale_vpn
       menu
       ;;
-    9)
+    8)
       submenu_opcoes
       ;;
     0)
