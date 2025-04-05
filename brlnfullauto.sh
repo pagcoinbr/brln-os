@@ -680,7 +680,6 @@ POETRY_BIN="$USER_HOME/.local/bin/poetry"
 SYSTEMD_FILE="/etc/systemd/system/lnbits.service"
 
 # Atualiza e instala dependências básicas
-sudo apt update
 sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
 
 # Instala Poetry (não precisa ativar venv manual)
@@ -994,6 +993,8 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
       install_lndg >> install.log 2>&1
+      echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
+      cat ~/lndg/data/lndg-admin.txt
       echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
       ;;
