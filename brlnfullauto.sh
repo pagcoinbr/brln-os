@@ -27,6 +27,10 @@ sudo systemctl restart apache2
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
 sudo rm -f "$WWW_HTML/index.html"
+sudo rm -f "$WWW_HTML/config.html"
+sudo rm -f "$WWW_HTML"/*.png
+sudo rm -f "$CGI_DST/"*.sh
+sudo rm -f "$ADM_SCRIPTS/"*.sh
 sudo cp "$HTML_SRC/index.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC/config.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
@@ -48,10 +52,14 @@ if ! grep -q 'Directory "/var/www/html/cgi-bin"' "$APACHE_CONF"; then
     Options +ExecCGI\n\
     AddHandler cgi-script .sh\n\
 </Directory>\n' "$APACHE_CONF"
+else
+    echo "Bloco de configuração CGI já existe no Apache."
 fi
 
 # Permissões de sudo para www-data nos scripts permitidos
-sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+if ! grep -q 'www-data ALL=(ALL) NOPASSWD' /etc/sudoers.d/www-data-scripts; then
+  echo "Adicionando permissões de sudo para www-data nos scripts..."
+  sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
 www-data ALL=(ALL) NOPASSWD: \\
   /usr/local/bin/toogle_bitcoin.sh, \\
   /usr/local/bin/update_lnd.sh, \\
@@ -62,10 +70,18 @@ www-data ALL=(ALL) NOPASSWD: \\
   /usr/local/bin/uninstall.sh, \\
   /usr/local/bin/update_apt.sh
 EOF
+else
+  echo "Permissões de sudo já existem para www-data."
+fi
+
 
 # Abre a posta 80 no UFW
-sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
-
+if ! sudo ufw status | grep -q "80/tcp"; then
+  echo "Abrindo a porta 80 no UFW..."
+  sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
+else
+  echo "A porta 80 já está aberta no UFW."
+fi
 echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
@@ -709,6 +725,9 @@ EOF
 
 # Torna o script executável
 chmod +x "$LNBITS_DIR/start-lnbits.sh"
+
+# Configurações do lnbits no ufw
+sudo ufw allow from 192.168.0.0/24 to any port 5000 proto tcp comment 'allow LNbits from local network'
 
 # Cria o serviço systemd
 sudo tee "$SYSTEMD_FILE" > /dev/null <<EOF
