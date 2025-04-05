@@ -144,19 +144,25 @@ chmod +x brlnfullauto.sh
 Você verá um menu com as seguintes opções:
 
 ```bash
-Instalação Automática
-1 - Instalação do BR⚡LN Bolt (Tor + LND + BTCd + Ferramentas)
+🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟
 
-Instalação Manual
-2 - Instalar Rede + Interface (Obrigatório para as opções 2-8)
-3 - Instalar Bitcoin Core (Tor + BTCd)
-4 - Instalar Lightning Daemon/LND - Exige Bitcoin Core Externo
-5 - Instalar Balance of Satoshis (Exige LND)
-6 - Instalar Thunderhub (Exige LND)
-7 - Instalar Lndg (Exige LND)
-8 - Instalar LNbits
-9 - Tailscale VPN
-0 - Sair
+⚡ Este Sript Instalará um Node Lightning Standalone
+  🛠️ 
+
+📝 Escolha uma opção:
+
+   1- Instalar Pre-requisitos (Obrigatório para as opções 2-8)
+   2- Instalar Bitcoin + Lightning Daemon/LND
+   3- Criar carteira LND
+   4- Instalar Balance of Satoshis (Exige LND)
+   5- Instalar Thunderhub (Exige LND)
+   6- Instalar Lndg (Exige LND)
+   7- Instalar LNbits
+   8- Instalar Tailscale VPN
+   9- Mais opções
+   0- Sair
+
+👉 Digite sua escolha: 
 ```
 [![Captura-de-tela-2025-04-05-022459.png](https://i.postimg.cc/rmPhz7fW/Captura-de-tela-2025-04-05-022459.png)](https://postimg.cc/Q9cgyYGx)
 Imagem
