@@ -126,9 +126,6 @@ download_lnd() {
   tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
-}
-
-btc_toogle_func() {
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
@@ -146,9 +143,6 @@ btc_toogle_func() {
     echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
     exit 1
   fi
-}
-
-configure_lnd() {
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -279,9 +273,6 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-}
-
-create_lnd_service() {
   sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
 # MiniBolt: systemd unit for lnd
 # /etc/systemd/system/lnd.service
@@ -325,9 +316,6 @@ EOF'
   sudo chmod 750 /run/tor
   sudo systemctl enable lnd
   sudo systemctl start lnd
-}
-
-create_wallet() {
   echo -e "${YELLOW}############################################################################################### ${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova carteira ${NC}"
   echo -e "${YELLOW}ou 'y' para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
@@ -962,14 +950,9 @@ menu() {
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
-      install_bitcoind >> install.log 2>&1
+      install_bitcoind
       echo -e "${YELLOW} instalando o lnd...${NC}"
-      download_lnd >> install.log 2>&1
-      btc_toogle_func
-      echo -e "${YELLOW} Configurando o lnd...${NC}"
-      echo -e "${YELLOW} Isso pode demorar um pouco...${NC}"
-      configure_lnd >> install.log 2>&1
-      create_lnd_service >> install.log 2>&1
+      download_lnd
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
       ;;
