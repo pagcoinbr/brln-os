@@ -822,10 +822,10 @@ toogle_on () {
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
-        rm -f "$file"
+        rm -f "$file" >> /dev/null 2>&1
         echo "Deleted: $file"
       else
-        echo "File not found: $file"
+        echo "File not found: $file" >> /dev/null 2>&1
       fi
     done
   # Função interna para reiniciar o serviço LND
