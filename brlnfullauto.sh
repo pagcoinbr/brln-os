@@ -995,6 +995,7 @@ menu() {
       echo
       cat ~/lndg/data/lndg-admin.txt
       echo
+      echo
       echo -e "${YELLOW}📝 Você deve mudar essa senha após o final da instalação."
       echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
       menu
