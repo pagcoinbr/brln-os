@@ -949,10 +949,10 @@ menu() {
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
-      echo -e "${YELLOW} instalando o bitcoind...${NC}"
-      install_bitcoind
       echo -e "${YELLOW} instalando o lnd...${NC}"
       download_lnd
+      echo -e "${YELLOW} instalando o bitcoind...${NC}"
+      install_bitcoind
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
       ;;
