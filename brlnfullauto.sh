@@ -29,7 +29,6 @@ sudo rm -f "$WWW_HTML/index.html"
 sudo rm -f "$WWW_HTML/config.html"
 sudo rm -f "$WWW_HTML"/*.png
 sudo rm -f "$CGI_DST/"*.sh
-sudo rm -f "$ADM_SCRIPTS/"*.sh
 sudo cp "$HTML_SRC/index.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC/config.html" "$WWW_HTML/"
 sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
