@@ -1,132 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>⚡ Painel do Node Lightning</title>
-  <link rel="icon" type="image/png" href="logopreto.png">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Configurações do Node</title>
+    <link rel="icon" type="image/png" href="logopreto.png">
+    <style>
+        body {
+            background: #f7f7f7;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
 
-<style>
-    body {
-        background-image: url('sky.png');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        font-family: 'Roboto', sans-serif;
-        text-align: center;
-        padding: 20px;
-        margin: 0;
-    }
+        .botao {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
 
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 32px;
-      color: #FFD700;
-      text-shadow: 0 0 10px #f8ff6f;
-      margin-bottom: 10px;
-    }
+        .botao:hover {
+            background-color: #218838;
+        }
 
-    .section {
-      background-color: rgba(0, 0, 0, 0.3);
-      border: 1px solid #6f42c1;
-      border-radius: 16px;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 600px;
-    }
+        .section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
 
-    .status {
-      font-size: 18px;
-      margin: 12px 0;
-      color: #ffffff;
-    }
+        .status {
+            font-size: 18px;
+            margin: 10px 0;
+        }
 
-    .status span {
-      font-weight: bold;
-      color: #FFD700;
-    }
+        .back {
+            margin-top: 30px;
+            display: inline-block;
+            background-color: #007bff;
+        }
 
-    .botao {
-      background-color: #6f42c1;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      margin: 15px 5px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .botao:hover {
-      background-color: #8a63d2;
-    }
-
-    .back {
-      background-color: #1f8ef1;
-    }
-
-    a.botao {
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .lightning {
-      font-size: 48px;
-      animation: flicker 1s infinite;
-    }
-
-    @keyframes flicker {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            text-align: left;
+            max-height: 300px;
+            overflow: auto;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="lightning">⚡</div>
-  <h1>Status do Node Lightning</h1>
+    <h1>⚙️ Painel de Configurações do Node</h1>
 
-  <div class="section">
-    <h2>📊 Monitoramento em Tempo Real</h2>
-    <div id="cpu" class="status">CPU: <span>carregando...</span></div>
-    <div id="ram" class="status">RAM: <span>carregando...</span></div>
-    <div id="bitcoind" class="status">Bitcoind: <span>carregando...</span></div>
-    <div id="lnd" class="status">LND: <span>carregando...</span></div>
-    <div id="tor" class="status">Tor: <span>carregando...</span></div>
-    <div id="chain" class="status">Blockchain: <span>carregando...</span></div>
-    <div id="graph" class="status">Graph: <span>carregando...</span></div>
-    <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
-  </div>
+    <div class="section">
+        <h2>📊 Status do Sistema</h2>
+        <div id="cpu" class="status">CPU: ...</div>
+        <div id="ram" class="status">RAM: ...</div>
+        <div id="lnd" class="status">LND: ...</div>
+        <div id="bitcoind" class="status">Bitcoind: ...</div>
+        <div id="tor" class="status">Tor: ...</div>
+        <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
+    </div>
 
-  <a href="index.html" class="botao back">⬅️ Voltar</a>
+    <a href="index.html" class="back botao">⬅️ Voltar</a>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", atualizarStatus);
-
-    function atualizarStatus() {
-      fetch('/cgi-bin/status.sh')
-        .then(res => {
-          if (!res.ok) throw new Error('Erro ao obter status.');
-          return res.json();
-        })
-        .then(data => {
-          document.getElementById("cpu").innerHTML = "CPU: <span>" + data.cpu + "</span>";
-          document.getElementById("ram").innerHTML = "RAM: <span>" + data.ram + "</span>";
-          document.getElementById("bitcoind").innerHTML = "Bitcoind: <span>" + (data.bitcoind === "ativo" ? "🟢 ativo" : "🔴 inativo") + "</span>";
-          document.getElementById("lnd").innerHTML = "LND: <span>" + (data.lnd === "ativo" ? "🟢 ativo" : "🔴 inativo") + "</span>";
-          document.getElementById("tor").innerHTML = "Tor: <span>" + (data.tor === "ativo" ? "🟢 ativo" : "🔴 inativo") + "</span>";
-          document.getElementById("chain").innerHTML = "Blockchain: <span>" + (data.synced_to_chain === true ? "🟢 sincronizado" : "🔴 não sincronizado") + "</span>";
-          document.getElementById("graph").innerHTML = "Graph: <span>" + (data.synced_to_graph === true ? "🟢 sincronizado" : "🔴 não sincronizado") + "</span>";
-        })
-        .catch(error => {
-          console.error("Erro ao carregar status:", error);
-          alert("Erro ao carregar o status do node.");
-        });
-    }
-  </script>
+    <script>
+        function atualizarStatus() {
+            fetch('/cgi-bin/status.sh')
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Erro ao obter status do sistema.');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    document.getElementById("cpu").innerText = "CPU: " + data.cpu;
+                    document.getElementById("ram").innerText = "RAM: " + data.ram;
+                    document.getElementById("lnd").innerText = "LND: " + data.lnd;
+                    document.getElementById("bitcoind").innerText = "Bitcoind: " + data.bitcoind;
+                    document.getElementById("tor").innerText = "Tor: " + data.tor;
+                })
+                .catch(error => {
+                    alert("Erro ao atualizar status: " + error.message);
+                });
+        }
+    </script>
 
 </body>
 </html>
