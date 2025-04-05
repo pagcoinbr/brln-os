@@ -169,42 +169,6 @@
                 });
         }
 
-        function alternarBitcoind() {
-            const estaLigado = document.getElementById("toggle-bitcoind").checked;
-            const acao = estaLigado ? "ligar-bitcoind" : "desligar-bitcoind";
-
-            fetch('/cgi-bin/toogle_bitcoind.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ acao: acao })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.mensagem || "Ação concluída.");
-                })
-                .catch(error => {
-                    alert("Erro ao alternar Bitcoind: " + error.message);
-                });
-        }
-
-        function alternarLnd() {
-            const estaLigado = document.getElementById("toggle-lnd").checked;
-            const acao = estaLigado ? "ligar-lnd" : "desligar-lnd";
-
-            fetch('/cgi-bin/toogle_lnd.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ acao: acao })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.mensagem || "Ação concluída.");
-                })
-                .catch(error => {
-                    alert("Erro ao alternar LND: " + error.message);
-                });
-        }
-    </script>
-
+        
 </body>
 </html>
