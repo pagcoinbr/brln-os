@@ -158,8 +158,8 @@ Instalação Manual
 9 - Tailscale VPN
 0 - Sair
 ```
-
-> **Recomendado**: use a opção **1** para instalar tudo automaticamente. Apesar de ela não contemplar o Tailscale VPN e o LNbits, eles podem ser instalados à parte escolhendo a opção 8 e 9.
+[![Captura-de-tela-2025-04-05-022459.png](https://i.postimg.cc/rmPhz7fW/Captura-de-tela-2025-04-05-022459.png)](https://postimg.cc/Q9cgyYGx)
+Imagem
 
 ---
 
