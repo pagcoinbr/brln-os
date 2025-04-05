@@ -126,6 +126,9 @@ download_lnd() {
   tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+}
+
+configure_lnd() {
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
@@ -323,6 +326,7 @@ EOF'
   cat << EOF > /data/lnd/password.txt
   $password
 EOF
+  sudo systemctl daemon-reload
   sudo systemctl enable lnd
   sudo systemctl start lnd
   echo -e "${YELLOW}############################################################################################### ${NC}"
@@ -950,7 +954,9 @@ menu() {
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} Digite a senha do usuário admin caso solicitado.${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
-      download_lnd
+      download_lnd >> install.log 2>&1
+      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+      configure_lnd
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       install_bitcoind
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
