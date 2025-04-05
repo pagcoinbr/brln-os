@@ -879,13 +879,13 @@ submenu_opcoes() {
 
   case $suboption in
     1)
-      echo -e "${YELLOW}🏠🔁 Trocar para o bitcoin local...${NC}"
+      echo -e "${YELLOW}🏠 🔁 Trocar para o bitcoin local...${NC}"
       toogle_on
       echo -e "${GREEN}✅ Serviços reiniciados!${NC}"
       submenu_opcoes
       ;;
     2)
-      echo -e "${YELLOW}☁️🔁 Trocar para o bitcoin remoto...${NC}"
+      echo -e "${YELLOW}☁️ 🔁 Trocar para o bitcoin remoto...${NC}"
       toogle_off
       echo -e "${GREEN}✅ Atualização concluída!${NC}"
       submenu_opcoes
