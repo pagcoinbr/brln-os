@@ -182,7 +182,7 @@
 
         function alternarBitcoind() {
             const estaLigado = document.getElementById("toggle-bitcoind").checked;
-            const acao = estaLigado ? 'ligar-bitcoind' : 'desligar-bitcoind';
+            const acao = estaLigado ? 'enable_bitcoind.sh' : 'desligar-bitcoind';
 
             fetch('/cgi-bin/execute.sh', {
                 method: 'POST',
