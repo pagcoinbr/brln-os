@@ -960,14 +960,13 @@ menu() {
       echo -e "${YELLOW} Isso pode demorar um pouco...${NC}"
       configure_lnd >> install.log 2>&1
       create_lnd_service >> install.log 2>&1
-      for i in {120..1}; do
-          echo -ne "Aguardando $i segundos...\r"
-          sleep 1
-      done
-      echo -ne "\n"
-      create_wallet
       echo -e "${GREEN}✅ Se sua criação de carteira foi bem sucedida, você pode seguir para o próximo passo!${NC}"
       menu
+      ;;
+    3)
+      echo -e "${YELLOW}⚡ Iniciando a criação da carteira...${NC}"
+      sleep 5
+      create_wallet
       ;;
     3)
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
