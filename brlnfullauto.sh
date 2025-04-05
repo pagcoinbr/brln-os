@@ -606,15 +606,15 @@ if [[ -d $LNDG_DIR ]]; then
     echo "LNDG já está instalado."
     else
 sudo apt install -y python3-pip python3-venv
-sudo ufw allow 8889/tcp comment 'allow lndg SSL from anywhere'
+sudo ufw allow from 192.168.0.0/24 to any port 8889 proto tcp comment 'allow lndg from local network'
 cd
 git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
 sudo apt install -y virtualenv
 virtualenv -p python3 .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install whitenoise
-.venv/bin/python3 initialize.py --whitenoise
+.venv/bin/pip install -r requirements.txt >> ~/brlnfullauto/install.log 2>&1
+.venv/bin/pip install whitenoise >> ~/brlnfullauto/install.log 2>&1
+.venv/bin/python3 initialize.py --whitenoise >> ~/brlnfullauto/install.log 2>&1
 sudo tee /etc/systemd/system/lndg-controller.service > /dev/null <<EOF
 [Unit]
 Description=Controlador de backend para Lndg
