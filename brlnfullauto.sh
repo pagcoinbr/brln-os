@@ -869,9 +869,9 @@ toogle_off () {
 submenu_opcoes() {
   echo -e "${CYAN}🔧 Mais opções disponíveis:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- Reiniciar serviços lnd"
-  echo -e "   ${GREEN}2${NC}- Atualizar todos os pacotes do sistema"
-  echo -e "   ${GREEN}3${NC}- Ver status dos lnd"
+  echo -e "   ${GREEN}1${NC}- 🏠🔁 Trocar para o bitcoin local."
+  echo -e "   ${GREEN}2${NC}- ☁️🔁 Trocar para o bitcoin remoto."
+  echo -e "   ${GREEN}3${NC}- ⚡ Ver status dos lnd"
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
