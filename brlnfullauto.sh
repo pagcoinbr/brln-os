@@ -55,25 +55,15 @@ else
   echo "Bloco de configuração CGI já existe no Apache."
 fi
 
-# Permissões de sudo para www-data nos scripts permitidos
-if ! grep -q 'www-data ALL=(ALL) NOPASSWD' /etc/sudoers.d/www-data-scripts; then
-  echo "Adicionando permissões de sudo para www-data nos scripts..."
-  sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
-www-data ALL=(ALL) NOPASSWD: \\
-  /usr/lib/cgi-bin/toogle_bitcoind.sh, \\
-  /usr/lib/cgi-bin/toogle_lnd.sh, \\
-  /usr/lib/cgi-bin/update_lnd.sh, \\
-  /usr/lib/cgi-bin/update_lndg.sh, \\
-  /usr/lib/cgi-bin/update_thunderhub.sh, \\
-  /usr/lib/cgi-bin/update_lnbits.sh, \\
-  /usr/lib/cgi-bin/update_bitcoind.sh, \\
-  /usr/lib/cgi-bin/unistall.sh, \\
-  /usr/lib/cgi-bin/update_apt.sh
-EOF
-else
-  echo "Permissões de sudo já existem para www-data."
-fi
+# Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
+echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
+SCRIPT_LIST=$(find /usr/lib/cgi-bin/ -maxdepth 1 -type f -name "*.sh" | sort | paste -sd ", \\" -)
 
+sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
+EOF
+
+echo "Permissões atualizadas com sucesso!"
 
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
