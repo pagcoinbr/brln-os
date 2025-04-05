@@ -887,7 +887,7 @@ submenu_opcoes() {
       submenu_opcoes
       ;;
     3)
-      chmod +x ./brlnfullauto/html/cgi-bin/manutencao.sh
+      chmod +x home/admin/brlnfullauto/html/cgi-bin/manutencao.sh
       /home/admin/brlnfullauto/html/cgi-bin/manutencao.sh
       ;;
     0)
