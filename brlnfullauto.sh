@@ -333,13 +333,6 @@ create_wallet() {
   echo -e "${YELLOW}############################################################################################### ${NC}"
 
   read -p "Digite sua senha do lnd(Lghtning Daemon): " password
-  until [[ ${#password} -ge 8 ]]; do
-    read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
-    echo
-    if [[ ${#password} -lt 8 ]]; then
-      echo "A senha deve ter pelo menos 8 caracteres. Tente novamente."
-    fi
-  done
   
   sudo touch /data/lnd/password.txt
   sudo chown admin:admin /data/lnd/password.txt
