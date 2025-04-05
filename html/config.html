@@ -111,7 +111,7 @@
 </head>
 <body>
 
-    <h1>⚙️ Painel de Configurações do Node</h1>
+    <h1>⚙️ Painel de Informações do Node</h1>
 
     <div class="section">
         <h2>📊 Status do Sistema</h2>
@@ -122,21 +122,11 @@
         <div id="tor" class="status">Tor: ...</div>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
     </div>
-    <div class="section">
-        <h3>🪙 Bitcoind</h3>
-        <button class="botao" onclick="ligarBitcoind()">🟢 Ligar Bitcoind</button>
-        <button class="botao" onclick="desligarBitcoind()">🔴 Desligar Bitcoind</button>
-        
-        <h3>⚡ LND</h3>
-        <button class="botao" onclick="ligarLnd()">🟢 Ligar LND</button>
-        <button class="botao" onclick="desligarLnd()">🔴 Desligar LND</button>        
-    </div>
 
-    <div class="section">
-        <h2>🛠️ Scripts de Administração</h2>
-        <button class="botao" onclick="executarAcao('update-lnd')">🔄 Atualizar LND</button>
-        <button class="botao" onclick="executarAcao('update-bitcoind')">Atualizar Bitcoind</button>
-    </div>
+    <script>
+        // Chama a função de atualização de status assim que a página é carregada
+        document.addEventListener("DOMContentLoaded", atualizarStatus);
+    </script>
 
     <a href="index.html" class="back botao">⬅️ Voltar</a>
 
@@ -159,38 +149,8 @@
                     document.getElementById("toggle-bitcoind").checked = (data.bitcoind === "ativo");
                     document.getElementById("toggle-lnd").checked = (data.lnd === "ativo");
                 })
-                .catch(error => {
-                    alert("Erro ao atualizar status: " + error.message);
-                });
         }
 
-        function ligarBitcoind() {
-            fetch('/cgi-bin/ligar_bitcoind.sh')
-                .then(res => res.json())
-                .then(data => alert(data.mensagem))
-                .catch(err => alert("Erro ao ligar Bitcoind: " + err.message));
-        }
-
-        function desligarBitcoind() {
-            fetch('/cgi-bin/desligar_bitcoind.sh')
-                .then(res => res.json())
-                .then(data => alert(data.mensagem))
-                .catch(err => alert("Erro ao desligar Bitcoind: " + err.message));
-        }
-
-        function ligarLnd() {
-            fetch('/cgi-bin/ligar_lnd.sh')
-                .then(res => res.json())
-                .then(data => alert(data.mensagem))
-                .catch(err => alert("Erro ao ligar LND: " + err.message));
-        }
-
-        function desligarLnd() {
-            fetch('/cgi-bin/desligar_lnd.sh')
-                .then(res => res.json())
-                .then(data => alert(data.mensagem))
-                .catch(err => alert("Erro ao desligar LND: " + err.message));
-        }
     </script>
 </body>
 </html>

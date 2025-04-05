@@ -887,14 +887,8 @@ submenu_opcoes() {
       submenu_opcoes
       ;;
     3)
-      echo -e "${CYAN}📋 Status dos lnd${NC}"
-      systemctl status lnd --no-pager
-      submenu_opcoes
-      ;;
-    4)
-      echo -e "${CYAN}📋 Status do bitcoind${NC}"
-      systemctl status bitcoind --no-pager
-      submenu_opcoes
+      chmod +x ./brlnfullauto/html/cgi-bin/manutencao.sh
+      /home/admin/brlnfullauto/html/cgi-bin/manutencao.sh
       ;;
     0)
       menu
