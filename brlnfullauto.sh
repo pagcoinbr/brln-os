@@ -342,7 +342,7 @@ create_wallet() {
   echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node.${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
 
-  password=""
+  read -p "Digite sua senha do lnd(Lghtning Daemon): " password
   until [[ ${#password} -ge 8 ]]; do
     read -p "Por favor, escolha uma senha para a sua carteira Lightning (mínimo 8 caracteres): " password
     echo
@@ -354,13 +354,14 @@ create_wallet() {
   sudo touch /data/lnd/password.txt
   sudo chown admin:admin /data/lnd/password.txt
   sudo chmod 600 /data/lnd/password.txt
-  echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
-  
+  cat << EOF > /data/lnd/password.txt
+  $password
+EOF
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}Carteira criada com sucesso!${NC}"
   else
-    echo -e "${YELLOW}Caso tenha escolhido por fazer a instalação com o bitcoin core local, é normal receber a mensagem de erro: ${NC}"
+    echo -e "${YELLOW}Caso receba o erro abaixo, basta aguardar 1 minuto e executar novamente o passo número 3.${NC}"
     echo -e "${RED}[lncli] could not load global options: could not load TLS cert file: open /data/lnd/tls.cert.tmp: no such file or directory ${NC}"
   fi
 }
