@@ -61,6 +61,52 @@
             overflow: auto;
             font-size: 14px;
         }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+            top: 4px;
+            left: 4px;
+        }
+
+        input:checked + .slider {
+            background-color: #28a745;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
@@ -75,6 +121,19 @@
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
+    </div>
+
+    <div class="section">
+        <h2>🔄 Status dos Serviços do Node:</h2>
+        <h3>🪙 Bitcoind</h3>
+<label class="switch">
+  <input type="checkbox" id="toggle-bitcoind" onchange="alternarBitcoind()">
+  <span class="slider"></span>
+</label><h3>⚡ LND</h3>
+<label class="switch">
+  <input type="checkbox" id="toggle-bitcoind" onchange="alternarBitcoind()">
+  <span class="slider"></span>
+</label>
     </div>
 
     <div class="section">
@@ -106,51 +165,39 @@
                 });
         }
 
-        function verLog(servico) {
-            fetch('/cgi-bin/execute.sh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ acao: 'log-' + servico })
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("logAtualizacao").innerText = data.log || "Sem dados.";
-            })
-            .catch(error => {
-                document.getElementById("logAtualizacao").innerText = "Erro ao carregar log: " + error.message;
-            });
-        }
-
         function executarAcao(acao) {
             fetch('/cgi-bin/execute.sh', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ acao: acao })
             })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("logAtualizacao").innerText = data.log || "Sem resposta.";
-            })
-            .catch(error => {
-                document.getElementById("logAtualizacao").innerText = "Erro: " + error.message;
-            });
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("logAtualizacao").innerText = data.log || "Sem resposta.";
+                })
+                .catch(error => {
+                    document.getElementById("logAtualizacao").innerText = "Erro: " + error.message;
+                });
         }
 
-        function alternarBitcoin() {
+        function alternarBitcoind() {
+            const estaLigado = document.getElementById("toggle-bitcoind").checked;
+            const acao = estaLigado ? 'ligar-bitcoind' : 'desligar-bitcoind';
+
             fetch('/cgi-bin/execute.sh', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ acao: 'toggle-bitcoin' })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ acao: acao })
             })
-            .then(res => res.json())
-            .then(data => {
-                const modo = data.modo || "desconhecido";
-                document.getElementById("modoBitcoin").innerText = "Modo atual: Bitcoin " + modo;
-            })
-            .catch(error => {
-                document.getElementById("modoBitcoin").innerText = "Erro ao alternar modo: " + error.message;
-            });
+                .then(res => res.json())
+                .then(data => {
+                    alert(`Bitcoind foi ${estaLigado ? "ligado" : "desligado"} com sucesso.`);
+                })
+                .catch(error => {
+                    alert("Erro ao alternar Bitcoind: " + error.message);
+                });
         }
+    </script>
     </script>
 
 </body>
