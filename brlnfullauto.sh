@@ -350,9 +350,10 @@ create_wallet() {
     fi
   done
 
-  touch $LN_DDIR/password.txt
-  chmod 600 $LN_DDIR/password.txt
-  echo "$password" > $LN_DDIR/password.txt
+  touch /data/lnd/password.txt
+  sudo chown admin:admin /data/lnd/password.txt
+  chmod 600 data/lnd/password.txt
+  echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   if [ $? -eq 0 ]; then
