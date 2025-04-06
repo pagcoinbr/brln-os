@@ -147,13 +147,16 @@ Você verá um menu com as seguintes opções:
 🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟
 
 ⚡ Este Sript Instalará um Node Lightning Standalone
-  🛠️ 
+  🛠️ Bem vindo ao seu novo banco, ele é BRASILEIRO. 
 
 📝 Escolha uma opção:
 
-   1- Instalar Pre-requisitos (Obrigatório para as opções 2-8)
-   2- Instalar Bitcoin + Lightning Daemon/LND
-   3- Criar carteira LND
+   1- Instalar Tor + nodejs + firewall
+   2- Instalar LND & criar carteira
+   3- Instalar Bitcoin Core
+
+3- Estas são as opções de instalação de aplicativos de administração:
+
    4- Instalar Balance of Satoshis (Exige LND)
    5- Instalar Thunderhub (Exige LND)
    6- Instalar Lndg (Exige LND)
@@ -162,10 +165,10 @@ Você verá um menu com as seguintes opções:
    9- Mais opções
    0- Sair
 
-👉 Digite sua escolha: 
+👉 Digite sua escolha:
 ```
 [![Captura-de-tela-2025-04-05-022459.png](https://i.postimg.cc/rmPhz7fW/Captura-de-tela-2025-04-05-022459.png)](https://postimg.cc/Q9cgyYGx)
-Imagem
+Imagem da criação da carteira no passo 2 do script.
 
 ---
 
