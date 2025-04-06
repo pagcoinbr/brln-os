@@ -346,6 +346,7 @@ else
   echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW} Você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
   echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher '9- Mais Opções' no menu principal, depois escolha a opção '1- 🏠🔁 Trocar para o bitcoin local'. ${NC}"
   echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd.${NC}"
+fi
 }
 
 install_bitcoind() {
