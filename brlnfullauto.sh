@@ -1084,8 +1084,8 @@ menu_manutencao
 submenu_opcoes() {
   echo -e "${CYAN}🔧 Mais opções disponíveis:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- 🏠🔁 Trocar para o bitcoin local."
-  echo -e "   ${GREEN}2${NC}- ☁️🔁 Trocar para o bitcoin remoto."
+  echo -e "   ${GREEN}1${NC}- 🏠 Trocar para o bitcoin local."
+  echo -e "   ${GREEN}2${NC}- ☁️ Trocar para o bitcoin remoto."
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
