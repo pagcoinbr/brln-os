@@ -1118,6 +1118,7 @@ submenu_opcoes() {
   echo -e "   ${GREEN}1${NC}- 🏠 Trocar para o bitcoin local."
   echo -e "   ${GREEN}2${NC}- ☁️ Trocar para o bitcoin remoto."
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
+  echo -e "   ${GREEN}4${NC}- 🚀 Instalar Simple LNWallet."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
