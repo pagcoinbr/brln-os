@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" href="logopreto.png" />
-  <title>BRLN Open Bank</title>
-  <header></header>
-  <main>
-    <a href="LNDG"></a>
-  </main>
-  <footer></footer>
   <style>
     body {
       background-image: url('sky.png');
@@ -81,28 +71,35 @@
     }
   </style>
 </head>
-<body>
-
-  <img src="BRLNlogo.png" alt="BRLN logo" />
-  <div class="container" id="botoes">
-    <a onclick="abrirApp(8889)" class="botao" target="_blank" rel="noopener noreferrer">LNDG</a>
-    <a onclick="abrirApp(3000)" class="botao" target="_blank" rel="noopener noreferrer">Thunderhub</a>
-    <a onclick="abrirApp(5000)" class="botao" target="_blank" rel="noopener noreferrer">LNbits</a>
-    <a href="https://amboss.space" class="botao" target="_blank" rel="noopener noreferrer">AMBOSS</a>
-    <a href="https://mempool.space" class="botao" target="_blank" rel="noopener noreferrer">Mempool</a>
-    <a href="config.html" class="botao" target="_blank" rel="noopener noreferrer">⚙️ Configurações</a>
-  </div>
-
-  <div class="footer-links">
-    <a href="https://services.br-ln.com" target="_blank" rel="noopener noreferrer">Click here to acess BR⚡LN website. Join us today! </a>
-  </div>
-
-  <script>
-    function abrirApp(porta) {
-      const ip = window.location.hostname;
-      window.open(`http://${ip}:${porta}`, '_blank');
-    }
-  </script>
-
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="logopreto.png" />
+  <title>BRLN Open Bank</title>
+  <header></header>
+  <main>
+    <body>
+      <img src="BRLNlogo.png" alt="BRLN logo" />
+      <div class="container" id="botoes">
+        <a onclick="abrirApp(8889)" class="botao" target="_blank" rel="noopener noreferrer">LNDG</a>
+        <a onclick="abrirApp(3000)" class="botao" target="_blank" rel="noopener noreferrer">Thunderhub</a>
+        <a onclick="abrirApp(5000)" class="botao" target="_blank" rel="noopener noreferrer">LNbits</a>
+        <a href="https://amboss.space" class="botao" target="_blank" rel="noopener noreferrer">AMBOSS</a>
+        <a href="https://mempool.space" class="botao" target="_blank" rel="noopener noreferrer">Mempool</a>
+        <a href="config.html" class="botao" target="_blank" rel="noopener noreferrer">⚙️ Configurações</a>
+      </div>
+    
+      <script>
+        function abrirApp(porta) {
+          const ip = window.location.hostname;
+          window.open(`http://${ip}:${porta}`, '_blank');
+        }
+      </script>
+  </main>
+  <footer>
+    <div class="footer-links">
+      <a href="https://services.br-ln.com" target="_blank" rel="noopener noreferrer">Click here to acess BR⚡LN website. Join us today! </a>
+    </div>
+  </footer>
 </body>
 </html>
