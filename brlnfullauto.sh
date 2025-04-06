@@ -1086,7 +1086,7 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet >> install.log 2>&1
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
@@ -1138,6 +1138,12 @@ submenu_opcoes() {
       ;;
     3)
       manutencao_script
+      ;;
+    4)
+      echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
+      simple_lnwallet
+      echo -e "${GREEN}✅ Simple LNWallet instalado com sucesso!${NC}"
+      submenu_opcoes
       ;;
     0)
       menu
