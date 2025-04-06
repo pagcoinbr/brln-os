@@ -84,7 +84,7 @@
         <a onclick="abrirApp(8889)" class="botao" target="_blank" rel="noopener noreferrer">LNDG</a>
         <a onclick="abrirApp(3000)" class="botao" target="_blank" rel="noopener noreferrer">Thunderhub</a>
         <a onclick="abrirApp(5000)" class="botao" target="_blank" rel="noopener noreferrer">LNbits</a>
-        <a onclick="abrirSimpleWallet()" class="botao" target="_blank" rel="noopener noreferrer">Simple Wallet</a>
+        <a onclick="abrirApp(35671)" class="botao" target="_blank" rel="noopener noreferrer"></a>
         <a href="https://amboss.space" class="botao" target="_blank" rel="noopener noreferrer">AMBOSS</a>
         <a href="https://mempool.space" class="botao" target="_blank" rel="noopener noreferrer">Mempool</a>
         <a href="config.html" class="botao" target="_blank" rel="noopener noreferrer">⚙️ Configurações</a>
@@ -95,23 +95,7 @@
           const ip = window.location.hostname;
           window.open(`http://${ip}:${porta}`, '_blank');
         }
-        function abrirSimpleWallet() {
-          fetch('simple-lnwallet-portas.txt')
-            .then(response => {
-              if (!response.ok) {
-          throw new Error('Erro ao carregar o arquivo');
-              }
-              return response.text();
-            })
-            .then(data => {
-              const porta = data.trim(); // Remove espaços em branco
-              const ip = window.location.hostname;
-              window.open(`http://${ip}:${porta}`, '_blank');
-            })
-            .catch(error => {
-              console.error('Erro:', error);
-            });
-        }
+        
       </script>
   </main>
   <footer>
