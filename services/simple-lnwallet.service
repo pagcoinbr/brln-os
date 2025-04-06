@@ -4,10 +4,11 @@ After=network.target
 
 [Service]
 User=admin
-WorkingDirectory=/home/admin/simple-wallet
-ExecStart=/home/admin/simple-wallet/simple-lnwallet
+WorkingDirectory=/home/admin/brlnfullauto
+ExecStart=/home/admin/brlnfullauto/simple-lnwallet
 Restart=on-failure
-Environment="PATH=/usr/bin:/bin"
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 [Install]
 WantedBy=multi-user.target
+
