@@ -349,7 +349,8 @@ else
   read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
   if [[ $sync_choice == "yes" ]]; then
     echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
-      ln -s "$LN_DDIR" /home/admin/.lnd
+  toogle_on
+  ln -s "$LN_DDIR" /home/admin/.lnd >> ~/brlnfullauto/install.log 2>&1
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
