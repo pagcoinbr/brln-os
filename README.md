@@ -167,7 +167,59 @@ Você verá um menu com as seguintes opções:
 
 👉 Digite sua escolha:
 ```
-[![Captura-de-tela-2025-04-05-022459.png](https://i.postimg.cc/rmPhz7fW/Captura-de-tela-2025-04-05-022459.png)](https://postimg.cc/Q9cgyYGx)
+Como é o processo de criação das 24 palavras?
+O processo é feito usando o próprio criador integrado com o lnd. Abaixo você pode ver como o processo se passa durante o passo 2 do lnd, usando um bitcoin remoto da BRLN para a primeira conexão, enquanto seu bitcoin core ainda está sincronizando.
+```bash
+################################################################
+ A seguir você será solicitado a adicionar suas credenciais do 
+ bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.
+ Caso você não seja membro, escolha a opção não e prossiga.
+################################################################
+
+Você deseja utilizar o bitcoind da BRLN? (yes/no): yes
+ Você escolheu usar o bitcoind remoto da BRLN! 
+Digite o bitcoind.rpcuser(BRLN): meu_user_BRLN
+Digite o bitcoind.rpcpass(BRLN): minha_senha_BRLN
+############################################################################################### 
+Agora Você irá criar sua FRASE DE 24 PALAVRAS, digite a senha de desbloqueio do lnd, depois repita mais 2x para registra-la no lnd e pressione 'n' para criar uma nova carteira. 
+apenas pressione ENTER quando questionado se quer adicionar uma senha a sua frase de 24 palavras.
+AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! Esta frase não pode ser recuperada no futuro se não for anotada agora. 
+Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!
+############################################################################################### 
+Digite sua senha de desbloqueio automático do lnd: 97629073
+Created symlink /etc/systemd/system/multi-user.target.wants/lnd.service → /etc/systemd/system/lnd.service.
+Input wallet password: 
+Confirm password: 
+Passwords don't match, please try again
+
+Input wallet password: 
+Confirm password: 
+
+Do you have an existing cipher seed mnemonic or extended master root key you want to use?
+Enter 'y' to use an existing cipher seed mnemonic, 'x' to use an extended master root key 
+or 'n' to create a new seed (Enter y/x/n): n
+
+Your cipher seed can optionally be encrypted.
+Input your passphrase if you wish to encrypt it (or press enter to proceed without a cipher seed passphrase): 
+
+Generating fresh cipher seed...
+
+!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
+
+---------------BEGIN LND CIPHER SEED---------------
+ 1. abstract   2. gold      3. wrong     4. salute 
+ 5. region     6. letter    7. leg       8. supreme
+ 9. guilt     10. witness  11. flock    12. ridge  
+13. orient    14. car      15. swarm    16. traffic
+17. correct   18. tower    19. refuse   20. reward 
+21. crane     22. cup      23. disease  24. hard   
+---------------END LND CIPHER SEED-----------------
+
+!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!
+
+lnd successfully initialized!
+```
+
 Imagem da criação da carteira no passo 2 do script.
 
 ---
