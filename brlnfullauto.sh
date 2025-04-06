@@ -317,7 +317,13 @@ EOF'
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
 
-    read -p "Digite sua senha do lnd(Lghtning Daemon): " password
+  echo -e "${YELLOW}############################################################################################### ${NC}"
+  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW}, digite a senha de desbloqueio do lnd, depois repita mais 2x para registra-la no lnd e pressione 'n' para criar uma nova carteira. ${NC}" 
+  echo -e "${YELLOW}apenas pressione ${RED}ENTER${YELLOW} quando questionado se quer adicionar uma senha a sua frase de 24 palavras.${NC}" 
+  echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
+  echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
+  echo -e "${YELLOW}############################################################################################### ${NC}"
+  read -p "Digite sua senha do lnd(Lghtning Daemon): " password
   
   sudo touch /data/lnd/password.txt
   sudo chown admin:admin /data/lnd/password.txt
@@ -328,14 +334,6 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl enable lnd
   sudo systemctl start lnd
-  echo -e "${YELLOW}############################################################################################### ${NC}"
-  echo -e "${YELLOW}Agora Você irá criar sua senha, digite a senha 3x para confirmar e pressione 'n' para criar uma nova carteira ${NC}"
-  echo -e "${YELLOW}ou 'y' para recuperar uma carteira antiga com 24 palavras, pressione ${RED}ENTER${NC}${YELLOW} ao ser perguntado se ${NC}" 
-  echo -e "${YELLOW}quer adicionar sua frase de 24 palavras com uma senha e pressione ${RED}ENTER${NC}${YELLOW} para criar uma nova carteira.${NC}" 
-  echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${NC}" 
-  echo -e "${RED}Esta frase não pode ser recuperada se não for anotada agora. ${NC}" 
-  echo -e "${RED}Caso contrário, você pode perder seus fundos depositados neste node.${NC}"
-  echo -e "${YELLOW}############################################################################################### ${NC}"
 if [ -f /data/lnd/password.txt ]; then
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
 else
@@ -1128,7 +1126,6 @@ menu() {
     2)
       echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
@@ -1138,6 +1135,7 @@ menu() {
       ;;
     3)
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
+      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
       install_bitcoind >> install.log 2>&1
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
