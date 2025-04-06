@@ -1105,7 +1105,21 @@ simple_lnwallet () {
   echo
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
   echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
-  sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+  if [[ -f ~/brlnfullauto/services/simple-lnwallet.service ]]; then
+    echo "O serviço simple-lnwallet já existe."
+    echo "Voce deseja sobrescrever o serviço? (yes/no)"
+    read -r lnsimplewallet_service_response
+    if [[ "$lnsimplewallet_service_response" == "yes" ]]; then
+      sudo rm -f /etc/systemd/system/simple-lnwallet.service
+      sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+    else
+      echo "O serviço simple-lnwallet não foi sobrescrito."
+    fi
+  else
+    echo "O serviço simple-lnwallet não foi encontrado. Criando..."
+    sudo rm -f /etc/systemd/system/simple-lnwallet.service
+    sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+  fi
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
