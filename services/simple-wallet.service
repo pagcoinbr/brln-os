@@ -1,0 +1,13 @@
+[Unit]
+Description=Simple LN Wallet Service
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin/simple-wallet
+ExecStart=/home/admin/simple-wallet/simple-lnwallet
+Restart=on-failure
+Environment="PATH=/usr/bin:/bin"
+
+[Install]
+WantedBy=multi-user.target

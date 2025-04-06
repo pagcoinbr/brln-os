@@ -1081,6 +1081,37 @@ bitcoin-cli --version
 menu_manutencao
 }	
 
+simple_lnwallet () {
+  if [[ -f ./simple-lnwallet ]]; then
+    echo "O binário simple-lnwallet já existe."
+  else
+    echo "O binário simple-lnwallet não foi encontrado. Baixando..."
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
+    chmod +x simple-lnwallet
+    sudo apt install xxd -y
+  fi
+  echo
+  echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
+  xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
+  cat ~/brlnfullauto/macaroon.hex
+  rm -f ~/brlnfullauto/macaroon.hex
+  echo
+  echo
+  echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
+  xxd -p ~/.lnd/tls.cert | tr -d '\n' > ~/brlnfullauto/tls.hex
+  cat ~/brlnfullauto/tls.hex
+  rm -f ~/brlnfullauto/tls.hex
+  echo
+  echo
+  echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
+  echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
+  sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+  sudo systemctl daemon-reexec
+  sudo systemctl daemon-reload
+  sudo systemctl enable simple-lnwallet
+  sudo systemctl start simple-lnwallet
+}
+
 submenu_opcoes() {
   echo -e "${CYAN}🔧 Mais opções disponíveis:${NC}"
   echo
