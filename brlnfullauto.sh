@@ -1104,13 +1104,6 @@ simple_lnwallet () {
   echo
   echo
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
-  # Extrair a porta do comando systemctl status e exibir para o usuário
-  PORT=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
-  if [[ -n "$PORT" ]]; then
-    echo -e "${YELLOW}🚀 O Simple LN Wallet está rodando na porta:${NC} ${GREEN}$PORT${NC}"
-  else
-    echo -e "${RED}❌ Não foi possível determinar a porta do Simple LN Wallet.${NC}"
-  fi
   echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
   if [[ -f ~/brlnfullauto/services/simple-lnwallet.service ]]; then
     echo "O serviço simple-lnwallet já existe."
@@ -1136,6 +1129,13 @@ simple_lnwallet () {
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
+    # Extrair a porta do comando systemctl status e exibir para o usuário
+  PORT=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
+  if [[ -n "$PORT" ]]; then
+    echo -e "${YELLOW}🚀 O Simple LN Wallet está rodando na porta:${NC} ${GREEN}$PORT${NC}"
+  else
+    echo -e "${RED}❌ Não foi possível determinar a porta do Simple LN Wallet.${NC}"
+  fi
 }
 
 submenu_opcoes() {
