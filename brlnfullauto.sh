@@ -344,8 +344,40 @@ fi
 else
   echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW} Você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
-  echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher '9- Mais Opções' no menu principal, depois escolha a opção '1- 🏠🔁 Trocar para o bitcoin local'. ${NC}"
-  echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd.${NC}"
+  echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
+  echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
+  read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
+  if [[ $sync_choice == "yes" ]]; then
+    echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
+      ln -s "$LN_DDIR" /home/admin/.lnd
+  sudo chmod -R g+X $LN_DDIR
+  sudo chmod 640 /run/tor/control.authcookie
+  sudo chmod 750 /run/tor
+
+  echo -e "${YELLOW}############################################################################################### ${NC}"
+  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW}, digite a senha de desbloqueio do lnd, depois repita mais 2x para registra-la no lnd e pressione 'n' para criar uma nova carteira. ${NC}" 
+  echo -e "${YELLOW}apenas pressione ${RED}ENTER${YELLOW} quando questionado se quer adicionar uma senha a sua frase de 24 palavras.${NC}" 
+  echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
+  echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
+  echo -e "${YELLOW}############################################################################################### ${NC}"
+  read -p "Digite sua senha do lnd(Lghtning Daemon): " password
+  
+  sudo touch /data/lnd/password.txt
+  sudo chown admin:admin /data/lnd/password.txt
+  sudo chmod 600 /data/lnd/password.txt
+  cat << EOF > /data/lnd/password.txt
+  $password
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl enable lnd
+  sudo systemctl start lnd
+if [ -f /data/lnd/password.txt ]; then
+  lncli --tlscertpath /data/lnd/tls.cert.tmp create
+else
+  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
+  exit 1
+fi
+fi
 fi
 }
 
