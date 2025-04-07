@@ -347,9 +347,9 @@ EOF
 
 install_bitcoind() {
   if [[ $arch == "x86_64" ]]; then
-    arch_btc="x86_64"
-   else
     arch_btc="aarch64"
+   else
+    arch_btc="x86_64"
   fi
     cd /tmp
     wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
