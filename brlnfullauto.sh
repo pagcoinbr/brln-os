@@ -9,7 +9,7 @@ LN_DDIR=/data/lnd
 LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 USER=admin
-LND_CONF="/home/admin/.lnd/lnd.conf"
+LND_CONF="/data/lnd/lnd.conf"
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
@@ -643,7 +643,6 @@ toogle_bitcoin () {
 }
 
 toogle_on () {
-  local LND_CONF="/home/admin/.lnd/lnd.conf"
   local FILES_TO_DELETE=(
     "/home/admin/.lnd/tls.cert"
     "/home/admin/.lnd/tls.key"
@@ -671,7 +670,6 @@ toogle_on () {
 }
 
 toogle_off () {
-  local LND_CONF="/home/admin/.lnd/lnd.conf"
   local FILES_TO_DELETE=(
     "/home/admin/.lnd/tls.cert"
     "/home/admin/.lnd/tls.key"
