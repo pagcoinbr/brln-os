@@ -354,7 +354,7 @@ install_bitcoind() {
     sha256sum --ignore-missing --check SHA256SUMS
     curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
     gpg --verify SHA256SUMS.asc
-    tar -xzvf bitcoin-$BTC_VERSION-$arch_btc.tar.gz
+    tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
     sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
     sudo mkdir -p /data/bitcoin
     sudo chown admin:admin /data/bitcoin
