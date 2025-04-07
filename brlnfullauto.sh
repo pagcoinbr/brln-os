@@ -3,7 +3,6 @@
 # Define as variáveis da URL do repositório do Tor
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
-# Define a variável de versão do LND
 LND_VERSION=0.18.3
 MAIN_DIR=/data
 LN_DDIR=/data/lnd
@@ -15,6 +14,7 @@ APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
+LND_SERVICE="~/brlnfullauto/services/lnd.service"
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
@@ -275,66 +275,9 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-  sudo bash -c 'cat << EOF > /etc/systemd/system/lnd.service
-# MiniBolt: systemd unit for lnd
-# /etc/systemd/system/lnd.service
-
-[Unit]
-Description=Lightning Network Daemon
-
-[Service]
-ExecStart=/usr/local/bin/lnd
-ExecStop=/usr/local/bin/lncli stop
-
-# Process management
-####################
-Restart=on-failure
-RestartSec=60
-Type=notify
-TimeoutStartSec=1200
-TimeoutStopSec=3600
-
-# Directory creation and permissions
-####################################
-RuntimeDirectory=lightningd
-RuntimeDirectoryMode=0710
-User=admin
-Group=admin
-
-# Hardening Measures
-####################
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-MemoryDenyWriteExecute=true
-
-[Install]
-WantedBy=multi-user.target
-EOF'
+  sudo mv $LND_SERVICE /etc/systemd/system/lnd.service
 if [[ $use_brlnd == "yes" ]]; then
-  ln -s "$LN_DDIR" /home/admin/.lnd
-  sudo chmod -R g+X $LN_DDIR
-  sudo chmod 640 /run/tor/control.authcookie
-  sudo chmod 750 /run/tor
-
-  echo -e "${YELLOW}############################################################################################### ${NC}"
-  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW}, digite a senha de desbloqueio do lnd, depois repita mais 2x para registra-la no lnd e pressione 'n' para criar uma nova carteira. ${NC}" 
-  echo -e "${YELLOW}apenas pressione ${RED}ENTER${YELLOW} quando questionado se quer adicionar uma senha a sua frase de 24 palavras.${NC}" 
-  echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
-  echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
-  echo -e "${YELLOW}############################################################################################### ${NC}"
-  read -p "Digite sua senha do lnd(Lghtning Daemon): " password
-  
-  sudo touch /data/lnd/password.txt
-  sudo chown admin:admin /data/lnd/password.txt
-  sudo chmod 600 /data/lnd/password.txt
-  cat << EOF > /data/lnd/password.txt
-  $password
-EOF
-  sudo systemctl daemon-reload
-  sudo systemctl enable lnd
-  sudo systemctl start lnd
+  create_wallet
 if [ -f /data/lnd/password.txt ]; then
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
 else
@@ -348,13 +291,24 @@ else
   echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
   read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
   if [[ $sync_choice == "yes" ]]; then
-    echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
+  echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
   toogle_on >> ~/brlnfullauto/install.log 2>&1
-  ln -s "$LN_DDIR" /home/admin/.lnd >> ~/brlnfullauto/install.log 2>&1
+  create_wallet
+if [ -f /data/lnd/password.txt ]; then
+  lncli --tlscertpath /data/lnd/tls.cert.tmp create
+else
+  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
+  exit 1
+fi
+fi
+fi
+}
+
+create_wallet () {
+  ln -s "$LN_DDIR" /home/admin/.lnd
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-
   echo -e "${YELLOW}############################################################################################### ${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW}, digite a senha de desbloqueio do lnd, depois repita mais 2x para registra-la no lnd e pressione 'n' para criar uma nova carteira. ${NC}" 
   echo -e "${YELLOW}apenas pressione ${RED}ENTER${YELLOW} quando questionado se quer adicionar uma senha a sua frase de 24 palavras.${NC}" 
@@ -372,14 +326,6 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl enable lnd
   sudo systemctl start lnd
-if [ -f /data/lnd/password.txt ]; then
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-else
-  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
-  exit 1
-fi
-fi
-fi
 }
 
 install_bitcoind() {
@@ -1131,8 +1077,8 @@ simple_lnwallet () {
   sudo systemctl start simple-lnwallet
     # Extrair a porta do comando systemctl status e exibir para o usuário
   PORT=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
-  touch ~/brlnfullauto/html/simple-lnwallet_porta.txt
-  echo $PORT >> ~/brlnfullauto/html/simple-lnwallet_porta.txt
+  touch ~/brlnfullauto/html/simple-lnwallet-porta.txt
+  echo $PORT >> ~/brlnfullauto/html/simple-lnwallet-porta.txt
   if [[ -n "$PORT" ]]; then
     echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
     echo -e "${YELLOW} http://<IP_DO_TAILSCALE>:<PORTA>${NC}"
