@@ -126,13 +126,12 @@ sudo userdel -rf temp
 
 ### 4. 📦 Instale o BR⚡LN Bolt
 
-Clone o projeto:
+Clone o projeto, copie e cole todos os comandos juntos:
 
 ```bash
 git clone https://github.com/pagcoinbr/brlnfullauto.git
-```
-```bash
 cd brlnfullauto
+git checkout V0.7.2-beta
 chmod +x brlnfullauto.sh
 ./brlnfullauto.sh
 ```
