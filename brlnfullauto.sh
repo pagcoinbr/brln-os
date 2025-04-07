@@ -1171,6 +1171,8 @@ menu() {
   echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
   echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
+  echo 
+  echo -e "${YELLOW} v0.7 beta${NC}"
   echo
   read -p "👉 Digite sua escolha: " option
 
