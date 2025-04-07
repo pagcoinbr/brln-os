@@ -366,7 +366,7 @@ install_bitcoind() {
     cd /home/admin/.bitcoin
     wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
     python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth
-    cat << EOF > /home/admin/.bitcoin/bitcoin.conf
+    cat << EOF > /data/bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
 # /data/bitcoin/bitcoin.conf
 
