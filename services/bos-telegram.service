@@ -1,0 +1,20 @@
+# Systemd unit for Bos-Telegram Bot
+# /etc/systemd/system/bos-telegram.service
+
+[Unit]
+Description=bos-telegram
+Wants=lnd.service
+After=lnd.service
+
+[Service]
+ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect <seu_connect_code_aqui>
+User=admin
+Restart=aways
+TimeoutSec=300
+RestartSec=240
+StandardOutput=null
+StandardError=journal
+Environment=BOS_DEFAULT_LND_PATH=/data/lnd
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,27 @@
+# MiniBolt: systemd unit for Thunderhub
+# /etc/systemd/system/thunderhub.service
+
+[Unit]
+Description=ThunderHub
+Requires=lnd.service
+After=lnd.service
+
+[Service]
+WorkingDirectory=/home/admin/thunderhub
+ExecStart=/usr/bin/npm run start
+
+User=admin
+
+# Process management
+####################
+TimeoutSec=300
+
+# Hardening Measures
+####################
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target
