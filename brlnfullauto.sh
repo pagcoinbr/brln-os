@@ -1206,6 +1206,7 @@ menu() {
       download_lnd >> install.log 2>&1
       clear
       configure_lnd
+      menu
       ;;
     3)
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
@@ -1282,5 +1283,6 @@ menu() {
       ;;
     esac
   }
-
+  
+ip_finder >> install.log 2>&1
 menu
