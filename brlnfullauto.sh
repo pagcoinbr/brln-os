@@ -4,6 +4,7 @@ USER=admin
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
+BTC_VERSION=28.1
 MAIN_DIR=/data
 LN_DDIR=/data/lnd
 LNDG_DIR=/home/$USER/lndg
@@ -129,7 +130,12 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 }
 
 download_lnd() {
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+  if [[ $arch == "x86_64" ]]; then
+    arch_lnd="amd64"
+   else
+    arch_lnd="arm64"
+  fi
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
@@ -141,9 +147,9 @@ download_lnd() {
     echo "####################################################################################### WARNING: GPG SIGNATURE NOT VERIFIED.##################################################################################################################################################"
     exit 1
   fi
-  tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
-  sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+  tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
+  sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
 }
 
 configure_lnd() {
@@ -348,17 +354,20 @@ EOF
 }
 
 install_bitcoind() {
+  if [[ $arch == "x86_64" ]]; then
+    arch_btc="x86_64"
+   else
+    arch_btc="aarch64"
+  fi
     cd /tmp
-    VERSION=28.0
-    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
-    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
+    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
+    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
     sha256sum --ignore-missing --check SHA256SUMS
     curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
     gpg --verify SHA256SUMS.asc
-    tar -xzvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
-    sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
+    tar -xzvf bitcoin-$BTC_VERSION-$arch_btc.tar.gz
+    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
     sudo mkdir -p /data/bitcoin
     sudo chown admin:admin /data/bitcoin
     ln -s /data/bitcoin /home/admin/.bitcoin
