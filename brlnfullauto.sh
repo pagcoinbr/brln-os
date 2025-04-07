@@ -1,16 +1,16 @@
 #!/bin/bash
 SCRIPT_VERSION=v0.7.2-beta
+USER=admin
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
 MAIN_DIR=/data
 LN_DDIR=/data/lnd
-LNDG_DIR=/home/admin/lndg
+LNDG_DIR=/home/$USER/lndg
 VERSION_THUB=0.13.31
-USER=admin
 LND_CONF="/data/lnd/lnd.conf"
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-HTML_SRC=~/brlnfullauto/html
+HTML_SRC=/home/$USER/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/$USER/brlnfullauto/services"
@@ -24,6 +24,18 @@ BLUE='\033[1;34m'
 MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
+
+system_detector () {
+  arch=$(uname -m)
+
+if [[ "$arch" == "x86_64" ]]; then
+  arc="amd64"
+elif [[ "$arch" == "aarch64" || "$arch" == arm* ]]; then
+  arc="arm"
+else
+  arc="unknown"
+fi
+}
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
@@ -995,6 +1007,7 @@ menu() {
   echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
   echo
   echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"
+  echo -e "${YELLOW} Arquitetura:${RED} $arch ${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
