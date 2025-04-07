@@ -1050,7 +1050,7 @@ menu() {
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
       download_lnd
-      clear
+      #clear
       configure_lnd
       menu
       ;;
