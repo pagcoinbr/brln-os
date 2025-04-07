@@ -26,10 +26,6 @@ MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
-system_detector () {
-  arch=$(uname -m)
-}
-
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
 sudo apt update && sudo apt full-upgrade -y
@@ -84,7 +80,7 @@ fi
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
   echo "Abrindo a porta 80 no UFW..."
-  sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
+  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network'
 else
   echo "A porta 80 já está aberta no UFW."
 fi
@@ -490,7 +486,7 @@ if [[ -d ~/thunderhub ]]; then
   git verify-commit v$VERSION_THUB
   npm install
   npm run build
-sudo ufw allow from 192.168.0.0/24 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
+sudo ufw allow from 192.168.0.0/23 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
 cp /home/$USER/thunderhub/.env /home/$USER/thunderhub/.env.local
 sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/$USER/thunderhub/.env.local
 bash -c "cat <<EOF > thubConfig.yaml
@@ -513,7 +509,7 @@ if [[ -d $LNDG_DIR ]]; then
     echo "LNDG já está instalado."
     else
 sudo apt install -y python3-pip python3-venv
-sudo ufw allow from 192.168.0.0/24 to any port 8889 proto tcp comment 'allow lndg from local network'
+sudo ufw allow from 192.168.0.0/23 to any port 8889 proto tcp comment 'allow lndg from local network'
 cd
 git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
@@ -570,7 +566,7 @@ EOF
 chmod +x "/home/$USER/start-lnbits.sh"
 
 # Configurações do lnbits no ufw
-sudo ufw allow from 192.168.0.0/24 to any port 5000 proto tcp comment 'allow LNbits from local network'
+sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
 
 # Configura systemd
 sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
@@ -1008,6 +1004,7 @@ menu() {
   echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
   echo
   echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"
+  echo -e "${YELLOW} Sua arquitetura é:${RED} $arch${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
@@ -1139,5 +1136,6 @@ menu() {
     esac
   }
 
+arch=$(uname -m)
 ip_finder >> install.log 2>&1
 menu
