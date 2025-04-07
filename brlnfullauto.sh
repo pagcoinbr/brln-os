@@ -1162,7 +1162,7 @@ menu() {
   echo -e "   ${GREEN}2${NC}- Instalar LND & Criar Carteira"
   echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core"
   echo
-  echo -e "${YELLOW}3${NC}- Estas São as Opções de Instalação de Aplicativos de Administração:"
+  echo -e "${YELLOW}${NC} Estas São as Opções de Instalação de Aplicativos de Administração:"
   echo
   echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
