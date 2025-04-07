@@ -1015,7 +1015,7 @@ menu() {
   echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
-  echo -e "${GREEN} v0.7.2 beta${NC}"
+  echo -e "${GREEN} v0.7.2-beta${NC}"
   echo
   read -p "👉 Digite sua escolha: " option
 
