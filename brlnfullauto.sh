@@ -1008,7 +1008,6 @@ menu() {
   echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
   echo
   echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"
-  echo -e "${YELLOW} Arquitetura:${RED} $arch ${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
