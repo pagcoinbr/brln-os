@@ -28,14 +28,6 @@ NC='\033[0m' # Sem cor
 
 system_detector () {
   arch=$(uname -m)
-
-if [[ "$arch" == "x86_64" ]]; then
-  arc="amd64"
-elif [[ "$arch" == "aarch64" || "$arch" == arm* ]]; then
-  arc="arm"
-else
-  arc="unknown"
-fi
 }
 
 update_and_upgrade() {
@@ -131,9 +123,9 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 
 download_lnd() {
   if [[ $arch == "x86_64" ]]; then
-    arch_lnd="amd64"
-   else
     arch_lnd="arm64"
+   else
+    arch_lnd="amd64"
   fi
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
