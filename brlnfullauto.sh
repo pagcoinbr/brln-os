@@ -13,10 +13,9 @@ APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-SERVICES="/home/admin/brlnfullauto/services"
-USER_HOME="/home/admin"
-LNBITS_DIR="/home/admin/lnbits"
-POETRY_BIN="$USER_HOME/.local/bin/poetry"
+SERVICES="/home/$USER/brlnfullauto/services"
+LNBITS_DIR="/home/$USER/lnbits"
+POETRY_BIN="/home/$USER/.local/bin/poetry"
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
