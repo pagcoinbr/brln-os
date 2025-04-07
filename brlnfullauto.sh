@@ -512,6 +512,7 @@ virtualenv -p python3 .venv
 .venv/bin/pip install -r requirements.txt >> ~/brlnfullauto/install.log 2>&1
 .venv/bin/pip install whitenoise >> ~/brlnfullauto/install.log 2>&1
 .venv/bin/python3 initialize.py --whitenoise >> ~/brlnfullauto/install.log 2>&1
+sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
 sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
 sudo systemctl daemon-reload
 sudo systemctl enable lndg-controller.service
@@ -1079,8 +1080,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_thunderhub
-      #clear
+      install_thunderhub >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
@@ -1105,8 +1106,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      lnbits_install
-      #clear
+      lnbits_install >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
