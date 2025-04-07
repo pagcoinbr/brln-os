@@ -14,7 +14,7 @@ APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-LND_SERVICE="~/brlnfullauto/services/lnd.service"
+LND_SERVICE="/home/admin/brlnfullauto/services/lnd.service"
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
