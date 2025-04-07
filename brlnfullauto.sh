@@ -1,6 +1,5 @@
 #!/bin/bash
-
-# Define as variáveis da URL do repositório do Tor
+SCRIPT_VERSION=v0.7.2-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
@@ -18,7 +17,6 @@ SERVICES="/home/admin/brlnfullauto/services"
 USER_HOME="/home/admin"
 LNBITS_DIR="/home/admin/lnbits"
 POETRY_BIN="$USER_HOME/.local/bin/poetry"
-
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -1015,7 +1013,7 @@ menu() {
   echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
-  echo -e "${GREEN} v0.7.2-beta${NC}"
+  echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
   read -p "👉 Digite sua escolha: " option
 
