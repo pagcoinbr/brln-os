@@ -478,20 +478,19 @@ if [[ -d ~/thunderhub ]]; then
   curl https://github.com/apotdevin.gpg | gpg --import
   git clone --branch v$VERSION_THUB https://github.com/apotdevin/thunderhub.git && cd thunderhub
   git verify-commit v$VERSION_THUB
-  sudo apt update && sudo apt full-upgrade -y
   npm install
   npm run build
 sudo ufw allow from 192.168.0.0/24 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
-cp .env .env.local
-sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .env.local
+cp /home/$USER/thunderhub/.env /home/$USER/thunderhub/.env.local
+sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/$USER/thunderhub/.env.local
 bash -c "cat <<EOF > thubConfig.yaml
-masterPassword: '$senha'
+masterPassword: '$thub_senha'
 accounts:
-  - name: 'MiniBolt'
+  - name: 'BRLNBolt'
     serverUrl: '127.0.0.1:10009'
     macaroonPath: '/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon'
     certificatePath: '/data/lnd/tls.cert'
-    password: '$senha'
+    password: '$thub_senha'
 EOF"
 sudo cp $SERVICES/thunderhub.service /etc/systemd/system/thunderhub.service
 sudo systemctl start thunderhub.service
@@ -1077,13 +1076,13 @@ menu() {
       menu
       ;;
     5)
-      read -p "Digite a senha para ThunderHub: " senha
+      read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_thunderhub >> install.log 2>&1
-      clear
+      install_thunderhub
+      #clear
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
