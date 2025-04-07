@@ -95,7 +95,7 @@ create_main_dir() {
 configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
   sudo ufw logging off
-  sudo ufw allow 22/tcp comment 'allow SSH from anywhere'
+  sudo ufw allow from 192.168.0.0/24 to any port 22 proto tcp comment 'allow SSH from local network'
   sudo ufw --force enable
 }
 
@@ -546,7 +546,7 @@ if [[ -d ~/thunderhub ]]; then
   sudo apt update && sudo apt full-upgrade -y
   npm install
   npm run build
-sudo ufw allow 3000/tcp comment 'allow ThunderHub SSL from anywhere'
+sudo ufw allow from 192.168.0.0/24 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
 cp .env .env.local
 sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' .env.local
 bash -c "cat <<EOF > thubConfig.yaml
