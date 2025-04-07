@@ -1055,8 +1055,8 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      download_lnd
-      #clear
+      download_lnd >> install.log 2>&1
+      clear
       configure_lnd
       menu
       ;;
@@ -1111,7 +1111,7 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      lnbits_install >> install.log 2>&1
+      lnbits_install
       clear
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
