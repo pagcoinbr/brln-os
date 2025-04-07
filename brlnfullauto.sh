@@ -1154,7 +1154,7 @@ menu() {
   echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
   echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
   echo
-  echo -e "${YELLOW} Acesse seu nó usando o IP no navegador: $ip_local${NC}"
+  echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
@@ -1283,6 +1283,6 @@ menu() {
       ;;
     esac
   }
-  
+
 ip_finder >> install.log 2>&1
 menu
