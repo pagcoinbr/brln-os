@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=v0.7.3-beta
+SCRIPT_VERSION=v0.8-beta
 USER=admin
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
