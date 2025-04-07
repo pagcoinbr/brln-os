@@ -15,6 +15,14 @@ HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 LND_SERVICE="/home/admin/brlnfullauto/services/lnd.service"
+# Cores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+NC='\033[0m' # Sem cor
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
@@ -275,7 +283,7 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-  sudo mv $LND_SERVICE /etc/systemd/system/lnd.service
+  sudo cp $LND_SERVICE /etc/systemd/system/lnd.service
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
 if [ -f /data/lnd/password.txt ]; then
@@ -1132,11 +1140,17 @@ submenu_opcoes() {
   esac
 }
 
+ip_finder () {
+  ip_local=$(hostname -I | awk '{print $1}')
+}  
+
 menu() {
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
   echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
   echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
+  echo
+  echo -e "${YELLOW} Acesse seu nó usando o IP no navegador: $ip_local${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
@@ -1174,7 +1188,8 @@ menu() {
       install_tor >> install.log 2>&1
       install_nodejs >> install.log 2>&1
       wait
-      echo -e "${GREEN}✅ Instalação concluída!${NC}"
+      clear
+      echo -e "${GREEN}✅ Instalação da interface e gráfica e interface de rede concluída!${NC}"
       menu      
       ;;
     2)
@@ -1185,6 +1200,7 @@ menu() {
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
       download_lnd >> install.log 2>&1
+      clear
       configure_lnd
       ;;
     3)
@@ -1192,6 +1208,7 @@ menu() {
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
       install_bitcoind >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
@@ -1201,6 +1218,7 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
       install_bos >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
@@ -1211,6 +1229,7 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
       install_thunderhub >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
@@ -1220,6 +1239,7 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
       install_lndg >> install.log 2>&1
+      clear
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
       cat ~/lndg/data/lndg-admin.txt
@@ -1235,6 +1255,7 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
       lnbits_install >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
@@ -1257,14 +1278,5 @@ menu() {
       ;;
     esac
   }
-
-# Cores
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-MAGENTA='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m' # Sem cor
 
 menu
