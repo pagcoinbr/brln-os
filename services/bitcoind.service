@@ -1,0 +1,43 @@
+# MiniBolt: systemd unit for bitcoind
+# /etc/systemd/system/bitcoind.service
+
+[Unit]
+Description=Bitcoin Core Daemon
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
+                                                                    -conf=/home/admin/.bitcoin/bitcoin.conf \
+                                                                    -datadir=/home/admin/.bitcoin \
+                                                                    -startupnotify='systemd-notify --ready' \
+                                                                    -shutdownnotify='systemd-notify --status="Stopping"'
+# Process management
+####################
+Type=notify
+NotifyAccess=all
+PIDFile=/run/bitcoind/bitcoind.pid
+
+Restart=on-failure
+TimeoutStartSec=infinity
+TimeoutStopSec=600
+
+# Directory creation and permissions
+####################################
+User=admin
+Group=admin
+RuntimeDirectory=bitcoind
+RuntimeDirectoryMode=0710
+UMask=0027
+
+# Hardening measures
+####################
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

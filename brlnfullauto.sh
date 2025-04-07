@@ -14,7 +14,11 @@ APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=~/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-LND_SERVICE="/home/admin/brlnfullauto/services/lnd.service"
+SERVICEs="/home/admin/brlnfullauto/services"
+USER_HOME="/home/admin"
+LNBITS_DIR="/home/admin/lnbits"
+POETRY_BIN="$USER_HOME/.local/bin/poetry"
+SYSTEMD_FILE="/etc/systemd/system/lnbits.service"
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -33,12 +37,10 @@ sudo systemctl restart apache2
 
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
-sudo rm -f "$WWW_HTML/index.html"
-sudo rm -f "$WWW_HTML/config.html"
+sudo rm -f "$WWW_HTML/"*.html
 sudo rm -f "$WWW_HTML"/*.png
 sudo rm -f "$CGI_DST/"*.sh
-sudo cp "$HTML_SRC/index.html" "$WWW_HTML/"
-sudo cp "$HTML_SRC/config.html" "$WWW_HTML/"
+sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
 sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
 sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
@@ -283,7 +285,7 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-  sudo cp $LND_SERVICE /etc/systemd/system/lnd.service
+  sudo cp $SERVICESlnd/lnd.service /etc/systemd/system/lnd.service
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
 if [ -f /data/lnd/password.txt ]; then
@@ -416,51 +418,7 @@ whitelist=download@127.0.0.1          # for Electrs
 # Initial block download optimizations
 EOF
 sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-sudo tee /etc/systemd/system/bitcoind.service > /dev/null << EOF
-# MiniBolt: systemd unit for bitcoind
-# /etc/systemd/system/bitcoind.service
-
-[Unit]
-Description=Bitcoin Core Daemon
-Requires=network-online.target
-After=network-online.target
-
-[Service]
-ExecStart=/usr/local/bin/bitcoind -pid=/run/bitcoind/bitcoind.pid \
-                                                                    -conf=/home/admin/.bitcoin/bitcoin.conf \
-                                                                    -datadir=/home/admin/.bitcoin \
-                                                                    -startupnotify='systemd-notify --ready' \
-                                                                    -shutdownnotify='systemd-notify --status="Stopping"'
-# Process management
-####################
-Type=notify
-NotifyAccess=all
-PIDFile=/run/bitcoind/bitcoind.pid
-
-Restart=on-failure
-TimeoutStartSec=infinity
-TimeoutStopSec=600
-
-# Directory creation and permissions
-####################################
-User=admin
-Group=admin
-RuntimeDirectory=bitcoind
-RuntimeDirectoryMode=0710
-UMask=0027
-
-# Hardening measures
-####################
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-MemoryDenyWriteExecute=true
-SystemCallArchitectures=native
-
-[Install]
-WantedBy=multi-user.target
-EOF
+sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
 sudo systemctl enable bitcoind
 sudo systemctl start bitcoind
 sudo ss -tulpn | grep bitcoind
@@ -504,30 +462,7 @@ fi
   "socket": "localhost:10009"
 }
 EOF"
-  sudo bash -c "cat <<EOF > /etc/systemd/system/bos-telegram.service
-# Systemd unit for Bos-Telegram Bot
-# /etc/systemd/system/bos-telegram.service
-# Substitua as variáveis iniciadas com \$ com suas informações
-# Não esquece de apagar o \$
-
-[Unit]
-Description=bos-telegram
-Wants=lnd.service
-After=lnd.service
-
-[Service]
-ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect <seu_connect_code_aqui>
-User=admin
-#Restart=always
-TimeoutSec=120
-#RestartSec=30
-StandardOutput=null
-StandardError=journal
-Environment=BOS_DEFAULT_LND_PATH=/data/lnd
-
-[Install]
-WantedBy=multi-user.target
-EOF"
+sudo cp $SERVICES/bos.service /etc/systemd/system/bos.service
   sudo systemctl daemon-reload
 fi
 }
@@ -558,35 +493,7 @@ accounts:
     certificatePath: '/data/lnd/tls.cert'
     password: '$senha'
 EOF"
-sudo bash -c 'cat <<EOF > /etc/systemd/system/thunderhub.service
-# MiniBolt: systemd unit for Thunderhub
-# /etc/systemd/system/thunderhub.service
-
-[Unit]
-Description=ThunderHub
-Requires=lnd.service
-After=lnd.service
-
-[Service]
-WorkingDirectory=/home/admin/thunderhub
-ExecStart=/usr/bin/npm run start
-
-User=admin
-
-# Process management
-####################
-TimeoutSec=300
-
-# Hardening Measures
-####################
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-
-[Install]
-WantedBy=multi-user.target
-EOF'
+sudo cp $SERVICES/thunderhub.service /etc/systemd/system/thunderhub.service
 sudo systemctl start thunderhub.service
 sudo systemctl enable thunderhub.service
 fi
@@ -606,43 +513,7 @@ virtualenv -p python3 .venv
 .venv/bin/pip install -r requirements.txt >> ~/brlnfullauto/install.log 2>&1
 .venv/bin/pip install whitenoise >> ~/brlnfullauto/install.log 2>&1
 .venv/bin/python3 initialize.py --whitenoise >> ~/brlnfullauto/install.log 2>&1
-sudo tee /etc/systemd/system/lndg-controller.service > /dev/null <<EOF
-[Unit]
-Description=Controlador de backend para Lndg
-
-[Service]
-Environment=PYTHONUNBUFFERED=1
-User=admin
-Group=admin
-ExecStart=$LNDG_DIR/.venv/bin/python3 $LNDG_DIR/controller.py
-StandardOutput=append:/var/log/lndg-controller.log
-StandardError=append:/var/log/lndg-controller.log
-Restart=always
-RestartSec=60s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-sudo tee /etc/systemd/system/lndg.service > /dev/null  <<EOF
-[Unit]
-Description=LNDG Django Server
-After=network.target
-
-[Service]
-Environment=PYTHONUNBUFFERED=1
-User=admin
-Group=admin
-WorkingDirectory=$LNDG_DIR
-ExecStart=$LNDG_DIR/.venv/bin/python3 $LNDG_DIR/manage.py runserver 0.0.0.0:8889
-StandardOutput=append:/var/log/lndg.log
-StandardError=append:/var/log/lndg.log
-Restart=always
-RestartSec=5
-TimeoutSec=300
-
-[Install]
-WantedBy=multi-user.target
-EOF
+sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
 sudo systemctl daemon-reload
 sudo systemctl enable lndg-controller.service
 sudo systemctl start lndg-controller.service
@@ -652,23 +523,12 @@ fi
 }
 
 lnbits_install() {
-# Instalação do LNbits 1.0 automatizada
-# Execute como usuário comum (ex: admin), não como root
-
-set -e  # Para o script em caso de erro
-
-# VARIÁVEIS
-USER_HOME="/home/admin"
-LNBITS_DIR="$USER_HOME/lnbits"
-POETRY_BIN="$USER_HOME/.local/bin/poetry"
-SYSTEMD_FILE="/etc/systemd/system/lnbits.service"
-
 # Atualiza e instala dependências básicas
 sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
 
 # Instala Poetry (não precisa ativar venv manual)
 curl -sSL https://install.python-poetry.org | python3 -
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$USER_HOME/.bashrc"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/$USER/.bashrc"
 export PATH="$HOME/.local/bin:$PATH"
 
 # Verifica versão do Poetry
@@ -676,11 +536,11 @@ export PATH="$HOME/.local/bin:$PATH"
 "$POETRY_BIN" --version
 
 # Clona o repositório LNbits
-git clone https://github.com/lnbits/lnbits.git "$LNBITS_DIR"
-sudo chown -R admin:admin "$LNBITS_DIR"
+git clone https://github.com/lnbits/lnbits.git "/home/$USER/lnbits"
+sudo chown -R admin:admin "/home/$USER/lnbits"
 
 # Entra no diretório e instala dependências com Poetry
-cd "$LNBITS_DIR"
+cd "/home/$USER/lnbits"
 git checkout main
 "$POETRY_BIN" install
 
@@ -689,15 +549,15 @@ cp .env.example .env
 sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
 # Criar o script de inicialização dinâmico
-cat > "$LNBITS_DIR/start-lnbits.sh" <<EOF
+cat > "/home/$USER/start-lnbits.sh" <<EOF
 #!/bin/bash
-cd $LNBITS_DIR
+cd /home/$USER/lnbits
 export PATH="\$HOME/.local/bin:\$PATH"
 exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
 EOF
 
 # Torna o script executável
-chmod +x "$LNBITS_DIR/start-lnbits.sh"
+chmod +x "/home/$USER/start-lnbits.sh"
 
 # Configurações do lnbits no ufw
 sudo ufw allow from 192.168.0.0/24 to any port 5000 proto tcp comment 'allow LNbits from local network'
@@ -1068,7 +928,7 @@ simple_lnwallet () {
     read -r lnsimplewallet_service_response
     if [[ "$lnsimplewallet_service_response" == "yes" ]]; then
       sudo rm -f /etc/systemd/system/simple-lnwallet.service
-      sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+      sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
     else
       echo "O serviço simple-lnwallet não foi sobrescrito."
     fi
