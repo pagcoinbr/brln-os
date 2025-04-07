@@ -1145,6 +1145,10 @@ ip_finder () {
 }  
 
 menu() {
+  echo
+  echo
+  echo
+  echo
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
   echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
