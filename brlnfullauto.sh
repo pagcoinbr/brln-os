@@ -1067,8 +1067,8 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      download_lnd >> install.log 2>&1
-      clear
+      download_lnd
+      #clear
       configure_lnd
       menu
       ;;
@@ -1076,8 +1076,8 @@ menu() {
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bitcoind >> install.log 2>&1
-      clear
+      install_bitcoind
+      #clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
