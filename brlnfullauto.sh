@@ -753,6 +753,9 @@ if [[ -n "$url" ]]; then
     echo "✅ Link encontrado: $url"
     echo "📲 QR Code:"
     echo "$url" | qrencode -t ANSIUTF8
+    touch tailscale_qr.log # cria o log do QR code
+    echo "🔗 QR Code salvo em tailscale_qr.log"
+    echo "$url" | qrencode -t ANSIUTF8 >> tailscale_qr.log 2>&1
 else
     echo "❌ Não foi possível encontrar o link no log."
     cat "$log_file"
