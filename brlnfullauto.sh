@@ -1136,15 +1136,15 @@ menu() {
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
   echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
-  echo -e "  ${GREEN}🛠️ Bem vindo ao seu novo banco, ele é BRASILEIRO. ${NC}"
+  echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- Instalar Tor + nodejs + firewall"
-  echo -e "   ${GREEN}2${NC}- Instalar LND & criar carteira"
+  echo -e "   ${GREEN}1${NC}- Instalar Interface Gráfica & Interface de Rede"
+  echo -e "   ${GREEN}2${NC}- Instalar LND & Criar Carteira"
   echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core"
   echo
-  echo -e "${YELLOW}3${NC}- Estas são as opções de instalação de aplicativos de administração:"
+  echo -e "${YELLOW}3${NC}- Estas São as Opções de Instalação de Aplicativos de Administração:"
   echo
   echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
