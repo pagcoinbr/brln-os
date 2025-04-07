@@ -18,7 +18,7 @@ SERVICEs="/home/admin/brlnfullauto/services"
 USER_HOME="/home/admin"
 LNBITS_DIR="/home/admin/lnbits"
 POETRY_BIN="$USER_HOME/.local/bin/poetry"
-SYSTEMD_FILE="/etc/systemd/system/lnbits.service"
+
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -562,24 +562,8 @@ chmod +x "/home/$USER/start-lnbits.sh"
 # Configurações do lnbits no ufw
 sudo ufw allow from 192.168.0.0/24 to any port 5000 proto tcp comment 'allow LNbits from local network'
 
-# Cria o serviço systemd
-sudo tee "$SYSTEMD_FILE" > /dev/null <<EOF
-[Unit]
-Description=LNbits
-After=network.target
-
-[Service]
-WorkingDirectory=$LNBITS_DIR
-ExecStart=$LNBITS_DIR/start-lnbits.sh
-User=admin
-Restart=always
-TimeoutSec=120
-RestartSec=30
-Environment=PYTHONUNBUFFERED=1
-
-[Install]
-WantedBy=multi-user.target
-EOF
+# Configura systemd
+sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
 
 # Ativa e inicia o serviço
 sudo systemctl daemon-reload
@@ -1035,7 +1019,7 @@ menu() {
   echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
-  echo -e "${GREEN} v0.7 beta${NC}"
+  echo -e "${GREEN} v0.7.1 beta${NC}"
   echo
   read -p "👉 Digite sua escolha: " option
 
