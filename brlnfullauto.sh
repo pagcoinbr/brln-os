@@ -334,7 +334,7 @@ create_wallet () {
   $password
 EOF
   sudo systemctl daemon-reload
-  sudo systemctl enable lnd
+  sudo systemctl enable lnd >> install.log 2>&1
   sudo systemctl start lnd
 }
 
@@ -1049,8 +1049,8 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      download_lnd
-      #clear
+      download_lnd >> install.log 2>&1
+      clear
       configure_lnd
       menu
       ;;
@@ -1058,8 +1058,8 @@ menu() {
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bitcoind
-      #clear
+      install_bitcoind >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
@@ -1068,8 +1068,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bos
-      #clear
+      install_bos >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
