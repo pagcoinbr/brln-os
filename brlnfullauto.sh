@@ -285,7 +285,7 @@ EOF
   sudo chmod -R g+X $LN_DDIR
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-  sudo cp $SERVICESlnd/lnd.service /etc/systemd/system/lnd.service
+  sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
 if [ -f /data/lnd/password.txt ]; then
