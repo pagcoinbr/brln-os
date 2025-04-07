@@ -462,7 +462,7 @@ fi
   "socket": "localhost:10009"
 }
 EOF"
-sudo cp $SERVICES/bos.service /etc/systemd/system/bos.service
+sudo cp $SERVICES/bos-telegram.service /etc/systemd/system/bost-elegram.service
   sudo systemctl daemon-reload
 fi
 }
