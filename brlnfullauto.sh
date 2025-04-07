@@ -992,8 +992,6 @@ ip_finder () {
 menu() {
   echo
   echo
-  echo
-  echo
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
   echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
@@ -1090,8 +1088,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_lndg
-      #clear
+      install_lndg >> install.log 2>&1
+      clear
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
       cat ~/lndg/data/lndg-admin.txt
