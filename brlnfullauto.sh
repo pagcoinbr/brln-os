@@ -1049,7 +1049,7 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      download_lnd >> install.log 2>&1
+      download_lnd
       clear
       configure_lnd
       menu
@@ -1058,8 +1058,8 @@ menu() {
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bitcoind >> install.log 2>&1
-      clear
+      install_bitcoind
+      #clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
@@ -1068,8 +1068,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bos >> install.log 2>&1
-      clear
+      install_bos
+      #clear
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
@@ -1089,8 +1089,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_lndg >> install.log 2>&1
-      clear
+      install_lndg
+      #clear
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
       cat ~/lndg/data/lndg-admin.txt
@@ -1105,8 +1105,8 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      lnbits_install >> install.log 2>&1
-      clear
+      lnbits_install
+      #clear
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
