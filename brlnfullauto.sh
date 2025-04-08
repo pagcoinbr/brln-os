@@ -1036,14 +1036,26 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
-      update_and_upgrade >> install.log 2>&1
-      create_main_dir >> install.log 2>&1
-      configure_ufw >> install.log 2>&1
-      echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
-      echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
-      echo -e "${RED}Seja paciente!${NC}"
-      install_tor >> install.log 2>&1
-      install_nodejs >> install.log 2>&1
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        update_and_upgrade
+        create_main_dir
+        configure_ufw
+        echo -e "${YELLOW}Isso pode na pior das hipóteses demorar até 30 minutos...${NC}"
+        install_tor
+        install_nodejs
+      elif [[ "$verbose_mode" == "n" ]]; then
+        update_and_upgrade >> install.log 2>&1
+        create_main_dir >> install.log 2>&1
+        configure_ufw >> install.log 2>&1
+        echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
+        echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
+        echo -e "${RED}Seja paciente!${NC}"
+        install_tor >> install.log 2>&1
+        install_nodejs >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+      fi      
       wait
       clear
       echo -e "${GREEN}✅ Instalação da interface e gráfica e interface de rede concluída!${NC}"
@@ -1056,7 +1068,15 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      download_lnd >> install.log 2>&1
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        download_lnd
+      elif [[ "$verbose_mode" == "n" ]]; then
+        download_lnd >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       clear
       configure_lnd
       menu
@@ -1065,7 +1085,15 @@ menu() {
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bitcoind >> install.log 2>&1
+      read -p "Avctivate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_bitcoind
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_bitcoind >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
@@ -1075,7 +1103,15 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bos >> install.log 2>&1
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_bos
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_bos >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       clear
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
@@ -1086,7 +1122,15 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_thunderhub >> install.log 2>&1
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_thunderhub
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_thunderhub >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       clear
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
@@ -1096,7 +1140,15 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_lndg >> install.log 2>&1
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_lndg
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_lndg >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       clear
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
@@ -1112,7 +1164,15 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      lnbits_install
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        lnbits_install
+      elif [[ "$verbose_mode" == "n" ]]; then
+        lnbits_install >> install.log 2>&1
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       clear
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
