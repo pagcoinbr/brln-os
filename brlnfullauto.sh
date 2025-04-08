@@ -1106,10 +1106,8 @@ menu() {
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Activate verbose mode? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        admin_management
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        admin_management
         system_preparations >> install.log 2>&1
         echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
         echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
