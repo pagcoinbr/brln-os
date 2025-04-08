@@ -14,15 +14,19 @@ brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
     echo -e "${GREEN}Diretório brlnfullauto já presente.${NC}"
   else
-    echo -e "${RED}Diretório brlnfullauto não encontrado, baixando...${NC}"
-    git clone https://github.com/REDACTED_USERbr/brlnfullauto.git "$INSTALL_DIR" >> /dev/null 2>&1
+    echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
+
+    sudo -u admin git clone https://github.com/REDACTED_USERbr/brlnfullauto.git "$INSTALL_DIR"
+    sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
-    cd "$INSTALL_DIR"
-    git checkout v0.8-beta >> /dev/null 2>&1
+    sudo -u admin git -C "$INSTALL_DIR" checkout v0.8-beta
   fi
+
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-  chmod +x "$INSTALL_DIR/brlnfullauto.sh"
-  sudo -u admin bash -c /home/admin/brlnfullauto.sh
+  sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
+
+  echo -e "${GREEN}Executando brlnfullauto.sh como admin...${NC}"
+  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
 }
 
