@@ -35,18 +35,7 @@ O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
 - Grave a ISO em um pendrive com [Balena Etcher](https://etcher.io) ou [Rufus](https://rufus.ie)
 - Instale com as opções padrões, **ativando o OpenSSH Server** quando solicitado.
 
-### 2. 🧑 Crie o usuário TEMP durante a instalação
-
-Durante a instalação inicial:
-
-- Nome: `temp`
-- Hostname: `brlnbolt`
-- Usuário: `temp`
-- Senha: escolha a sua.
-
-Após o primeiro login, fazendo o SSH com o IP atual da máquina como explicado a seguir, siga com os próximos comandos para criar o usuário final.
-
-Fazendo a primeira conexão via SSH:
+Após o primeiro login, estabeleça a conexão SSH com o IP atual da máquina, conforme explicado abaixo.
 
 ## 🔐 O que é SSH?
 
@@ -61,77 +50,16 @@ Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este
 ```bash
 ssh temp@192.168.1.104 <- coloque seu IP aqui.
 ```
-
-Depois disso, você verá o terminal do seu node, podendo controlar tudo por lá.
-
-*- Para encontrar o IP da sua máquina na rede local, faça o comando:*
-```
-ip a
-```
-Você verá uma saída parecida com essa:
-```
-enp4s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
-   link/ether e8:9c:25:7c:0b:8e brd ff:ff:ff:ff:ff:ff
-   inet 192.168.0.104/24 metric 100 brd 192.168.0.255 scope global enp4s0 <- **Seu IP está no início desta linha.**
-      valid_lft forever preferred_lft forever
-   inet6 fe80::ea9c:25ff:fe7c:b8e/64 scope link 
-      valid_lft forever preferred_lft forever
-```
-No caso, o IP é `192.168.0.104`, então o comando para fazer SSH será:
-
-```bash
-ssh temp@192.168.0.104 <- coloque seu IP aqui.
-```
-
----
-
-### 3. 👤 Crie o usuário `admin`
-ATENÇÃO! Apenas é necessário 1 destes comandos. Caso ele permita você criar o usuário admin e solicite escolher a nova senha do usuário admin, você já pode passar para a próxima etapa.
-
-Entre com o usuário `temp` e execute:
-
-```bash
-sudo adduser --gecos "" admin
-```
-Caso receba o erro: `fatal: The group 'admin' already exists.`, você precisa fazer:
-
-```bash
-sudo adduser --gecos "" --ingroup admin admin
-```
-
-Caso ainda receba o mesmo erro, tente:
-```bash
-sudo passwd admin
-```
-
-ATENÇÃO! Apenas é necessário 1 destes comandos. Caso ele permita você criar e solicite escolher a nova senha do usuário admin, você já pode passar para a próxima etapa.
-
-```bash
-sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-```
-
-Depois, troque para o usuário `admin`:
-
-```bash
-sudo su - admin
-```
-
-E remova o usuário temporário:
-
-```bash
-sudo userdel -rf temp
-```
+O IP da sua máquina está apontado no script.
 
 ---
 
 ### 4. 📦 Instale o BR⚡LN Bolt
 
-Clone o projeto:
+Clone o projeto, copie e cole todos os comandos juntos:
 
 ```bash
 git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
-```
-```bash
 cd brlnfullauto
 chmod +x brlnfullauto.sh
 ./brlnfullauto.sh
