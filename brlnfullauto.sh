@@ -136,6 +136,9 @@ ech -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com suces
 echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
 echo -e "➕ ${BLUE} Agora você pode prosseguir com a instalação baixando o repositório do BRLNFullAuto novamente.${NC}"
 echo -e "${RED} git clone https://github.com/REDACTED_USERbr/brlnfullauto.git ${NC}"
+echo -e "${RED} cd brlnfullauto ${NC}"
+echo -e "${RED} chmod +x brlnfullauto.sh ${NC}"
+echo -e "${RED} ./brlnfullauto.sh ${NC}"
 sudo su - admin
 fi
 }
@@ -1091,9 +1094,7 @@ menu() {
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  sudo su - admin >> /dev/null 2>&1
   echo "O script foi iniciado as $(date +%T)" >> install.log
-  echo -e "${YELLOW}⚠️ O script está rodando como admin${NC}"
   read -p "👉 Digite sua escolha: " option
 
   case $option in
