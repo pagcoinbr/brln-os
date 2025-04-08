@@ -50,7 +50,9 @@ Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este
 ```bash
 ssh temp@192.168.1.104 <- coloque seu IP aqui.
 ```
-O IP da sua máquina está apontado no script.
+Caso não encontre com facilidade, você pode usar um software de scan da rede local como o: https://www.advanced-ip-scanner.com/br/
+
+*Muito cuidado ao utilizar software de terceiros!!!*
 
 ---
 
@@ -59,7 +61,7 @@ O IP da sua máquina está apontado no script.
 Para iniciar a instalação, execute:
 
 ```bash
-bash <(curl -s -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/REDACTED_USERbr/brlnfullauto/main/run.sh)
+bash <(curl -s https://raw.githubusercontent.com/REDACTED_USERbr/brlnfullauto/main/run.sh)
 ```
 
 ---
