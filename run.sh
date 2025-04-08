@@ -17,7 +17,7 @@ else
   echo -e "${RED}Diretório brlnfullauto não encontrado, baixando...${NC}"
   git clone https://github.com/REDACTED_USERbr/brlnfullauto.git "$INSTALL_DIR" >> "$INSTALL_DIR/install.log" 2>&1
   cd "$INSTALL_DIR"
-  touch 
+  touch install.sh
   git stash >> install.log 2>&1
   git checkout v0.8-beta >> install.log 2>&1
 fi
