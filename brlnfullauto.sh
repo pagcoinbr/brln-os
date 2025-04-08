@@ -82,11 +82,50 @@ else
   echo "A porta 80 já está aberta no UFW."
 fi
 echo "✅ Interface web do node Lightning instalada com sucesso!"
+sudo rm -rf /home/admin/brlnfullauto
+git clone https://github.com/pagcoinbr/brlnfullauto.git
+cd brlnfullauto
+#git checkout V0.7.2-beta
+chmod +x brlnfullauto.sh
+}
+
+admin_management() {
+  # Solicita a senha do usuário atual e armazena com segurança
+read -s -p "[sudo] password for $USER: " user_pass
+echo
+
+# Função para executar comandos com sudo e senha fornecida
+run_with_sudo() {
+    echo "$user_pass" | sudo -S "$@"
+}
+
+# Garante que o grupo 'admin' existe
+if getent group admin > /dev/null; then
+    echo "✅ Grupo 'admin' já existe."
+else
+    echo "➕ Criando grupo 'admin'..."
+    run_with_sudo groupadd admin
+fi
+
+# Garante que o usuário 'admin' existe
+if id "admin" &>/dev/null; then
+    echo "✅ Usuário 'admin' já existe."
+else
+    echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
+    run_with_sudo adduser --gecos "" --ingroup admin admin
+fi
+
+# Define a senha do usuário 'admin' automaticamente
+echo "🔐 Definindo a senha do usuário 'admin'..."
+echo "admin:$user_pass" | run_with_sudo chpasswd
+
+echo "✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
+sudo su - admin
 }
 
 create_main_dir() {
-  sudo mkdir $MAIN_DIR
-  sudo chown admin:admin $MAIN_DIR
+sudo mkdir $MAIN_DIR
+sudo chown admin:admin $MAIN_DIR
 }
 
 configure_ufw() {
@@ -996,6 +1035,16 @@ system_detector () {
   arch=$(uname -m)
 }
 
+system_preparations () {
+  update_and_upgrade
+  create_main_dir
+  configure_ufw
+  echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
+  echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
+  install_tor
+  install_nodejs
+}
+
 menu() {
   echo
   echo
@@ -1025,6 +1074,9 @@ menu() {
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
+  sudo su - admin >> /dev/null 2>&1
+  echo "O script foi iniciado as $(date +%T)" >> install.log
+  echo -e "${YELLOW}⚠️ O script está rodando como admin${NC}"
   read -p "👉 Digite sua escolha: " option
 
   case $option in
@@ -1032,30 +1084,20 @@ menu() {
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       touch ~/brlnfullauto/install.log
       chmod +w ~/brlnfullauto/install.log
-      echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Activate verbose mode? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        update_and_upgrade
-        create_main_dir
-        configure_ufw
-        echo -e "${YELLOW}Isso pode na pior das hipóteses demorar até 30 minutos...${NC}"
-        install_tor
-        install_nodejs
+        admin_management
+        system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        update_and_upgrade >> install.log 2>&1
-        create_main_dir >> install.log 2>&1
-        configure_ufw >> install.log 2>&1
-        echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
-        echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
-        echo -e "${RED}Seja paciente!${NC}"
-        install_tor >> install.log 2>&1
-        install_nodejs >> install.log 2>&1
+        admin_management
+        system_preparations >> install.log 2>&1
+        echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
+        echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
+        echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
         clear
       else
-        echo "Opção inválida. Usando o modo padrão."
+        echo "Opção inválida."
       fi      
       wait
       echo -e "${GREEN}✅ Instalação da interface e gráfica e interface de rede concluída!${NC}"
@@ -1074,7 +1116,7 @@ menu() {
       elif [[ "$verbose_mode" == "n" ]]; then
         download_lnd >> install.log 2>&1
       else
-        echo "Opção inválida. Usando o modo padrão."
+        echo "Opção inválida."
         menu
         clear
       fi
@@ -1092,7 +1134,7 @@ menu() {
         install_bitcoind >> install.log 2>&1
         clear
       else
-        echo "Opção inválida. Usando o modo padrão."
+        echo "Opção inválida."
         menu
       fi
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
@@ -1110,7 +1152,7 @@ menu() {
         install_bos >> install.log 2>&1
         clear
       else
-        echo "Opção inválida. Usando o modo padrão."
+        echo "Opção inválida."
         menu
       fi
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
@@ -1129,7 +1171,7 @@ menu() {
         install_thunderhub >> install.log 2>&1
         clear
       else
-        echo "Opção inválida. Usando o modo padrão."
+        echo "Opção inválida."
         menu
       fi
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
@@ -1171,7 +1213,7 @@ menu() {
         lnbits_install >> install.log 2>&1
         clear
       else
-        echo "Opção inválida. Usando o modo padrão."
+        echo "Opção inválida."
         menu
       fi
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
