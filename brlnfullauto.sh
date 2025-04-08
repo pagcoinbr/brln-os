@@ -109,6 +109,8 @@ if [ "$user_pass_1" != "$user_pass_2" ]; then
 fi
 echo
 
+user_pass="$user_pass_1"
+
 # Função para executar comandos com sudo e senha fornecida
 run_with_sudo() {
     echo "$user_pass" | sudo -S "$@"
