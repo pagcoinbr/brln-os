@@ -1102,7 +1102,7 @@ menu() {
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  sudo su - admin >> /dev/null 2>&1
+  sudo su - admin
   echo "O script foi iniciado as $(date +%T)" >> install.log
   echo -e "${YELLOW}⚠️ O script está rodando como admin${NC}"
   read -p "👉 Digite sua escolha: " option
