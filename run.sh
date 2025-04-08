@@ -20,6 +20,8 @@ brln_check () {
     sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
     sudo -u admin git -C "$INSTALL_DIR" checkout main
+    git stash
+    git pull
   fi
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
