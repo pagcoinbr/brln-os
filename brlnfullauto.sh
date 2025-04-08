@@ -82,8 +82,7 @@ else
   echo "A porta 80 já está aberta no UFW."
 fi
 echo "✅ Interface web do node Lightning instalada com sucesso!"
-sudo rm -rf /home/admin/brlnfullauto
-git clone https://github.com/pagcoinbr/brlnfullauto.git
+git clone https://github.com/pagcoinbr/brlnfullauto.git >> install.log 2>&1
 cd brlnfullauto
 #git checkout V0.7.2-beta
 chmod +x brlnfullauto.sh
@@ -91,7 +90,12 @@ chmod +x brlnfullauto.sh
 
 admin_management() {
   # Solicita a senha do usuário atual e armazena com segurança
-read -s -p "[sudo] password for $USER: " user_pass
+read -s -p "[sudo] password for $USER: " user_pass_1
+read -s -p "[sudo] repeat password for $USER: " user_pass_2
+if [ "$user_pass_1" != "$user_pass_2" ]; then
+    echo -e "\n${RED}As senhas não coincidem. Tente novamente.${NC}"
+    exit 1
+fi
 echo
 
 # Função para executar comandos com sudo e senha fornecida
