@@ -967,41 +967,16 @@ simple_lnwallet () {
   echo
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
   echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
-  if [[ -f ~/brlnfullauto/services/simple-lnwallet.service ]]; then
-    echo "O serviço simple-lnwallet já existe."
-    echo "Voce deseja sobrescrever o serviço? (yes/no)"
-    read -r lnsimplewallet_service_response
-    if [[ "$lnsimplewallet_service_response" == "yes" ]]; then
-      sudo rm -f /etc/systemd/system/simple-lnwallet.service
-      sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-    else
-      echo "O serviço simple-lnwallet não foi sobrescrito."
-    fi
-  else
-    echo "O serviço simple-lnwallet não foi encontrado. Criando..."
-    sudo rm -f /etc/systemd/system/simple-lnwallet.service
-    sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-    if [[ $? -eq 0 ]]; then
-      echo "✅ Serviço simple-lnwallet sobrescrito com sucesso!"
-    else
-      echo "❌ Erro ao sobrescrever o serviço simple-lnwallet."
-    fi
-  fi
+  sudo rm -f /etc/systemd/system/simple-lnwallet.service
+  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
-    # Extrair a porta do comando systemctl status e exibir para o usuário
-  PORT=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
-  touch ~/brlnfullauto/html/simple-lnwallet-porta.txt
-  echo $PORT >> ~/brlnfullauto/html/simple-lnwallet-porta.txt
-  if [[ -n "$PORT" ]]; then
-    echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
-    echo -e "${YELLOW} http://<IP_DO_TAILSCALE>:<PORTA>${NC}"
-    echo -e "${YELLOW}🚀 O Simple LN Wallet está rodando na porta:${NC} ${GREEN}$PORT${NC}"
-  else
-    echo -e "${RED}❌ Não foi possível determinar a porta do Simple LN Wallet.${NC}"
-  fi
+  # Extrair a porta do comando systemctl status e exibir para o usuário
+  sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
+  echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
+  echo -e "${YELLOW} http://<IP_DO_TAILSCALE>:<PORTA>${NC}"
 }
 
 submenu_opcoes() {
