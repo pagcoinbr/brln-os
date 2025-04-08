@@ -21,7 +21,7 @@ else
   git clone https://github.com/REDACTED_USERbr/brlnfullauto.git "$INSTALL_DIR" >> /dev/null 2>&1
   sleep 2
   cd "$INSTALL_DIR"
-  touch install.sh
+  touch install.log
   git stash /dev/null 2>&1
   git checkout v0.8-beta >> /dev/null 2>&1
 fi
