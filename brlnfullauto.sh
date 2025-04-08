@@ -973,7 +973,8 @@ simple_lnwallet () {
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
-  sudo systemctl status simple-lnwallet.service
+  # Extrair a porta do comando systemctl status e exibir para o usuário
+  sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+'
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
   echo -e "${YELLOW} http://<IP_DO_TAILSCALE>:<PORTA>${NC}"
 }
