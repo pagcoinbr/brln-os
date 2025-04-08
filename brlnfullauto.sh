@@ -118,7 +118,6 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 }
 
 download_lnd() {
-  arch=$(uname -m)
   if [[ $arch == "x86_64" ]]; then
     arch_lnd="amd64"
   else
@@ -343,7 +342,6 @@ EOF
 }
 
 install_bitcoind() {
-  arch=$(uname -m)
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
    else
