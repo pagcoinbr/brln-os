@@ -118,10 +118,11 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 }
 
 download_lnd() {
+  arch=$(uname -m)
   if [[ $arch == "x86_64" ]]; then
-    arch_lnd="arm64"
-   else
     arch_lnd="amd64"
+  else
+    arch_lnd="arm64"
   fi
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
@@ -342,10 +343,11 @@ EOF
 }
 
 install_bitcoind() {
+  arch=$(uname -m)
   if [[ $arch == "x86_64" ]]; then
-    arch_btc="aarch64"
-   else
     arch_btc="x86_64"
+   else
+    arch_btc="aarch64"
   fi
     cd /tmp
     wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
@@ -995,6 +997,10 @@ ip_finder () {
   ip_local=$(hostname -I | awk '{print $1}')
 }  
 
+system_detector () {
+  arch=$(uname -m)
+}
+
 menu() {
   echo
   echo
@@ -1064,8 +1070,8 @@ menu() {
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bitcoind
-      #clear
+      install_bitcoind >> install.log 2>&1
+      clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
@@ -1136,6 +1142,6 @@ menu() {
     esac
   }
 
-arch=$(uname -m)
-ip_finder >> install.log 2>&1
+system_detector
+ip_finder
 menu
