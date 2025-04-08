@@ -50,15 +50,7 @@ Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este
 ```bash
 ssh temp@192.168.1.104 <- coloque seu IP aqui.
 ```
-O IP da sua máquina está apontado no script:
-```bash
-
-
-No caso, o IP é `192.168.0.104`, então o comando para fazer SSH será:
-
-```bash
-ssh temp@192.168.0.104 <- coloque seu IP aqui.
-```
+O IP da sua máquina está apontado no script.
 
 ---
 
