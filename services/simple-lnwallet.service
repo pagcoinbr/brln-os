@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 User=admin
-WorkingDirectory=/home/admin/brlnfullauto
-ExecStart=/home/admin/brlnfullauto/simple-lnwallet
+WorkingDirectory=/home/admin
+ExecStart=/home/admin/simple-lnwallet
 Restart=on-failure
 Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
