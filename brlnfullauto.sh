@@ -141,6 +141,7 @@ git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
 cd brlnfullauto
 chmod +x brlnfullauto.sh
 bash brlnfullauto.sh
+fi
 }
 
 create_main_dir() {
