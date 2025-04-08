@@ -130,7 +130,7 @@ fi
 
 # Define a senha do usuário 'admin' automaticamente
 echo "🔐 Definindo a senha do usuário 'admin'..."
-echo "admin:$user_pass" | sudo chpasswd
+echo "$user_pass" | sudo -S bash -c "echo 'admin:$user_pass' | chpasswd"
 sleep 10
 echo "✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
 sleep 5
