@@ -1053,11 +1053,11 @@ menu() {
         echo -e "${RED}Seja paciente!${NC}"
         install_tor >> install.log 2>&1
         install_nodejs >> install.log 2>&1
+        clear
       else
         echo "Opção inválida. Usando o modo padrão."
       fi      
       wait
-      clear
       echo -e "${GREEN}✅ Instalação da interface e gráfica e interface de rede concluída!${NC}"
       menu      
       ;;
@@ -1076,8 +1076,8 @@ menu() {
       else
         echo "Opção inválida. Usando o modo padrão."
         menu
+        clear
       fi
-      clear
       configure_lnd
       menu
       ;;
@@ -1090,11 +1090,11 @@ menu() {
         install_bitcoind
       elif [[ "$verbose_mode" == "n" ]]; then
         install_bitcoind >> install.log 2>&1
+        clear
       else
         echo "Opção inválida. Usando o modo padrão."
         menu
       fi
-      clear
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
@@ -1108,11 +1108,11 @@ menu() {
         install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
         install_bos >> install.log 2>&1
+        clear
       else
         echo "Opção inválida. Usando o modo padrão."
         menu
       fi
-      clear
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
@@ -1127,11 +1127,11 @@ menu() {
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
         install_thunderhub >> install.log 2>&1
+        clear
       else
         echo "Opção inválida. Usando o modo padrão."
         menu
       fi
-      clear
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
@@ -1145,11 +1145,11 @@ menu() {
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
         install_lndg >> install.log 2>&1
+        clear
       else
         echo "Opção inválida. Usando o modo padrão."
         menu
       fi
-      clear
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
       cat ~/lndg/data/lndg-admin.txt
@@ -1169,11 +1169,11 @@ menu() {
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
         lnbits_install >> install.log 2>&1
+        clear
       else
         echo "Opção inválida. Usando o modo padrão."
         menu
       fi
-      clear
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
