@@ -591,7 +591,7 @@ cp .env.example .env
 sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
 # Criar o script de inicialização dinâmico
-cat > "/home/admin/start-lnbits.sh" <<EOF
+cat > "/home/admin/lnbits/start-lnbits.sh" <<EOF
 #!/bin/bash
 cd /home/admin/lnbits
 export PATH="\$HOME/.local/bin:\$PATH"
