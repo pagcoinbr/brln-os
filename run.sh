@@ -22,8 +22,7 @@ else
   sleep 2
   cd "$INSTALL_DIR"
   touch install.log
-  git stash /dev/null 2>&1
-  git checkout v0.8-beta >> /dev/null 2>&1
+  git checkout v0.8-beta
 fi
 
 chmod +x "$INSTALL_DIR/brlnfullauto.sh"
