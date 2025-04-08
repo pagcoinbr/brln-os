@@ -135,10 +135,9 @@ sleep 10
 echo "✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
 sleep 5
 sudo su - admin
-git clone https://github.com/pagcoinbr/brlnfullauto.git
-cd brlnfullauto
-chmod +x brlnfullauto.sh
-bash brlnfullauto.sh
+git clone https://github.com/pagcoinbr/brlnfullauto.git >> install.log 2>&1
+chmod +x /home/admin/brlnfullauto/brlnfullauto.sh
+bash /home/admin/brlnfullauto/brlnfullauto.sh
 fi
 }
 
