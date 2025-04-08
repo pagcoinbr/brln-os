@@ -131,7 +131,7 @@ Clone o projeto, copie e cole todos os comandos juntos:
 ```bash
 git clone https://github.com/pagcoinbr/brlnfullauto.git
 cd brlnfullauto
-git checkout v0.7.2-beta
+git checkout V0.7.2-beta
 chmod +x brlnfullauto.sh
 ./brlnfullauto.sh
 ```
