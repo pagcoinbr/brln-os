@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=v0.8.7-beta
+SCRIPT_VERSION=v0.8.7.5-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
@@ -115,6 +115,9 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 }
 
 download_lnd() {
+  set -e
+  mkdir -p ~/lnd-install
+  cd ~/lnd-install
   if [[ $arch == "x86_64" ]]; then
     arch_lnd="amd64"
   else
@@ -128,7 +131,7 @@ download_lnd() {
   sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
   curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
   gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
-  tar -xzf tar -xvf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
+  tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
 }
