@@ -148,7 +148,7 @@ sudo chown admin:admin $MAIN_DIR
 configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
   sudo ufw logging off
-  sudo ufw allow from 192.168.0.0/24 to any port 22 proto tcp comment 'allow SSH from local network'
+  sudo ufw allow from 192.168.0.0/23 to any port 22 proto tcp comment 'allow SSH from local network'
   sudo ufw --force enable
 }
 
@@ -996,6 +996,7 @@ simple_lnwallet () {
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
+  sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
   sleep 6
   # Extrair a porta do comando systemctl status e exibir para o usuário
