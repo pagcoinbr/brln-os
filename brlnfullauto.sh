@@ -93,25 +93,16 @@ atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
   echo -e "${GREEN} Você já está logado como admin! ${NC}"
   menu
+  exit 0
 else
   echo -e "${RED} Você não está logado como admin! ${NC}"
   echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
-  echo -e "${YELLOW} Você pode criar um usuário admin agora ou continuar com o usuário atual.${NC}"
+
+
+
 fi
 read -p "Você deseja criar um usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then
-  # Solicita a senha do usuário atual e armazena com segurança
-read -s -p "[sudo] password for $USER: " user_pass_1
-echo
-read -s -p "[sudo] repeat password for $USER: " user_pass_2
-if [ "$user_pass_1" != "$user_pass_2" ]; then
-    echo -e "\n${RED}As senhas não coincidem. Tente novamente.${NC}"
-    exit 1
-fi
-echo
-
-user_pass="$user_pass_1"
-
 # Garante que o grupo 'admin' existe
 if getent group admin > /dev/null; then
     echo "✅ Grupo 'admin' já existe."
@@ -123,16 +114,21 @@ fi
 # Garante que o usuário 'admin' existe
 if id "admin" &>/dev/null; then
     echo "✅ Usuário 'admin' já existe."
-else
+    sudo passwd admin
+    echo -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
+    echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
+    echo -e "➕ ${BLUE} Agora você pode prosseguir com a instalação baixando o repositório do BRLNFullAuto novamente.${NC}"
+    echo -e "${RED} git clone https://github.com/pagcoinbr/brlnfullauto.git ${NC}"
+    echo -e "${RED} cd brlnfullauto ${NC}"
+    echo -e "${RED} chmod +x brlnfullauto.sh ${NC}"
+    echo -e "${RED} ./brlnfullauto.sh ${NC}"
+    sudo su - admin
+    exit 0
+  else
     echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
     sudo adduser --gecos "" --ingroup admin admin
 fi
-
-# Define a senha do usuário 'admin' automaticamente
-echo "🔐 Definindo a senha do usuário 'admin'..."
-echo "$user_pass" | sudo -S bash -c "echo 'admin:$user_pass' | chpasswd"
-sleep 10
-ech -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
+echo -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
 echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
 echo -e "➕ ${BLUE} Agora você pode prosseguir com a instalação baixando o repositório do BRLNFullAuto novamente.${NC}"
 echo -e "${RED} git clone https://github.com/pagcoinbr/brlnfullauto.git ${NC}"
@@ -140,6 +136,11 @@ echo -e "${RED} cd brlnfullauto ${NC}"
 echo -e "${RED} chmod +x brlnfullauto.sh ${NC}"
 echo -e "${RED} ./brlnfullauto.sh ${NC}"
 sudo su - admin
+exit 0
+elif [[ $create_user == "no" ]]; then
+  echo -e "${RED} Você escolheu não criar um usuário admin! ${NC}"
+  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+  exit 1
 fi
 }
 
