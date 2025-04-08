@@ -82,10 +82,6 @@ else
   echo "A porta 80 já está aberta no UFW."
 fi
 echo "✅ Interface web do node Lightning instalada com sucesso!"
-git clone https://github.com/REDACTED_USERbr/brlnfullauto.git >> install.log 2>&1
-cd brlnfullauto
-#git checkout V0.7.2-beta
-chmod +x brlnfullauto.sh
 }
 
 admin_management() {
