@@ -61,6 +61,7 @@ Clone o projeto, copie e cole todos os comandos juntos:
 ```bash
 git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
 cd brlnfullauto
+git checkout v0.8-beta
 chmod +x brlnfullauto.sh
 ./brlnfullauto.sh
 ```
