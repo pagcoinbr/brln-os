@@ -1241,7 +1241,7 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       tailscale_vpn
-      menu
+      exit 0
       ;;
     9)
       submenu_opcoes
