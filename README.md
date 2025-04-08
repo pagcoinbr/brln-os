@@ -56,14 +56,10 @@ O IP da sua máquina está apontado no script.
 
 ### 4. 📦 Instale o BR⚡LN Bolt
 
-Clone o projeto, copie e cole todos os comandos juntos:
+Para iniciar a instalação, execute:
 
 ```bash
-git clone https://github.com/REDACTED_USERbr/brlnfullauto.git
-cd brlnfullauto
-git checkout v0.8-beta
-chmod +x brlnfullauto.sh
-./brlnfullauto.sh
+bash <(curl -s -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/REDACTED_USERbr/brlnfullauto/main/run.sh)
 ```
 
 ---
