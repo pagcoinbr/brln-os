@@ -1,22 +1,21 @@
 #!/bin/bash
 SCRIPT_VERSION=v0.8-beta
-USER=admin
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
 BTC_VERSION=28.1
 MAIN_DIR=/data
 LN_DDIR=/data/lnd
-LNDG_DIR=/home/$USER/lndg
+LNDG_DIR=/home/admin/lndg
 VERSION_THUB=0.13.31
 LND_CONF="/data/lnd/lnd.conf"
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-HTML_SRC=/home/$USER/brlnfullauto/html
+HTML_SRC=/home/admin/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-SERVICES="/home/$USER/brlnfullauto/services"
-LNBITS_DIR="/home/$USER/lnbits"
-POETRY_BIN="/home/$USER/.local/bin/poetry"
+SERVICES="/home/admin/brlnfullauto/services"
+LNBITS_DIR="/home/admin/lnbits"
+POETRY_BIN="/home/admin/.local/bin/poetry"
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -453,7 +452,7 @@ fi
   npm i -g balanceofsatoshis
   bos --version
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
-  sudo chown -R $USER:$USER /data/lnd
+  sudo chown -R admin:admin /data/lnd
   sudo chmod -R 755 /data/lnd
   export BOS_DEFAULT_LND_PATH=/data/lnd
   mkdir -p ~/.bos/$alias
@@ -487,8 +486,8 @@ if [[ -d ~/thunderhub ]]; then
   npm install
   npm run build
 sudo ufw allow from 192.168.0.0/23 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
-cp /home/$USER/thunderhub/.env /home/$USER/thunderhub/.env.local
-sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/$USER/thunderhub/.env.local
+cp /home/admin/thunderhub/.env /home/admin/thunderhub/.env.local
+sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/admin/thunderhub/.env.local
 bash -c "cat <<EOF > thubConfig.yaml
 masterPassword: '$thub_senha'
 accounts:
@@ -534,7 +533,7 @@ sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential pytho
 
 # Instala Poetry (não precisa ativar venv manual)
 curl -sSL https://install.python-poetry.org | python3 -
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/$USER/.bashrc"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/admin/.bashrc"
 export PATH="$HOME/.local/bin:$PATH"
 
 # Verifica versão do Poetry
@@ -542,11 +541,11 @@ export PATH="$HOME/.local/bin:$PATH"
 "$POETRY_BIN" --version
 
 # Clona o repositório LNbits
-git clone https://github.com/lnbits/lnbits.git "/home/$USER/lnbits"
-sudo chown -R admin:admin "/home/$USER/lnbits"
+git clone https://github.com/lnbits/lnbits.git "/home/admin/lnbits"
+sudo chown -R admin:admin "/home/admin/lnbits"
 
 # Entra no diretório e instala dependências com Poetry
-cd "/home/$USER/lnbits"
+cd "/home/admin/lnbits"
 git checkout main
 "$POETRY_BIN" install
 
@@ -555,15 +554,15 @@ cp .env.example .env
 sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
 # Criar o script de inicialização dinâmico
-cat > "/home/$USER/start-lnbits.sh" <<EOF
+cat > "/home/admin/start-lnbits.sh" <<EOF
 #!/bin/bash
-cd /home/$USER/lnbits
+cd /home/admin/lnbits
 export PATH="\$HOME/.local/bin:\$PATH"
 exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
 EOF
 
 # Torna o script executável
-chmod +x "/home/$USER/start-lnbits.sh"
+chmod +x "/home/admin/start-lnbits.sh"
 
 # Configurações do lnbits no ufw
 sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
