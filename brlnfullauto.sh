@@ -302,7 +302,7 @@ else
   read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
   if [[ $sync_choice == "yes" ]]; then
   echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
-  toogle_on >>"$HOME/brlnfullauto/install.log"
+  toogle_on >> /dev/null 2>&1
   create_wallet
 if [ -f /data/lnd/password.txt ]; then
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
@@ -334,7 +334,7 @@ create_wallet () {
   $password
 EOF
   sudo systemctl daemon-reload
-  sudo systemctl enable lnd >> "$HOME/brlnfullauto/install.log"
+  sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
 }
 
@@ -512,9 +512,9 @@ git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
 sudo apt install -y virtualenv
 virtualenv -p python3 .venv
-.venv/bin/pip install -r requirements.txt >> "$HOME/brlnfullauto/install.log"
-.venv/bin/pip install whitenoise >> "$HOME/brlnfullauto/install.log"
-.venv/bin/python3 initialize.py --whitenoise >> "$HOME/brlnfullauto/install.log"
+.venv/bin/pip install -r requirements.txt >> /dev/null 2>&1
+.venv/bin/pip install whitenoise >> /dev/null 2>&1
+.venv/bin/python3 initialize.py --whitenoise >> /dev/null 2>&1
 sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
 sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
 sudo systemctl daemon-reload
@@ -578,9 +578,9 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 
 tailscale_vpn () {
 # Instalação do Tailscale VPN
-curl -fsSL https://tailscale.com/install.sh | sh >> "$HOME/brlnfullauto/install.log"
+curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
 # Instala o qrencode para gerar QR codes
-sudo apt install qrencode -y >> "$HOME/brlnfullauto/install.log"
+sudo apt install qrencode -y >> /dev/null 2>&1
 log_file="tailscale_up.log"
 rm -f "$log_file" # remove log antigo se existir
 touch "$log_file" # cria um novo log
@@ -915,7 +915,7 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet >> "$HOME/brlnfullauto/install.log"
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet /home/admin/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
@@ -960,7 +960,6 @@ submenu_opcoes() {
   echo -e "   ${GREEN}1${NC}- 🏠 Trocar para o bitcoin local."
   echo -e "   ${GREEN}2${NC}- ☁️ Trocar para o bitcoin remoto."
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
-  echo -e "   ${GREEN}4${NC}- 🚀 Instalar Simple LNWallet."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
@@ -981,12 +980,6 @@ submenu_opcoes() {
       ;;
     3)
       manutencao_script
-      ;;
-    4)
-      echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
-      simple_lnwallet
-      echo -e "${GREEN}✅ Simple LNWallet instalado com sucesso!${NC}"
-      submenu_opcoes
       ;;
     0)
       menu
@@ -1033,10 +1026,10 @@ menu() {
   echo -e "   ${GREEN}2${NC}- Instalar LND & Criar Carteira"
   echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core"
   echo
-  echo -e "${YELLOW}${NC} Estas São as Opções de Instalação de Aplicativos de Administração:"
+  echo -e "${YELLOW} Estas São as Opções de Instalação de Aplicativos de Administração:${NC}"
   echo
-  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}4${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub & Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar LNbits"
   echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
@@ -1045,115 +1038,107 @@ menu() {
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  echo "O script foi iniciado as $(date +%T)" >> "$HOME/brlnfullauto/install.log"
   read -p "👉 Digite sua escolha: " option
 
   case $option in
     1)
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
-      touch ~/brlnfullauto/install.log
-      chmod +w ~/brlnfullauto/install.log
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
-      read -p "Activate verbose mode? (y/n): " verbose_mode
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        system_preparations >> "$HOME/brlnfullauto/install.log"
-        echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
-        echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-        echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
+        echo -e "${YELLOW}🕒 A instalação está sendo executada em segundo plano...${NC}"
+        system_preparations >> /dev/null 2>&1
         clear
       else
         echo "Opção inválida."
       fi      
       wait
-      echo -e "${GREEN}✅ Instalação da interface e gráfica e interface de rede concluída!${NC}"
+      echo -e "\033[43m\033[30m ✅ Instalação da interface e gráfica e interface de rede concluída! \033[0m"
       menu      
       ;;
     2)
-      echo -e "${CYAN}🚀 Iniciando a instalação BTC + LND...${NC}"
+      echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
-      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      read -p "Activate verbose mode? (y/n): " verbose_mode
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         download_lnd
       elif [[ "$verbose_mode" == "n" ]]; then
-        download_lnd >> "$HOME/brlnfullauto/install.log"
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+        download_lnd >> /dev/null 2>&1
+        clear
       else
         echo "Opção inválida."
         menu
-        clear
       fi
       configure_lnd
+      echo -e "\033[43m\033[30m ✅ Sua instalação do LND foi bem sucedida! \033[0m"
       menu
       ;;
     3)
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      read -p "Avctivate verbose mode? (y/n): " verbose_mode
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         install_bitcoind
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_bitcoind >> "$HOME/brlnfullauto/install.log"
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+        install_bitcoind >> /dev/null 2>&1
         clear
       else
         echo "Opção inválida."
         menu
       fi
-      echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
+      echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
       menu
       ;;
     4)
-      echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      read -p "Activate verbose mode? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        install_bos
-      elif [[ "$verbose_mode" == "n" ]]; then
-        install_bos >> "$HOME/brlnfullauto/install.log"
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
+      echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
+      simple_lnwallet
+      echo -e "\033[43m\033[30m ✅ Simple LNWallet instalado com sucesso! \033[0m"
+      submenu_opcoes
       menu
       ;;
     5)
-      read -p "Digite a senha para ThunderHub: " thub_senha
-      echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      read -p "Activate verbose mode? (y/n): " verbose_mode
+      echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        install_thunderhub
+        install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_thunderhub >> "$HOME/brlnfullauto/install.log"
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
+        install_bos >> /dev/null 2>&1
         clear
       else
         echo "Opção inválida."
         menu
       fi
-      echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
+      echo -e "\033[43m\033[30m ✅ Balance of Satoshis instalado com sucesso! \033[0m"
+      read -p "Digite a senha para ThunderHub: " thub_senha
+      echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_thunderhub
+      elif [[ "$verbose_mode" == "n" ]]; then
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+        install_thunderhub >> /dev/null 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
+      echo -e "\033[43m\033[30m ✅ ThunderHub instalado com sucesso! \033[0m"
       menu
       ;;
     6)
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      read -p "Activate verbose mode? (y/n): " verbose_mode
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_lndg >> "$HOME/brlnfullauto/install.log"
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+        install_lndg >> /dev/null 2>&1
         clear
       else
         echo "Opção inválida. Usando o modo padrão."
@@ -1165,32 +1150,29 @@ menu() {
       echo
       echo
       echo -e "${YELLOW}📝 Você deve mudar essa senha ao final da instalação."
-      echo -e "${GREEN}✅ LNDG instalado com sucesso!${NC}"
+      echo -e "\033[43m\033[30m ✅ LNDG instalado com sucesso! \033[0m"
       menu
       ;;
     7)
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
-      echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
       read -p "Activate verbose mode? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
-        lnbits_install >> "$HOME/brlnfullauto/install.log"
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+        lnbits_install >> /dev/null 2>&1
         clear
       else
         echo "Opção inválida."
         menu
       fi
-      echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
+      echo -e "\033[43m\033[30m ✅ LNbits instalado com sucesso! \033[0m"
       menu
       ;;
     8)
       echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       tailscale_vpn
+      echo -e "\033[43m\033[30m ✅ Tailscale instalado com sucesso! \033[0m"
       exit 0
       ;;
     9)
