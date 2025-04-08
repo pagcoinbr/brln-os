@@ -1190,4 +1190,4 @@ menu() {
 
 system_detector
 ip_finder
-admin_management
+menu
