@@ -102,6 +102,7 @@ read -p "Você deseja criar um usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then
   # Solicita a senha do usuário atual e armazena com segurança
 read -s -p "[sudo] password for $USER: " user_pass_1
+echo
 read -s -p "[sudo] repeat password for $USER: " user_pass_2
 if [ "$user_pass_1" != "$user_pass_2" ]; then
     echo -e "\n${RED}As senhas não coincidem. Tente novamente.${NC}"
