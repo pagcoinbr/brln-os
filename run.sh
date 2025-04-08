@@ -11,7 +11,7 @@ echo -e "${GREEN}Iniciando instalação do BRLN FullAuto...${NC}"
 sleep 1
 
 # Cria o diretório home/admin se não existir
-mkdir -p /home/admin
+sudo mkdir -p /home/admin
 
 # Verifica se o repositório já existe
 if [[ -d "$INSTALL_DIR" ]]; then
