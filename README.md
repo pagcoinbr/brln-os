@@ -72,15 +72,18 @@ Você verá um menu com as seguintes opções:
 🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟
 
 ⚡ Este Sript Instalará um Node Lightning Standalone
-  🛠️ Bem vindo ao seu novo banco, ele é BRASILEIRO. 
+  🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. 
+
+ Acesse seu nó usando o IP no navegador: 192.168.1.104
+ Sua arquitetura é: x86_64
 
 📝 Escolha uma opção:
 
-   1- Instalar Tor + nodejs + firewall
-   2- Instalar LND & criar carteira
+   1- Instalar Interface Gráfica & Interface de Rede
+   2- Instalar LND & Criar Carteira
    3- Instalar Bitcoin Core
 
-3- Estas são as opções de instalação de aplicativos de administração:
+ Estas São as Opções de Instalação de Aplicativos de Administração:
 
    4- Instalar Balance of Satoshis (Exige LND)
    5- Instalar Thunderhub (Exige LND)
@@ -90,7 +93,9 @@ Você verá um menu com as seguintes opções:
    9- Mais opções
    0- Sair
 
-👉 Digite sua escolha:
+ v0.8-beta 
+
+👉 Digite sua escolha: 
 ```
 Como é o processo de criação das 24 palavras?
 O processo é feito usando o próprio criador integrado com o lnd. Abaixo você pode ver como o processo se passa durante o passo 2 do lnd, usando um bitcoin remoto da BRLN para a primeira conexão, enquanto seu bitcoin core ainda está sincronizando.
