@@ -112,17 +112,12 @@ echo
 
 user_pass="$user_pass_1"
 
-# Função para executar comandos com sudo e senha fornecida
-run_with_sudo() {
-    echo "$user_pass" | sudo -S "$@"
-}
-
 # Garante que o grupo 'admin' existe
 if getent group admin > /dev/null; then
     echo "✅ Grupo 'admin' já existe."
 else
     echo "➕ Criando grupo 'admin'..."
-    run_with_sudo groupadd admin
+    sudo groupadd admin
 fi
 
 # Garante que o usuário 'admin' existe
@@ -130,7 +125,7 @@ if id "admin" &>/dev/null; then
     echo "✅ Usuário 'admin' já existe."
 else
     echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
-    run_with_sudo adduser --gecos "" --ingroup admin admin
+    sudo adduser --gecos "" --ingroup admin admin
 fi
 
 # Define a senha do usuário 'admin' automaticamente
