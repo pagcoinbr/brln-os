@@ -14,6 +14,7 @@ WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 LNBITS_DIR="/home/admin/lnbits"
 POETRY_BIN="/home/admin/.local/bin/poetry"
+HOME="/home/admin"
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -302,7 +303,7 @@ else
   read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
   if [[ $sync_choice == "yes" ]]; then
   echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
-  toogle_on >> ~/brlnfullauto/install.log 2>&1
+  toogle_on >>"$HOME/brlnfullauto/install.log"
   create_wallet
 if [ -f /data/lnd/password.txt ]; then
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
@@ -334,7 +335,7 @@ create_wallet () {
   $password
 EOF
   sudo systemctl daemon-reload
-  sudo systemctl enable lnd >> install.log 2>&1
+  sudo systemctl enable lnd >> "$HOME/brlnfullauto/install.log"
   sudo systemctl start lnd
 }
 
@@ -512,9 +513,9 @@ git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
 sudo apt install -y virtualenv
 virtualenv -p python3 .venv
-.venv/bin/pip install -r requirements.txt >> ~/brlnfullauto/install.log 2>&1
-.venv/bin/pip install whitenoise >> ~/brlnfullauto/install.log 2>&1
-.venv/bin/python3 initialize.py --whitenoise >> ~/brlnfullauto/install.log 2>&1
+.venv/bin/pip install -r requirements.txt >> "$HOME/brlnfullauto/install.log"
+.venv/bin/pip install whitenoise >> "$HOME/brlnfullauto/install.log"
+.venv/bin/python3 initialize.py --whitenoise >> "$HOME/brlnfullauto/install.log"
 sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
 sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
 sudo systemctl daemon-reload
@@ -578,9 +579,9 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 
 tailscale_vpn () {
 # Instalação do Tailscale VPN
-curl -fsSL https://tailscale.com/install.sh | sh >> install.log 2>&1
+curl -fsSL https://tailscale.com/install.sh | sh >> "$HOME/brlnfullauto/install.log"
 # Instala o qrencode para gerar QR codes
-sudo apt install qrencode -y >> install.log 2>&1
+sudo apt install qrencode -y >> "$HOME/brlnfullauto/install.log"
 log_file="tailscale_up.log"
 rm -f "$log_file" # remove log antigo se existir
 touch "$log_file" # cria um novo log
@@ -915,7 +916,7 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet >> install.log 2>&1
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet >> "$HOME/brlnfullauto/install.log"
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
@@ -1045,7 +1046,7 @@ menu() {
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  echo "O script foi iniciado as $(date +%T)" >> install.log
+  echo "O script foi iniciado as $(date +%T)" >> "$HOME/brlnfullauto/install.log"
   read -p "👉 Digite sua escolha: " option
 
   case $option in
@@ -1058,7 +1059,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        system_preparations >> install.log 2>&1
+        system_preparations >> "$HOME/brlnfullauto/install.log"
         echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
         echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
         echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
@@ -1081,7 +1082,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         download_lnd
       elif [[ "$verbose_mode" == "n" ]]; then
-        download_lnd >> install.log 2>&1
+        download_lnd >> "$HOME/brlnfullauto/install.log"
       else
         echo "Opção inválida."
         menu
@@ -1098,7 +1099,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_bitcoind
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_bitcoind >> install.log 2>&1
+        install_bitcoind >> "$HOME/brlnfullauto/install.log"
         clear
       else
         echo "Opção inválida."
@@ -1116,7 +1117,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_bos >> install.log 2>&1
+        install_bos >> "$HOME/brlnfullauto/install.log"
         clear
       else
         echo "Opção inválida."
@@ -1135,7 +1136,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_thunderhub >> install.log 2>&1
+        install_thunderhub >> "$HOME/brlnfullauto/install.log"
         clear
       else
         echo "Opção inválida."
@@ -1153,7 +1154,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
-        install_lndg >> install.log 2>&1
+        install_lndg >> "$HOME/brlnfullauto/install.log"
         clear
       else
         echo "Opção inválida. Usando o modo padrão."
@@ -1177,7 +1178,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
-        lnbits_install >> install.log 2>&1
+        lnbits_install >> "$HOME/brlnfullauto/install.log"
         clear
       else
         echo "Opção inválida."
