@@ -19,7 +19,7 @@ brln_check () {
     sudo -u admin git clone https://github.com/REDACTED_USERbr/brlnfullauto.git "$INSTALL_DIR"
     sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
-    #sudo -u admin git -C "$INSTALL_DIR" checkout v0.8-beta
+    sudo -u admin git -C "$INSTALL_DIR" checkout main
   fi
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
