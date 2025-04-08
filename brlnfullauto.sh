@@ -89,7 +89,6 @@ chmod +x brlnfullauto.sh
 }
 
 admin_management() {
-
 # Função para executar comandos com sudo e senha fornecida
 run_with_sudo() {
     echo "$user_pass" | sudo -S "$@"
@@ -101,11 +100,10 @@ user_exists=$(id -u admin 2>/dev/null)
 
 if [[ -n "$group_exists" && -n "$user_exists" ]]; then
     echo "✅ Usuário e grupo 'admin' já existem. Indo para o menu..."
-    # Aqui você chama o menu, exemplo:
     menu
     exit 0
   else
-    echo -e "${RED}⚠️ Usuário ou grupo 'admin' não encontrados.${NC}"
+    echo -e "${RED}⚠️  Usuário ou grupo 'admin' não encontrados.${NC}"
 fi
 
 # Se não existir, pergunta se deseja criar
@@ -136,7 +134,7 @@ if [[ $create_user == "yes" ]]; then
     # Cria usuário 'admin' se não existir
     if [[ -z "$user_exists" ]]; then
         echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
-        run_with_sudo adduser --gecos "" --ingroup admin admin
+        run_with_sudo adduser --disabled-password --gecos "" --ingroup admin admin
     else
         echo "✅ Usuário 'admin' já existe."
     fi
