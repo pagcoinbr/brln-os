@@ -89,66 +89,58 @@ chmod +x brlnfullauto.sh
 }
 
 admin_management() {
+atual_user=$(whoami)
+if [[ $atual_user = "admin" ]]; then
+  echo -e "${GREEN} Você já está logado como admin! ${NC}"
+  menu
+else
+  echo -e "${RED} Você não está logado como admin! ${NC}"
+  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+  echo -e "${YELLOW} Você pode criar um usuário admin agora ou continuar com o usuário atual.${NC}"
+fi
+read -p "Você deseja criar um usuário admin? (yes/no): " create_user
+if [[ $create_user == "yes" ]]; then
+  # Solicita a senha do usuário atual e armazena com segurança
+read -s -p "[sudo] password for $USER: " user_pass_1
+read -s -p "[sudo] repeat password for $USER: " user_pass_2
+if [ "$user_pass_1" != "$user_pass_2" ]; then
+    echo -e "\n${RED}As senhas não coincidem. Tente novamente.${NC}"
+    exit 1
+fi
+echo
+
 # Função para executar comandos com sudo e senha fornecida
 run_with_sudo() {
     echo "$user_pass" | sudo -S "$@"
 }
 
-# Verifica se grupo e usuário 'admin' já existem
-group_exists=$(getent group admin)
-user_exists=$(id -u admin 2>/dev/null)
-
-if [[ -n "$group_exists" && -n "$user_exists" ]]; then
-    echo "✅ Usuário e grupo 'admin' já existem. Indo para o menu..."
-    menu
-    exit 0
-  else
-    echo -e "${RED}⚠️  Usuário ou grupo 'admin' não encontrados.${NC}"
-fi
-
-# Se não existir, pergunta se deseja criar
-read -p "Você deseja criar grupo e usuário admin? (yes/no): " create_user
-
-if [[ $create_user == "yes" ]]; then
-    # Solicita senha duas vezes
-    read -s -p "[sudo] password for $USER: " user_pass_1
-    echo
-    read -s -p "[sudo] repeat password for $USER: " user_pass_2
-    echo
-    if [ "$user_pass_1" != "$user_pass_2" ]; then
-        echo -e "${RED}❌ As senhas não coincidem. Tente novamente.${NC}"
-        exit 1
-    fi
-
-    # Armazena senha confirmada
-    user_pass="$user_pass_1"
-
-    # Cria grupo 'admin' se não existir
-    if [[ -z "$group_exists" ]]; then
-        echo "➕ Criando grupo 'admin'..."
-        run_with_sudo groupadd admin
-    else
-        echo "✅ Grupo 'admin' já existe."
-    fi
-
-    # Cria usuário 'admin' se não existir
-    if [[ -z "$user_exists" ]]; then
-        echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
-        run_with_sudo adduser --disabled-password --gecos "" --ingroup admin admin
-    else
-        echo "✅ Usuário 'admin' já existe."
-    fi
-
-    # Define senha do usuário 'admin'
-    echo "🔐 Definindo a senha do usuário 'admin'..."
-    echo "admin:$user_pass" | run_with_sudo chpasswd
-
-    echo -e "\n✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
-    menu  # Leva para o menu
+# Garante que o grupo 'admin' existe
+if getent group admin > /dev/null; then
+    echo "✅ Grupo 'admin' já existe."
 else
-    echo -e "${RED}⚠️ Você escolheu não criar um usuário admin. Encerrando.${NC}"
-    exit 1
+    echo "➕ Criando grupo 'admin'..."
+    run_with_sudo groupadd admin
 fi
+
+# Garante que o usuário 'admin' existe
+if id "admin" &>/dev/null; then
+    echo "✅ Usuário 'admin' já existe."
+else
+    echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
+    run_with_sudo adduser --gecos "" --ingroup admin admin
+fi
+
+# Define a senha do usuário 'admin' automaticamente
+echo "🔐 Definindo a senha do usuário 'admin'..."
+echo "admin:$user_pass" | run_with_sudo chpasswd
+sleep 10
+echo "✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
+sleep 5
+sudo su - admin
+git clone https://github.com/pagcoinbr/brlnfullauto.git
+cd brlnfullauto
+chmod +x brlnfullauto.sh
+bash brlnfullauto.sh
 }
 
 create_main_dir() {
@@ -1102,7 +1094,7 @@ menu() {
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  sudo su - admin
+  sudo su - admin >> /dev/null 2>&1
   echo "O script foi iniciado as $(date +%T)" >> install.log
   echo -e "${YELLOW}⚠️ O script está rodando como admin${NC}"
   read -p "👉 Digite sua escolha: " option
@@ -1115,8 +1107,10 @@ menu() {
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Activate verbose mode? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
+        admin_management
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
+        admin_management
         system_preparations >> install.log 2>&1
         echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
         echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
