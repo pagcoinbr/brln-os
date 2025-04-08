@@ -61,7 +61,7 @@ Caso não encontre com facilidade, você pode usar um software de scan da rede l
 Para iniciar a instalação, execute:
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/REDACTED_USERbr/brlnfullauto/main/run.sh)
+bash <(curl -s -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/REDACTED_USERbr/brlnfullauto/main/run.sh)
 ```
 
 ---
