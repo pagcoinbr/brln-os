@@ -1,24 +1,19 @@
 #!/bin/bash
-
-# Define as variáveis da URL do repositório do Tor
+SCRIPT_VERSION=v0.8-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
+BTC_VERSION=28.1
 MAIN_DIR=/data
-LN_DDIR=/data/lnd
-LNDG_DIR=/home/admin/lndg
-VERSION_THUB=0.13.31
-USER=admin
+VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 LND_CONF="/data/lnd/lnd.conf"
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
-HTML_SRC=~/brlnfullauto/html
+HTML_SRC=/home/admin/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
-USER_HOME="/home/admin"
 LNBITS_DIR="/home/admin/lnbits"
-POETRY_BIN="$USER_HOME/.local/bin/poetry"
-
+POETRY_BIN="/home/admin/.local/bin/poetry"
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -82,16 +77,76 @@ fi
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
   echo "Abrindo a porta 80 no UFW..."
-  sudo ufw allow from 192.168.0.0/24 to any port 80 proto tcp comment 'allow Apache from local network'
+  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network'
 else
   echo "A porta 80 já está aberta no UFW."
 fi
 echo "✅ Interface web do node Lightning instalada com sucesso!"
+git clone https://github.com/pagcoinbr/brlnfullauto.git >> install.log 2>&1
+cd brlnfullauto
+#git checkout V0.7.2-beta
+chmod +x brlnfullauto.sh
+}
+
+admin_management() {
+atual_user=$(whoami)
+if [[ $atual_user = "admin" ]]; then
+  echo -e "${GREEN} Você já está logado como admin! ${NC}"
+  menu
+  exit 0
+else
+  echo -e "${RED} Você não está logado como admin! ${NC}"
+  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+fi
+read -p "Você deseja criar um usuário admin? (yes/no): " create_user
+if [[ $create_user == "yes" ]]; then
+# Garante que o grupo 'admin' existe
+if getent group admin > /dev/null; then
+    echo "✅ Grupo 'admin' já existe."
+else
+    echo "➕ Criando grupo 'admin'..."
+    sudo groupadd admin
+fi
+
+# Garante que o usuário 'admin' existe
+if id "admin" &>/dev/null; then
+    echo "✅ Usuário 'admin' já existe."
+    sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+    sudo passwd admin
+    echo -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
+    echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
+    echo -e "➕ ${BLUE} Agora você pode prosseguir com a instalação baixando o repositório do BRLNFullAuto novamente.${NC}"
+    echo -e "${RED} git clone https://github.com/pagcoinbr/brlnfullauto.git ${NC}"
+    echo -e "${RED} cd brlnfullauto ${NC}"
+    echo -e "${RED} chmod +x brlnfullauto.sh ${NC}"
+    echo -e "${RED} ./brlnfullauto.sh ${NC}"
+    sudo su - admin
+    exit 0
+  else
+    echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
+    sudo adduser --gecos "" --ingroup admin admin
+    sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+fi
+echo -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
+echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
+echo -e "➕ ${BLUE} Agora você pode prosseguir com a instalação baixando o repositório do BRLNFullAuto novamente.${NC}"
+echo -e "${RED} git clone https://github.com/pagcoinbr/brlnfullauto.git ${NC}"
+echo -e "${RED} cd brlnfullauto ${NC}"
+echo -e "${RED} chmod +x brlnfullauto.sh ${NC}"
+echo -e "${RED} ./brlnfullauto.sh ${NC}"
+sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+sudo su - admin
+exit 0
+elif [[ $create_user == "no" ]]; then
+  echo -e "${RED} Você escolheu não criar um usuário admin! ${NC}"
+  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+  exit 1
+fi
 }
 
 create_main_dir() {
-  sudo mkdir $MAIN_DIR
-  sudo chown admin:admin $MAIN_DIR
+sudo mkdir $MAIN_DIR
+sudo chown admin:admin $MAIN_DIR
 }
 
 configure_ufw() {
@@ -120,7 +175,12 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 }
 
 download_lnd() {
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
+  if [[ $arch == "x86_64" ]]; then
+    arch_lnd="amd64"
+  else
+    arch_lnd="arm64"
+  fi
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
@@ -132,9 +192,9 @@ download_lnd() {
     echo "####################################################################################### WARNING: GPG SIGNATURE NOT VERIFIED.##################################################################################################################################################"
     exit 1
   fi
-  tar -xzf lnd-linux-amd64-v$LND_VERSION-beta.tar.gz
-  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-v$LND_VERSION-beta/lnd lnd-linux-amd64-v$LND_VERSION-beta/lncli
-  sudo rm -r lnd-linux-amd64-v$LND_VERSION-beta lnd-linux-amd64-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+  tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
+  sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
 }
 
 configure_lnd() {
@@ -159,10 +219,10 @@ configure_lnd() {
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo usermod -a -G debian-tor admin
-  sudo mkdir -p $LN_DDIR
-  sudo chown -R admin:admin $LN_DDIR
-  ln -s "$LN_DDIR" /home/admin/.lnd
-  cat << EOF > $LN_DDIR/lnd.conf
+  sudo mkdir -p /data/lnd
+  sudo chown -R admin:admin /data/lnd
+  ln -s /data/lnd /home/admin/.lnd
+  cat << EOF > /data/lnd/lnd.conf
 # MiniBolt: lnd configuration
 # /data/admin/lnd.conf
 
@@ -282,7 +342,7 @@ tor.streamisolation=true
 tor.active=true
 tor.v3=true
 EOF
-  sudo chmod -R g+X $LN_DDIR
+  sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
@@ -315,8 +375,8 @@ fi
 }
 
 create_wallet () {
-  ln -s "$LN_DDIR" /home/admin/.lnd
-  sudo chmod -R g+X $LN_DDIR
+  ln -s /data/lnd /home/admin/.lnd
+  sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   echo -e "${YELLOW}############################################################################################### ${NC}"
@@ -339,24 +399,27 @@ EOF
 }
 
 install_bitcoind() {
+  if [[ $arch == "x86_64" ]]; then
+    arch_btc="x86_64"
+   else
+    arch_btc="aarch64"
+  fi
     cd /tmp
-    VERSION=28.0
-    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
-    wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
+    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
+    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
     sha256sum --ignore-missing --check SHA256SUMS
     curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
     gpg --verify SHA256SUMS.asc
-    tar -xzvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
-    sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
+    tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
     sudo mkdir -p /data/bitcoin
     sudo chown admin:admin /data/bitcoin
     ln -s /data/bitcoin /home/admin/.bitcoin
     cd /home/admin/.bitcoin
     wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
     python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth
-    cat << EOF > /home/admin/.bitcoin/bitcoin.conf
+    cat << EOF > /data/bitcoin/bitcoin.conf
 # MiniBolt: bitcoind configuration
 # /data/bitcoin/bitcoin.conf
 
@@ -447,7 +510,7 @@ fi
   npm i -g balanceofsatoshis
   bos --version
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
-  sudo chown -R $USER:$USER /data/lnd
+  sudo chown -R admin:admin /data/lnd
   sudo chmod -R 755 /data/lnd
   export BOS_DEFAULT_LND_PATH=/data/lnd
   mkdir -p ~/.bos/$alias
@@ -480,9 +543,9 @@ if [[ -d ~/thunderhub ]]; then
   git verify-commit v$VERSION_THUB
   npm install
   npm run build
-sudo ufw allow from 192.168.0.0/24 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
-cp /home/$USER/thunderhub/.env /home/$USER/thunderhub/.env.local
-sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/$USER/thunderhub/.env.local
+sudo ufw allow from 192.168.0.0/23 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
+cp /home/admin/thunderhub/.env /home/admin/thunderhub/.env.local
+sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/admin/thunderhub/.env.local
 bash -c "cat <<EOF > thubConfig.yaml
 masterPassword: '$thub_senha'
 accounts:
@@ -499,11 +562,11 @@ fi
 }
 
 install_lndg () {
-if [[ -d $LNDG_DIR ]]; then
+if [[ -d /home/admin/lndg ]]; then
     echo "LNDG já está instalado."
     else
 sudo apt install -y python3-pip python3-venv
-sudo ufw allow from 192.168.0.0/24 to any port 8889 proto tcp comment 'allow lndg from local network'
+sudo ufw allow from 192.168.0.0/23 to any port 8889 proto tcp comment 'allow lndg from local network'
 cd
 git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
@@ -528,7 +591,7 @@ sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential pytho
 
 # Instala Poetry (não precisa ativar venv manual)
 curl -sSL https://install.python-poetry.org | python3 -
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/$USER/.bashrc"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/admin/.bashrc"
 export PATH="$HOME/.local/bin:$PATH"
 
 # Verifica versão do Poetry
@@ -536,11 +599,11 @@ export PATH="$HOME/.local/bin:$PATH"
 "$POETRY_BIN" --version
 
 # Clona o repositório LNbits
-git clone https://github.com/lnbits/lnbits.git "/home/$USER/lnbits"
-sudo chown -R admin:admin "/home/$USER/lnbits"
+git clone https://github.com/lnbits/lnbits.git "/home/admin/lnbits"
+sudo chown -R admin:admin "/home/admin/lnbits"
 
 # Entra no diretório e instala dependências com Poetry
-cd "/home/$USER/lnbits"
+cd "/home/admin/lnbits"
 git checkout main
 "$POETRY_BIN" install
 
@@ -549,18 +612,18 @@ cp .env.example .env
 sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
 # Criar o script de inicialização dinâmico
-cat > "/home/$USER/start-lnbits.sh" <<EOF
+cat > "/home/admin/lnbits/start-lnbits.sh" <<EOF
 #!/bin/bash
-cd /home/$USER/lnbits
+cd /home/admin/lnbits
 export PATH="\$HOME/.local/bin:\$PATH"
 exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
 EOF
 
 # Torna o script executável
-chmod +x "/home/$USER/start-lnbits.sh"
+chmod +x "/home/admin/lnbits/start-lnbits.sh"
 
 # Configurações do lnbits no ufw
-sudo ufw allow from 192.168.0.0/24 to any port 5000 proto tcp comment 'allow LNbits from local network'
+sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
 
 # Configura systemd
 sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
@@ -931,41 +994,17 @@ simple_lnwallet () {
   echo
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
   echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
-  if [[ -f ~/brlnfullauto/services/simple-lnwallet.service ]]; then
-    echo "O serviço simple-lnwallet já existe."
-    echo "Voce deseja sobrescrever o serviço? (yes/no)"
-    read -r lnsimplewallet_service_response
-    if [[ "$lnsimplewallet_service_response" == "yes" ]]; then
-      sudo rm -f /etc/systemd/system/simple-lnwallet.service
-      sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-    else
-      echo "O serviço simple-lnwallet não foi sobrescrito."
-    fi
-  else
-    echo "O serviço simple-lnwallet não foi encontrado. Criando..."
-    sudo rm -f /etc/systemd/system/simple-lnwallet.service
-    sudo mv ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-    if [[ $? -eq 0 ]]; then
-      echo "✅ Serviço simple-lnwallet sobrescrito com sucesso!"
-    else
-      echo "❌ Erro ao sobrescrever o serviço simple-lnwallet."
-    fi
-  fi
+  sudo rm -f /etc/systemd/system/simple-lnwallet.service
+  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
-    # Extrair a porta do comando systemctl status e exibir para o usuário
-  PORT=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
-  touch ~/brlnfullauto/html/simple-lnwallet-porta.txt
-  echo $PORT >> ~/brlnfullauto/html/simple-lnwallet-porta.txt
-  if [[ -n "$PORT" ]]; then
-    echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
-    echo -e "${YELLOW} http://<IP_DO_TAILSCALE>:<PORTA>${NC}"
-    echo -e "${YELLOW}🚀 O Simple LN Wallet está rodando na porta:${NC} ${GREEN}$PORT${NC}"
-  else
-    echo -e "${RED}❌ Não foi possível determinar a porta do Simple LN Wallet.${NC}"
-  fi
+  # Extrair a porta do comando systemctl status e exibir para o usuário
+  echo -e "${YELLOW} A porta do Simple LNWallet é:${NC}"
+  sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+'
+  echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
+  echo -e "${YELLOW} http://<IP_DO_TAILSCALE>:<PORTA>${NC}"
 }
 
 submenu_opcoes() {
@@ -1016,6 +1055,20 @@ ip_finder () {
   ip_local=$(hostname -I | awk '{print $1}')
 }  
 
+system_detector () {
+  arch=$(uname -m)
+}
+
+system_preparations () {
+  update_and_upgrade
+  create_main_dir
+  configure_ufw
+  echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
+  echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
+  install_tor
+  install_nodejs
+}
+
 menu() {
   echo
   echo
@@ -1025,6 +1078,7 @@ menu() {
   echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
   echo
   echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"
+  echo -e "${YELLOW} Sua arquitetura é:${RED} $arch${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
@@ -1042,8 +1096,9 @@ menu() {
   echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
-  echo -e "${GREEN} v0.7.2-beta${NC}"
+  echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
+  echo "O script foi iniciado as $(date +%T)" >> install.log
   read -p "👉 Digite sua escolha: " option
 
   case $option in
@@ -1051,20 +1106,20 @@ menu() {
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       touch ~/brlnfullauto/install.log
       chmod +w ~/brlnfullauto/install.log
-      echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
-      echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
-      echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
-      update_and_upgrade >> install.log 2>&1
-      create_main_dir >> install.log 2>&1
-      configure_ufw >> install.log 2>&1
-      echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
-      echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
-      echo -e "${RED}Seja paciente!${NC}"
-      install_tor >> install.log 2>&1
-      install_nodejs >> install.log 2>&1
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        system_preparations
+      elif [[ "$verbose_mode" == "n" ]]; then
+        system_preparations >> install.log 2>&1
+        echo -e "${YELLOW}✅ A instalação será executada em segundo plano.${NC}"
+        echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
+        echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
+        clear
+      else
+        echo "Opção inválida."
+      fi      
       wait
-      clear
       echo -e "${GREEN}✅ Instalação da interface e gráfica e interface de rede concluída!${NC}"
       menu      
       ;;
@@ -1075,8 +1130,16 @@ menu() {
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} instalando o lnd...${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-      download_lnd >> install.log 2>&1
-      clear
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        download_lnd
+      elif [[ "$verbose_mode" == "n" ]]; then
+        download_lnd >> install.log 2>&1
+      else
+        echo "Opção inválida."
+        menu
+        clear
+      fi
       configure_lnd
       menu
       ;;
@@ -1084,8 +1147,16 @@ menu() {
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bitcoind >> install.log 2>&1
-      clear
+      read -p "Avctivate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_bitcoind
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_bitcoind >> install.log 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
       echo -e "${GREEN}✅ Sua instalação do bitcoin core foi bem sucedida!${NC}"
       menu
       ;;
@@ -1094,8 +1165,16 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-      install_bos >> install.log 2>&1
-      clear
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_bos
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_bos >> install.log 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
       echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
       menu
       ;;
@@ -1105,8 +1184,16 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_thunderhub >> install.log 2>&1
-      clear
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_thunderhub
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_thunderhub >> install.log 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
       echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
       menu
       ;;
@@ -1115,8 +1202,16 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      install_lndg >> install.log 2>&1
-      clear
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_lndg
+      elif [[ "$verbose_mode" == "n" ]]; then
+        install_lndg >> install.log 2>&1
+        clear
+      else
+        echo "Opção inválida. Usando o modo padrão."
+        menu
+      fi
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
       cat ~/lndg/data/lndg-admin.txt
@@ -1131,8 +1226,16 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-      lnbits_install >> install.log 2>&1
-      clear
+      read -p "Activate verbose mode? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        lnbits_install
+      elif [[ "$verbose_mode" == "n" ]]; then
+        lnbits_install >> install.log 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
       echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
       menu
       ;;
@@ -1141,7 +1244,7 @@ menu() {
       echo -e "${YELLOW}📝 Para acompanhar o progresso abra outro terminal e use:${NC}" 
       echo -e "${GREEN}tail -f ~/brlnfullauto/install.log${NC}"
       tailscale_vpn
-      menu
+      exit 0
       ;;
     9)
       submenu_opcoes
@@ -1156,5 +1259,6 @@ menu() {
     esac
   }
 
-ip_finder >> install.log 2>&1
-menu
+system_detector
+ip_finder
+admin_management
