@@ -620,7 +620,7 @@ exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
 EOF
 
 # Torna o script executável
-chmod +x "/home/admin/start-lnbits.sh"
+chmod +x "/home/admin/lnbits/start-lnbits.sh"
 
 # Configurações do lnbits no ufw
 sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
