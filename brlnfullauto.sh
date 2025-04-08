@@ -97,9 +97,6 @@ if [[ $atual_user = "admin" ]]; then
 else
   echo -e "${RED} Você não está logado como admin! ${NC}"
   echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
-
-
-
 fi
 read -p "Você deseja criar um usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then
@@ -114,6 +111,7 @@ fi
 # Garante que o usuário 'admin' existe
 if id "admin" &>/dev/null; then
     echo "✅ Usuário 'admin' já existe."
+    sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
     sudo passwd admin
     echo -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
     echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
@@ -127,6 +125,7 @@ if id "admin" &>/dev/null; then
   else
     echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
     sudo adduser --gecos "" --ingroup admin admin
+    sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
 fi
 echo -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
 echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
@@ -135,6 +134,7 @@ echo -e "${RED} git clone https://github.com/pagcoinbr/brlnfullauto.git ${NC}"
 echo -e "${RED} cd brlnfullauto ${NC}"
 echo -e "${RED} chmod +x brlnfullauto.sh ${NC}"
 echo -e "${RED} ./brlnfullauto.sh ${NC}"
+sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
 sudo su - admin
 exit 0
 elif [[ $create_user == "no" ]]; then
