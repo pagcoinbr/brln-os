@@ -120,7 +120,7 @@ download_lnd() {
   else
     arch_lnd="arm64"
   fi
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$VERSION-beta/lnd-linux-$arch_lnd-v$VERSION-beta.tar.gz
+  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
   wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
