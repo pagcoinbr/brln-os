@@ -1000,10 +1000,15 @@ simple_lnwallet () {
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
+  echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
+  sleep 6
   # Extrair a porta do comando systemctl status e exibir para o usuário
-  echo -e "${YELLOW} A porta do Simple LNWallet é:${NC}"
-  echo
-  sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+'
+  simple_ln_porta=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
+  if [[ $simple_ln_porta == "" ]]; then
+    echo -e "${RED}❌ Não foi possível encontrar a porta do Simple LNWallet, por favor verifique o serviço.${NC}"
+  else
+    echo -e "${GREEN}✅ Porta do Simple LNWallet encontrada: $simple_ln_porta${NC}"
+  fi
   echo
   echo -e "${YELLOW} Acesse apenas na rede local ou pelo Tailscale.${NC}"
 }
