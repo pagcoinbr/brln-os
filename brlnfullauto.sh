@@ -89,42 +89,68 @@ chmod +x brlnfullauto.sh
 }
 
 admin_management() {
-  # Solicita a senha do usuário atual e armazena com segurança
-read -s -p "[sudo] password for $USER: " user_pass_1
-read -s -p "[sudo] repeat password for $USER: " user_pass_2
-if [ "$user_pass_1" != "$user_pass_2" ]; then
-    echo -e "\n${RED}As senhas não coincidem. Tente novamente.${NC}"
-    exit 1
-fi
-echo
 
 # Função para executar comandos com sudo e senha fornecida
 run_with_sudo() {
     echo "$user_pass" | sudo -S "$@"
 }
 
-# Garante que o grupo 'admin' existe
-if getent group admin > /dev/null; then
-    echo "✅ Grupo 'admin' já existe."
-else
-    echo "➕ Criando grupo 'admin'..."
-    run_with_sudo groupadd admin
+# Verifica se grupo e usuário 'admin' já existem
+group_exists=$(getent group admin)
+user_exists=$(id -u admin 2>/dev/null)
+
+if [[ -n "$group_exists" && -n "$user_exists" ]]; then
+    echo "✅ Usuário e grupo 'admin' já existem. Indo para o menu..."
+    # Aqui você chama o menu, exemplo:
+    menu
+    exit 0
+  else
+    echo -e "${RED}⚠️ Usuário ou grupo 'admin' não encontrados.${NC}"
 fi
 
-# Garante que o usuário 'admin' existe
-if id "admin" &>/dev/null; then
-    echo "✅ Usuário 'admin' já existe."
+# Se não existir, pergunta se deseja criar
+read -p "Você deseja criar grupo e usuário admin? (yes/no): " create_user
+
+if [[ $create_user == "yes" ]]; then
+    # Solicita senha duas vezes
+    read -s -p "[sudo] password for $USER: " user_pass_1
+    echo
+    read -s -p "[sudo] repeat password for $USER: " user_pass_2
+    echo
+    if [ "$user_pass_1" != "$user_pass_2" ]; then
+        echo -e "${RED}❌ As senhas não coincidem. Tente novamente.${NC}"
+        exit 1
+    fi
+
+    # Armazena senha confirmada
+    user_pass="$user_pass_1"
+
+    # Cria grupo 'admin' se não existir
+    if [[ -z "$group_exists" ]]; then
+        echo "➕ Criando grupo 'admin'..."
+        run_with_sudo groupadd admin
+    else
+        echo "✅ Grupo 'admin' já existe."
+    fi
+
+    # Cria usuário 'admin' se não existir
+    if [[ -z "$user_exists" ]]; then
+        echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
+        run_with_sudo adduser --gecos "" --ingroup admin admin
+    else
+        echo "✅ Usuário 'admin' já existe."
+    fi
+
+    # Define senha do usuário 'admin'
+    echo "🔐 Definindo a senha do usuário 'admin'..."
+    echo "admin:$user_pass" | run_with_sudo chpasswd
+
+    echo -e "\n✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
+    menu  # Leva para o menu
 else
-    echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
-    run_with_sudo adduser --gecos "" --ingroup admin admin
+    echo -e "${RED}⚠️ Você escolheu não criar um usuário admin. Encerrando.${NC}"
+    exit 1
 fi
-
-# Define a senha do usuário 'admin' automaticamente
-echo "🔐 Definindo a senha do usuário 'admin'..."
-echo "admin:$user_pass" | run_with_sudo chpasswd
-
-echo "✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
-sudo su - admin
 }
 
 create_main_dir() {
