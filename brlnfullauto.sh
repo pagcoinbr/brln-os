@@ -132,12 +132,11 @@ fi
 echo "🔐 Definindo a senha do usuário 'admin'..."
 echo "$user_pass" | sudo -S bash -c "echo 'admin:$user_pass' | chpasswd"
 sleep 10
-echo "✅ Tudo pronto! Usuário e grupo 'admin' configurados com sucesso."
-sleep 5
+ech -e "✅ ${GREEN}Tudo pronto! Usuário e grupo 'admin' configurados com sucesso.${NC}"
+echo -e "🔑 ${YELLOW}Você pode usar o comando ${RED}sudo su - admin ${YELLOW} para acessar o usuário admin.${NC}"
+echo -e "➕ ${BLUE} Agora você pode prosseguir com a instalação baixando o repositório do BRLNFullAuto novamente.${NC}"
+echo -e "${RED} git clone https://github.com/REDACTED_USERbr/brlnfullauto.git ${NC}"
 sudo su - admin
-git clone https://github.com/REDACTED_USERbr/brlnfullauto.git >> install.log 2>&1
-chmod +x /home/admin/brlnfullauto/brlnfullauto.sh
-bash /home/admin/brlnfullauto/brlnfullauto.sh
 fi
 }
 
