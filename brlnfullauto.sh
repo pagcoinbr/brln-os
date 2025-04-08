@@ -748,43 +748,70 @@ wait
 }
 
 thunderhub_update () {
-  read -p "Deseja atualizar o Thunderhub para qual versão? (Ex: 0.13.0) " THUB_VERSION
+  echo "🔍 Buscando a versão mais recente do Thunderhub..."
+  LATEST_VERSION=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | grep tag_name | cut -d '"' -f 4)
+  if [ -z "$LATEST_VERSION" ]; then
+    echo "❌ Não foi possível obter a última versão. Abortando..."
+    return 1
+  fi
+  echo "📦 Última versão encontrada: $LATEST_VERSION"
+  read -p "Deseja continuar com a atualização para a versão $LATEST_VERSION? (yes/no): " CONFIRMA
+  if [[ "$CONFIRMA" != "yes" ]]; then
+    echo "❌ Atualização cancelada."
+    return 1
+  fi
+  echo "⏳ Atualizando Thunderhub para a versão $LATEST_VERSION..."
   sudo systemctl stop thunderhub
-  cd
-  cd thunderhub
-  git pull https://github.com/apotdevin/thunderhub.git $THUB_VERSION
+  cd ~/thunderhub || { echo "❌ Diretório ~/thunderhub não encontrado!"; return 1; }
+  git fetch --all
+  git checkout tags/"$LATEST_VERSION" -b update-"$LATEST_VERSION"
   npm install
   npm run build
   sudo systemctl start thunderhub
-  echo "Thunderhub atualizado!"
-head -n 3 /home/admin/thunderhub/package.json | grep version
+  echo "✅ Thunderhub atualizado para a versão $LATEST_VERSION!"
+  head -n 3 package.json | grep version
 }
 
 lndg_update () {
-  cd
-  cd /home/admin/lndg
+  echo "🔍 Iniciando atualização do LNDg..."
+  cd /home/admin/lndg || { echo "❌ Diretório /home/admin/lndg não encontrado!"; return 1; }
+  echo "🛑 Parando serviços do LNDg..."
   sudo systemctl stop lndg.service
   sudo systemctl stop lndg-controller.service
+  echo "💾 Salvando alterações locais (git stash)..."
   git stash
-  git pull
+  echo "🔄 Atualizando repositório via git pull..."
+  git pull origin master
+  echo "⚙️ Aplicando migrações..."
   .venv/bin/python manage.py migrate
+  echo "🔄 Recarregando systemd e iniciando serviços..."
   sudo systemctl daemon-reload
   sudo systemctl start lndg.service
   sudo systemctl start lndg-controller.service
-    echo "LNDg atualizado!"
-  }
+  echo "✅ LNDg atualizado com sucesso!"
+  git log -1 --pretty=format:"📝 Último commit: %h - %s (%cd)" --date=short
+}
+
 
 lnbits_update () {
-  cd /home/admin/lnbits
+  echo "🔍 Iniciando atualização do LNbits..."
+  cd /home/admin/lnbits || { echo "❌ Diretório /home/admin/lnbits não encontrado!"; return 1; }
+  echo "🛑 Parando serviço do LNbits..."
   sudo systemctl stop lnbits
+  echo "💾 Salvando alterações locais (git stash)..."
   git stash
-  git pull
+  echo "🔄 Atualizando repositório LNbits..."
+  git pull origin main
+  echo "📦 Atualizando Poetry e dependências..."
   poetry self update
   poetry install --only main
+  echo "🔄 Recarregando systemd e iniciando serviço..."
   sudo systemctl daemon-reload
   sudo systemctl start lnbits
-    echo "LNbits atualizado!"
-  }
+  echo "✅ LNbits atualizado com sucesso!"
+  git log -1 --pretty=format:"📝 Último commit: %h - %s (%cd)" --date=short
+}
+
 
 thunderhub_uninstall () {
   sudo systemctl stop thunderhub
