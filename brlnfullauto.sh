@@ -5,9 +5,7 @@ TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE
 LND_VERSION=0.18.3
 BTC_VERSION=28.1
 MAIN_DIR=/data
-LN_DDIR=/data/lnd
-LNDG_DIR=/home/admin/lndg
-VERSION_THUB=0.13.31
+VERSION_THUB=(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 LND_CONF="/data/lnd/lnd.conf"
 APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=/home/admin/brlnfullauto/html
@@ -161,10 +159,10 @@ configure_lnd() {
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo usermod -a -G debian-tor admin
-  sudo mkdir -p $LN_DDIR
-  sudo chown -R admin:admin $LN_DDIR
-  ln -s "$LN_DDIR" /home/admin/.lnd
-  cat << EOF > $LN_DDIR/lnd.conf
+  sudo mkdir -p /data/lnd
+  sudo chown -R admin:admin /data/lnd
+  ln -s /data/lnd /home/admin/.lnd
+  cat << EOF > /data/lnd/lnd.conf
 # MiniBolt: lnd configuration
 # /data/admin/lnd.conf
 
@@ -284,7 +282,7 @@ tor.streamisolation=true
 tor.active=true
 tor.v3=true
 EOF
-  sudo chmod -R g+X $LN_DDIR
+  sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
@@ -317,8 +315,8 @@ fi
 }
 
 create_wallet () {
-  ln -s "$LN_DDIR" /home/admin/.lnd
-  sudo chmod -R g+X $LN_DDIR
+  ln -s /data/lnd /home/admin/.lnd
+  sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   echo -e "${YELLOW}############################################################################################### ${NC}"
@@ -504,7 +502,7 @@ fi
 }
 
 install_lndg () {
-if [[ -d $LNDG_DIR ]]; then
+if [[ -d /home/admin/lndg ]]; then
     echo "LNDG já está instalado."
     else
 sudo apt install -y python3-pip python3-venv
