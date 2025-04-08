@@ -1097,7 +1097,6 @@ menu() {
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
       simple_lnwallet
       echo -e "\033[43m\033[30m ✅ Simple LNWallet instalado com sucesso! \033[0m"
-      submenu_opcoes
       menu
       ;;
     5)
