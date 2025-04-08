@@ -7,6 +7,9 @@ NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
+echo -e "${GREEN}Iniciando instalação do BRLN FullAuto...${NC}"
+sleep 1
+
 # Cria o diretório home/admin se não existir
 mkdir -p /home/admin
 
@@ -16,6 +19,7 @@ if [[ -d "$INSTALL_DIR" ]]; then
 else
   echo -e "${RED}Diretório brlnfullauto não encontrado, baixando...${NC}"
   git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR" >> "$INSTALL_DIR/install.log" 2>&1
+  sleep 2
   cd "$INSTALL_DIR"
   touch install.sh
   git stash >> install.log 2>&1
