@@ -12,7 +12,8 @@ sleep 1
 
 brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
-    echo -e "${GREEN}Diretório brlnfullauto já presente.${NC}"
+    echo -e "${GREEN}Diretório brlnfullauto já baixado.${NC}"
+    echo -e "${GREEN}Digite a senha do usuário admin para continuar...${NC}"
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
 
@@ -54,7 +55,7 @@ if [[ -d "/home/admin" ]]; then
 
     echo "✅ Diretório /home/admin corrigido com sucesso."
   else
-    echo "✅ Diretório /home/admin já pertence ao usuário admin."
+    echo 
   fi
 else
   echo "➕ Criando diretório /home/admin..."
@@ -69,6 +70,8 @@ main_call () {
 # Identifica e cria o usuário/grupo admin
 atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
+  echo
+  echo
   echo -e "${GREEN} Você já está logado como admin! ${NC}"
   dir_check
   brln_check
@@ -76,7 +79,7 @@ else
   echo -e "${RED} Você não está logado como admin! ${NC}"
   echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
 fi
-read -p "Você deseja criar um usuário admin? (yes/no): " create_user
+read -p "Você deseja mudar a senha do usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then
 # Garante que o grupo 'admin' existe
 if getent group admin > /dev/null; then
