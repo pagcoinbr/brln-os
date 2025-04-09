@@ -89,8 +89,8 @@ Você verá um menu com as seguintes opções:
 📝 Escolha uma opção:
 
    1- Instalar Interface Gráfica & Interface de Rede
-   2- Instalar LND & Criar Carteira
-   3- Instalar Bitcoin Core
+   2- Instalar Bitcoin Core
+   3- Instalar LND & Criar Carteira
 
  Estas São as Opções de Instalação de Aplicativos de Administração:
 
@@ -105,10 +105,45 @@ Você verá um menu com as seguintes opções:
  v0.8.9-beta 
 
 👉 Digite sua escolha: 
+💡 Nesse momento, não tem segredo, só não vai saber fazer quem ainda não aprendeu a contar.  
+🚀 A instalação já foi pensada para o usuário final que deseja ter acesso a tudo que a Lightning tem a oferecer.  
+⚡ Então, comece pela instalação número **1** e siga até a **8**. Durante esse processo, você será interrompido por perguntas que irão guiá-lo na personalização do seu node Lightning, como o input de senhas, o nome do seu node e um passo a passo para a criação da carteira.
+
+🛠️ *Sempre que for questionado sobre a exibição de logs, responda "y" se quiser ver o script funcionando por trás dos panos, ou "n" se preferir um terminal mais limpo e legível.*
+
+**⚠️ ATENÇÃO:** Para os não membros da BRLN é necessário aguardar a sincronização da blockchain por completo para poder fazer o passo 3 em diante. Você pode acompanhar o progresso do download com o seguinte comando:
+
+```bash
+bitcoin-cli -getinfo
 ```
+
+A saída será como esta:
+```bash
+admin@minibolt:~/brlnfullauto$ bitcoin-cli -getinfo
+Chain: main
+Blocks: 891699
+Headers: 891699
+Verification progress: 99.9988%
+Difficulty: 121507793131898.1
+
+Network: in 11, out 11, total 22
+Version: 280100
+Time offset (s): 0
+Proxies: 127.0.0.1:9050 (ipv4, ipv6, onion, cjdns), 127.0.0.1:7656 (i2p)
+Min tx relay fee rate (BTC/kvB): 0.00001000
+
+Warnings: (none)
+```
+
+**Quando a sincronização estiver em *99.9988%*, você já pode seguir para o passo 3.**
+
+---
+
 **Como é o processo de criação das 24 palavras?**
 
-O processo é feito usando o próprio criador integrado com o lnd. Abaixo você pode ver como o processo se passa durante o passo 2 do lnd, usando um bitcoin remoto da BRLN para a primeira conexão, enquanto seu bitcoin core ainda está sincronizando.
+O processo é feito usando o próprio criador integrado com o lnd. Abaixo você pode ver como o processo se passa durante o passo 3 do lnd.
+
+Exemplo:
 
 ```bash
 ################################################################
@@ -118,7 +153,7 @@ O processo é feito usando o próprio criador integrado com o lnd. Abaixo você 
 ################################################################
 
 Você deseja utilizar o bitcoind da BRLN? (yes/no): yes
- Você escolheu usar o bitcoind remoto da BRLN! 
+Você escolheu usar o bitcoind remoto da BRLN! 
 Digite o bitcoind.rpcuser(BRLN): meu_user_BRLN
 Digite o bitcoind.rpcpass(BRLN): minha_senha_BRLN
 ############################################################################################### 
@@ -127,7 +162,7 @@ apenas pressione ENTER quando questionado se quer adicionar uma senha a sua fras
 AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! Esta frase não pode ser recuperada no futuro se não for anotada agora. 
 Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!
 ############################################################################################### 
-Digite sua senha de desbloqueio automático do lnd: 97629073
+Digite sua senha de desbloqueio automático do lnd:
 Created symlink /etc/systemd/system/multi-user.target.wants/lnd.service → /etc/systemd/system/lnd.service.
 Input wallet password: 
 Confirm password: 
@@ -160,8 +195,6 @@ Generating fresh cipher seed...
 
 lnd successfully initialized!
 ```
-
-Imagem da criação da carteira no passo 2 do script.
 
 ---
 
