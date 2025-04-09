@@ -12,7 +12,6 @@ sleep 1
 
 brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
-    echo -e "${GREEN}Diretório brlnfullauto já baixado.${NC}"
     echo -e "${GREEN}Digite a senha do usuário admin para continuar...${NC}"
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
@@ -27,8 +26,6 @@ brln_check () {
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
-
-  echo -e "${GREEN}Executando brlnfullauto.sh como admin...${NC}"
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
 }
@@ -70,8 +67,6 @@ main_call () {
 # Identifica e cria o usuário/grupo admin
 atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
-  echo
-  echo
   echo -e "${GREEN} Você já está logado como admin! ${NC}"
   dir_check
   brln_check
