@@ -1022,9 +1022,9 @@ menu() {
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
   echo -e "   ${GREEN}1${NC}- Instalar Interface Gráfica & Interface de Rede"
-  echo -e "   ${GREEN}2${NC}- Instalar LND & Criar Carteira"
-  echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core"
-  echo
+  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core"
+  echo -e "   ${GREEN}3${NC}- Instalar LND & Criar Carteira"
+  echo 
   echo -e "${YELLOW} Estas São as Opções de Instalação de Aplicativos de Administração:${NC}"
   echo
   echo -e "   ${GREEN}4${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
@@ -1058,6 +1058,23 @@ menu() {
       menu      
       ;;
     2)
+      echo -e "${YELLOW} instalando o bitcoind...${NC}"
+      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_bitcoind
+      elif [[ "$verbose_mode" == "n" ]]; then
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+        install_bitcoind >> /dev/null 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
+      echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
+      menu
+      ;;
+    3)
       echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW} instalando o lnd...${NC}"
@@ -1074,23 +1091,6 @@ menu() {
       fi
       configure_lnd
       echo -e "\033[43m\033[30m ✅ Sua instalação do LND foi bem sucedida! \033[0m"
-      menu
-      ;;
-    3)
-      echo -e "${YELLOW} instalando o bitcoind...${NC}"
-      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        install_bitcoind
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-        install_bitcoind >> /dev/null 2>&1
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
       menu
       ;;
     4)
