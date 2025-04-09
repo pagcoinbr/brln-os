@@ -159,15 +159,11 @@ Digite o bitcoind.rpcpass(BRLN): minha_senha_BRLN
 ############################################################################################### 
 Agora Você irá criar sua FRASE DE 24 PALAVRAS, digite a senha de desbloqueio do lnd, depois repita mais 2x para registra-la no lnd e pressione 'n' para criar uma nova carteira. 
 apenas pressione ENTER quando questionado se quer adicionar uma senha a sua frase de 24 palavras.
-AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! Esta frase não pode ser recuperada no futuro se não for anotada agora. 
+AVISO! Anote sua frase de 24 palavras com ATENÇÃO, AGORA! Esta frase não pode ser recuperada no futuro se não for anotada agora. 
 Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!
 ############################################################################################### 
 Digite sua senha de desbloqueio automático do lnd:
 Created symlink /etc/systemd/system/multi-user.target.wants/lnd.service → /etc/systemd/system/lnd.service.
-Input wallet password: 
-Confirm password: 
-Passwords don't match, please try again
-
 Input wallet password: 
 Confirm password: 
 
@@ -202,7 +198,7 @@ lnd successfully initialized!
 
 Depois da instalação, acesse:
 
-```
+```bash
 http://192.168.1.104 <- coloque seu IP aqui.
 ```
 
