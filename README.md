@@ -276,7 +276,12 @@ Com a Lightning Network, você faz parte da revolução monetária global.
 
 Bibliografia:
 BRLN Bolt: https://brln.gitbook.io/brln-bolt
+
 Thunderhub: https://github.com/apotdevin/thunderhub
+
 Simple LNwallet: https://github.com/jvxis/simple-lnwallet-go
+
 Minibolt: https://minibolt.minibolt.info/
+
 Lnbits: https://github.com/lnbits/lnbits
+
