@@ -7,15 +7,14 @@ NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
-echo -e "${GREEN}Iniciando instalação do BRLN FullAuto...${NC}"
+echo -e "${BLUE}Iniciando instalação do BRLN FullAuto...${NC}"
 sleep 1
 
 brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
-    echo -e "${GREEN}Digite a senha do usuário admin para continuar...${NC}"
+    echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
-
     sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
     sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
