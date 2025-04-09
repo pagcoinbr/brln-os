@@ -134,6 +134,7 @@ download_lnd() {
   tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+  sudo rm -rf /home/admin/lnd-install
 }
 
 configure_lnd() {
@@ -338,6 +339,7 @@ EOF
 }
 
 install_bitcoind() {
+  set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
    else
@@ -914,7 +916,7 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet /home/admin/simple-lnwallet
+    wget -O /home/admin/simple-lnwallet https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
