@@ -1117,6 +1117,7 @@ menu() {
       fi
       echo -e "\033[43m\033[30m ✅ Balance of Satoshis instalado com sucesso! \033[0m"
       echo
+      echo -e "${YELLOW}🕒 Iniciando a instalação do Thunderhub...${NC}"
       read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
