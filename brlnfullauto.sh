@@ -916,7 +916,8 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget -O /home/admin/simple-lnwallet https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
+    cd /home/admin
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
