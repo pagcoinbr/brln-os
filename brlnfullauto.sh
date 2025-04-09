@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=v0.8.7.5-beta
+SCRIPT_VERSION=v0.8.9-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.3
@@ -134,6 +134,7 @@ download_lnd() {
   tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+  sudo rm -rf /home/admin/lnd-install
 }
 
 configure_lnd() {
@@ -335,6 +336,7 @@ create_wallet () {
 }
 
 install_bitcoind() {
+  set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
    else
@@ -911,7 +913,8 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet /home/admin/simple-lnwallet
+    cd /home/admin
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
@@ -923,7 +926,7 @@ simple_lnwallet () {
   echo
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
-  xxd -p ~/.lnd/tls.cert | tr -d '\n' > ~/brlnfullauto/tls.hex
+  xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
   rm -f ~/brlnfullauto/tls.hex
   echo
@@ -1111,6 +1114,7 @@ menu() {
       fi
       echo -e "\033[43m\033[30m ✅ Balance of Satoshis instalado com sucesso! \033[0m"
       echo
+      echo -e "${YELLOW}🕒 Iniciando a instalação do Thunderhub...${NC}"
       read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode

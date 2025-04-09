@@ -14,16 +14,17 @@ A **BR⚡LN** é uma comunidade brasileira comprometida com a educação, adoç�
 
 O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
 
-- ⚡ Lightning Daemon (LND)
-- ₿ Bitcoin Core (bitcoind)
-- 🔒 Tor
-- 📊 Thunderhub
-- 📬 LNDg
-- 🧪 LNbits
-- ⚙️ Painel web interativo
-- 🤖 Integração com Telegram via BOS
+⚡ Bitcoin Core (pra falar com a blockchain direto!)
+⚡ LND (pra abrir canal e sair torrando SATs)
+🕵️ Tor (só os ninjas sabem)
+📊 Thunderhub (Como um trovão!)
+📦 BOS (Balance of Satoshis - Ele vira seu chefe)
+📈 LNDG (relatórios pra quem gosta de dados)
+🎨 LNbits (pra brincar de banco... mas soberano!)
+🌐 Interface Web linda de morrer
+🔐 VPN com Tailscale (acessa do PC, celular, geladeira...)
 
-[![Captura-de-tela-2025-04-03-232915.png](https://i.postimg.cc/ZYH8DC3b/Captura-de-tela-2025-04-03-232915.png)](https://postimg.cc/G9BT43qV)
+![image](https://github.com/user-attachments/assets/05cd1e7b-f066-4ed7-a6be-7212f6abcf0e)
 
 ---
 
@@ -40,15 +41,13 @@ Após o primeiro login, estabeleça a conexão SSH com o IP atual da máquina, c
 ## 🔐 O que é SSH?
 
 **SSH (Secure Shell)** é um protocolo que permite **acessar e controlar outro computador pela rede, de forma segura**, usando criptografia.
-
-### 🧠 Em outras palavras:
-Com o SSH, você pode **entrar no terminal de outro computador**, como se estivesse sentado na frente dele, mesmo que ele esteja do outro lado do mundo 🌍.
+🧠 Em outras palavras, com o SSH, você pode **entrar no terminal de outro computador**, como se estivesse sentado na frente dele, mesmo que ele esteja do outro lado do mundo 🌍.
 
 ## 💡 Exemplo prático:
 Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este `192.168.1.104`. Se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
 
 ```bash
-ssh temp@192.168.1.104 <- coloque seu IP aqui.
+ssh admin@192.168.1.104 <- coloque seu IP aqui.
 ```
 Caso não encontre com facilidade, você pode usar um software de scan da rede local como o: https://www.advanced-ip-scanner.com/br/
 
@@ -61,7 +60,7 @@ Caso não encontre com facilidade, você pode usar um software de scan da rede l
 Para iniciar a instalação, execute:
 
 ```bash
-bash <(curl -s -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
+bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
 ```
 
 ---
@@ -76,7 +75,7 @@ Você verá um menu com as seguintes opções:
 ⚡ Este Sript Instalará um Node Lightning Standalone
   🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. 
 
- Acesse seu nó usando o IP no navegador: 192.168.1.104
+ Acesse seu nó usando o IP no navegador: 10.67.124.175
  Sua arquitetura é: x86_64
 
 📝 Escolha uma opção:
@@ -87,20 +86,22 @@ Você verá um menu com as seguintes opções:
 
  Estas São as Opções de Instalação de Aplicativos de Administração:
 
-   4- Instalar Balance of Satoshis (Exige LND)
-   5- Instalar Thunderhub (Exige LND)
+   4- Instalar Simple LNWallet - By JVX (Exige LND)
+   5- Instalar Thunderhub & Balance of Satoshis (Exige LND)
    6- Instalar Lndg (Exige LND)
    7- Instalar LNbits
    8- Instalar Tailscale VPN
    9- Mais opções
    0- Sair
 
- v0.8-beta 
+ v0.8.9-beta 
 
 👉 Digite sua escolha: 
 ```
-Como é o processo de criação das 24 palavras?
+**Como é o processo de criação das 24 palavras?**
+
 O processo é feito usando o próprio criador integrado com o lnd. Abaixo você pode ver como o processo se passa durante o passo 2 do lnd, usando um bitcoin remoto da BRLN para a primeira conexão, enquanto seu bitcoin core ainda está sincronizando.
+
 ```bash
 ################################################################
  A seguir você será solicitado a adicionar suas credenciais do 
@@ -161,7 +162,7 @@ Imagem da criação da carteira no passo 2 do script.
 Depois da instalação, acesse:
 
 ```
-http://192.168.0.104 <- coloque seu IP aqui.
+http://192.168.1.104 <- coloque seu IP aqui.
 ```
 
 Você verá botões para acessar:
@@ -169,42 +170,15 @@ Você verá botões para acessar:
 - Thunderhub
 - LNDg
 - LNbits
+- Simple LNWallet
 - AMBOSS
 - MEMPOOL
 - Configurações
 
-[![Captura-de-tela-2025-04-03-232915.png](https://i.postimg.cc/ZYH8DC3b/Captura-de-tela-2025-04-03-232915.png)](https://postimg.cc/G9BT43qV)
+![image](https://github.com/user-attachments/assets/05cd1e7b-f066-4ed7-a6be-7212f6abcf0e)
 Imagem 1 - Menu principal do BR⚡LN Bolt
 
 Se conseguiu acessar a interface gráfica, seu node está quase pronto. Basta realizar mais algumas etapas para configurar a conexão com o Telegram, assim podendo acompanhar todos os eventos que acontecem no seu node.
-
----
-
-## ⚠️ Corrigir `lnd.conf` se necessário
-
-Se errou alguma configuração, como a senha do bitcoind, edite com:
-
-```bash
-nano /data/lnd/lnd.conf
-```
-
-Depois, reinicie o LND:
-
-```bash
-sudo systemctl restart lnd
-```
-
----
-
-## ✅ Verifique se está tudo certo
-
-Execute:
-
-```bash
-lncli getinfo
-```
-
-Você deve ver o status do seu node Lightning rodando!
 
 ---
 
@@ -291,3 +265,10 @@ Com a Lightning Network, você faz parte da revolução monetária global.
 
 > Feito com amor pela comunidade BR⚡LN.  
 > Compartilhe, instale, rode e nos ajude a construir um futuro livre!
+
+Bibliografia:
+BRLN Bolt: https://brln.gitbook.io/brln-bolt
+Thunderhub: https://github.com/apotdevin/thunderhub
+Simple LNwallet: https://github.com/jvxis/simple-lnwallet-go
+Minibolt: https://minibolt.minibolt.info/
+Lnbits: https://github.com/lnbits/lnbits
