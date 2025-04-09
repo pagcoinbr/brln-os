@@ -923,13 +923,13 @@ simple_lnwallet () {
   fi
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
-  xxd -p /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > /home/admin/lndbrlnfullauto/macaroon.hex
+  xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
   cat ~/brlnfullauto/macaroon.hex
   rm -f ~/brlnfullauto/macaroon.hex
   echo
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
-  xxd -p /data/lnd/tls.cert | tr -d '\n' > /home/admin/brlnfullauto/tls.hex
+  xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
   rm -f ~/brlnfullauto/tls.hex
   echo
