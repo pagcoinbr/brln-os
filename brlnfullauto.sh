@@ -325,17 +325,14 @@ create_wallet () {
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
   echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
-  read -p "Digite sua senha do lnd(Lghtning Daemon): " password
-  
-  sudo touch /data/lnd/password.txt
+  read -p "Digite sua senha do lnd(Lightning Daemon): " password
+  echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   sudo chown admin:admin /data/lnd/password.txt
   sudo chmod 600 /data/lnd/password.txt
-  cat << EOF > /data/lnd/password.txt
-  $password
-EOF
   sudo systemctl daemon-reload
   sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
+  unset password  # limpa da memória, por segurança
 }
 
 install_bitcoind() {
