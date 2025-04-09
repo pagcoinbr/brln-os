@@ -15,13 +15,21 @@ A **BR⚡LN** é uma comunidade brasileira comprometida com a educação, adoç�
 O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
 
 ⚡ Bitcoin Core (pra falar com a blockchain direto!)
+
 ⚡ LND (pra abrir canal e sair torrando SATs)
+
 🕵️ Tor (só os ninjas sabem)
+
 📊 Thunderhub (Como um trovão!)
+
 📦 BOS (Balance of Satoshis - Ele vira seu chefe)
+
 📈 LNDG (relatórios pra quem gosta de dados)
+
 🎨 LNbits (pra brincar de banco... mas soberano!)
+
 🌐 Interface Web linda de morrer
+
 🔐 VPN com Tailscale (acessa do PC, celular, geladeira...)
 
 ![image](https://github.com/user-attachments/assets/05cd1e7b-f066-4ed7-a6be-7212f6abcf0e)
