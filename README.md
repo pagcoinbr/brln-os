@@ -55,7 +55,7 @@ Após o primeiro login, estabeleça a conexão SSH com o IP atual da máquina, c
 Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este `192.168.1.104`. Se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
 
 ```bash
-ssh admin@192.168.1.104 <- ##coloque seu IP aqui.##
+ssh admin@192.168.1.104 <- coloque seu IP aqui.###############
 ```
 Caso não encontre com facilidade, você pode usar um software de scan da rede local como o: https://www.advanced-ip-scanner.com/br/
 
