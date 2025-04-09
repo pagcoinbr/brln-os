@@ -24,7 +24,7 @@ O **BR⚡LN Bolt** é um conjunto de scripts automatizados que instala:
 🌐 Interface Web linda de morrer
 🔐 VPN com Tailscale (acessa do PC, celular, geladeira...)
 
-[![Captura-de-tela-2025-04-03-232915.png](https://i.postimg.cc/ZYH8DC3b/Captura-de-tela-2025-04-03-232915.png)](https://postimg.cc/G9BT43qV)
+![image](https://github.com/user-attachments/assets/05cd1e7b-f066-4ed7-a6be-7212f6abcf0e)
 
 ---
 
