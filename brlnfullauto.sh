@@ -4,15 +4,11 @@ TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.5
 BTC_VERSION=28.1
-MAIN_DIR=/data
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-LND_CONF="/data/lnd/lnd.conf"
-APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=/home/admin/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
-LNBITS_DIR="/home/admin/lnbits"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 # Cores
 RED='\033[0;31m'
@@ -46,7 +42,7 @@ for script in "$CGI_DST"/*.sh; do
 done
 
 # Configurar o Apache para permitir CGI no diretório correto
-if ! grep -q 'Directory "/usr/lib/cgi-bin"' "$APACHE_CONF"; then
+if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
   echo "Adicionando bloco de configuração CGI ao Apache..."
   sudo sed -i '/<\/VirtualHost>/i \
 <Directory "/usr/lib/cgi-bin">\n\
@@ -54,7 +50,7 @@ if ! grep -q 'Directory "/usr/lib/cgi-bin"' "$APACHE_CONF"; then
   Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
   Require all granted\n\
   AddHandler cgi-script .sh\n\
-</Directory>\n' "$APACHE_CONF"
+</Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
 else
   echo "Bloco de configuração CGI já existe no Apache."
 fi
@@ -85,8 +81,8 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 create_main_dir() {
-sudo mkdir $MAIN_DIR
-sudo chown admin:admin $MAIN_DIR
+sudo mkdir /data
+sudo chown admin:admin /data
 }
 
 configure_ufw() {
@@ -652,7 +648,7 @@ toogle_on () {
   )
 
   # Função interna para comentar linhas 73 a 78
-    sed -i '73,78 s/^/#/' "$LND_CONF"
+    sed -i '73,78 s/^/#/' "/data/lnd/lnd.conf"
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
@@ -679,7 +675,7 @@ toogle_off () {
   )
 
   # Função interna para descomentar linhas 73 a 78
-    sed -i '73,78 s/^#//' "$LND_CONF"
+    sed -i '73,78 s/^#//' "/data/lnd/lnd.conf"
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
