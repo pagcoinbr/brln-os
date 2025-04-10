@@ -2,7 +2,7 @@
 SCRIPT_VERSION=v0.8.9-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
-LND_VERSION=0.18.3
+LND_VERSION=0.18.5
 BTC_VERSION=28.1
 MAIN_DIR=/data
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
