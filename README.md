@@ -108,6 +108,8 @@ Você verá um menu com as seguintes opções:
  v0.8.9-beta 
 
 👉 Digite sua escolha: 
+```
+
 💡 Nesse momento, não tem segredo, só não vai saber fazer quem ainda não aprendeu a contar.  
 🚀 A instalação já foi pensada para o usuário final que deseja ter acesso a tudo que a Lightning tem a oferecer.  
 ⚡ Então, comece pela instalação número **1** e siga até a **8**. Durante esse processo, você será interrompido por perguntas que irão guiá-lo na personalização do seu node Lightning, como o input de senhas, o nome do seu node e um passo a passo para a criação da carteira.
