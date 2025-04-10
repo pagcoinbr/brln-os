@@ -51,13 +51,16 @@ Após o primeiro login, estabeleça a conexão SSH com o IP atual da máquina, c
 **SSH (Secure Shell)** é um protocolo que permite **acessar e controlar outro computador pela rede, de forma segura**, usando criptografia.
 🧠 Em outras palavras, com o SSH, você pode **entrar no terminal de outro computador**, como se estivesse sentado na frente dele, mesmo que ele esteja do outro lado do mundo 🌍.
 
+Quando você faz o primeiro login no linux ele já te axibe o ip do seu nó na rede local. Caso ele não apareça na tela inicial após digitar a senha, confira o cabo de rede ao qual ele deve estar bem conectado.
+
 ## 💡 Exemplo prático:
 Seu node BR⚡LN Bolt, que está na rede local, deve ter um IP parecido com este `192.168.1.104`. Se você já souber o IP da rede interna da sua casa, você pode acessá-lo com:
 
 ```bash
-ssh admin@192.168.1.104 <- coloque seu IP aqui.###############
+ssh admin@192.168.1.104 <- coloque seu IP aqui.
 ```
-Caso não encontre com facilidade, você pode usar um software de scan da rede local como o: https://www.advanced-ip-scanner.com/br/
+
+Caso não encontre com facilidade sei IP da máquina, você pode usar um software de scan da rede local procurando algo no Google.
 
 *Muito cuidado ao utilizar software de terceiros!!!*
 
