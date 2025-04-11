@@ -10,6 +10,8 @@ CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
+# Caminho para o ficheiro de configuração
+CONF_PATH="/data/lnd/lnd.conf"
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -40,6 +42,19 @@ sudo chmod +x "$CGI_DST"/*.sh
 for script in "$CGI_DST"/*.sh; do
   sudo chmod +x "$script"
 done
+
+# Verifica se o ficheiro existe
+if [ ! -f "$CONF_PATH" ]; then
+  echo "Erro: Ficheiro não encontrado"
+  exit 1
+fi
+
+# Verifica se a linha está ativa
+if grep -q "^bitcoind\.rpchost=" "$CONF_PATH"; then
+  echo "Remoto"
+else
+  echo "Local"
+fi
 
 # Configurar o Apache para permitir CGI no diretório correto
 if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
