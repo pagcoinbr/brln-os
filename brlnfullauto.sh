@@ -68,8 +68,6 @@ EOF
 else
   echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
 fi
-
-
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
   echo "Abrindo a porta 80 no UFW..."
@@ -108,6 +106,27 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   else
     echo "Erro: Tor não está ouvindo nas portas corretas."
   fi
+}
+
+postgres_db () {
+  sudo install -d /usr/share/postgresql-common/pgdg
+  sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+  sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+  sudo apt update && sudo apt install postgresql postgresql-contrib
+  sudo ss -tulpn | grep postgres
+  echo -e "${GREEN}Postgressdb Instalado com sucesso!${NC}"
+  sleep 3
+  sudo mkdir -p /data/postgresdb/17
+  sudo chown -R admin:admin /data/postgresdb
+  sudo chmod -R 700 /data/postgresdb
+  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
+  # Automatizar a alteração do diretório de dados no arquivo de configuração do PostgreSQL
+  sudo sed -i "42s|.*|data_directory = '/data/postgresdb/17'|" "/etc/postgresql/17/main/postgresql.conf"
+  sudo systemctl restart postgresql
+  # Checar o status do PostgreSQL
+  pg_lsclusters
+  sudo ss -tulpn | grep postgres
+  sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';"
 }
 
 download_lnd() {
@@ -158,6 +177,7 @@ configure_lnd() {
   read -p "Qual Database você deseja usar? (sqlite/bbolt): " db_choice
   if [[ $db_choice == "sqlite" ]]; then
     echo -e "${GREEN}Você escolheu usar o SQLite!${NC}"
+    postgres_db
     psql -V
     sudo -u postgres createdb -O admin lndb
     lnd_db=$(cat <<EOF
@@ -255,91 +275,33 @@ install_bitcoind() {
   set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
-   else
+  else
     arch_btc="aarch64"
   fi
-    cd /tmp
-    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
-    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
-    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
-    sha256sum --ignore-missing --check SHA256SUMS
-    curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
-    gpg --verify SHA256SUMS.asc
-    tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
-    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
-    sudo mkdir -p /data/bitcoin
-    sudo chown admin:admin /data/bitcoin
-    ln -s /data/bitcoin /home/admin/.bitcoin
-    cd /home/admin/.bitcoin
-    wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
-    python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth
-    cat << EOF > /data/bitcoin/bitcoin.conf
-# MiniBolt: bitcoind configuration
-# /data/bitcoin/bitcoin.conf
 
-# Bitcoin daemon
-server=1
-txindex=1
-
-# Append comment to the user agent string
-uacomment=MiniBolt node
-
-# Suppress a breaking RPC change that may prevent LND from starting up
-deprecatedrpc=warnings
-
-# Disable integrated wallet
-disablewallet=1
-
-# Additional logs
-debug=tor
-debug=i2p
-
-# Assign to the cookie file read permission to the Bitcoin group users
-rpccookieperms=group
-
-# Disable debug.log
-nodebuglogfile=1
-
-# Avoid assuming that a block and its ancestors are valid,
-# and potentially skipping their script verification.
-# We will set it to 0, to verify all.
-assumevalid=0
-
-# Enable all compact filters
-blockfilterindex=1
-
-# Serve compact block filters to peers per BIP 157
-peerblockfilters=1
-
-# Maintain coinstats index used by the gettxoutsetinfo RPC
-coinstatsindex=1
-
-# Network
-listen=1
-
-## P2P bind
-bind=127.0.0.1
-
-## Proxify clearnet outbound connections using Tor SOCKS5 proxy
-proxy=127.0.0.1:9050
-
-## I2P SAM proxy to reach I2P peers and accept I2P connections
-i2psam=127.0.0.1:7656
-
-# Connections
-$rpcauth
-zmqpubrawblock=tcp://127.0.0.1:28332
-zmqpubrawtx=tcp://127.0.0.1:28333
-
-whitelist=download@127.0.0.1          # for Electrs
-# Initial block download optimizations
-EOF
-sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
-sudo systemctl enable bitcoind
-sudo systemctl start bitcoind
-sudo ss -tulpn | grep bitcoind
-echo "Bitcoind instalado com sucesso!"
+  cd /tmp
+  wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+  wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
+  wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
+  sha256sum --ignore-missing --check SHA256SUMS
+  curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do
+    curl -s "$url" | gpg --import
+  done
+  gpg --verify SHA256SUMS.asc
+  tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
+  sudo mkdir -p /data/bitcoin
+  sudo chown admin:admin /data/bitcoin
+  ln -s /data/bitcoin /home/admin/.bitcoin
+  cd /home/admin/.bitcoin
+  wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
+  sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
+  sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
+  sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
+  sudo systemctl enable bitcoind
+  sudo systemctl start bitcoind
+  sudo ss -tulpn | grep bitcoind
+  echo "Bitcoind instalado com sucesso!"
 }
 
 install_nodejs() {
