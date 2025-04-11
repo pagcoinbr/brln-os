@@ -151,6 +151,43 @@ configure_lnd() {
     echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
     exit 1
   fi
+  local file_path="/data/lnd/lnd.conf"
+  local alias_line="alias=$alias | BR⚡️LN"
+  # Insere a linha na posição 8
+  sudo sed -i "8i$alias_line" "$file_path"
+  read -p "Qual Database você deseja usar? (sqlite/bbolt): " db_choice
+  if [[ $db_choice == "sqlite" ]]; then
+    echo -e "${GREEN}Você escolheu usar o SQLite!${NC}"
+    psql -V
+    sudo -u postgres createdb -O admin lndb
+    lnd_db=$(cat <<EOF
+[db]
+## Database selection
+db.backend=postgres
+
+[postgres]
+db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
+db.postgres.timeout=0
+EOF
+)
+  elif [[ $db_choice == "bbolt" ]]; then
+    echo -e "${RED}Você escolheu usar o BBolt!${NC}"
+    lnd_db=$(cat <<EOF
+[bolt]
+## Database
+# Set the next value to false to disable auto-compact DB
+# and fast boot and comment the next line
+db.bolt.auto-compact=true
+# Uncomment to do DB compact at every LND reboot (default: 168h)
+#db.bolt.auto-compact-min-age=0h
+EOF
+)
+  else
+    echo -e "${RED}Opção inválida. Por favor, escolha 'sqlite' ou 'bbolt'.${NC}"
+    exit 1
+  fi
+  # Inserir a configuração no arquivo lnd.conf na linha 100
+  echo "$lnd_db" | sudo sed -i '100r /dev/stdin' /data/lnd/lnd.conf
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -159,124 +196,7 @@ configure_lnd() {
   sudo chown -R admin:admin /data/lnd
   ln -s /data/lnd /home/admin/.lnd
   cat << EOF > /data/lnd/lnd.conf
-# MiniBolt: lnd configuration
-# /data/admin/lnd.conf
 
-[Application Options]
-externalhosts=<ddns_clearnet>:9735
-# externalip=<fixed_ip_clearnet>
-# Up to 32 UTF-8 characters, accepts emojis i.e ⚡🧡​ https://emojikeyboard.top/
-alias=$alias|BR⚡️LN
-# You can choose the color you want at https://www.color-hex.com/
-color=#ff9900
-
-# Automatically unlock wallet with the password in this file
-wallet-unlock-password-file=/data/lnd/password.txt
-wallet-unlock-allow-create=true
-
-# The TLS private key will be encrypted to the node's seed
-tlsencryptkey=true
-
-# Automatically regenerate certificate when near expiration
-tlsautorefresh=true
-
-# Do not include the interface IPs or the system hostname in TLS certificate
-tlsdisableautofill=true
-
-## Channel settings
-# (Optional) Minimum channel size. Uncomment and set whatever you want
-# (default: 20000 sats)
-minchansize=1000000
-
-## (Optional) High fee environment settings
-#max-commit-fee-rate-anchors=10
-#max-channel-fee-allocation=0.5
-
-## Communication
-accept-keysend=true
-accept-amp=true
-
-## Rebalancing
-allow-circular-route=true
-
-## Modo Hibrido
-# specify an interface (IPv4/IPv6) and port (default 9735) to listen on
-# listen on IPv4 interface or listen=[::1]:9736 on IPv6 interface
-listen=0.0.0.0:9735
-# listen=[::1]:9736
-
-## Performance
-gc-canceled-invoices-on-startup=true
-gc-canceled-invoices-on-the-fly=true
-ignore-historical-gossip-filters=true
-restlisten=0.0.0.0:8080
-rpclisten=0.0.0.0:10009
-
-[Bitcoin]
-bitcoin.mainnet=true
-bitcoin.node=bitcoind
-
-# Fee settings - default LND base fee = 1000 (mSat), fee rate = 1 (ppm)
-# You can choose whatever you want e.g ZeroFeeRouting (0,0) or ZeroBaseFee (0,X)
-bitcoin.basefee=0
-bitcoin.feerate=0
-# (Optional) Specify the CLTV delta we will subtract from a forwarded HTLC's timelock value
-# (default: 80)
-#bitcoin.timelockdelta=80
-
-#[Bitcoind]
-#bitcoind.rpchost=127.0.0.1:8332
-#bitcoind.rpcuser=
-#bitcoind.rpcpass=
-#bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
-#bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
-
-[Bitcoind]
-bitcoind.rpchost=bitcoin.br-ln.com:8085
-bitcoind.rpcuser=$bitcoind_rpcuser
-bitcoind.rpcpass=$bitcoind_rpcpass
-bitcoind.zmqpubrawblock=tcp://bitcoin.br-ln.com:28332
-bitcoind.zmqpubrawtx=tcp://bitcoin.br-ln.com:28333
-
-[protocol]
-protocol.wumbo-channels=false
-protocol.option-scid-alias=true
-protocol.simple-taproot-chans=true
-
-[wtclient]
-## Watchtower client settings
-wtclient.active=true
-
-# (Optional) Specify the fee rate with which justice transactions will be signed
-# (default: 10 sat/byte)
-#wtclient.sweep-fee-rate=10
-
-[watchtower]
-## Watchtower server settings
-watchtower.active=true
-
-[routing]
-routing.strictgraphpruning=true
-
-[bolt]
-## Database
-# Set the next value to false to disable auto-compact DB
-# and fast boot and comment the next line
-db.bolt.auto-compact=true
-# Uncomment to do DB compact at every LND reboot (default: 168h)
-#db.bolt.auto-compact-min-age=0h
-
-## High fee environment (Optional)
-# (default: CONSERVATIVE) Uncomment the next 2 lines
-#[Bitcoind]
-#bitcoind.estimatemode=ECONOMICAL
-
-[tor]
-# If clearnet active, change the 2 lines below to true and false
-tor.skip-proxy-for-clearnet-targets=false
-tor.streamisolation=true
-tor.active=true
-tor.v3=true
 EOF
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
