@@ -74,7 +74,6 @@
         <div id="lnd" class="status">LND: ...</div>
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
-        <div id="blockchain-status">Blockchain: --</div>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
     </div>
 
@@ -100,20 +99,6 @@
                     alert("Erro ao atualizar status: " + error.message);
                 });
         }
-        function analisarStatus() {
-  // ... o código já existente de análise ...
-
-  // Chamar a API para verificar a Blockchain
-  fetch("http://127.0.0.1:5005/blockchain-status")
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById("blockchain-status").innerText = "Blockchain: " + data.blockchain;
-    })
-    .catch(error => {
-      document.getElementById("blockchain-status").innerText = "Blockchain: Erro";
-      console.error("Erro ao buscar status da blockchain:", error);
-    });
-}
     </script>
 
 </body>
