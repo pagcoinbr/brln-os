@@ -153,7 +153,7 @@ download_lnd() {
 }
 
 configure_lnd() {
-  local file_path="/home/admin/conf_files/lnd.conf"
+  local file_path="/home/admin/brlnfullauto/conf_files/lnd.conf"
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
