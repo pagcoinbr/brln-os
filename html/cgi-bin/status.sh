@@ -16,7 +16,7 @@ echo "{
     \"tor\": \"$(check_service tor)\"
 }"
 # Verifica se bitcoind.rpchost está ativo ou comentado
-CONF_PATH="/home/admin/brlnfullauto/html/cgi-bin"
+CONF_PATH="/data/lnd/lnd.conf"
 
 if grep -q "^bitcoind.rpchost=bitcoin.br-ln.com:8085" "$CONF_PATH"; then
     echo "Blockchain: Remoto"
@@ -25,3 +25,4 @@ elif grep -q "^#bitcoind.rpchost=bitcoin.br-ln.com:8085" "$CONF_PATH"; then
 else
     echo "Blockchain: Desconhecida"
 fi
+
