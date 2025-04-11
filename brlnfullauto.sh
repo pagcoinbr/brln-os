@@ -153,6 +153,7 @@ download_lnd() {
 }
 
 configure_lnd() {
+  local file_path="/home/admin/conf_files/lnd.conf"
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
@@ -163,6 +164,8 @@ configure_lnd() {
   if [[ $use_brlnd == "yes" ]]; then
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+    sudo sed -i "75s|.*|bitcoind.rpcuser=$bitcoind_rpcuser|" "$file_path"
+    sudo sed -i "76s|.*|bitcoind.rpcpass=$bitcoind_rpcpass|" "$file_path"
     read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
   elif [[ $use_brlnd == "no" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
@@ -170,12 +173,12 @@ configure_lnd() {
     echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
     exit 1
   fi
-  local file_path="/data/lnd/lnd.conf"
   local alias_line="alias=$alias | BR⚡️LN"
   # Insere a linha na posição 8
   sudo sed -i "8i$alias_line" "$file_path"
   read -p "Qual Database você deseja usar? (sqlite/bbolt): " db_choice
   if [[ $db_choice == "sqlite" ]]; then
+    postgres_db
     echo -e "${GREEN}Você escolheu usar o SQLite!${NC}"
     postgres_db
     psql -V
@@ -207,7 +210,7 @@ EOF
     exit 1
   fi
   # Inserir a configuração no arquivo lnd.conf na linha 100
-  echo "$lnd_db" | sudo sed -i '100r /dev/stdin' /data/lnd/lnd.conf
+  echo "$lnd_db" | sudo sed -i '100r /dev/stdin' $file_path
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -215,13 +218,11 @@ EOF
   sudo mkdir -p /data/lnd
   sudo chown -R admin:admin /data/lnd
   ln -s /data/lnd /home/admin/.lnd
-  cat << EOF > /data/lnd/lnd.conf
-
-EOF
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
+  sudo cp $file_path /data/lnd/lnd.conf
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
 if [ -f /data/lnd/password.txt ]; then
