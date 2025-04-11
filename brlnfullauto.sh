@@ -164,11 +164,12 @@ configure_lnd() {
   if [[ $use_brlnd == "yes" ]]; then
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
+    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
     sudo sed -i "75s|.*|bitcoind.rpcuser=$bitcoind_rpcuser|" "$file_path"
     sudo sed -i "76s|.*|bitcoind.rpcpass=$bitcoind_rpcpass|" "$file_path"
-    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
   elif [[ $use_brlnd == "no" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
+    toogle_on
   else
     echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
     exit 1
@@ -225,28 +226,17 @@ EOF
   sudo cp $file_path /data/lnd/lnd.conf
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
-if [ -f /data/lnd/password.txt ]; then
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-else
-  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
-  exit 1
-fi
 else
   echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
-  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW} Você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
+  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS.${YELLOW} Para isso você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
   echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
   echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
-  read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
+  read -p "Seu bitcoin core já está completamente sincronizado? (yes/no): " sync_choice
   if [[ $sync_choice == "yes" ]]; then
   echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
   toogle_on >> /dev/null 2>&1
+  sleep 5
   create_wallet
-if [ -f /data/lnd/password.txt ]; then
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-else
-  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
-  exit 1
-fi
 fi
 fi
 }
