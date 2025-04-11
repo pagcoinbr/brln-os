@@ -74,7 +74,7 @@
         <div id="lnd" class="status">LND: ...</div>
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
-        <p id="blockchain">Blockchain: ...</p>
+        <div id="blockchain" class="status">Blockchain: ...</div>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
     </div>
 
@@ -87,7 +87,7 @@
                 if (!res.ok) {
                     throw new Error('Erro ao obter status do sistema.');
                 }
-                return res.text();  // <- Aqui trocamos de res.json() para res.text()
+                return res.text(); // ✅ <- Aqui trocamos para texto simples
             })
             .then(text => {
                 const lines = text.split('\n');
@@ -112,6 +112,8 @@
             });
     }
 </script>
+
+
 
 </body>
 </html>
