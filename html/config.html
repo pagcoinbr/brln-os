@@ -74,32 +74,44 @@
         <div id="lnd" class="status">LND: ...</div>
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
+        <p id="blockchain">Blockchain: ...</p>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
     </div>
 
     <a href="index.html" class="back botao">⬅️ Voltar</a>
 
-    <script>
-        function atualizarStatus() {
-            fetch('/cgi-bin/status.sh')
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Erro ao obter status do sistema.');
+ <script>
+    function atualizarStatus() {
+        fetch('/cgi-bin/status.sh')
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Erro ao obter status do sistema.');
+                }
+                return res.text();  // <- Aqui trocamos de res.json() para res.text()
+            })
+            .then(text => {
+                const lines = text.split('\n');
+                for (const line of lines) {
+                    if (line.includes("CPU:")) {
+                        document.getElementById("cpu").innerText = line;
+                    } else if (line.includes("RAM:")) {
+                        document.getElementById("ram").innerText = line;
+                    } else if (line.includes("LND:")) {
+                        document.getElementById("lnd").innerText = line;
+                    } else if (line.includes("Bitcoind:")) {
+                        document.getElementById("bitcoind").innerText = line;
+                    } else if (line.includes("Tor:")) {
+                        document.getElementById("tor").innerText = line;
+                    } else if (line.includes("Blockchain:")) {
+                        document.getElementById("blockchain").innerText = line;
                     }
-                    return res.json();
-                })
-                .then(data => {
-                    document.getElementById("cpu").innerText = "CPU: " + data.cpu;
-                    document.getElementById("ram").innerText = "RAM: " + data.ram;
-                    document.getElementById("lnd").innerText = "LND: " + data.lnd;
-                    document.getElementById("bitcoind").innerText = "Bitcoind: " + data.bitcoind;
-                    document.getElementById("tor").innerText = "Tor: " + data.tor;
-                })
-                .catch(error => {
-                    alert("Erro ao atualizar status: " + error.message);
-                });
-        }
-    </script>
+                }
+            })
+            .catch(error => {
+                alert("Erro ao atualizar status: " + error.message);
+            });
+    }
+</script>
 
 </body>
 </html>
