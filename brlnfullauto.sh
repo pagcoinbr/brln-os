@@ -112,22 +112,38 @@ postgres_db () {
   sudo install -d /usr/share/postgresql-common/pgdg
   sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
   sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-  sudo apt update && sudo apt install postgresql postgresql-contrib
-  sudo ss -tulpn | grep postgres
-  echo -e "${GREEN}Postgressdb Instalado com sucesso!${NC}"
+  sudo apt update && sudo apt install -y postgresql postgresql-contrib
+  sudo ss -tulpn | grep 5432
+
+  echo -e "${GREEN}PostgresDB Instalado com sucesso!${NC}"
   sleep 3
+
+  # Diretório de dados como admin
   sudo mkdir -p /data/postgresdb/17
   sudo chown -R admin:admin /data/postgresdb
   sudo chmod -R 700 /data/postgresdb
-  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
-  # Automatizar a alteração do diretório de dados no arquivo de configuração do PostgreSQL
+
+  # Inicializar cluster como admin
+  /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
+
+  # Alterar o local do data_directory
   sudo sed -i "42s|.*|data_directory = '/data/postgresdb/17'|" "/etc/postgresql/17/main/postgresql.conf"
-  sudo systemctl restart postgresql
+
+  # Atualizar o systemd para rodar como admin
+  sudo sed -i 's/^User=postgres/User=admin/' /lib/systemd/system/postgresql@17-main.service
+  sudo systemctl daemon-reexec
+  sudo systemctl daemon-reload
+
+  sudo systemctl restart postgresql@17-main
+
   # Checar o status do PostgreSQL
   pg_lsclusters
-  sudo ss -tulpn | grep postgres
-  sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';"
+  sudo ss -tulpn | grep 5432
+
+  # Criar o role admin dentro do PostgreSQL (você já é o admin do sistema)
+  psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';" || true
 }
+
 
 download_lnd() {
   set -e
