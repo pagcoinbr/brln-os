@@ -216,9 +216,9 @@ configure_lnd() {
   local alias_line="alias=$alias | BR⚡️LN"
   # Insere a linha na posição 8
   sudo sed -i "8i$alias_line" "$file_path"
-  read -p "Qual Database você deseja usar? (sqlite/bbolt): " db_choice
-  if [[ $db_choice == "sqlite" ]]; then
-    echo -e "${GREEN}Você escolheu usar o SQLite!${NC}"
+  read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
+  if [[ $db_choice == "postgres" ]]; then
+    echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
     postgres_db
     psql -V
     lnd_db=$(cat <<EOF
@@ -232,7 +232,7 @@ db.postgres.timeout=0
 EOF
 )
   elif [[ $db_choice == "bbolt" ]]; then
-    echo -e "${RED}Você escolheu usar o BBolt!${NC}"
+    echo -e "${RED}Você escolheu usar o Bbolt!${NC}"
     lnd_db=$(cat <<EOF
 [bolt]
 ## Database
