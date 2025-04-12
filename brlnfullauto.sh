@@ -256,9 +256,12 @@ create_wallet () {
   echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   sudo chown admin:admin /data/lnd/password.txt
   sudo chmod 600 /data/lnd/password.txt
+  sudo chown admin:admin /data/lnd
+  sudo chmod 740 /data/lnd/lnd.conf
   sudo systemctl daemon-reload
   sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
+  lncli --tlscertpath /data/lnd/tls.cert.tmp create
   unset password  # limpa da memória, por segurança
 }
 
