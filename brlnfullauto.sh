@@ -1,19 +1,16 @@
 #!/bin/bash
-SCRIPT_VERSION=v0.8.7.5-beta
+SCRIPT_VERSION=v0.8.9-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
-LND_VERSION=0.18.3
+LND_VERSION=0.18.5
 BTC_VERSION=28.1
-MAIN_DIR=/data
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-LND_CONF="/data/lnd/lnd.conf"
-APACHE_CONF="/etc/apache2/sites-enabled/000-default.conf"
 HTML_SRC=/home/admin/brlnfullauto/html
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
-LNBITS_DIR="/home/admin/lnbits"
 POETRY_BIN="/home/admin/.local/bin/poetry"
+
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -46,7 +43,7 @@ for script in "$CGI_DST"/*.sh; do
 done
 
 # Configurar o Apache para permitir CGI no diretório correto
-if ! grep -q 'Directory "/usr/lib/cgi-bin"' "$APACHE_CONF"; then
+if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
   echo "Adicionando bloco de configuração CGI ao Apache..."
   sudo sed -i '/<\/VirtualHost>/i \
 <Directory "/usr/lib/cgi-bin">\n\
@@ -54,7 +51,7 @@ if ! grep -q 'Directory "/usr/lib/cgi-bin"' "$APACHE_CONF"; then
   Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
   Require all granted\n\
   AddHandler cgi-script .sh\n\
-</Directory>\n' "$APACHE_CONF"
+</Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
 else
   echo "Bloco de configuração CGI já existe no Apache."
 fi
@@ -85,8 +82,8 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 create_main_dir() {
-sudo mkdir $MAIN_DIR
-sudo chown admin:admin $MAIN_DIR
+sudo mkdir /data
+sudo chown admin:admin /data
 }
 
 configure_ufw() {
@@ -134,6 +131,7 @@ download_lnd() {
   tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+  sudo rm -rf /home/admin/lnd-install
 }
 
 configure_lnd() {
@@ -335,6 +333,7 @@ create_wallet () {
 }
 
 install_bitcoind() {
+  set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
    else
@@ -650,7 +649,7 @@ toogle_on () {
   )
 
   # Função interna para comentar linhas 73 a 78
-    sed -i '73,78 s/^/#/' "$LND_CONF"
+    sed -i '73,78 s/^/#/' "/data/lnd/lnd.conf"
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
@@ -677,7 +676,7 @@ toogle_off () {
   )
 
   # Função interna para descomentar linhas 73 a 78
-    sed -i '73,78 s/^#//' "$LND_CONF"
+    sed -i '73,78 s/^#//' "/data/lnd/lnd.conf"
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
@@ -911,7 +910,8 @@ simple_lnwallet () {
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet /home/admin/simple-lnwallet
+    cd /home/admin
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
@@ -923,7 +923,7 @@ simple_lnwallet () {
   echo
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
-  xxd -p ~/.lnd/tls.cert | tr -d '\n' > ~/brlnfullauto/tls.hex
+  xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
   rm -f ~/brlnfullauto/tls.hex
   echo
@@ -1019,9 +1019,9 @@ menu() {
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
   echo -e "   ${GREEN}1${NC}- Instalar Interface Gráfica & Interface de Rede"
-  echo -e "   ${GREEN}2${NC}- Instalar LND & Criar Carteira"
-  echo -e "   ${GREEN}3${NC}- Instalar Bitcoin Core"
-  echo
+  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core"
+  echo -e "   ${GREEN}3${NC}- Instalar LND & Criar Carteira"
+  echo 
   echo -e "${YELLOW} Estas São as Opções de Instalação de Aplicativos de Administração:${NC}"
   echo
   echo -e "   ${GREEN}4${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
@@ -1055,6 +1055,23 @@ menu() {
       menu      
       ;;
     2)
+      echo -e "${YELLOW} instalando o bitcoind...${NC}"
+      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_bitcoind
+      elif [[ "$verbose_mode" == "n" ]]; then
+        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+        install_bitcoind >> /dev/null 2>&1
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
+      echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
+      menu
+      ;;
+    3)
       echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW} instalando o lnd...${NC}"
@@ -1071,23 +1088,6 @@ menu() {
       fi
       configure_lnd
       echo -e "\033[43m\033[30m ✅ Sua instalação do LND foi bem sucedida! \033[0m"
-      menu
-      ;;
-    3)
-      echo -e "${YELLOW} instalando o bitcoind...${NC}"
-      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        install_bitcoind
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-        install_bitcoind >> /dev/null 2>&1
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
       menu
       ;;
     4)
@@ -1111,6 +1111,7 @@ menu() {
       fi
       echo -e "\033[43m\033[30m ✅ Balance of Satoshis instalado com sucesso! \033[0m"
       echo
+      echo -e "${YELLOW}🕒 Iniciando a instalação do Thunderhub...${NC}"
       read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode

@@ -7,27 +7,22 @@ NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
-echo -e "${GREEN}Iniciando instalação do BRLN FullAuto...${NC}"
+echo -e "${BLUE}Iniciando instalação do BRLN FullAuto...${NC}"
 sleep 1
 
 brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
-    echo -e "${GREEN}Diretório brlnfullauto já presente.${NC}"
+    echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
-
     sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
     sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
     sudo -u admin git -C "$INSTALL_DIR" checkout main
-    git stash
-    git pull
   fi
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
-
-  echo -e "${GREEN}Executando brlnfullauto.sh como admin...${NC}"
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
 }
@@ -54,7 +49,7 @@ if [[ -d "/home/admin" ]]; then
 
     echo "✅ Diretório /home/admin corrigido com sucesso."
   else
-    echo "✅ Diretório /home/admin já pertence ao usuário admin."
+    echo 
   fi
 else
   echo "➕ Criando diretório /home/admin..."
@@ -76,7 +71,7 @@ else
   echo -e "${RED} Você não está logado como admin! ${NC}"
   echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
 fi
-read -p "Você deseja criar um usuário admin? (yes/no): " create_user
+read -p "Você deseja mudar a senha do usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then
 # Garante que o grupo 'admin' existe
 if getent group admin > /dev/null; then
