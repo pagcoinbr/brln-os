@@ -218,7 +218,17 @@ configure_lnd() {
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
     echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
-    postgres_db
+    read -p "Você deseja exibir os logs da instalação? (yes/no): " show_logs
+    if [[ $show_logs == "yes" ]]; then
+      echo -e "${GREEN}Exibindo logs da instalação do Postgres...${NC}"
+      postgres_db
+    elif [[ $show_logs == "no" ]]; then
+      echo -e "${RED}Você escolheu não exibir os logs da instalação do Postgres!${NC}"
+      postgres_db >> /dev/null 2>&1
+    else
+      echo -e "${RED}Opção inválida. Por favor, escolha 'yes' ou 'no'.${NC}"
+      exit 1
+    fi
     psql -V
     lnd_db=$(cat <<EOF
 [db]
@@ -822,8 +832,8 @@ bitcoin-cli --version
 menu_manutencao
 }	
 
-simple_lnwallet () {
-  if [[ -f ./simple-lnwallet ]]; then
+get_simple_wallet () {
+if [[ -f ./simple-lnwallet ]]; then
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
@@ -831,6 +841,19 @@ simple_lnwallet () {
     wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
+  fi
+}
+
+simple_lnwallet () {
+  read -p "Deseja exibir os logs da instalação? (yes/no): " logs_choice
+  if [[ $logs_choice == "yes" ]]; then
+    get_simple_wallet
+  elif
+  [[ $logs_choice == "no" ]]; then
+    get_simple_wallet > /dev/null 2>&1
+  else
+    echo "Opção inválida!"
+    exit 1
   fi
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
