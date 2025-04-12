@@ -305,6 +305,7 @@ create_wallet () {
 }
 
 install_bitcoind() {
+  local file_path="/home/admin/brlnfullauto/conf_files/bitcoin.conf"
   set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
@@ -326,6 +327,7 @@ install_bitcoind() {
   sudo mkdir -p /data/bitcoin
   sudo chown admin:admin /data/bitcoin
   ln -s /data/bitcoin /home/admin/.bitcoin
+  sudo cp $file_path /data/bitcoin/bitcoin.conf
   cd /home/admin/.bitcoin
   wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
   sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
