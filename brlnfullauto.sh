@@ -69,8 +69,6 @@ EOF
 else
   echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
 fi
-
-
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
   echo "Abrindo a porta 80 no UFW..."
@@ -111,6 +109,66 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
   fi
 }
 
+postgres_db () {
+  cd "$(dirname "$0")" || cd ~
+
+  echo -e "${GREEN}⏳ Iniciando instalação do PostgreSQL...${NC}"
+
+  # Importa a chave do repositório oficial
+  sudo install -d /usr/share/postgresql-common/pgdg
+  sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+  # Adiciona o repositório
+  sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+  # Atualiza os pacotes e instala o PostgreSQL
+  sudo apt update && sudo apt install -y postgresql postgresql-contrib
+
+  echo -e "${GREEN}✅ PostgreSQL instalado com sucesso!${NC}"
+  sleep 2
+
+  # Cria o diretório de dados customizado
+  sudo mkdir -p /data/postgresdb/17
+  sudo chown -R postgres:postgres /data/postgresdb
+  sudo chmod -R 700 /data/postgresdb
+
+  echo -e "${GREEN}📁 Diretório /data/postgresdb/17 preparado.${NC}"
+  sleep 1
+
+  # Inicializa o cluster no novo local
+  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
+
+  # Redireciona o PostgreSQL para o novo diretório
+  sudo sed -i "42s|.*|data_directory = '/data/postgresdb/17'|" /etc/postgresql/17/main/postgresql.conf
+
+  echo -e "${YELLOW}🔁 Redirecionando data_directory para /data/postgresdb/17${NC}"
+
+  # Reinicia serviços e recarrega systemd
+  sudo systemctl daemon-reexec
+  sudo systemctl daemon-reload
+  sudo systemctl restart postgresql
+
+  # Exibe status
+  echo -e "${GREEN}📡 Verificando status da instância principal...${NC}"
+  journalctl -n 10 -u postgresql@17-main.service
+
+  # Verifica se está ouvindo na porta 5432
+  sudo ss -tulpn | grep 5432
+
+  # Mostra clusters ativos
+  pg_lsclusters
+
+  # Cria a role admin com senha padrão (admin)
+  sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';" || true
+
+  # Cria banco de dados lndb com owner admin
+  sudo -u postgres createdb -O admin lndb
+
+  echo -e "${GREEN}🎉 PostgreSQL está pronto para uso com o banco 'lndb' e o usuário 'admin'.${NC}"
+}
+
+
+
 download_lnd() {
   set -e
   mkdir -p ~/lnd-install
@@ -131,10 +189,10 @@ download_lnd() {
   tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
-  sudo rm -rf /home/admin/lnd-install
 }
 
 configure_lnd() {
+  local file_path="/home/admin/brlnfullauto/conf_files/lnd.conf"
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
@@ -146,119 +204,46 @@ configure_lnd() {
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
     read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
+    sudo sed -i "75s|.*|bitcoind.rpcuser=$bitcoind_rpcuser|" "$file_path"
+    sudo sed -i "76s|.*|bitcoind.rpcpass=$bitcoind_rpcpass|" "$file_path"
   elif [[ $use_brlnd == "no" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
+    toogle_on
   else
     echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
     exit 1
   fi
-  sudo usermod -aG debian-tor admin
-  sudo chmod 640 /run/tor/control.authcookie
-  sudo chmod 750 /run/tor
-  sudo usermod -a -G debian-tor admin
-  sudo mkdir -p /data/lnd
-  sudo chown -R admin:admin /data/lnd
-  ln -s /data/lnd /home/admin/.lnd
-  cat << EOF > /data/lnd/lnd.conf
-# MiniBolt: lnd configuration
-# /data/admin/lnd.conf
+  local alias_line="alias=$alias | BR⚡️LN"
+  # Insere a linha na posição 8
+  sudo sed -i "8i$alias_line" "$file_path"
+  read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
+  if [[ $db_choice == "postgres" ]]; then
+    echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
+    read -p "Você deseja exibir os logs da instalação? (yes/no): " show_logs
+    if [[ $show_logs == "yes" ]]; then
+      echo -e "${GREEN}Exibindo logs da instalação do Postgres...${NC}"
+      postgres_db
+    elif [[ $show_logs == "no" ]]; then
+      echo -e "${RED}Você escolheu não exibir os logs da instalação do Postgres!${NC}"
+      postgres_db >> /dev/null 2>&1
+    else
+      echo -e "${RED}Opção inválida. Por favor, escolha 'yes' ou 'no'.${NC}"
+      exit 1
+    fi
+    psql -V
+    lnd_db=$(cat <<EOF
+[db]
+## Database selection
+db.backend=postgres
 
-[Application Options]
-externalhosts=<ddns_clearnet>:9735
-# externalip=<fixed_ip_clearnet>
-# Up to 32 UTF-8 characters, accepts emojis i.e ⚡🧡​ https://emojikeyboard.top/
-alias=$alias|BR⚡️LN
-# You can choose the color you want at https://www.color-hex.com/
-color=#ff9900
-
-# Automatically unlock wallet with the password in this file
-wallet-unlock-password-file=/data/lnd/password.txt
-wallet-unlock-allow-create=true
-
-# The TLS private key will be encrypted to the node's seed
-tlsencryptkey=true
-
-# Automatically regenerate certificate when near expiration
-tlsautorefresh=true
-
-# Do not include the interface IPs or the system hostname in TLS certificate
-tlsdisableautofill=true
-
-## Channel settings
-# (Optional) Minimum channel size. Uncomment and set whatever you want
-# (default: 20000 sats)
-minchansize=1000000
-
-## (Optional) High fee environment settings
-#max-commit-fee-rate-anchors=10
-#max-channel-fee-allocation=0.5
-
-## Communication
-accept-keysend=true
-accept-amp=true
-
-## Rebalancing
-allow-circular-route=true
-
-## Modo Hibrido
-# specify an interface (IPv4/IPv6) and port (default 9735) to listen on
-# listen on IPv4 interface or listen=[::1]:9736 on IPv6 interface
-listen=0.0.0.0:9735
-# listen=[::1]:9736
-
-## Performance
-gc-canceled-invoices-on-startup=true
-gc-canceled-invoices-on-the-fly=true
-ignore-historical-gossip-filters=true
-restlisten=0.0.0.0:8080
-rpclisten=0.0.0.0:10009
-
-[Bitcoin]
-bitcoin.mainnet=true
-bitcoin.node=bitcoind
-
-# Fee settings - default LND base fee = 1000 (mSat), fee rate = 1 (ppm)
-# You can choose whatever you want e.g ZeroFeeRouting (0,0) or ZeroBaseFee (0,X)
-bitcoin.basefee=0
-bitcoin.feerate=0
-# (Optional) Specify the CLTV delta we will subtract from a forwarded HTLC's timelock value
-# (default: 80)
-#bitcoin.timelockdelta=80
-
-#[Bitcoind]
-#bitcoind.rpchost=127.0.0.1:8332
-#bitcoind.rpcuser=
-#bitcoind.rpcpass=
-#bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
-#bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
-
-[Bitcoind]
-bitcoind.rpchost=bitcoin.br-ln.com:8085
-bitcoind.rpcuser=$bitcoind_rpcuser
-bitcoind.rpcpass=$bitcoind_rpcpass
-bitcoind.zmqpubrawblock=tcp://bitcoin.br-ln.com:28332
-bitcoind.zmqpubrawtx=tcp://bitcoin.br-ln.com:28333
-
-[protocol]
-protocol.wumbo-channels=false
-protocol.option-scid-alias=true
-protocol.simple-taproot-chans=true
-
-[wtclient]
-## Watchtower client settings
-wtclient.active=true
-
-# (Optional) Specify the fee rate with which justice transactions will be signed
-# (default: 10 sat/byte)
-#wtclient.sweep-fee-rate=10
-
-[watchtower]
-## Watchtower server settings
-watchtower.active=true
-
-[routing]
-routing.strictgraphpruning=true
-
+[postgres]
+db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
+db.postgres.timeout=0
+EOF
+)
+  elif [[ $db_choice == "bbolt" ]]; then
+    echo -e "${RED}Você escolheu usar o Bbolt!${NC}"
+    lnd_db=$(cat <<EOF
 [bolt]
 ## Database
 # Set the next value to false to disable auto-compact DB
@@ -266,47 +251,41 @@ routing.strictgraphpruning=true
 db.bolt.auto-compact=true
 # Uncomment to do DB compact at every LND reboot (default: 168h)
 #db.bolt.auto-compact-min-age=0h
-
-## High fee environment (Optional)
-# (default: CONSERVATIVE) Uncomment the next 2 lines
-#[Bitcoind]
-#bitcoind.estimatemode=ECONOMICAL
-
-[tor]
-# If clearnet active, change the 2 lines below to true and false
-tor.skip-proxy-for-clearnet-targets=false
-tor.streamisolation=true
-tor.active=true
-tor.v3=true
 EOF
+)
+  else
+    echo -e "${RED}Opção inválida. Por favor, escolha 'sqlite' ou 'bbolt'.${NC}"
+    exit 1
+  fi
+  # Inserir a configuração no arquivo lnd.conf na linha 100
+  echo "$lnd_db" | sudo sed -i '100r /dev/stdin' $file_path
+  sudo usermod -aG debian-tor admin
+  sudo chmod 640 /run/tor/control.authcookie
+  sudo chmod 750 /run/tor
+  sudo usermod -a -G debian-tor admin
+  sudo mkdir -p /data/lnd
+  sudo chown -R admin:admin /data/lnd
+  ln -s /data/lnd /home/admin/.lnd
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
   sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
+  sudo cp $file_path /data/lnd/lnd.conf
+  sudo chown admin:admin /data/lnd/lnd.conf
+  sudo chmod 640 /data/lnd/lnd.conf
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
-if [ -f /data/lnd/password.txt ]; then
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-else
-  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
-  exit 1
-fi
 else
   echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
-  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS${YELLOW} Você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
+  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS.${YELLOW} Para isso você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
   echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
   echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
-  read -p "Seu bitcoin core já está sincronizado? (yes/no): " sync_choice
+  read -p "Seu bitcoin core já está completamente sincronizado? (yes/no): " sync_choice
   if [[ $sync_choice == "yes" ]]; then
   echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
   toogle_on >> /dev/null 2>&1
+  sleep 5
   create_wallet
-if [ -f /data/lnd/password.txt ]; then
-  lncli --tlscertpath /data/lnd/tls.cert.tmp create
-else
-  echo -e "${RED}Erro: Arquivo de senha não encontrado.${NC}"
-  exit 1
-fi
 fi
 fi
 }
@@ -326,101 +305,50 @@ create_wallet () {
   echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   sudo chown admin:admin /data/lnd/password.txt
   sudo chmod 600 /data/lnd/password.txt
+  sudo chown admin:admin /data/lnd
+  sudo chmod 740 /data/lnd/lnd.conf
   sudo systemctl daemon-reload
   sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
+  lncli --tlscertpath /data/lnd/tls.cert.tmp create
   unset password  # limpa da memória, por segurança
+  sudo rm -rf /home/admin/lnd-install
 }
 
 install_bitcoind() {
+  local file_path="/home/admin/brlnfullauto/conf_files/bitcoin.conf"
   set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
-   else
+  else
     arch_btc="aarch64"
   fi
-    cd /tmp
-    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
-    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
-    wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
-    sha256sum --ignore-missing --check SHA256SUMS
-    curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
-    gpg --verify SHA256SUMS.asc
-    tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
-    sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
-    sudo mkdir -p /data/bitcoin
-    sudo chown admin:admin /data/bitcoin
-    ln -s /data/bitcoin /home/admin/.bitcoin
-    cd /home/admin/.bitcoin
-    wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
-    python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth
-    cat << EOF > /data/bitcoin/bitcoin.conf
-# MiniBolt: bitcoind configuration
-# /data/bitcoin/bitcoin.conf
 
-# Bitcoin daemon
-server=1
-txindex=1
-
-# Append comment to the user agent string
-uacomment=MiniBolt node
-
-# Suppress a breaking RPC change that may prevent LND from starting up
-deprecatedrpc=warnings
-
-# Disable integrated wallet
-disablewallet=1
-
-# Additional logs
-debug=tor
-debug=i2p
-
-# Assign to the cookie file read permission to the Bitcoin group users
-rpccookieperms=group
-
-# Disable debug.log
-nodebuglogfile=1
-
-# Avoid assuming that a block and its ancestors are valid,
-# and potentially skipping their script verification.
-# We will set it to 0, to verify all.
-assumevalid=0
-
-# Enable all compact filters
-blockfilterindex=1
-
-# Serve compact block filters to peers per BIP 157
-peerblockfilters=1
-
-# Maintain coinstats index used by the gettxoutsetinfo RPC
-coinstatsindex=1
-
-# Network
-listen=1
-
-## P2P bind
-bind=127.0.0.1
-
-## Proxify clearnet outbound connections using Tor SOCKS5 proxy
-proxy=127.0.0.1:9050
-
-## I2P SAM proxy to reach I2P peers and accept I2P connections
-i2psam=127.0.0.1:7656
-
-# Connections
-$rpcauth
-zmqpubrawblock=tcp://127.0.0.1:28332
-zmqpubrawtx=tcp://127.0.0.1:28333
-
-whitelist=download@127.0.0.1          # for Electrs
-# Initial block download optimizations
-EOF
-sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
-sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
-sudo systemctl enable bitcoind
-sudo systemctl start bitcoind
-sudo ss -tulpn | grep bitcoind
-echo "Bitcoind instalado com sucesso!"
+  cd /tmp
+  wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+  wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
+  wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
+  sha256sum --ignore-missing --check SHA256SUMS
+  curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do
+    curl -s "$url" | gpg --import
+  done
+  gpg --verify SHA256SUMS.asc
+  tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
+  sudo mkdir -p /data/bitcoin
+  sudo chown admin:admin /data/bitcoin
+  ln -s /data/bitcoin /home/admin/.bitcoin
+  sudo cp $file_path /data/bitcoin/bitcoin.conf
+  sudo chown admin:admin /data/bitcoin/bitcoin.conf
+  sudo chmod 640 /data/bitcoin/bitcoin.conf
+  cd /home/admin/.bitcoin
+  wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
+  sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
+  sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
+  sudo systemctl enable bitcoind
+  sudo systemctl start bitcoind
+  sudo ss -tulpn | grep bitcoind
+  echo "Bitcoind instalado com sucesso!"
 }
 
 install_nodejs() {
@@ -905,8 +833,8 @@ bitcoin-cli --version
 menu_manutencao
 }	
 
-simple_lnwallet () {
-  if [[ -f ./simple-lnwallet ]]; then
+get_simple_wallet () {
+if [[ -f ./simple-lnwallet ]]; then
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
@@ -914,6 +842,19 @@ simple_lnwallet () {
     wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
+  fi
+}
+
+simple_lnwallet () {
+  read -p "Deseja exibir os logs da instalação? (yes/no): " logs_choice
+  if [[ $logs_choice == "yes" ]]; then
+    get_simple_wallet
+  elif
+  [[ $logs_choice == "no" ]]; then
+    get_simple_wallet > /dev/null 2>&1
+  else
+    echo "Opção inválida!"
+    exit 1
   fi
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
@@ -939,15 +880,7 @@ simple_lnwallet () {
   sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
   sleep 6
-  # Extrair a porta do comando systemctl status e exibir para o usuário
-  simple_ln_porta=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
-  if [[ $simple_ln_porta == "" ]]; then
-    echo -e "${RED}❌ Não foi possível encontrar a porta do Simple LNWallet, por favor verifique o serviço.${NC}"
-  else
-    echo -e "${GREEN}✅ Porta do Simple LNWallet encontrada: $simple_ln_porta${NC}"
-  fi
-  echo
-  echo -e "${YELLOW} Acesse apenas na rede local ou pelo Tailscale.${NC}"
+  sudo systemctl status simple-lnwallet.service
 }
 
 submenu_opcoes() {
