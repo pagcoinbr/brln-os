@@ -328,10 +328,11 @@ install_bitcoind() {
   sudo chown admin:admin /data/bitcoin
   ln -s /data/bitcoin /home/admin/.bitcoin
   sudo cp $file_path /data/bitcoin/bitcoin.conf
+  sudo chown admin:admin /data/bitcoin/bitcoin.conf
+  sudo chmod 640 /data/bitcoin/bitcoin.conf
   cd /home/admin/.bitcoin
   wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
   sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
-  sudo chmod 640 /home/admin/.bitcoin/bitcoin.conf
   sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
   sudo systemctl enable bitcoind
   sudo systemctl start bitcoind
