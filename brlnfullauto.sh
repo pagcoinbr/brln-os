@@ -856,8 +856,7 @@ simple_lnwallet () {
   sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
   sleep 6
-
-sudo systemctl status simple-lnwallet.service
+  sudo systemctl status simple-lnwallet.service
 }
 
 submenu_opcoes() {
