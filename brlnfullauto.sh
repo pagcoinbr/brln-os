@@ -856,15 +856,8 @@ simple_lnwallet () {
   sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
   sleep 6
-  # Extrair a porta do comando systemctl status e exibir para o usuário
-  simple_ln_porta=$(sudo systemctl status simple-lnwallet.service | grep -oP 'porta :\K[0-9]+')
-  if [[ $simple_ln_porta == "" ]]; then
-    echo -e "${RED}❌ Não foi possível encontrar a porta do Simple LNWallet, por favor verifique o serviço.${NC}"
-  else
-    echo -e "${GREEN}✅ Porta do Simple LNWallet encontrada: $simple_ln_porta${NC}"
-  fi
-  echo
-  echo -e "${YELLOW} Acesse apenas na rede local ou pelo Tailscale.${NC}"
+
+sudo systemctl status simple-lnwallet.service
 }
 
 submenu_opcoes() {
