@@ -109,40 +109,63 @@ deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_
 }
 
 postgres_db () {
+  cd "$(dirname "$0")" || cd ~
+
+  echo -e "${GREEN}⏳ Iniciando instalação do PostgreSQL...${NC}"
+
+  # Importa a chave do repositório oficial
   sudo install -d /usr/share/postgresql-common/pgdg
   sudo curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+  # Adiciona o repositório
   sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+  # Atualiza os pacotes e instala o PostgreSQL
   sudo apt update && sudo apt install -y postgresql postgresql-contrib
-  sudo ss -tulpn | grep 5432
 
-  echo -e "${GREEN}PostgresDB Instalado com sucesso!${NC}"
-  sleep 3
+  echo -e "${GREEN}✅ PostgreSQL instalado com sucesso!${NC}"
+  sleep 2
 
-  # Diretório de dados como admin
+  # Cria o diretório de dados customizado
   sudo mkdir -p /data/postgresdb/17
-  sudo chown -R admin:admin /data/postgresdb
+  sudo chown -R postgres:postgres /data/postgresdb
   sudo chmod -R 700 /data/postgresdb
 
-  # Inicializar cluster como admin
-  /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
+  echo -e "${GREEN}📁 Diretório /data/postgresdb/17 preparado.${NC}"
+  sleep 1
 
-  # Alterar o local do data_directory
-  sudo sed -i "42s|.*|data_directory = '/data/postgresdb/17'|" "/etc/postgresql/17/main/postgresql.conf"
+  # Inicializa o cluster no novo local
+  sudo -u postgres /usr/lib/postgresql/17/bin/initdb -D /data/postgresdb/17
 
-  # Atualizar o systemd para rodar como admin
-  sudo sed -i 's/^User=postgres/User=admin/' /lib/systemd/system/postgresql@17-main.service
+  # Redireciona o PostgreSQL para o novo diretório
+  sudo sed -i "42s|.*|data_directory = '/data/postgresdb/17'|" /etc/postgresql/17/main/postgresql.conf
+
+  echo -e "${YELLOW}🔁 Redirecionando data_directory para /data/postgresdb/17${NC}"
+
+  # Reinicia serviços e recarrega systemd
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
+  sudo systemctl restart postgresql
 
-  sudo systemctl restart postgresql@17-main
+  # Exibe status
+  echo -e "${GREEN}📡 Verificando status da instância principal...${NC}"
+  journalctl -n 10 -u postgresql@17-main.service
 
-  # Checar o status do PostgreSQL
-  pg_lsclusters
+  # Verifica se está ouvindo na porta 5432
   sudo ss -tulpn | grep 5432
 
-  # Criar o role admin dentro do PostgreSQL (você já é o admin do sistema)
-  psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';" || true
+  # Mostra clusters ativos
+  pg_lsclusters
+
+  # Cria a role admin com senha padrão (admin)
+  sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';" || true
+
+  # Cria banco de dados lndb com owner admin
+  sudo -u postgres createdb -O admin lndb
+
+  echo -e "${GREEN}🎉 PostgreSQL está pronto para uso com o banco 'lndb' e o usuário 'admin'.${NC}"
 }
+
 
 
 download_lnd() {
@@ -195,11 +218,9 @@ configure_lnd() {
   sudo sed -i "8i$alias_line" "$file_path"
   read -p "Qual Database você deseja usar? (sqlite/bbolt): " db_choice
   if [[ $db_choice == "sqlite" ]]; then
-    postgres_db
     echo -e "${GREEN}Você escolheu usar o SQLite!${NC}"
     postgres_db
     psql -V
-    sudo -u postgres createdb -O admin lndb
     lnd_db=$(cat <<EOF
 [db]
 ## Database selection
