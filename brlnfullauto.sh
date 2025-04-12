@@ -10,6 +10,7 @@ CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
+
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
