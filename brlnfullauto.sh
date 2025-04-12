@@ -148,13 +148,6 @@ postgres_db () {
   sudo systemctl daemon-reload
   sudo systemctl restart postgresql
 
-  # Exibe status
-  echo -e "${GREEN}📡 Verificando status da instância principal...${NC}"
-  journalctl -n 10 -u postgresql@17-main.service
-
-  # Verifica se está ouvindo na porta 5432
-  sudo ss -tulpn | grep 5432
-
   # Mostra clusters ativos
   pg_lsclusters
 
