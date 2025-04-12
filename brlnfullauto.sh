@@ -188,7 +188,6 @@ download_lnd() {
   tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
   sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
-  sudo rm -rf /home/admin/lnd-install
 }
 
 configure_lnd() {
@@ -261,6 +260,8 @@ EOF
   sudo chmod 750 /run/tor
   sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
   sudo cp $file_path /data/lnd/lnd.conf
+  sudo chown admin:admin /data/lnd/lnd.conf
+  sudo chmod 640 /data/lnd/lnd.conf
 if [[ $use_brlnd == "yes" ]]; then
   create_wallet
 else
@@ -300,6 +301,7 @@ create_wallet () {
   sudo systemctl start lnd
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   unset password  # limpa da memória, por segurança
+  sudo rm -rf /home/admin/lnd-install
 }
 
 install_bitcoind() {
