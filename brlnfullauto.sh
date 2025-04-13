@@ -260,7 +260,9 @@ EOF
   sudo usermod -a -G debian-tor admin
   sudo mkdir -p /data/lnd
   sudo chown -R admin:admin /data/lnd
+  if [[ ! -d /home/admin/.lnd ]]; then
   ln -s /data/lnd /home/admin/.lnd
+  fi
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -308,7 +310,12 @@ create_wallet () {
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
   echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
-  read -p "Digite sua senha do lnd(Lightning Daemon): " password
+  read -p "Digite sua senha da sua carteira lighting: " password
+  read -p "Confirme sua senha da sua carteira lighting: " password2
+  if [[ $password != $password2 ]]; then
+    echo -e "${RED}As senhas não coincidem. Por favor, tente novamente.${NC}"
+    create_wallet
+  fi
   echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
   sudo chown admin:admin /data/lnd/password.txt
   sudo chmod 600 /data/lnd/password.txt
