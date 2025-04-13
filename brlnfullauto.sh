@@ -260,7 +260,7 @@ EOF
   sudo usermod -a -G debian-tor admin
   sudo mkdir -p /data/lnd
   sudo chown -R admin:admin /data/lnd
-  if [[ ! -d /home/admin/.lnd ]]; then
+  if [[ ! -L /home/admin/.lnd ]]; then
   ln -s /data/lnd /home/admin/.lnd
   fi
   sudo chmod -R g+X /data/lnd
@@ -300,6 +300,9 @@ fi
 } 
 
 create_wallet () {
+  if [[ ! -L /home/admin/.lnd ]]; then
+  ln -s /data/lnd /home/admin/.lnd
+  fi
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
