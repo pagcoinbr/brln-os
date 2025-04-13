@@ -300,6 +300,7 @@ create_wallet () {
   sudo chmod 600 /data/lnd/password.txt
   sudo chown admin:admin /data/lnd
   sudo chmod 740 /data/lnd/lnd.conf
+  sudo usermod -aG admin www-data
   sudo systemctl daemon-reload
   sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
