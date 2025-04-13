@@ -297,6 +297,9 @@ fi
     echo -e "${RED} Opção inválida. Por favor, confirme se anotou a frase de segurança. ${NC}"
     24_word_confirmation
   fi
+  unset password  # limpa da memória, por segurança
+  sudo rm -rf /home/admin/lnd-install
+  menu
 } 
 
 create_wallet () {
@@ -328,8 +331,6 @@ create_wallet () {
   sudo systemctl start lnd
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
   24_word_confirmation
-  unset password  # limpa da memória, por segurança
-  sudo rm -rf /home/admin/lnd-install
 }
 
 install_bitcoind() {
