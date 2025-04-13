@@ -285,6 +285,18 @@ fi
 fi
 }
 
+24_word_confirmation () {
+  echo -e "${YELLOW} Você confirma que anotou a sua frase de 24 palavras corretamente? Ela não poderá ser recuperada no futuro, se não anotada agora!!! ${NC}"
+  echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
+  read -p "Você confirma que anotou a sua frase de 24 palavras corretamente? (yes/no): " confirm_phrase
+  if [[ $confirm_phrase == "yes" ]]; then
+    echo -e "${GREEN} Você confirmou que anotou a frase de 24 palavras! ${NC}"
+  else
+    echo -e "${RED} Opção inválida. Por favor, confirme se anotou a frase de segurança. ${NC}"
+    24_word_confirmation
+  fi
+} 
+
 create_wallet () {
   ln -s /data/lnd /home/admin/.lnd
   sudo chmod -R g+X /data/lnd
@@ -306,6 +318,7 @@ create_wallet () {
   sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
   lncli --tlscertpath /data/lnd/tls.cert.tmp create
+  24_word_confirmation
   unset password  # limpa da memória, por segurança
   sudo rm -rf /home/admin/lnd-install
 }
