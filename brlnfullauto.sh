@@ -76,6 +76,8 @@ if ! sudo ufw status | grep -q "80/tcp"; then
 else
   echo "A porta 80 já está aberta no UFW."
 fi
+sudo usermod -aG admin www-data
+sudo systemctl restart apache2
 echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
@@ -300,7 +302,6 @@ create_wallet () {
   sudo chmod 600 /data/lnd/password.txt
   sudo chown admin:admin /data/lnd
   sudo chmod 740 /data/lnd/lnd.conf
-  sudo usermod -aG admin www-data
   sudo systemctl daemon-reload
   sudo systemctl enable lnd >> /dev/null 2>&1
   sudo systemctl start lnd
