@@ -300,7 +300,6 @@ fi
 } 
 
 create_wallet () {
-  ln -s /data/lnd /home/admin/.lnd
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
