@@ -1,4 +1,7 @@
-#!/bin/bash
+# Cores
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # Reset
 
 # Função de spinner
 spinner() {
@@ -6,7 +9,7 @@ spinner() {
     local delay=0.1
     local spinstr='|/-\'
     echo -n " "
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+    while kill -0 $pid 2>/dev/null; do
         local temp=${spinstr#?}
         printf " [%c]  " "$spinstr"
         local spinstr=$temp${spinstr%"$temp"}
@@ -16,8 +19,30 @@ spinner() {
     printf "    \b\b\b\b"
 }
 
-# Exemplo de comando demorado simulado
-echo -n "Simulando tarefa demorada..."
-(sleep 5) & spinner
-echo "✔ Feito!"
+# Simulação de função "system update"
+system_update() {
+    system update # Verifica atualizacoes do sistema
+    system upgrade -y # Faz atualização do sistema
+}
+
+# Exemplo completo
+echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
+echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
+read -p "Deseja exibir logs? (y/n): " verbose_mode
+
+if [[ "$verbose_mode" == "y" ]]; then
+    system_update
+elif [[ "$verbose_mode" == "n" ]]; then
+    echo -e "${YELLOW}🕒 A instalação está sendo executada em segundo plano...${NC}"
+    system_update >> /dev/null 2>&1 & spinner
+    clear
+else
+    echo "Opção inválida."
+    exit 1
+fi
+
+wait
+echo -e "\033[43m\033[30m ✅ Instalação da interface gráfica e interface de rede concluída! \033[0m"
+# menu  # Se quiser testar, comenta ou define esta função
+
 
