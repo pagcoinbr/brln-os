@@ -30,6 +30,9 @@ echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
 echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
 read -p "Deseja exibir logs? (y/n): " verbose_mode
 
+# Força pedido de password antes do background
+sudo -v
+
 if [[ "$verbose_mode" == "y" ]]; then
     system_update
 elif [[ "$verbose_mode" == "n" ]]; then
