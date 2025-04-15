@@ -21,8 +21,8 @@ spinner() {
 
 # Simulação de função "system update"
 system_update() {
-    system apt-get update # Verifica atualizacoes do sistema
-    system apt-get upgrade -y # Faz atualização do sistema
+    apt-get update # Verifica atualizacoes do sistema
+    apt-get upgrade -y # Faz atualização do sistema
 }
 
 # Exemplo completo
