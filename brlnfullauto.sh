@@ -1018,12 +1018,12 @@ menu() {
         clear
       else
         echo "Opção inválida."
-        exit 1
-      fi
+      fi      
       wait
       echo -e "\033[43m\033[30m ✅ Instalação da interface e gráfica e interface de rede concluída! \033[0m"
       menu      
       ;;
+
     2)
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
