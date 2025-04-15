@@ -1013,7 +1013,8 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW}🕒 A instalação está sendo executada em segundo plano...${NC}"
+        echo -e "${YELLOW}🕒 Essa instalação pode demorar até 40 min.${NC}"
+        echo -e "${YELLOW} Aguarde pois a instalação está sendo executada em segundo plano...${NC}"
         system_preparations >> /dev/null 2>&1 & spinner
         clear
       else
