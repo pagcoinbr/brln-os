@@ -20,6 +20,22 @@ MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
+# Spinner
+spinner() {
+    local pid=$!
+    local delay=0.1
+    local spinstr='|/-\'
+    echo -n " "
+    while kill -0 $pid 2>/dev/null; do
+        local temp=${spinstr#?}
+        printf " [%c]  " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\b\b\b\b\b\b"
+    done
+    printf "    \b\b\b\b"
+}
+
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
 sudo apt update && sudo apt full-upgrade -y
@@ -992,15 +1008,18 @@ menu() {
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Deseja exibir logs? (y/n): " verbose_mode
+    # Força pedido de password antes do background
+      sudo -v
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}🕒 A instalação está sendo executada em segundo plano...${NC}"
-        system_preparations >> /dev/null 2>&1
+        system_preparations >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
-      fi      
+        exit 1
+      fi
       wait
       echo -e "\033[43m\033[30m ✅ Instalação da interface e gráfica e interface de rede concluída! \033[0m"
       menu      
