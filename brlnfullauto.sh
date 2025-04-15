@@ -11,6 +11,9 @@ WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 
+"098765
+"
+
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
