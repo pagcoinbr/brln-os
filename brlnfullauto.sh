@@ -20,6 +20,39 @@ MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
+# Spinner com ⚡ piscando, largura estável
+spinner() {
+    local pid=$!
+    local delay=0.2
+    local spinstr='|/-\'
+    local spinlen=${#spinstr}
+    local i=0
+    local j=0
+
+    tput civis  # Esconde o cursor
+
+    while kill -0 $pid 2>/dev/null; do
+        # Gira o emoji e o spinner
+        local emoji=""
+        if (( i % 2 == 0 )); then
+            emoji="⚡"
+        else
+            emoji="  "  # dois espaços para compensar a largura do ⚡
+        fi
+
+        local spin_char="${spinstr:j:1}"
+
+        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
+
+        sleep $delay
+        i=$(( (i + 1) % 4 ))
+        j=$(( (j + 1) % spinlen ))
+    done
+
+    printf "\r✅ BRLN instalado com sucesso!     \n"
+    tput cnorm  # Mostra o cursor de volta
+}
+
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
 sudo apt update && sudo apt full-upgrade -y
@@ -315,8 +348,8 @@ create_wallet () {
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
   echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
-  read -p "Digite sua senha da sua carteira lighting: " password
-  read -p "Confirme sua senha da sua carteira lighting: " password2
+  read -p "Digite a senha da sua carteira lighting: " password
+  read -p "Confirme a senha da sua carteira lighting: " password2
   if [[ $password != $password2 ]]; then
     echo -e "${RED}As senhas não coincidem. Por favor, tente novamente.${NC}"
     create_wallet
@@ -992,11 +1025,14 @@ menu() {
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Deseja exibir logs? (y/n): " verbose_mode
+    # Força pedido de password antes do background
+      sudo -v
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW}🕒 A instalação está sendo executada em segundo plano...${NC}"
-        system_preparations >> /dev/null 2>&1
+        echo -e "${YELLOW}🕒 Essa instalação pode demorar até 40 min.${NC}"
+        echo -e "${YELLOW} Aguarde pois a instalação está sendo executada em segundo plano...${NC}"
+        system_preparations >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1005,6 +1041,7 @@ menu() {
       echo -e "\033[43m\033[30m ✅ Instalação da interface e gráfica e interface de rede concluída! \033[0m"
       menu      
       ;;
+
     2)
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
@@ -1013,7 +1050,7 @@ menu() {
         install_bitcoind
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-        install_bitcoind >> /dev/null 2>&1
+        install_bitcoind >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1031,7 +1068,7 @@ menu() {
         download_lnd
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-        download_lnd >> /dev/null 2>&1
+        download_lnd >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1054,7 +1091,7 @@ menu() {
         install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-        install_bos >> /dev/null 2>&1
+        install_bos >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1070,7 +1107,7 @@ menu() {
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-        install_thunderhub >> /dev/null 2>&1
+        install_thunderhub >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1086,7 +1123,7 @@ menu() {
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-        install_lndg >> /dev/null 2>&1
+        install_lndg >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida. Usando o modo padrão."
@@ -1108,7 +1145,7 @@ menu() {
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-        lnbits_install >> /dev/null 2>&1
+        lnbits_install >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
