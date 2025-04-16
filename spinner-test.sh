@@ -3,20 +3,30 @@ CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # Reset
 
-# Função de spinner
+# Spinner
 spinner() {
     local pid=$!
-    local delay=0.1
+    local delay=0.2
+    local emoji_frames=('⚡' ' ' '⚡' ' ')
     local spinstr='|/-\'
-    echo -n " "
+    local i=0
+
+    tput civis  # Esconde o cursor
+
     while kill -0 $pid 2>/dev/null; do
         local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
+        local spin_char=$spinstr
+        spinstr=$temp${spinstr%"$temp"}
+
+        local emoji="${emoji_frames[i]}"
+        i=$(( (i + 1) % ${#emoji_frames[@]} ))
+
+        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
         sleep $delay
-        printf "\b\b\b\b\b\b"
     done
-    printf "    \b\b\b\b"
+
+    printf "\r✅ BRLN instalado com sucesso!     \n"
+    tput cnorm  # Mostra o cursor de volta
 }
 
 # Simulação de função "system update"
