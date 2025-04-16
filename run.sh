@@ -15,7 +15,8 @@ brln_check () {
     echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
-    sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
+    #sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
+    sudo -u admin git clone https://github.com/Redinpais/brlnfullauto.git "$INSTALL_DIR"
     sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
     sudo -u admin git -C "$INSTALL_DIR" checkout main
@@ -69,7 +70,7 @@ if [[ $atual_user = "admin" ]]; then
   brln_check
 else
   echo -e "${RED} Você não está logado como admin! ${NC}"
-  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação! ${NC}"
 fi
 read -p "Você deseja criar o usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then

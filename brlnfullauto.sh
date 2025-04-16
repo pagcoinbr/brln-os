@@ -1023,15 +1023,15 @@ menu() {
   case $option in
     1)
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
-      echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
+      echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
     # Força pedido de password antes do background
       sudo -v
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW}🕒 Essa instalação pode demorar até 40 min.${NC}"
-        echo -e "${YELLOW} Aguarde pois a instalação está sendo executada em segundo plano...${NC}"
+        echo -e "${YELLOW} Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
+        echo -e "${YELLOW}🕒 ATENÇÃO: Poderá demorar 10 min. ou mais. Seja paciente.${NC}"        
         system_preparations >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1049,7 +1049,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_bitcoind
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
         install_bitcoind >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1067,7 +1067,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         download_lnd
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
         download_lnd >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1090,7 +1090,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
+        echo -e "${YELLOW} 🕒 Aguarde p.f. Isso pode demorar um pouco...${NC}  "
         install_bos >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1106,7 +1106,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde p.f. Poderá demorar 5 min. ou mais. Seja paciente... ${NC}"
         install_thunderhub >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1122,7 +1122,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde p.f. Isso pode demorar um pouco... ${NC}"
         install_lndg >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1140,11 +1140,11 @@ menu() {
       ;;
     7)
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
-      read -p "Activate verbose mode? (y/n): " verbose_mode
+      read -p "Deseja exigir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde p.f. Isso pode demorar um pouco... Seja paciente. ${NC}"
         lnbits_install >> /dev/null 2>&1 & spinner
         clear
       else
