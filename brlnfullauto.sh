@@ -24,7 +24,7 @@ NC='\033[0m' # Sem cor
 spinner() {
     local pid=$!
     local delay=0.1
-    local spinstr="BR⚡LN a instalar |" "BR   LN a instalar /" "BR⚡LN a instalar  -" "BR   LN a instalar  \"
+    local spinstr='|/-\'
     echo -n " "
     while kill -0 $pid 2>/dev/null; do
         local temp=${spinstr#?}
