@@ -3,12 +3,12 @@ CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # Reset
 
-# Spinner
+# Spinner com emoji piscando, sem "dança"
 spinner() {
     local pid=$!
     local delay=0.2
-    local emoji_frames=('⚡' ' ' '⚡' ' ')
     local spinstr='|/-\'
+    local emoji_frames=('⚡' '\033[30m⚡\033[0m' '⚡' '\033[30m⚡\033[0m')  # Alterna visível/invisível
     local i=0
 
     tput civis  # Esconde o cursor
@@ -21,7 +21,7 @@ spinner() {
         local emoji="${emoji_frames[i]}"
         i=$(( (i + 1) % ${#emoji_frames[@]} ))
 
-        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
+        printf "\rBR${emoji}LN a instalar... [%c]" "$spin_char"
         sleep $delay
     done
 
