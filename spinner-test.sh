@@ -3,7 +3,7 @@ CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # Reset
 
-# Spinner com ⚡ que pisca sem mover o texto
+# Spinner com ⚡ piscando, largura estável
 spinner() {
     local pid=$!
     local delay=0.2
@@ -20,7 +20,7 @@ spinner() {
         if (( i % 2 == 0 )); then
             emoji="⚡"
         else
-            emoji=" "  # espaço fixo, mesmo tamanho
+            emoji="  "  # dois espaços para compensar a largura do ⚡
         fi
 
         local spin_char="${spinstr:j:1}"
@@ -35,6 +35,7 @@ spinner() {
     printf "\r✅ BRLN instalado com sucesso!     \n"
     tput cnorm  # Mostra o cursor de volta
 }
+
 
 
 # Simulação de função "system update"
