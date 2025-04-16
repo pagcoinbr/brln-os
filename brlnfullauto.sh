@@ -20,20 +20,37 @@ MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
-# Spinner
+# Spinner com ⚡ piscando, largura estável
 spinner() {
     local pid=$!
-    local delay=0.1
+    local delay=0.2
     local spinstr='|/-\'
-    echo -n " "
+    local spinlen=${#spinstr}
+    local i=0
+    local j=0
+
+    tput civis  # Esconde o cursor
+
     while kill -0 $pid 2>/dev/null; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
+        # Gira o emoji e o spinner
+        local emoji=""
+        if (( i % 2 == 0 )); then
+            emoji="⚡"
+        else
+            emoji="  "  # dois espaços para compensar a largura do ⚡
+        fi
+
+        local spin_char="${spinstr:j:1}"
+
+        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
+
         sleep $delay
-        printf "\b\b\b\b\b\b"
+        i=$(( (i + 1) % 4 ))
+        j=$(( (j + 1) % spinlen ))
     done
-    printf "    \b\b\b\b"
+
+    printf "\r✅ BRLN instalado com sucesso!     \n"
+    tput cnorm  # Mostra o cursor de volta
 }
 
 update_and_upgrade() {
@@ -1033,7 +1050,7 @@ menu() {
         install_bitcoind
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-        install_bitcoind >> /dev/null 2>&1
+        install_bitcoind >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1051,7 +1068,7 @@ menu() {
         download_lnd
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}"
-        download_lnd >> /dev/null 2>&1
+        download_lnd >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1074,7 +1091,7 @@ menu() {
         install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco...${NC}  "
-        install_bos >> /dev/null 2>&1
+        install_bos >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1090,7 +1107,7 @@ menu() {
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-        install_thunderhub >> /dev/null 2>&1
+        install_thunderhub >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -1106,7 +1123,7 @@ menu() {
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-        install_lndg >> /dev/null 2>&1
+        install_lndg >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida. Usando o modo padrão."
@@ -1128,7 +1145,7 @@ menu() {
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Isso pode demorar um pouco... ${NC}"
-        lnbits_install >> /dev/null 2>&1
+        lnbits_install >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
