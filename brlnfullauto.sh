@@ -348,8 +348,8 @@ create_wallet () {
   echo -e "${YELLOW}AVISO!: Anote sua frase de 24 palavras com ATENÇÃO, AGORA! ${RED}Esta frase não pode ser recuperada no futuro se não for anotada agora. ${NC}" 
   echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
   echo -e "${YELLOW}############################################################################################### ${NC}"
-  read -p "Digite sua senha da sua carteira lighting: " password
-  read -p "Confirme sua senha da sua carteira lighting: " password2
+  read -p "Digite a senha da sua carteira lighting: " password
+  read -p "Confirme a senha da sua carteira lighting: " password2
   if [[ $password != $password2 ]]; then
     echo -e "${RED}As senhas não coincidem. Por favor, tente novamente.${NC}"
     create_wallet
