@@ -73,6 +73,8 @@ Para iniciar a instalação, execute:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
 ```
+ATENÇÃO: Caso a sua instalação seja interrompida depois de definir o novo usuario "admin", deverá fazer 'logout' no terminal e voltar a entrar com o exemplo prático acima descrito.
+A seguir, repita este passo 4.
 
 ---
 
