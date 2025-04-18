@@ -19,8 +19,6 @@ BLUE='\033[1;34m'
 MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
-#1234567890
-
 
 # Spinner com ⚡ piscando, largura estável
 spinner() {
