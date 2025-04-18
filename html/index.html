@@ -103,37 +103,35 @@
       window.open(`http://${ip}:${porta}`, '_blank');
     }
   
-// Verifica se os serviços principais estão acessíveis (versão rápida com Image)
-function verificarServicosPrincipais() {
-  const apps = [
-    { id: 'lndg-btn', porta: 8889 },
-    { id: 'thunder-btn', porta: 3000 },
-    { id: 'lnbits-btn', porta: 5000 },
-    { id: 'simple-btn', porta: 35671 },
-  ];
-
-  const ip = window.location.hostname;
-
-  apps.forEach(app => {
-    const url = `http://${ip}:${app.porta}/favicon.ico`;
-    const botao = document.getElementById(app.id);
-
-    const img = new Image();
-    img.onload = () => {
-      botao.disabled = false;
-      botao.style.opacity = "1";
-      botao.style.cursor = "pointer";
-    };
-    img.onerror = () => {
-      botao.disabled = true;
-      botao.style.opacity = "0.5";
-      botao.style.cursor = "not-allowed";
-      botao.title = "Serviço não disponível";
-    };
-    img.src = url + "?_=" + new Date().getTime(); // evita cache
-  });
-}
-
+    // Verifica se os serviços principais estão acessíveis
+    function verificarServicosPrincipais() {
+      const apps = [
+        { id: 'lndg-btn', porta: 8889 },
+        { id: 'thunder-btn', porta: 3000 },
+        { id: 'lnbits-btn', porta: 5000 },
+        { id: 'simple-btn', porta: 35671 },
+      ];
+  
+      const ip = window.location.hostname;
+  
+      apps.forEach(app => {
+        const url = `http://${ip}:${app.porta}`;
+        const botao = document.getElementById(app.id);
+  
+        fetch(url, { method: 'HEAD', mode: 'no-cors' })
+          .then(() => {
+            botao.disabled = false;
+            botao.style.opacity = "1";
+            botao.style.cursor = "pointer";
+          })
+          .catch(() => {
+            botao.disabled = true;
+            botao.style.opacity = "0.5";
+            botao.style.cursor = "not-allowed";
+            botao.title = "Serviço não disponível";
+          });
+      });
+    }
   
     document.addEventListener('DOMContentLoaded', verificarServicosPrincipais);
   </script>
