@@ -80,10 +80,10 @@
   <img src="BRLNlogo.png" alt="BRLN logo" />
 
   <div class="container" id="botoes">
-    <button class="botao" onclick="abrirApp(8889)">LNDG</button>
-    <button class="botao" onclick="abrirApp(3000)">Thunderhub</button>
-    <button class="botao" onclick="abrirApp(5000)">LNbits</button>
-    <button class="botao" onclick="abrirApp(35671)">Simple LNWallet</button>
+    <td><button id="lndg-btn" class="botao" onclick="abrirApp(8889)">LNDg</button></td>
+    <td><button id="thunder-btn" class="botao" onclick="abrirApp(3000)">Thunderhub</button></td>
+    <td><button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">LNBits</button></td>
+    <td><button id="simple-btn" class="botao" onclick="abrirApp(35671)">Simple LNWallet</button></td>
     <a href="https://amboss.space" class="botao" target="_blank">AMBOSS</a>
     <a href="https://mempool.space" class="botao" target="_blank">Mempool</a>
     <a href="config.html" class="botao" >⚙️ Configurações</a>
@@ -102,7 +102,70 @@
       const ip = window.location.hostname;
       window.open(`http://${ip}:${porta}`, '_blank');
     }
+  
+    // Função para verificar os serviços, começando com todos desativados e repetindo até o serviço ser encontrado
+    function verificarServicosPrincipais() {
+      const apps = [
+        { id: 'lndg-btn', porta: 8889 },
+        { id: 'thunder-btn', porta: 3000 },
+        { id: 'lnbits-btn', porta: 5000 },
+        { id: 'simple-btn', porta: 35671 },
+      ];
+  
+      const ip = window.location.hostname;
+      const timeout = 2000; // tempo máximo de espera em milissegundos para cada verificação
+  
+      // Inicialmente, desativa todos os botões
+      apps.forEach(app => {
+        const botao = document.getElementById(app.id);
+        botao.disabled = true;
+        botao.style.opacity = "0.5";
+        botao.style.cursor = "not-allowed";
+        botao.title = "Verificando serviço...";
+      });
+  
+      // Função para tentar verificar o serviço repetidamente até encontrá-lo
+      apps.forEach(app => {
+        const url = `http://${ip}:${app.porta}`;
+  
+        const checkService = () => {
+          const fetchWithTimeout = new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject('Timeout'), timeout); // timeout de 2 segundos
+            fetch(url, { method: 'HEAD', mode: 'no-cors' })
+              .then((response) => {
+                clearTimeout(timer); // Limpa o timeout se a resposta chegar
+                resolve(response);
+              })
+              .catch(reject);
+          });
+  
+          fetchWithTimeout
+            .then(() => {
+              // Se o serviço for encontrado, habilita o botão
+              const botao = document.getElementById(app.id);
+              botao.disabled = false;
+              botao.style.opacity = "1";
+              botao.style.cursor = "pointer";
+              botao.title = "Serviço disponível";
+            })
+            .catch(() => {
+              // Se o serviço não for encontrado, continua tentando
+              setTimeout(checkService, 2000); // Repetir a verificação após 2 segundos
+            });
+        };
+  
+        // Inicia a verificação do serviço
+        checkService();
+      });
+    }
+  
+    // Chama a função assim que a página for carregada
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dá 1 segundo para "mostrar" que a plataforma está verificando
+      setTimeout(verificarServicosPrincipais, 1000);
+    });
   </script>
+  
 
 </body>
 </html>
