@@ -1,100 +1,73 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" href="logopreto.png" />
-  <title>BRLN Open Bank</title>
+  <meta charset="UTF-8">
+  <title>brlnfullauto - Painel de Controle</title>
   <style>
     body {
-      background-image: url('sky.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
       font-family: Arial, sans-serif;
-      color: black;
       text-align: center;
-      margin: 0;
-      padding: 0;
+      background-color: #f4f4f4;
+      padding: 20px;
     }
-    
-    img {
-      max-width: 50%;
-      margin: 1px auto;
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 30px;
     }
 
     .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      max-width: 800px;
+      margin: auto;
     }
 
     .botao {
-      background-color: #28a745; /* Verde */
-      color: white;
+      padding: 15px 10px;
       border: none;
-      padding: 15px 25px;
+      border-radius: 10px;
       font-size: 16px;
-      border-radius: 8px;
+      background-color: #3498db;
+      color: white;
       cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      min-width: 150px;
-      box-sizing: border-box;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      max-width: 90%;
-      flex: 1 1 200px; /* Flex-grow, flex-shrink, flex-basis */
-      transition: background 0.3s;
+      transition: background-color 0.3s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
-    .botao:hover {
-      background-color: #1e7e34;
+    .botao:hover:not([disabled]) {
+      background-color: #2980b9;
     }
 
-    .footer-links {
-      margin-top: 20px;
+    .botao[disabled] {
+      background-color: #bbb;
+      cursor: not-allowed;
     }
 
-    .footer-links a {
-      display: inline-block;
-      margin: 5px 10px;
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-    }
-
-    @media (max-width: 600px) {
-      .botao {
-        font-size: 14px;
-        padding: 12px 20px;
-        min-width: 120px;
-      }
+    .footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #999;
     }
   </style>
 </head>
 <body>
-  
-  <img src="BRLNlogo.png" alt="BRLN logo" />
 
-  <div class="container" id="botoes">
-    <button class="botao" onclick="abrirApp(8889)">LNDG</button>
-    <button class="botao" onclick="abrirApp(3000)">Thunderhub</button>
-    <button class="botao" onclick="abrirApp(5000)">LNbits</button>
-    <button class="botao" onclick="abrirApp(35671)">Simple LNWallet</button>
-    <a href="https://amboss.space" class="botao" target="_blank">AMBOSS</a>
-    <a href="https://mempool.space" class="botao" target="_blank">Mempool</a>
-    <a href="config.html" class="botao" >⚙️ Configurações</a>
+  <h1>brlnfullauto - Acessar Serviços</h1>
+
+  <div class="container">
+    <button class="botao" data-porta="3000" title="Bitcoin Core">Bitcoin Core</button>
+    <button class="botao" data-porta="3001" title="LND">LND</button>
+    <button class="botao" data-porta="3002" title="RTL">Ride The Lightning</button>
+    <button class="botao" data-porta="3003" title="ThunderHub">ThunderHub</button>
+    <button class="botao" data-porta="3004" title="BTC RPC Explorer">BTC RPC Explorer</button>
+    <button class="botao" data-porta="3005" title="Electrum Server">Electrum Server</button>
+    <button class="botao" data-porta="3006" title="Mempool.space">Mempool</button>
   </div>
 
-  <div class="footer-links">
-    <a href="https://services.br-ln.com">Click here to acess BR⚡LN website. Join us today! </a>
-  <div></div>
-    <a> Made with ⚡ by BRLN team.</a>
-    <div></div>
-      <a>v0.8.9.1-beta</a>
+  <div class="footer">
+    Desenvolvido com ♥ por pagcoinbr - Projeto brlnfullauto
   </div>
 
   <script>
@@ -102,6 +75,28 @@
       const ip = window.location.hostname;
       window.open(`http://${ip}:${porta}`, '_blank');
     }
+
+    function verificarServicos() {
+      const botoes = document.querySelectorAll('.botao');
+
+      botoes.forEach(botao => {
+        const porta = botao.getAttribute('data-porta');
+        const ip = window.location.hostname;
+        const url = `http://${ip}:${porta}`;
+
+        fetch(url, { method: 'HEAD', mode: 'no-cors' })
+          .then(() => {
+            botao.disabled = false;
+            botao.addEventListener('click', () => abrirApp(porta));
+          })
+          .catch(() => {
+            botao.disabled = true;
+            botao.title += ' (Serviço não disponível)';
+          });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', verificarServicos);
   </script>
 
 </body>
