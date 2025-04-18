@@ -103,7 +103,7 @@
       window.open(`http://${ip}:${porta}`, '_blank');
     }
   
-    // Verifica se os serviços principais estão acessíveis
+    // Função para verificar os serviços, começando com todos desativados e repetindo até o serviço ser encontrado
     function verificarServicosPrincipais() {
       const apps = [
         { id: 'lndg-btn', porta: 8889 },
@@ -113,27 +113,57 @@
       ];
   
       const ip = window.location.hostname;
+      const timeout = 2000; // tempo máximo de espera em milissegundos para cada verificação
   
+      // Inicialmente, desativa todos os botões
+      apps.forEach(app => {
+        const botao = document.getElementById(app.id);
+        botao.disabled = true;
+        botao.style.opacity = "0.5";
+        botao.style.cursor = "not-allowed";
+        botao.title = "Verificando serviço...";
+      });
+  
+      // Função para tentar verificar o serviço repetidamente até encontrá-lo
       apps.forEach(app => {
         const url = `http://${ip}:${app.porta}`;
-        const botao = document.getElementById(app.id);
   
-        fetch(url, { method: 'HEAD', mode: 'no-cors' })
-          .then(() => {
-            botao.disabled = false;
-            botao.style.opacity = "1";
-            botao.style.cursor = "pointer";
-          })
-          .catch(() => {
-            botao.disabled = true;
-            botao.style.opacity = "0.5";
-            botao.style.cursor = "not-allowed";
-            botao.title = "Serviço não disponível";
+        const checkService = () => {
+          const fetchWithTimeout = new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject('Timeout'), timeout); // timeout de 2 segundos
+            fetch(url, { method: 'HEAD', mode: 'no-cors' })
+              .then((response) => {
+                clearTimeout(timer); // Limpa o timeout se a resposta chegar
+                resolve(response);
+              })
+              .catch(reject);
           });
+  
+          fetchWithTimeout
+            .then(() => {
+              // Se o serviço for encontrado, habilita o botão
+              const botao = document.getElementById(app.id);
+              botao.disabled = false;
+              botao.style.opacity = "1";
+              botao.style.cursor = "pointer";
+              botao.title = "Serviço disponível";
+            })
+            .catch(() => {
+              // Se o serviço não for encontrado, continua tentando
+              setTimeout(checkService, 2000); // Repetir a verificação após 2 segundos
+            });
+        };
+  
+        // Inicia a verificação do serviço
+        checkService();
       });
     }
   
-    document.addEventListener('DOMContentLoaded', verificarServicosPrincipais);
+    // Chama a função assim que a página for carregada
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dá 1 segundo para "mostrar" que a plataforma está verificando
+      setTimeout(verificarServicosPrincipais, 1000);
+    });
   </script>
   
 
