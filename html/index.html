@@ -80,10 +80,10 @@
   <img src="BRLNlogo.png" alt="BRLN logo" />
 
   <div class="container" id="botoes">
-    <button class="botao" onclick="abrirApp(8889)">LNDG</button>
-    <button class="botao" onclick="abrirApp(3000)">Thunderhub</button>
-    <button class="botao" onclick="abrirApp(5000)">LNbits</button>
-    <button class="botao" onclick="abrirApp(35671)">Simple LNWallet</button>
+    <td><button id="lndg-btn" class="button button1" onclick="abrirApp(8889)">LNDg</button></td>
+    <td><button id="thunder-btn" class="button button1" onclick="abrirApp(3000)">Thunderhub</button></td>
+    <td><button id="lnbits-btn" class="button button1" onclick="abrirApp(5000)">LNBits</button></td>
+    <td><button id="simple-btn" class="button button1" onclick="abrirApp(35671)">Simple LNWallet</button></td>
     <a href="https://amboss.space" class="botao" target="_blank">AMBOSS</a>
     <a href="https://mempool.space" class="botao" target="_blank">Mempool</a>
     <a href="config.html" class="botao" >⚙️ Configurações</a>
@@ -102,7 +102,40 @@
       const ip = window.location.hostname;
       window.open(`http://${ip}:${porta}`, '_blank');
     }
+  
+    // Verifica se os serviços principais estão acessíveis
+    function verificarServicosPrincipais() {
+      const apps = [
+        { id: 'lndg-btn', porta: 8889 },
+        { id: 'thunder-btn', porta: 3000 },
+        { id: 'lnbits-btn', porta: 5000 },
+        { id: 'simple-btn', porta: 35671 },
+      ];
+  
+      const ip = window.location.hostname;
+  
+      apps.forEach(app => {
+        const url = `http://${ip}:${app.porta}`;
+        const botao = document.getElementById(app.id);
+  
+        fetch(url, { method: 'HEAD', mode: 'no-cors' })
+          .then(() => {
+            botao.disabled = false;
+            botao.style.opacity = "1";
+            botao.style.cursor = "pointer";
+          })
+          .catch(() => {
+            botao.disabled = true;
+            botao.style.opacity = "0.5";
+            botao.style.cursor = "not-allowed";
+            botao.title = "Serviço não disponível";
+          });
+      });
+    }
+  
+    document.addEventListener('DOMContentLoaded', verificarServicosPrincipais);
   </script>
+  
 
 </body>
 </html>
