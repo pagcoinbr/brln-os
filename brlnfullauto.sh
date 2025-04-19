@@ -56,8 +56,8 @@ spinner() {
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
-sudo apt update & sudo apt full-upgrade -y 
-sudo apt install apache2 -y 
+sudo apt update & sudo apt full-upgrade -y >> /dev/null 2>&1 & spinner
+sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
 sudo a2enmod cgid dir
 sudo systemctl restart apache2
 
@@ -122,7 +122,7 @@ terminal_web() {
     # Baixa o binário como admin
     sudo -v
     update_and_upgrade
-    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz
+    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
     # Extrai como admin
     sudo -u admin tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /home/admin/
     # Move binário para /usr/local/bin
