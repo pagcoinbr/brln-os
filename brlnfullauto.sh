@@ -116,7 +116,7 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 terminal_web() {
-  update_and_upgrade >> /dev/null 2>&1 & spinner
+  update_and_upgrade >> /dev/null 2>&1
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
@@ -152,7 +152,7 @@ terminal_web() {
       sudo systemctl restart gotty-fullauto.service
       sudo -u admin bash <(curl -s https://raw.githubusercontent.com/$git_user/brlnfullauto/$branch/run.sh)
     fi
-    return 0
+    exit 0
   fi
 }
 
