@@ -113,10 +113,10 @@ fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
 echo "✅ Interface web do node Lightning instalada com sucesso!"
-sudo systemctl restart gotty.service
 }
 
 terminal_web() {
+  update_and_upgrade
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
@@ -128,12 +128,16 @@ terminal_web() {
     sudo chmod +x /usr/local/bin/gotty
     # Copia o serviço
     sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
+    sudo cp /home/admin/brlnfullauto/services/gotty-fullauto.service /etc/systemd/system/gotty-fullauto.service
     # Ativa e inicia
     sudo systemctl daemon-reload
     sudo systemctl enable gotty.service
     sudo systemctl start gotty.service
+    sudo systemctl enable gotty-fullauto.service
+    sudo systemctl start gotty-fullauto.service 
     echo -e "${GREEN} Terminal Web instalado com sucesso! ${NC}"
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
+    
     sudo systemctl restart gotty.service
     exit 0
   else
@@ -1015,7 +1019,6 @@ system_detector () {
 }
 
 system_preparations () {
-  update_and_upgrade
   create_main_dir
   configure_ufw
   echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
@@ -1212,4 +1215,3 @@ menu() {
 system_detector
 ip_finder
 terminal_web
-menu
