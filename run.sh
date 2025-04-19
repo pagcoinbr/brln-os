@@ -48,16 +48,16 @@ if [[ -d "/home/admin" ]]; then
     sudo chown admin:admin /home/admin
     sudo chmod 755 /home/admin
 
-    echo "✅ Diretório /home/admin corrigido com sucesso."
+    echo 
   else
     echo 
   fi
 else
-  echo "➕ Criando diretório /home/admin..."
+  echo
   sudo mkdir -p /home/admin
   sudo chown admin:admin /home/admin
   sudo chmod 755 /home/admin
-  echo "✅ Diretório /home/admin criado com sucesso."
+  echo
 fi
 }
 
