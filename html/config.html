@@ -91,6 +91,16 @@
                 if (!res.ok) {
                     throw new Error('Erro ao obter status do sistema.');
                 }
+    function abrirApp(porta) {
+        const ip = window.location.hostname;
+        const width = 900;
+        const height = 600;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+
+        window.open(`http://${ip}:${porta}`, '_blank',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
+    }
                 return res.text(); // ✅ <- Aqui trocamos para texto simples
             })
             .then(text => {
@@ -114,17 +124,6 @@
             .catch(error => {
                 alert("Erro ao atualizar status: " + error.message);
             });
-    }
-
-    function abrirApp(porta) {
-        const ip = window.location.hostname;
-        const width = 900;
-        const height = 600;
-        const left = (screen.width - width) / 2;
-        const top = (screen.height - height) / 2;
-
-        window.open(`http://${ip}:${porta}`, '_blank',
-            `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
     }
 
                 return res.text(); // ✅ <- Aqui trocamos para texto simples
