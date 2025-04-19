@@ -143,14 +143,10 @@ terminal_web() {
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
-      sudo systemctl restart gotty.service
-      sudo systemctl restart gotty-fullauto.service
       menu
     else
       echo -e "${RED} Você não está logado como admin! ${NC}"
       echo -e "${RED} Logando como admin e executando o script... ${NC}"
-      sudo systemctl restart gotty.service
-      sudo systemctl restart gotty-fullauto.service
       sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
     fi
     exit 0
