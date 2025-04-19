@@ -23,7 +23,6 @@ brln_check () {
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
-  terminal_web
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
 }
@@ -70,7 +69,10 @@ if [[ $atual_user = "admin" ]]; then
   brln_check
 else
   echo -e "${RED} Você não está logado como admin! ${NC}"
-  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+  if id "admin" &>/dev/null; then
+  echo "✅ Usuário 'admin' já existe."
+  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+  fi
 fi
 read -p "Você deseja criar o usuário admin? (yes/no): " create_user
 if [[ $create_user == "yes" ]]; then
@@ -99,23 +101,6 @@ elif [[ $create_user == "no" ]]; then
   echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
   exit 1
 fi
-}
-
-terminal_web () {
-  if [[ ! -f /usr/local/bin/gotty ]]; then
-    echo -e "${GREEN} Instalando Terminal Web... ${NC}"
-    wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz >> /dev/null 2>&1
-    tar -xvzf gotty_linux_amd64.tar.gz
-    sudo mv gotty /usr/local/bin
-    sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
-    sudo systemctl enable gotty.service
-    sudo systemctl start gotty.service
-    echo -e "${GREEN} gotty instalado com sucesso! ${NC}"
-    echo -e "${GREEN} Acesse o terminal web em: http://$(hostname -I | awk '{print $1}') ${NC}"
-    exit 0
-  else
-    echo -e "${GREEN} gotty já está instalado! ${NC}"
-  fi
 }
 
 main_call
