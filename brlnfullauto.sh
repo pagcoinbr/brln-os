@@ -128,12 +128,14 @@ terminal_web() {
     sudo systemctl enable gotty.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty.service
     sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
-    sudo systemctl start gotty-fullauto.service 
+    sudo systemctl start gotty-fullauto.service
     echo
     echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
     echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
     echo
     echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+    echo -e "${RED} ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
+    tailscale_vpn
     echo
     echo -e "${GREEN} EM segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
     sudo systemctl restart gotty.service
@@ -143,7 +145,7 @@ terminal_web() {
     sudo systemctl start gotty-logs-lnd.service
     sudo systemctl start gotty-logs-bitcoind.service
     sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1
-    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1 
+    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
@@ -596,32 +598,34 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 tailscale_vpn () {
-# Instalação do Tailscale VPN
+# Instala Tailscale e QRCode (sem logs)
 curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
-# Instala o qrencode para gerar QR codes
 sudo apt install qrencode -y >> /dev/null 2>&1
-# 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
-echo "▶️ Iniciando 'tailscale up' em background..."
-sudo tailscale up
-# 2️⃣ Aguarda a autenticação do Tailscale
-  for i in {20..1}; do
-    echo -ne "Aguardando $i segundos...\r"
-    sleep 1
-  done
-  echo -ne "\n"
-# 3️⃣ Tenta extrair o link de autenticação do log
-echo "🔍 Procurando o link de autenticação..."
-url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+')
+
+# Roda o tailscale up em segundo plano, salvando log
+sudo tailscale up 2>&1 | tee /tmp/tailscale.log &
+
+# Aguarda alguns segundos pra gerar a URL
+sleep 5
+
+# Extrai o link de autenticação
+url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]*' /tmp/tailscale.log | head -n 1)
+
 if [[ -n "$url" ]]; then
-    echo "✅ Link encontrado: $url"
-    echo "📲 QR Code:"
     echo "$url" | qrencode -t ANSIUTF8
+    echo ""
+    echo "📎 Link de autenticação: $url"
 else
-    echo "❌ Não foi possível encontrar o link no log."
+    echo "❌ Link de autenticação não encontrado. Tente novamente."
 fi
-# 4️⃣ Aguarda a finalização do tailscale up
-echo "⏳ Aguardando autenticação para finalizar o comando..."
-echo "✅ tailscale up finalizado."
+
+# Espera usuário autenticar
+read -p "🔐 Pressione ENTER após autenticar no navegador..."
+echo -e "⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏"
+echo -e "🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?"
+echo -e "🏴‍☠️ Rodar o próprio node é só o primeiro passo rumo à liberdade financeira."
+echo -e "🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com"
+echo -e "🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!"
 }
 
 toogle_bitcoin () {
