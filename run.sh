@@ -23,6 +23,7 @@ brln_check () {
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
+  terminal_web
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
 }
@@ -118,4 +119,3 @@ terminal_web () {
 }
 
 main_call
-terminal_web
