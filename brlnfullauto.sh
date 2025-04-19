@@ -117,9 +117,9 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 
 terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
-  update_and_upgrade
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
+    update_and_upgrade
     # Baixa o binário como admin
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz
     # Extrai como admin
