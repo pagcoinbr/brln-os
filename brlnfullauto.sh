@@ -45,7 +45,7 @@ spinner() {
 
         local spin_char="${spinstr:j:1}"
 
-        printf "\rBR%sLN... [%c]" "$emoji" "$spin_char"
+        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
 
         sleep $delay
         i=$(( (i + 1) % 4 ))
@@ -530,9 +530,9 @@ git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
 sudo apt install -y virtualenv
 virtualenv -p python3 .venv
-.venv/bin/pip install -r requirements.txt >> /dev/null 2>&1
-.venv/bin/pip install whitenoise >> /dev/null 2>&1
-.venv/bin/python3 initialize.py --whitenoise >> /dev/null 2>&1
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install whitenoise
+.venv/bin/python3 initialize.py --whitenoise
 sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
 sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
 sudo systemctl daemon-reload
