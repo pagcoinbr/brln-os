@@ -129,6 +129,7 @@ terminal_web() {
     sudo systemctl start gotty.service
     sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty-fullauto.service 
+    echo
     echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
     echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
     echo
