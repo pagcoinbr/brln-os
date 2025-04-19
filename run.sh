@@ -88,11 +88,6 @@ else
   brln_check
   exit 0
 fi
-elif [[ $create_user == "no" ]]; then
-  echo -e "${RED} Você escolheu não criar um usuário admin! ${NC}"
-  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
-  exit 1
-fi
 }
 
 main_call
