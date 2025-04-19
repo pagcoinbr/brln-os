@@ -134,10 +134,11 @@ terminal_web() {
     echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
     echo
     echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
-    echo -e "${RED} ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
+    echo
+    echo -e "${RED} Ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
     tailscale_vpn
     echo
-    echo -e "${GREEN} EM segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
+    echo -e "${GREEN} Em segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
     sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1
@@ -614,7 +615,6 @@ url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]*' /tmp/tailscale.log 
 if [[ -n "$url" ]]; then
     echo "$url" | qrencode -t ANSIUTF8
     echo ""
-    echo "📎 Link de autenticação: $url"
 else
     echo "❌ Link de autenticação não encontrado. Tente novamente."
 fi
