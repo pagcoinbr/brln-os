@@ -68,33 +68,25 @@ if [[ $atual_user = "admin" ]]; then
   dir_check
   brln_check
 else
-  echo -e "${RED} Você não está logado como admin! ${NC}"
   if id "admin" &>/dev/null; then
   echo
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
   fi
 fi
-read -p "Você deseja criar o usuário admin? (yes/no): " create_user
-if [[ $create_user == "yes" ]]; then
-# Garante que o grupo 'admin' existe
-if getent group admin > /dev/null; then
-    echo
-else
-    echo
-    sudo groupadd admin
-fi
-
+  sudo groupadd admin >> /dev/null 2>&1
 # Garante que o usuário 'admin' existe
 if id "admin" &>/dev/null; then
   echo
   sudo passwd admin
   dir_check
   brln_check
+  exit 0
 else
   sudo adduser --gecos "" --ingroup admin admin
   dir_check
   brln_check
+  exit 0
 fi
 elif [[ $create_user == "no" ]]; then
   echo -e "${RED} Você escolheu não criar um usuário admin! ${NC}"
