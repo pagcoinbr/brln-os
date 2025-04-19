@@ -10,6 +10,7 @@ CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
+atual_user=$(whoami)
 
 # Cores
 RED='\033[0;31m'
@@ -129,6 +130,7 @@ terminal_web() {
   else
     echo -e "${GREEN} Terminal Web já está instalado! ${NC}"
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
+    exit 0
   fi
 }
 
