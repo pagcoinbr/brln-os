@@ -1040,7 +1040,7 @@ menu() {
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- Instalar Interface Gráfica & Interface de Rede"
+  echo -e "   ${GREEN}1${NC}- Instalar Interface de Rede"
   echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core"
   echo -e "   ${GREEN}3${NC}- Instalar LND & Criar Carteira"
   echo 
@@ -1077,7 +1077,7 @@ menu() {
         echo "Opção inválida."
       fi      
       wait
-      echo -e "\033[43m\033[30m ✅ Instalação da interface e gráfica e interface de rede concluída! \033[0m"
+      echo -e "\033[43m\033[30m ✅ Instalação da interface de rede concluída! \033[0m"
       menu      
       ;;
 
