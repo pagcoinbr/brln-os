@@ -129,8 +129,12 @@ terminal_web() {
     sudo systemctl start gotty.service
     sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty-fullauto.service 
-    echo -e "${GREEN} Terminal Web instalado com sucesso! ${NC}"
-    echo -e "${GREEN} Acesse o menu de configurações pelo navegador em:${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+    echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
+    echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
+    echo
+    echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+    echo
+    echo -e "${GREEN} EM segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
     sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1 & spinner
