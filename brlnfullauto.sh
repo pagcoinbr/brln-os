@@ -113,14 +113,14 @@ fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
 echo "✅ Interface web do node Lightning instalada com sucesso!"
-sudo systemctl restart gotty
+sudo systemctl restart gotty.service
 }
 
 terminal_web() {
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
-    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz
+    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1
     # Extrai como admin
     sudo -u admin tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /home/admin/
     # Move binário para /usr/local/bin
@@ -134,6 +134,7 @@ terminal_web() {
     sudo systemctl start gotty.service
     echo -e "${GREEN} Terminal Web instalado com sucesso! ${NC}"
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
+    sudo systemctl restart gotty.service
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
@@ -141,6 +142,7 @@ terminal_web() {
     else
       echo -e "${RED} Você não está logado como admin! ${NC}"
       echo -e "${RED} Logando como admin e executando o script... ${NC}"
+      sudo systemctl restart gotty.service
       sudo -u admin bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/run.sh)
     fi
     return 0
