@@ -102,7 +102,7 @@ EOF
 fi
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
-  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null 2>&1 & spinner
+  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
 fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
@@ -137,8 +137,8 @@ terminal_web() {
     echo -e "${GREEN} EM segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
-    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1 & spinner
-    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1 & spinner
+    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1 
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
@@ -1017,7 +1017,6 @@ system_preparations () {
 }
 
 menu() {
-  echo
   echo
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
