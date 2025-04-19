@@ -63,10 +63,6 @@ run_with_spinner() {
 
 update_and_upgrade() {
 sudo -v
-echo "Atualizando pacotes do sistema..."
-run_with_spinner sudo apt update -y
-echo "Atualizando pacotes para a versão mais recente..."
-sudo apt full-upgrade -y
 echo "Instalando Apache e módulos necessários..."
 run_with_spinner sudo apt install apache2 -y
 echo "Habilitando módulos do Apache..."
@@ -162,6 +158,10 @@ terminal_web() {
 }
 
 create_main_dir() {
+echo "Atualizando pacotes do sistema..."
+sudo apt update -y
+echo "Atualizando pacotes para a versão mais recente..."
+sudo apt full-upgrade -y
 sudo mkdir /data
 sudo chown admin:admin /data
 }
