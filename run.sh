@@ -114,7 +114,6 @@ terminal_web () {
     exit 0
   else
     echo -e "${GREEN} gotty já está instalado! ${NC}"
-    main_call
   fi
 }
 
