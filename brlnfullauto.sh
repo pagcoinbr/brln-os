@@ -55,11 +55,18 @@ spinner() {
 }
 
 update_and_upgrade() {
+  sudo -v
 # Atualizar sistema e instalar Apache + módulos
-sudo apt update & sudo apt full-upgrade -y >> /dev/null 2>&1 & spinner
-sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
-sudo a2enmod cgid dir
-sudo systemctl restart apache2
+  echo "Atualizando pacotes do sistema..."
+  sudo apt update -y >> /dev/null 2>&1 & spinner
+  echo "Atualizando pacotes para a versão mais recente..."
+  sudo apt full-upgrade -y >> /dev/null 2>&1 & spinner
+  echo "Instalando Apache e módulos necessários..."
+  sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
+  echo "Habilitando módulos do Apache..."
+  sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
+  echo "Reiniciando o serviço Apache..."
+  sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
@@ -120,7 +127,6 @@ terminal_web() {
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
-    sudo -v
     update_and_upgrade
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
     # Extrai como admin
