@@ -129,16 +129,7 @@ terminal_web() {
     sudo systemctl start gotty.service
     sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty-fullauto.service
-    echo
-    echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
-    echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
-    echo
-    echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
-    echo
-    echo -e "${RED} Ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
     tailscale_vpn
-    echo
-    echo -e "${GREEN} Em segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
     sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1
@@ -612,12 +603,22 @@ sleep 5
 # Extrai o link de autenticação
 url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]*' /tmp/tailscale.log | head -n 1)
 
+echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
+echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
+echo
+echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+echo
+echo -e "${RED} Ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
+
 if [[ -n "$url" ]]; then
-    echo "$url" | qrencode -t ANSIUTF8
-    echo ""
+  echo "$url" | qrencode -t ANSIUTF8
+  echo ""
 else
-    echo "❌ Link de autenticação não encontrado. Tente novamente."
+  echo "❌ Link de autenticação não encontrado. Tente novamente."
 fi
+
+echo
+echo -e "${GREEN} Em seguida escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
 echo -e "⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏"
 echo -e "🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?"
 echo -e "🏴‍☠️ Rodar o próprio node é só o primeiro passo rumo à liberdade financeira."
