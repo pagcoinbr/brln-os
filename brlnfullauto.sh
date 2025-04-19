@@ -66,7 +66,7 @@ sudo -v
 echo "Atualizando pacotes do sistema..."
 run_with_spinner sudo apt update -y
 echo "Atualizando pacotes para a versão mais recente..."
-run_with_spinner sudo apt full-upgrade -y
+sudo apt full-upgrade -y
 echo "Instalando Apache e módulos necessários..."
 run_with_spinner sudo apt install apache2 -y
 echo "Habilitando módulos do Apache..."
