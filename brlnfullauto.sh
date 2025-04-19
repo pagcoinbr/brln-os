@@ -123,6 +123,8 @@ terminal_web() {
     # Copia o serviço
     sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
     sudo cp /home/admin/brlnfullauto/services/gotty-fullauto.service /etc/systemd/system/gotty-fullauto.service
+    sudo cp /home/admin/brlnfullauto/services/gotty-logs-lnd.service /etc/systemd/system/gotty-logs-lnd.service
+    sudo cp /home/admin/brlnfullauto/services/gotty-logs-bitcoind.service /etc/systemd/system/gotty-logs-bitcoind.service
     # Ativa e inicia
     sudo systemctl daemon-reload
     sudo systemctl enable gotty.service >> /dev/null 2>&1 & spinner
