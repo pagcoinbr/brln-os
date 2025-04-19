@@ -72,6 +72,7 @@ else
   if id "admin" &>/dev/null; then
   echo "✅ Usuário 'admin' já existe."
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+  exit 0
   fi
 fi
 read -p "Você deseja criar o usuário admin? (yes/no): " create_user

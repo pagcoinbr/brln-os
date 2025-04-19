@@ -113,6 +113,7 @@ fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
 echo "✅ Interface web do node Lightning instalada com sucesso!"
+sudo systemctl restart gotty
 }
 
 terminal_web() {
@@ -128,10 +129,7 @@ terminal_web() {
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
     exit 0
   else
-    echo -e "${GREEN} Terminal Web já está instalado! ${NC}"
-    echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
     if [[ $atual_user == "admin" ]]; then
-      echo -e "${GREEN} Você já está logado como admin! ${NC}"
       menu
     else
       echo -e "${RED} Você não está logado como admin! ${NC}"
