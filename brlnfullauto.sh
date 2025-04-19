@@ -62,6 +62,7 @@ run_with_spinner() {
 }
 
 update_and_upgrade() {
+sudo -v
 echo "Atualizando pacotes do sistema..."
 run_with_spinner sudo apt update -y
 
