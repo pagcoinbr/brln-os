@@ -1027,6 +1027,7 @@ menu() {
       read -p "Deseja exibir logs? (y/n): " verbose_mode
     # Força pedido de password antes do background
       sudo -v
+      sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
