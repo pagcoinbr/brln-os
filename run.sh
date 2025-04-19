@@ -1,5 +1,6 @@
 #!/bin/bash
-
+branch=teste_v0.9
+git_user=pagcoinbr
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -15,10 +16,10 @@ brln_check () {
     echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
-    sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
+    sudo -u admin git clone https://github.com/$git_user/brlnfullauto.git "$INSTALL_DIR"
     sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
-    sudo -u admin git -C "$INSTALL_DIR" switch teste_v0.9
+    sudo -u admin git -C "$INSTALL_DIR" switch $branch
   fi
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
