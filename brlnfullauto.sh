@@ -118,7 +118,7 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 
 terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
-  update_and_upgrade >> /dev/null 2>&1
+  update_and_upgrade
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
