@@ -138,6 +138,10 @@ terminal_web() {
     echo -e "${GREEN} EM segui da escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
+    sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1
+    sudo systemctl enable gotty-logs-bitcoind.service >> /dev/null 2>&1
+    sudo systemctl start gotty-logs-lnd.service
+    sudo systemctl start gotty-logs-bitcoind.service
     sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1
     sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1 
     exit 0
