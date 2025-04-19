@@ -119,9 +119,9 @@ terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
-    update_and_upgrade
     # Baixa o binário como admin
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz
+    update_and_upgrade >> /dev/null 2>&1 & spinner
     # Extrai como admin
     sudo -u admin tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /home/admin/
     # Move binário para /usr/local/bin
@@ -943,13 +943,11 @@ simple_lnwallet () {
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
   xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
   cat ~/brlnfullauto/macaroon.hex
-  rm -f ~/brlnfullauto/macaroon.hex
   echo
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
   xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
-  rm -f ~/brlnfullauto/tls.hex
   echo
   echo
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
@@ -961,9 +959,6 @@ simple_lnwallet () {
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
   sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
-  echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
-  sleep 6
-  sudo systemctl status simple-lnwallet.service
 }
 
 submenu_opcoes() {
