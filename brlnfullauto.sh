@@ -116,9 +116,7 @@ terminal_web() {
     update_and_upgrade
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
     # Extrai como admin
-    sudo -u admin tar -xvzf /home/admin/gotty_linux_amd64.tar.gz
-    # Move binário para /usr/local/bin
-    sudo mv /home/admin/gotty /usr/local/bin
+    sudo tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /usr/local/bin
     sudo chmod +x /usr/local/bin/gotty
     # Copia o serviço
     sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
