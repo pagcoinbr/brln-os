@@ -152,7 +152,7 @@ terminal_web() {
       echo -e "${RED} Logando como admin e executando o script... ${NC}"
       sudo systemctl restart gotty.service
       sudo systemctl restart gotty-fullauto.service
-      sudo -u admin bash <(curl -s https://raw.githubusercontent.com/$git_user/brlnfullauto/$branch/run.sh)
+      sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
     fi
     exit 0
   fi
