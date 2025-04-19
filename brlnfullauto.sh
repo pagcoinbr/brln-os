@@ -11,6 +11,7 @@ WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 atual_user=$(whoami)
+branch=teste_v0.9
 
 # Cores
 RED='\033[0;31m'
@@ -116,13 +117,13 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 terminal_web() {
-  update_and_upgrade >> /dev/null 2>&1 >> spinner &
+  update_and_upgrade >> /dev/null 2>&1 >> & spinner
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
-    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 >> spinner &
+    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 >> & spinner
     # Extrai como admin
-    sudo -u admin tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /home/admin/ >> /dev/null 2>&1 >> spinner &
+    sudo -u admin tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /home/admin/ >> /dev/null 2>&1 >> & spinner
     # Move binário para /usr/local/bin
     sudo mv /home/admin/gotty /usr/local/bin
     sudo chmod +x /usr/local/bin/gotty
@@ -146,7 +147,7 @@ terminal_web() {
       echo -e "${RED} Você não está logado como admin! ${NC}"
       echo -e "${RED} Logando como admin e executando o script... ${NC}"
       sudo systemctl restart gotty.service
-      sudo -u admin bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/run.sh)
+      sudo -u admin bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/$branch/run.sh)
     fi
     return 0
   fi
