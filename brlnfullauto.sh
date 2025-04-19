@@ -54,19 +54,28 @@ spinner() {
     tput cnorm  # Mostra o cursor de volta
 }
 
+run_with_spinner() {
+  "$@" >> /dev/null 2>&1 &
+  pid=$!
+  spinner "$pid"
+  wait "$pid"
+}
+
 update_and_upgrade() {
-  sudo -v
-# Atualizar sistema e instalar Apache + módulos
-  echo "Atualizando pacotes do sistema..."
-  sudo apt update -y >> /dev/null 2>&1 & spinner
-  echo "Atualizando pacotes para a versão mais recente..."
-  sudo apt full-upgrade -y >> /dev/null 2>&1 & spinner
-  echo "Instalando Apache e módulos necessários..."
-  sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
-  echo "Habilitando módulos do Apache..."
-  sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
-  echo "Reiniciando o serviço Apache..."
-  sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
+echo "Atualizando pacotes do sistema..."
+run_with_spinner sudo apt update -y
+
+echo "Atualizando pacotes para a versão mais recente..."
+run_with_spinner sudo apt full-upgrade -y
+
+echo "Instalando Apache e módulos necessários..."
+run_with_spinner sudo apt install apache2 -y
+
+echo "Habilitando módulos do Apache..."
+run_with_spinner sudo a2enmod cgid dir
+
+echo "Reiniciando o serviço Apache..."
+run_with_spinner sudo systemctl restart apache2
 
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
