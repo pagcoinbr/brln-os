@@ -51,8 +51,6 @@ spinner() {
         i=$(( (i + 1) % 4 ))
         j=$(( (j + 1) % spinlen ))
     done
-
-    printf "\r✅ BRLN instalado com sucesso!     \n"
     tput cnorm  # Mostra o cursor de volta
 }
 
