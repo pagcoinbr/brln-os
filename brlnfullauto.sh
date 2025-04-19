@@ -45,7 +45,7 @@ spinner() {
 
         local spin_char="${spinstr:j:1}"
 
-        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
+        printf "\rBR%sLN... [%c]" "$emoji" "$spin_char"
 
         sleep $delay
         i=$(( (i + 1) % 4 ))
