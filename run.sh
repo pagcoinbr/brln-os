@@ -104,10 +104,10 @@ fi
 terminal_web () {
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
-    wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
+    wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz >> /dev/null 2>&1
     tar -xvzf gotty_linux_amd64.tar.gz
     sudo mv gotty /usr/local/bin
-    sudo cp /home/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
+    sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
     sudo systemctl enable gotty.service
     sudo systemctl start gotty.service
     echo -e "${GREEN} gotty instalado com sucesso! ${NC}"
