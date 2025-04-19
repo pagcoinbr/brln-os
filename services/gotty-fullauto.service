@@ -6,7 +6,7 @@ After=network.target
 User=admin
 WorkingDirectory=/home/admin
 Environment=HOME=/home/admin
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash -c 'bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/brlnfullauto.sh)'
+ExecStart=/usr/local/bin/gotty -w -p 8081 bash -c 'while true; do bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/run.sh); done'
 Restart=always
 
 [Install]
