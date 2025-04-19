@@ -135,6 +135,7 @@ terminal_web() {
       menu
     else
       echo -e "${RED} Você não está logado como admin! ${NC}"
+      echo -e "${RED} Logando como admin e executando o script... ${NC}"
       sudo -u admin bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/run.sh)
     fi
     exit 0
