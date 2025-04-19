@@ -123,11 +123,12 @@ terminal_web() {
     sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
     sudo systemctl enable gotty.service
     sudo systemctl start gotty.service
-    echo -e "${GREEN} gotty instalado com sucesso! ${NC}"
-    echo -e "${GREEN} Acesse o terminal web em: http://$(hostname -I | awk '{print $1}') ${NC}"
+    echo -e "${GREEN} Terminal Web instalado com sucesso! ${NC}"
+    echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
     exit 0
   else
-    echo -e "${GREEN} gotty já está instalado! ${NC}"
+    echo -e "${GREEN} Terminal Web já está instalado! ${NC}"
+    echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
   fi
 }
 
