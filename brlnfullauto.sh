@@ -140,6 +140,8 @@ terminal_web() {
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
+    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network'
+    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network'
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
@@ -460,7 +462,6 @@ if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
   echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
 fi
   npm i -g balanceofsatoshis
-  bos --version
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
   sudo chown -R admin:admin /data/lnd
   sudo chmod -R 755 /data/lnd
