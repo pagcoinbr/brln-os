@@ -3,7 +3,7 @@ Description=Terminal Web com GoTTY
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/gotty -w bash
+ExecStart=/usr/local/bin/gotty -p 8081 -w bash
 Restart=always
 User=admin
 WorkingDirectory=/home/admin
