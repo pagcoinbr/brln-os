@@ -57,7 +57,7 @@ spinner() {
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
 sudo ls /usr/bin/apt-get >> /dev/null 2>&1
-sudo apt update -y #>> /dev/null 2>&1 & spinner
+sudo apt update -y >> /dev/null 2>&1 & spinner
 sudo apt full-upgrade -y >> /dev/null 2>&1 & spinner
 sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
 sudo a2enmod cgid dir
