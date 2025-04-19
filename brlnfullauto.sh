@@ -618,9 +618,6 @@ if [[ -n "$url" ]]; then
 else
     echo "❌ Link de autenticação não encontrado. Tente novamente."
 fi
-
-# Espera usuário autenticar
-read -p "🔐 Pressione ENTER após autenticar no navegador..."
 echo -e "⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏"
 echo -e "🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?"
 echo -e "🏴‍☠️ Rodar o próprio node é só o primeiro passo rumo à liberdade financeira."
