@@ -54,21 +54,14 @@ spinner() {
     tput cnorm  # Mostra o cursor de volta
 }
 
-run_with_spinner() {
-  "$@" >> /dev/null 2>&1 &
-  pid=$!
-  spinner "$pid"
-  wait "$pid"
-}
-
 update_and_upgrade() {
 sudo -v
 echo "Instalando Apache e módulos necessários..."
-run_with_spinner sudo apt install apache2 -y
+sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
 echo "Habilitando módulos do Apache..."
-run_with_spinner sudo a2enmod cgid dir
+sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
 echo "Reiniciando o serviço Apache..."
-run_with_spinner sudo systemctl restart apache2
+sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
@@ -106,21 +99,19 @@ if [ -n "$SCRIPT_LIST" ]; then
   sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
 www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
-  echo "Permissões atualizadas com sucesso!"
 fi
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
-  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network'
+  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null 2>&1 & spinner
 fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
-echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
-    echo -e "${GREEN} Instalando Terminal Web... ${NC}"
+    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
     # Baixa o binário como admin
     update_and_upgrade
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
@@ -139,11 +130,11 @@ terminal_web() {
     sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty-fullauto.service 
     echo -e "${GREEN} Terminal Web instalado com sucesso! ${NC}"
-    echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
+    echo -e "${GREEN} Acesse o menu de configurações pelo navegador em:${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
-    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network'
-    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network'
+    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1 & spinner
+    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1 & spinner
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
