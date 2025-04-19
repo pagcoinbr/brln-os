@@ -56,10 +56,9 @@ spinner() {
 
 update_and_upgrade() {
 # Atualizar sistema e instalar Apache + módulos
-sudo apt update && sudo apt full-upgrade -y >> /dev/null 2>&1
-spinner
-sudo apt install apache2 -y >> /dev/null 2>&1
-sudo a2enmod cgid dir >> /dev/null 2>&1
+sudo apt update && sudo apt full-upgrade -y
+sudo apt install apache2 -y
+sudo a2enmod cgid dir
 sudo systemctl restart apache2
 
 # Criar diretórios e mover arquivos
@@ -117,7 +116,7 @@ echo "✅ Interface web do node Lightning instalada com sucesso!"
 }
 
 terminal_web() {
-  update_and_upgrade
+  update_and_upgrade >> /dev/null 2>&1 & spinner
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     # Baixa o binário como admin
