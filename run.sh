@@ -46,8 +46,6 @@ if [[ -d "/home/admin" ]]; then
     sudo mkdir -p /home/admin
     sudo chown admin:admin /home/admin
     sudo chmod 755 /home/admin
-
-    echo 
   else
     echo 
   fi
@@ -69,7 +67,6 @@ if [[ $atual_user = "admin" ]]; then
   brln_check
 else
   if id "admin" &>/dev/null; then
-  echo
   sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
   exit 0
   fi
@@ -77,7 +74,6 @@ fi
   sudo groupadd admin >> /dev/null 2>&1
 # Garante que o usuário 'admin' existe
 if id "admin" &>/dev/null; then
-  echo
   sudo passwd admin
   dir_check
   brln_check
