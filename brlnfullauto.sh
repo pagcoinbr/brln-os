@@ -609,7 +609,7 @@ echo
 echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
 echo
 echo -e "${RED} Ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
-
+echo
 if [[ -n "$url" ]]; then
   echo "$url" | qrencode -t ANSIUTF8
   echo ""
