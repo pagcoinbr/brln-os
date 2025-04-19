@@ -130,6 +130,13 @@ terminal_web() {
   else
     echo -e "${GREEN} Terminal Web já está instalado! ${NC}"
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
+    if [[ $atual_user == "admin" ]]; then
+      echo -e "${GREEN} Você já está logado como admin! ${NC}"
+      menu
+    else
+      echo -e "${RED} Você não está logado como admin! ${NC}"
+      sudo -u admin bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/run.sh)
+    fi
     exit 0
   fi
 }
