@@ -4,11 +4,15 @@ git_user=pagcoinbr
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
-echo -e "${BLUE}Iniciando instalação do BRLN FullAuto...${NC}"
+echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
 sleep 1
 
 brln_check () {
