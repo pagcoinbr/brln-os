@@ -102,65 +102,6 @@ fi
 }
 
 terminal_web () {
-  sudo apt install apache2 -y
-  sudo a2enmod cgid dir
-  sudo systemctl restart apache2
-
-  # Criar diretórios e mover arquivos
-  sudo mkdir -p "$CGI_DST"
-  sudo rm -f "$WWW_HTML/"*.html
-  sudo rm -f "$WWW_HTML"/*.png
-  sudo rm -f "$CGI_DST/"*.sh
-  sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
-  sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
-  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
-
-  # Corrigir permissões de execução
-  sudo chmod +x "$CGI_DST"/*.sh
-  for script in "$CGI_DST"/*.sh; do
-    sudo chmod +x "$script"
-  done
-
-  # Configurar o Apache para permitir CGI no diretório correto
-  if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
-    echo "Adicionando bloco de configuração CGI ao Apache..."
-    sudo sed -i '/<\/VirtualHost>/i \
-<Directory "/usr/lib/cgi-bin">\n\
-  AllowOverride None\n\
-  Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
-  Require all granted\n\
-  AddHandler cgi-script .sh\n\
-</Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
-  else
-    echo "Bloco de configuração CGI já existe no Apache."
-  fi
-
-  # Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
-  echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
-
-  SCRIPT_LIST=$(find /usr/lib/cgi-bin/ -maxdepth 1 -type f -name "*.sh" | sort | paste -sd ", " -)
-
-  if [ -n "$SCRIPT_LIST" ]; then
-    sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
-www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
-EOF
-    echo "Permissões atualizadas com sucesso!"
-  else
-    echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
-  fi
-
-  # Abre a porta 80 no UFW
-  if ! sudo ufw status | grep -q "80/tcp"; then
-    echo "Abrindo a porta 80 no UFW..."
-    sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network'
-  else
-    echo "A porta 80 já está aberta no UFW."
-  fi
-
-  sudo usermod -aG admin www-data
-  sudo systemctl restart apache2
-  echo "✅ Interface web do node Lightning instalada com sucesso!"
-
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Terminal Web... ${NC}"
     wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz >> /dev/null 2>&1
