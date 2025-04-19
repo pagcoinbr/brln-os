@@ -108,8 +108,6 @@ else
 fi
 
 # Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
-echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
-
 SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
 
 if [ -n "$SCRIPT_LIST" ]; then
@@ -117,15 +115,10 @@ if [ -n "$SCRIPT_LIST" ]; then
 www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
   echo "Permissões atualizadas com sucesso!"
-else
-  echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
 fi
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
-  echo "Abrindo a porta 80 no UFW..."
   sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network'
-else
-  echo "A porta 80 já está aberta no UFW."
 fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
@@ -149,9 +142,9 @@ terminal_web() {
     sudo cp /home/admin/brlnfullauto/services/gotty-fullauto.service /etc/systemd/system/gotty-fullauto.service
     # Ativa e inicia
     sudo systemctl daemon-reload
-    sudo systemctl enable gotty.service
+    sudo systemctl enable gotty.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty.service
-    sudo systemctl enable gotty-fullauto.service
+    sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty-fullauto.service 
     echo -e "${GREEN} Terminal Web instalado com sucesso! ${NC}"
     echo -e "${GREEN} Acesse pelo navegador em: http://$(hostname -I | awk '{print $1}') ${NC}"
