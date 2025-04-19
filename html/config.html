@@ -77,16 +77,56 @@
         <div id="blockchain" class="status">Blockchain: ...</div>
         <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
     </div>
+    <div class="section">
+        <h2>🖥️ Acessar Terminal</h2>
+        <button class="botao" onclick="abrirApp(8080)">🖥️ Acessar Terminal Web</button>
+    </div>
 
     <a href="index.html" class="back botao">⬅️ Voltar</a>
 
- <script>
+<script>
     function atualizarStatus() {
         fetch('/cgi-bin/status.sh')
             .then(res => {
                 if (!res.ok) {
                     throw new Error('Erro ao obter status do sistema.');
                 }
+                return res.text(); // ✅ <- Aqui trocamos para texto simples
+            })
+            .then(text => {
+                const lines = text.split('\n');
+                for (const line of lines) {
+                    if (line.includes("CPU:")) {
+                        document.getElementById("cpu").innerText = line;
+                    } else if (line.includes("RAM:")) {
+                        document.getElementById("ram").innerText = line;
+                    } else if (line.includes("LND:")) {
+                        document.getElementById("lnd").innerText = line;
+                    } else if (line.includes("Bitcoind:")) {
+                        document.getElementById("bitcoind").innerText = line;
+                    } else if (line.includes("Tor:")) {
+                        document.getElementById("tor").innerText = line;
+                    } else if (line.includes("Blockchain:")) {
+                        document.getElementById("blockchain").innerText = line;
+                    }
+                }
+            })
+            .catch(error => {
+                alert("Erro ao atualizar status: " + error.message);
+            });
+    }
+
+    function abrirApp(porta) {
+        const ip = window.location.hostname;
+        const width = 900;
+        const height = 600;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+
+        window.open(`http://${ip}:${porta}`, '_blank',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
+    }
+
                 return res.text(); // ✅ <- Aqui trocamos para texto simples
             })
             .then(text => {
