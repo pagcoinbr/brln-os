@@ -93,7 +93,7 @@ fi
 # Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
 echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
 
-SCRIPT_LIST=$(find /usr/lib/cgi-bin/ -maxdepth 1 -type f -name "*.sh" | sort | paste -sd ", " -)
+SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
 
 if [ -n "$SCRIPT_LIST" ]; then
   sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
