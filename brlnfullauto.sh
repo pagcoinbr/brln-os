@@ -459,7 +459,6 @@ if [[ -d ~/.npm-global ]]; then
 if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
   echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
 fi
-  source ~/.profile
   npm i -g balanceofsatoshis
   bos --version
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
