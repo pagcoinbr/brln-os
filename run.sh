@@ -16,7 +16,7 @@ brln_check () {
   else
     echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
     sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
-        sudo chown -R admin:admin "$INSTALL_DIR"
+    sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
     sudo -u admin git -C "$INSTALL_DIR" checkout main
   fi
@@ -66,7 +66,7 @@ atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
   echo -e "${GREEN} Você já está logado como admin! ${NC}"
   dir_check
-  brln_check
+  #brln_check
 else
   echo -e "${RED} Você não está logado como admin! ${NC}"
   echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
@@ -86,12 +86,12 @@ if id "admin" &>/dev/null; then
   echo "✅ Usuário 'admin' já existe."
   sudo passwd admin
   dir_check
-  brln_check
+  #brln_check
 else
   echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
   sudo adduser --gecos "" --ingroup admin admin
   dir_check
-  brln_check
+  #brln_check
 fi
 elif [[ $create_user == "no" ]]; then
   echo -e "${RED} Você escolheu não criar um usuário admin! ${NC}"
