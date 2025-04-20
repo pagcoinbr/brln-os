@@ -1,0 +1,13 @@
+[Unit]
+Description=Configura o bos telegram
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin
+Environment=TERM=xterm
+ExecStart=/bin/bash /home/admin/brlnfullauto/html/scripts/bos-telegram.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -172,47 +172,36 @@ update_and_upgrade
     sudo tar -xvzf /home/admin/gotty_linux_arm.tar.gz -C /usr/local/bin
   fi
     sudo chmod +x /usr/local/bin/gotty
-    sudo rm -f /etc/systemd/system/gotty.service
-    sudo rm -f /etc/systemd/system/gotty-fullauto.service
-    sudo rm -f /etc/systemd/system/gotty-logs-lnd.service
-    sudo rm -f /etc/systemd/system/gotty-logs-bitcoind.service
-    sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
-    sudo cp /home/admin/brlnfullauto/services/gotty-fullauto.service /etc/systemd/system/gotty-fullauto.service
-    sudo cp /home/admin/brlnfullauto/services/gotty-logs-lnd.service /etc/systemd/system/gotty-logs-lnd.service
-    sudo cp /home/admin/brlnfullauto/services/gotty-logs-bitcoind.service /etc/systemd/system/gotty-logs-bitcoind.service
-    # Ativa e inicia
+    sudo chmod +x /home/admin/brlnfullauto/html/sciripts/*.sh
+    # Define arrays for services and ports
+    SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "gotty-bos-telegram")
+    PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "3737")
+    COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
+          "allow cli on port 3232 from local network" 
+          "allow bitcoinlogs on port 3434 from local network" 
+          "allow lndlogs on port 3535 from local network")
+
+    # Remove and copy service files
+    for service in "${SERVICES[@]}"; do
+      sudo rm -f /etc/systemd/system/$service.service
+      sudo cp /home/admin/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
+    done
+
+    # Reload systemd and enable/start services
     sudo systemctl daemon-reload
-    if ! sudo systemctl is-enabled --quiet gotty.service; then
-      sudo systemctl enable gotty.service >> /dev/null 2>&1
-      sudo systemctl restart gotty.service >> /dev/null 2>&1 & spinner
-    fi
+    for service in "${SERVICES[@]}"; do
+      if ! sudo systemctl is-enabled --quiet $service.service; then
+        sudo systemctl enable $service.service >> /dev/null 2>&1
+        sudo systemctl restart $service.service >> /dev/null 2>&1 & spinner
+      fi
+    done
 
-    if ! sudo systemctl is-enabled --quiet gotty-fullauto.service; then
-      sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1
-      sudo systemctl restart gotty-fullauto.service >> /dev/null 2>&1 & spinner
-    fi
-
-    if ! sudo systemctl is-enabled --quiet gotty-logs-bitcoind.service; then
-      sudo systemctl enable gotty-logs-bitcoind.service >> /dev/null 2>&1
-      sudo systemctl restart gotty-logs-bitcoind.service >> /dev/null 2>&1 & spinner
-    fi
-
-    if ! sudo systemctl is-enabled --quiet gotty-logs-lnd.service; then
-      sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1
-      sudo systemctl restart gotty-logs-lnd.service >> /dev/null 2>&1 & spinner
-    fi
-    if ! sudo ufw status | grep -q "3131/tcp"; then
-      sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow BRLNfullauto on port 3131 from local network' >> /dev/null 2>&1
-    fi
-    if ! sudo ufw status | grep -q "3232/tcp"; then
-      sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow cli on port 3232 from local network' >> /dev/null 2>&1
-    fi
-    if ! sudo ufw status | grep -q "3434/tcp"; then
-      sudo ufw allow from 192.168.0.0/23 to any port 3434 proto tcp comment 'allow bitcoinlogs on port 3434 from local network' >> /dev/null 2>&1
-    fi
-    if ! sudo ufw status | grep -q "3535/tcp"; then
-      sudo ufw allow from 192.168.0.0/23 to any port 3535 proto tcp comment 'allow lndlogs on port 3535 from local network' >> /dev/null 2>&1
-    fi
+    # Configure UFW rules for ports
+    for i in "${!PORTS[@]}"; do
+      if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
+        sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
+      fi
+    done
 }
 
 terminal_web() {
