@@ -321,18 +321,18 @@ configure_lnd() {
   echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
   echo -e "${GREEN}################################################################${NC}"  
   echo
-  read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
-  if [[ $use_brlnd == "yes" ]]; then
+  read -p "Você deseja utilizar o bitcoind da BRLN? (y/n): " use_brlnd
+  if [[ $use_brlnd == "y" ]]; then
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
     read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
     sudo sed -i "75s|.*|bitcoind.rpcuser=$bitcoind_rpcuser|" "$file_path"
     sudo sed -i "76s|.*|bitcoind.rpcpass=$bitcoind_rpcpass|" "$file_path"
-  elif [[ $use_brlnd == "no" ]]; then
+  elif [[ $use_brlnd == "n" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
     toogle_on
   else
-    echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
+    echo -e "${RED} Opção inválida. Por favor, escolha 'y' ou 'n'. ${NC}"
     exit 1
   fi
   local alias_line="alias=$alias | BR⚡️LN"
@@ -341,15 +341,15 @@ configure_lnd() {
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
     echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
-    read -p "Você deseja exibir os logs da instalação? (yes/no): " show_logs
-    if [[ $show_logs == "yes" ]]; then
+    read -p "Você deseja exibir os logs da instalação? (y/n): " show_logs
+    if [[ $show_logs == "y" ]]; then
       echo -e "${GREEN}Exibindo logs da instalação do Postgres...${NC}"
       postgres_db
-    elif [[ $show_logs == "no" ]]; then
+    elif [[ $show_logs == "n" ]]; then
       echo -e "${RED}Você escolheu não exibir os logs da instalação do Postgres!${NC}"
       postgres_db >> /dev/null 2>&1
     else
-      echo -e "${RED}Opção inválida. Por favor, escolha 'yes' ou 'no'.${NC}"
+      echo -e "${RED}Opção inválida. Por favor, escolha 'y' ou 'n'.${NC}"
       exit 1
     fi
     psql -V
@@ -397,15 +397,15 @@ EOF
   sudo cp $file_path /data/lnd/lnd.conf
   sudo chown admin:admin /data/lnd/lnd.conf
   sudo chmod 640 /data/lnd/lnd.conf
-if [[ $use_brlnd == "yes" ]]; then
+if [[ $use_brlnd == "y" ]]; then
   create_wallet
 else
   echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS.${YELLOW} Para isso você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
   echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
   echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
-  read -p "Seu bitcoin core já está completamente sincronizado? (yes/no): " sync_choice
-  if [[ $sync_choice == "yes" ]]; then
+  read -p "Seu bitcoin core já está completamente sincronizado? (y/n): " sync_choice
+  if [[ $sync_choice == "y" ]]; then
   echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
   toogle_on >> /dev/null 2>&1
   sleep 5
@@ -417,8 +417,8 @@ fi
 24_word_confirmation () {
   echo -e "${YELLOW} Você confirma que anotou a sua frase de 24 palavras corretamente? Ela não poderá ser recuperada no futuro, se não anotada agora!!! ${NC}"
   echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
-  read -p "Você confirma que anotou a sua frase de 24 palavras corretamente? (yes/no): " confirm_phrase
-  if [[ $confirm_phrase == "yes" ]]; then
+  read -p "Você confirma que anotou a sua frase de 24 palavras corretamente? (y/n): " confirm_phrase
+  if [[ $confirm_phrase == "y" ]]; then
     echo -e "${GREEN} Você confirmou que anotou a frase de 24 palavras! ${NC}"
   else
     echo -e "${RED} Opção inválida. Por favor, confirme se anotou a frase de segurança. ${NC}"
@@ -461,6 +461,7 @@ create_wallet () {
 }
 
 install_bitcoind() {
+  sudo -v
   local file_path="/home/admin/brlnfullauto/conf_files/bitcoin.conf"
   set -e
   if [[ $arch == "x86_64" ]]; then
@@ -825,8 +826,8 @@ thunderhub_update () {
     return 1
   fi
   echo "📦 Última versão encontrada: $LATEST_VERSION"
-  read -p "Deseja continuar com a atualização para a versão $LATEST_VERSION? (yes/no): " CONFIRMA
-  if [[ "$CONFIRMA" != "yes" ]]; then
+  read -p "Deseja continuar com a atualização para a versão $LATEST_VERSION? (y/n): " CONFIRMA
+  if [[ "$CONFIRMA" != "n" ]]; then
     echo "❌ Atualização cancelada."
     return 1
   fi
