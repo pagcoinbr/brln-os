@@ -2,7 +2,6 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Configurações do Node</title>
     <link rel="icon" type="image/png" href="logopreto.png">
     <style>
@@ -15,7 +14,6 @@
             font-family: Arial, sans-serif;
             text-align: center;
             padding: 20px;
-            margin: 0;
         }
 
         .botao {
@@ -29,9 +27,6 @@
             cursor: pointer;
             text-decoration: none;
             transition: background 0.3s;
-            display: inline-block;
-            width: 100%;
-            max-width: 300px;
         }
 
         .botao:hover {
@@ -45,13 +40,11 @@
             padding: 20px;
             margin: 20px auto;
             max-width: 600px;
-            box-sizing: border-box;
         }
 
         .status {
             font-size: 18px;
             margin: 10px 0;
-            word-wrap: break-word;
         }
 
         .back {
@@ -78,51 +71,6 @@
             overflow: auto;
             font-size: 14px;
         }
-
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .botao {
-                font-size: 14px;
-                padding: 10px 20px;
-            }
-
-            .section {
-                padding: 15px;
-                margin: 15px auto;
-            }
-
-            .status {
-                font-size: 16px;
-            }
-
-            h1, h2 {
-                font-size: 1.5em;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .botao {
-                font-size: 12px;
-                padding: 8px 16px;
-            }
-
-            h1, h2 {
-                font-size: 1.2em;
-            }
-
-            .status {
-                font-size: 14px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -137,12 +85,13 @@
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
         <div id="blockchain" class="status">Blockchain: ...</div>
-    </div>
 
+    </div>
     <div class="section">
         <h2>🖥️ Painel de Controle</h2>
         <button class="botao" onclick="abrirApp(3131)">⚡ Instalar BRLN FullAuto</button>
         <button class="botao" onclick="abrirApp(3232)">🖥️ Acessar Terminal Web</button>
+        <br>
         <br><br>
         <a>Para colar no terminal utilize, Ctrl + Shift + V</a>
         <br><br>
@@ -150,18 +99,20 @@
         <button class="botao" onclick="abrirApp(3535)">⚡ Ver Logs do LND</button>
         <button class="botao" onclick="abrirApp(3434)">⛓️ Ver Logs do Bitcoind</button>
     </div>
-
     <div class="section">
         <h2>🙏 Apoie Nosso Projeto</h2>
         <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>
-        <a href="lightning:lnbc1..." style="display: inline-block;">
-            <img src="donate.png" alt="QR Code para doação">
+    
+        <!-- QR Code clicável -->
+        <a href="lightning:brlnfullauto@wallet.br-ln.com" style="display: inline-block;">
+            <img src="donate.png" alt="QR Code para doação" style="max-width: 200px; width: 100%; height: auto; margin: 10px auto; cursor: pointer;">
         </a>
     </div>
-
+    
     <div class="voltar-container">
         <a href="index.html" class="back botao">⬅️ Voltar</a>
     </div>
+
 
 <script>
     function atualizarStatus() {
@@ -170,7 +121,7 @@
                 if (!res.ok) {
                     throw new Error('Erro ao obter status do sistema.');
                 }
-                return res.text();
+                return res.text(); // ✅ <- Aqui trocamos para texto simples
             })
             .then(text => {
                 const lines = text.split('\n');
@@ -195,8 +146,9 @@
             });
     }
 
-    setInterval(atualizarStatus, 5000);
-    window.onload = atualizarStatus;
+        // Atualiza a cada 5 segundos
+        setInterval(atualizarStatus, 5000);
+        window.onload = atualizarStatus;
 
     function abrirApp(porta) {
         const ip = window.location.hostname;
@@ -209,6 +161,7 @@
             `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
     }
 </script>
+
 
 </body>
 </html>
