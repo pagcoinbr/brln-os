@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=admin
 WorkingDirectory=/home/admin
-Environment=HOME=/home/admin
+Environment=TERM=xterm
 ExecStart=/usr/local/bin/gotty -p 3535 -w journalctl -fu lnd
 Restart=always
 

@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=admin
 WorkingDirectory=/home/admin
-Environment=HOME=/home/admin
+Environment=TERM=xterm
 ExecStart=/usr/local/bin/gotty -p 3131 -w bash -c 'bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/brlnfullauto.sh)'
 Restart=always
 
