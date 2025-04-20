@@ -48,9 +48,19 @@
         }
 
         .back {
+            width: auto;
+            max-width: 90%;
+            font-size: 16px;
+            padding: 12px 24px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .voltar-container {
             margin-top: 30px;
-            display: inline-block;
-            background-color: #007bff;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
         }
 
         pre {
@@ -81,12 +91,18 @@
         <h2>🖥️ Painel de Controle</h2>
         <button class="botao" onclick="abrirApp(3131)">⚡ Instalar BRLN FullAuto</button>
         <button class="botao" onclick="abrirApp(3232)">🖥️ Acessar Terminal Web</button>
+        <br>
+        <br><br>
+        <a>Para colar no terminal utilize, Ctrl + Shift + V</a>
+        <br><br>
         <h2>📜 Logs do Sistema</h2>
         <button class="botao" onclick="abrirApp(3535)">⚡ Ver Logs do LND</button>
         <button class="botao" onclick="abrirApp(3434)">⛓️ Ver Logs do Bitcoind</button>
-      </div>      
+    </div>
+    <div class="voltar-container">
+        <a href="index.html" class="back botao">⬅️ Voltar</a>
+    </div>
 
-    <a href="index.html" class="back botao">⬅️ Voltar</a>
 
 <script>
     function atualizarStatus() {
