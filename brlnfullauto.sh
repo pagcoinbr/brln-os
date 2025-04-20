@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=v0.9-beta
+SCRIPT_VERSION=v0.9.1-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.5
@@ -983,7 +983,12 @@ if [[ -f ./simple-lnwallet ]]; then
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
     cd /home/admin
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/simple-lnwallet
+  if [[ $arch == "x86_64" ]]; then
+    simple_arch=""
+  else
+    simple_arch="-rpi"
+  fi
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/simple-lnwallet$simple_arch
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
@@ -1003,24 +1008,22 @@ simple_lnwallet () {
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
   sleep 1
-  sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
   sleep 1
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
   sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
-  read -p "Deseja exibir o conteúdo do arquivo macaroon.hex? (y/n): " show_tls
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
   xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
   cat ~/brlnfullauto/macaroon.hex
   echo
   echo
-  read -p "Deseja exibir o conteúdo do arquivo tls.hex? (y/n): " show_macaroon
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
   xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
+  echo
   echo
 }
 
@@ -1033,7 +1036,7 @@ submenu_opcoes() {
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
-  read -p "👉 Digite sua escolha: " suboption
+  read -p "👉 Digite sua escolha:   " suboption
 
   case $suboption in
     1)
