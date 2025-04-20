@@ -75,14 +75,14 @@
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
         <div id="blockchain" class="status">Blockchain: ...</div>
-        <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status</button>
+        <button class="botao" onclick="atualizarStatus()">🔄 Atualizar Status Manualmente</button>
+        <div id="status-atualizando" class="status">Atualizando automaticamente a cada 5 segundos...</div>
+
     </div>
     <div class="section">
-        <h2>🖥️ Acessar Terminal</h2>
+        <h2>🖥️ Painel de Controle</h2>
         <button class="botao" onclick="abrirApp(3131)">⚡ Instalar BRLN FullAuto</button>
         <button class="botao" onclick="abrirApp(3232)">🖥️ Acessar Terminal Web</button>
-    </div>
-    <div class="section">
         <h2>📜 Logs do Sistema</h2>
         <button class="botao" onclick="abrirApp(3535)">⚡ Ver Logs do LND</button>
         <button class="botao" onclick="abrirApp(3434)">⛓️ Ver Logs do Bitcoind</button>
@@ -121,6 +121,10 @@
                 alert("Erro ao atualizar status: " + error.message);
             });
     }
+
+        // Atualiza a cada 5 segundos
+        setInterval(atualizarStatus, 5000);
+        window.onload = atualizarStatus;
 
     function abrirApp(porta) {
         const ip = window.location.hostname;
