@@ -1047,7 +1047,7 @@ menu() {
   echo -e "   ${GREEN}5${NC}- Instalar Thunderhub & Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
+  echo -e "   ${GREEN}8${NC}- Atualizar a interface gráfica"
   echo -e "   ${GREEN}9${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
@@ -1191,9 +1191,9 @@ menu() {
       menu
       ;;
     8)
-      echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
-      tailscale_vpn
-      echo -e "\033[43m\033[30m ✅ Tailscale instalado com sucesso! \033[0m"
+      echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
+      update_and_upgrade
+      echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
       exit 0
       ;;
     9)
