@@ -3,7 +3,7 @@ Description=Terminal Web com GoTTY
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/gotty -p 3232 -w bash sudo -v
+ExecStart=/usr/local/bin/gotty -p 3232 -w sudo -v
 Restart=always
 User=admin
 WorkingDirectory=/home/admin

@@ -1329,5 +1329,4 @@ menu() {
 
 system_detector
 ip_finder
-sudo -v
 terminal_web
