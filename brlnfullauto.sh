@@ -107,7 +107,7 @@ spinner() {
 }
 
 update_and_upgrade() {
-echo "Instalando Apache e módulos necessários..."
+echo "Instalando Apache..."
 sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
 echo "Habilitando módulos do Apache..."
 sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
