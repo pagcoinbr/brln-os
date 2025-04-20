@@ -1000,11 +1000,14 @@ simple_lnwallet () {
     echo "Opção inválida!"
     exit 1
   fi
+  read -p "Deseja exibir o conteúdo do arquivo macaroon.hex? (y/n): " show_tls
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
   xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
   cat ~/brlnfullauto/macaroon.hex
   echo
+  echo
+  read -p "Deseja exibir o conteúdo do arquivo tls.hex? (y/n): " show_macaroon
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
   xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
