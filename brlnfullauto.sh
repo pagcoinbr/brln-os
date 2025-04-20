@@ -983,18 +983,18 @@ if [[ -f ./simple-lnwallet ]]; then
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
     cd /home/admin
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/simple-lnwallet
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
 }
 
 simple_lnwallet () {
-  read -p "Deseja exibir os logs da instalação? (yes/no): " logs_choice
-  if [[ $logs_choice == "yes" ]]; then
+  read -p "Deseja exibir os logs da instalação? (y/n): " logs_choice
+  if [[ $logs_choice == "y" ]]; then
     get_simple_wallet
   elif
-  [[ $logs_choice == "no" ]]; then
+  [[ $logs_choice == "n" ]]; then
     get_simple_wallet > /dev/null 2>&1
   else
     echo "Opção inválida!"
@@ -1002,8 +1002,10 @@ simple_lnwallet () {
   fi
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+  sleep 1
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
+  sleep 1
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
   sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
@@ -1020,9 +1022,6 @@ simple_lnwallet () {
   xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
   echo
-  echo
-  echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
-  echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
 }
 
 submenu_opcoes() {
