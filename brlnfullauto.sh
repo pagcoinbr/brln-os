@@ -138,6 +138,8 @@ terminal_web() {
     sudo systemctl start gotty-logs-bitcoind.service
     sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1
     sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3434 proto tcp comment 'allow application on port 3434 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3535 proto tcp comment 'allow application on port 3535 from local network' >> /dev/null 2>&1
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
