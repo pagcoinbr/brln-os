@@ -1000,6 +1000,8 @@ simple_lnwallet () {
     echo "Opção inválida!"
     exit 1
   fi
+  sudo rm -f /etc/systemd/system/simple-lnwallet.service
+  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
   sudo systemctl daemon-reexec
   sudo systemctl daemon-reload
   sudo systemctl enable simple-lnwallet
@@ -1021,8 +1023,6 @@ simple_lnwallet () {
   echo
   echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
   echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
-  sudo rm -f /etc/systemd/system/simple-lnwallet.service
-  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
 }
 
 submenu_opcoes() {
