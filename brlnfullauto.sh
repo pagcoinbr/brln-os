@@ -1000,6 +1000,11 @@ simple_lnwallet () {
     echo "Opção inválida!"
     exit 1
   fi
+  sudo systemctl daemon-reexec
+  sudo systemctl daemon-reload
+  sudo systemctl enable simple-lnwallet
+  sudo systemctl start simple-lnwallet
+  sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   read -p "Deseja exibir o conteúdo do arquivo macaroon.hex? (y/n): " show_tls
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
@@ -1018,11 +1023,6 @@ simple_lnwallet () {
   echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-  sudo systemctl daemon-reexec
-  sudo systemctl daemon-reload
-  sudo systemctl enable simple-lnwallet
-  sudo systemctl start simple-lnwallet
-  sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
 }
 
 submenu_opcoes() {
