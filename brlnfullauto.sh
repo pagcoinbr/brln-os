@@ -108,12 +108,53 @@ sudo usermod -aG admin www-data
 sudo systemctl restart apache2
 }
 
+gui_update() {
+update_and_upgrade
+  if [[ ! -f /usr/local/bin/gotty ]]; then
+    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
+    sudo tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /usr/local/bin
+    sudo chmod +x /usr/local/bin/gotty
+  fi
+    sudo rm -f /etc/systemd/system/gotty.service
+    sudo rm -f /etc/systemd/system/gotty-fullauto.service
+    sudo rm -f /etc/systemd/system/gotty-logs-lnd.service
+    sudo rm -f /etc/systemd/system/gotty-logs-bitcoind.service
+    sudo cp /home/admin/brlnfullauto/services/gotty.service /etc/systemd/system/gotty.service
+    sudo cp /home/admin/brlnfullauto/services/gotty-fullauto.service /etc/systemd/system/gotty-fullauto.service
+    sudo cp /home/admin/brlnfullauto/services/gotty-logs-lnd.service /etc/systemd/system/gotty-logs-lnd.service
+    sudo cp /home/admin/brlnfullauto/services/gotty-logs-bitcoind.service /etc/systemd/system/gotty-logs-bitcoind.service
+    # Ativa e inicia
+    sudo systemctl daemon-reload
+    sudo systemctl enable gotty.service >> /dev/null 2>&1 & spinner
+    sudo systemctl restart gotty.service
+    sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
+    sudo systemctl restart gotty-fullauto.service
+    sudo systemctl enable gotty-logs-bitcoind.service >> /dev/null 2>&1 & spinner
+    sudo systemctl restart gotty-logs-bitcoind.service
+    sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1 & spinner
+    sudo systemctl restart gotty-logs-lnd.service
+    if ! sudo ufw status | grep -q "3131/tcp"; then
+      sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow BRLNfullauto on port 3131 from local network' >> /dev/null 2>&1
+    fi
+    if ! sudo ufw status | grep -q "3232/tcp"; then
+      sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow cli on port 3232 from local network' >> /dev/null 2>&1
+    fi
+    if ! sudo ufw status | grep -q "3434/tcp"; then
+      sudo ufw allow from 192.168.0.0/23 to any port 3434 proto tcp comment 'allow bitcoinlogs on port 3434 from local network' >> /dev/null 2>&1
+    fi
+    if ! sudo ufw status | grep -q "3535/tcp"; then
+      sudo ufw allow from 192.168.0.0/23 to any port 3535 proto tcp comment 'allow lndlogs on port 3535 from local network' >> /dev/null 2>&1
+    fi
+}
+
 terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
     echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
     # Baixa o binário como admin
     update_and_upgrade
+    tailscale_vpn
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
     # Extrai como admin
     sudo tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /usr/local/bin
@@ -129,17 +170,16 @@ terminal_web() {
     sudo systemctl start gotty.service
     sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
     sudo systemctl start gotty-fullauto.service
-    tailscale_vpn
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
     sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1
     sudo systemctl enable gotty-logs-bitcoind.service >> /dev/null 2>&1
     sudo systemctl start gotty-logs-lnd.service
     sudo systemctl start gotty-logs-bitcoind.service
-    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow application on port 3131 from local network' >> /dev/null 2>&1
-    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow application on port 3232 from local network' >> /dev/null 2>&1
-    sudo ufw allow from 192.168.0.0/23 to any port 3434 proto tcp comment 'allow application on port 3434 from local network' >> /dev/null 2>&1
-    sudo ufw allow from 192.168.0.0/23 to any port 3535 proto tcp comment 'allow application on port 3535 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow BRLNfullauto on port 3131 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow cli on port 3232 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3434 proto tcp comment 'allow bitcoinlogs on port 3434 from local network' >> /dev/null 2>&1
+    sudo ufw allow from 192.168.0.0/23 to any port 3535 proto tcp comment 'allow lndlogs on port 3535 from local network' >> /dev/null 2>&1
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
