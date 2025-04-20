@@ -398,7 +398,7 @@ configure_lnd() {
       postgres_db
     elif [[ $show_logs == "n" ]]; then
       echo -e "${RED}Você escolheu não exibir os logs da instalação do Postgres!${NC}"
-      postgres_db >> /dev/null 2>&1
+      postgres_db >> /dev/null 2>&1 & spinner
     else
       echo -e "${RED}Opção inválida. Por favor, escolha 'y' ou 'n'.${NC}"
       exit 1
@@ -699,7 +699,7 @@ curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
 sudo apt install qrencode -y >> /dev/null 2>&1
 
 # Roda o tailscale up em segundo plano, salvando log
-sudo tailscale up 2>&1 | tee /tmp/tailscale.log &
+sudo tailscale up > /dev/null 2>&1 | tee /tmp/tailscale.log &
 
 # Aguarda alguns segundos pra gerar a URL
 sleep 5
@@ -1029,17 +1029,19 @@ menu_manutencao
 }	
 
 get_simple_wallet () {
+  arch=$(uname -m)
 if [[ -f ./simple-lnwallet ]]; then
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
     cd /home/admin
   if [[ $arch == "x86_64" ]]; then
-    simple_arch=""
+    echo "Arquitetura x86_64 detectada."
+    simple_arch="simple-lnwallet"
   else
-    simple_arch="-rpi"
+    simple_arch="simple-lnwallet-rpi"
   fi
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/simple-lnwallet$simple_arch
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/$simple_arch
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
