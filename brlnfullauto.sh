@@ -107,7 +107,6 @@ spinner() {
 }
 
 update_and_upgrade() {
-sudo -v
 echo "Instalando Apache e módulos necessários..."
 sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
 echo "Habilitando módulos do Apache..."
@@ -513,7 +512,6 @@ create_wallet () {
 }
 
 install_bitcoind() {
-  sudo -v
   local file_path="/home/admin/brlnfullauto/conf_files/bitcoin.conf"
   set -e
   if [[ $arch == "x86_64" ]]; then
@@ -1167,6 +1165,7 @@ menu() {
 
   case $option in
     1)
+      sudo -v
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1189,6 +1188,7 @@ menu() {
       ;;
 
     2)
+      sudo -v
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1206,6 +1206,7 @@ menu() {
       menu
       ;;
     3)
+      sudo -v
       echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW} instalando o lnd...${NC}"
@@ -1225,12 +1226,14 @@ menu() {
       menu
       ;;
     4)
+      sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
       simple_lnwallet
       echo -e "\033[43m\033[30m ✅ Simple LNWallet instalado com sucesso! \033[0m"
       menu
       ;;
     5)
+      sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
@@ -1263,6 +1266,7 @@ menu() {
       menu
       ;;
     6)
+      sudo -v
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
@@ -1285,6 +1289,7 @@ menu() {
       menu
       ;;
     7)
+      sudo -v
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       read -p "Deseja exigir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
@@ -1301,6 +1306,7 @@ menu() {
       menu
       ;;
     8)
+      sudo -v
       echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
       gui_update
       echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
