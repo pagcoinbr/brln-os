@@ -1232,7 +1232,7 @@ menu() {
       ;;
     8)
       echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
-      update_and_upgrade
+      gui_update
       echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
       exit 0
       ;;
