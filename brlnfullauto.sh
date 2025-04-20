@@ -126,14 +126,25 @@ update_and_upgrade
     sudo cp /home/admin/brlnfullauto/services/gotty-logs-bitcoind.service /etc/systemd/system/gotty-logs-bitcoind.service
     # Ativa e inicia
     sudo systemctl daemon-reload
-    sudo systemctl enable gotty.service >> /dev/null 2>&1 & spinner
-    sudo systemctl restart gotty.service
-    sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
-    sudo systemctl restart gotty-fullauto.service
-    sudo systemctl enable gotty-logs-bitcoind.service >> /dev/null 2>&1 & spinner
-    sudo systemctl restart gotty-logs-bitcoind.service
-    sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1 & spinner
-    sudo systemctl restart gotty-logs-lnd.service
+    if ! sudo systemctl is-enabled --quiet gotty.service; then
+      sudo systemctl enable gotty.service >> /dev/null 2>&1
+      sudo systemctl restart gotty.service >> /dev/null 2>&1 & spinner
+    fi
+
+    if ! sudo systemctl is-enabled --quiet gotty-fullauto.service; then
+      sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1
+      sudo systemctl restart gotty-fullauto.service >> /dev/null 2>&1 & spinner
+    fi
+
+    if ! sudo systemctl is-enabled --quiet gotty-logs-bitcoind.service; then
+      sudo systemctl enable gotty-logs-bitcoind.service >> /dev/null 2>&1
+      sudo systemctl restart gotty-logs-bitcoind.service >> /dev/null 2>&1 & spinner
+    fi
+
+    if ! sudo systemctl is-enabled --quiet gotty-logs-lnd.service; then
+      sudo systemctl enable gotty-logs-lnd.service >> /dev/null 2>&1
+      sudo systemctl restart gotty-logs-lnd.service >> /dev/null 2>&1 & spinner
+    fi
     if ! sudo ufw status | grep -q "3131/tcp"; then
       sudo ufw allow from 192.168.0.0/23 to any port 3131 proto tcp comment 'allow BRLNfullauto on port 3131 from local network' >> /dev/null 2>&1
     fi
