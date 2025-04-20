@@ -177,9 +177,9 @@ terminal_web() {
     sudo cp /home/admin/brlnfullauto/services/gotty-logs-bitcoind.service /etc/systemd/system/gotty-logs-bitcoind.service
     # Ativa e inicia
     sudo systemctl daemon-reload
-    sudo systemctl enable gotty.service >> /dev/null 2>&1 & spinner
+    sudo systemctl enable gotty.service >> /dev/null
     sudo systemctl start gotty.service
-    sudo systemctl enable gotty-fullauto.service >> /dev/null 2>&1 & spinner
+    sudo systemctl enable gotty-fullauto.service >> /dev/null
     sudo systemctl start gotty-fullauto.service
     sudo systemctl restart gotty.service
     sudo systemctl restart gotty-fullauto.service
@@ -672,11 +672,11 @@ fi
 
 echo
 echo -e "${GREEN} Em seguida escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
-echo -e "⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏"
-echo -e "🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?"
-echo -e "🏴‍☠️ Rodar o próprio node é só o primeiro passo rumo à liberdade financeira."
-echo -e "🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com"
-echo -e "🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!"
+echo -e "${GREEN}⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏${NC}"
+echo -e "${GREEN}🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?${NC}"
+echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
+echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com${NC}"
+echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
 }
 
 toogle_bitcoin () {
