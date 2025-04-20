@@ -165,7 +165,6 @@ terminal_web() {
     echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
     # Baixa o binário como admin
     update_and_upgrade
-    tailscale_vpn
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
     # Extrai como admin
     sudo tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /usr/local/bin
@@ -191,6 +190,7 @@ terminal_web() {
     sudo ufw allow from 192.168.0.0/23 to any port 3232 proto tcp comment 'allow cli on port 3232 from local network' >> /dev/null 2>&1
     sudo ufw allow from 192.168.0.0/23 to any port 3434 proto tcp comment 'allow bitcoinlogs on port 3434 from local network' >> /dev/null 2>&1
     sudo ufw allow from 192.168.0.0/23 to any port 3535 proto tcp comment 'allow lndlogs on port 3535 from local network' >> /dev/null 2>&1
+    tailscale_vpn
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
