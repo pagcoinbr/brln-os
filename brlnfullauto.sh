@@ -162,11 +162,16 @@ sudo systemctl restart apache2
 gui_update() {
 update_and_upgrade
   if [[ ! -f /usr/local/bin/gotty ]]; then
+  if [[ $arch == "x86_64" ]]; then
     echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz -O /home/admin/gotty_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
+    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
     sudo tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /usr/local/bin
-    sudo chmod +x /usr/local/bin/gotty
+    else
+    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz -O /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz >> /dev/null 2>&1 & spinner
+    sudo tar -xvzf /home/admin/gotty_linux_arm.tar.gz -C /usr/local/bin
   fi
+    sudo chmod +x /usr/local/bin/gotty
     sudo rm -f /etc/systemd/system/gotty.service
     sudo rm -f /etc/systemd/system/gotty-fullauto.service
     sudo rm -f /etc/systemd/system/gotty-logs-lnd.service
