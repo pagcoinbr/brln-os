@@ -1108,6 +1108,7 @@ menu() {
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
   read -p "👉 Digite sua escolha:   " option
+  echo
 
   case $option in
     1)
