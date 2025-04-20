@@ -1,3 +1,55 @@
+# This script automates the installation and configuration of a Lightning Network node and related services.
+# It includes functionalities for setting up Bitcoin Core, LND, and various management tools like ThunderHub, LNbits, and LNDG.
+# Below is a breakdown of the script's main components and their purposes:
+
+# Variables:
+# - SCRIPT_VERSION: Version of the script.
+# - TOR_LINIK, TOR_GPGLINK: URLs for Tor installation.
+# - LND_VERSION, BTC_VERSION: Versions of LND and Bitcoin Core to install.
+# - VERSION_THUB: Fetches the latest ThunderHub version from GitHub.
+# - HTML_SRC, CGI_DST, WWW_HTML: Paths for web interface files.
+# - SERVICES, POETRY_BIN: Paths for services and Poetry binary.
+# - atual_user, branch, git_user: User and Git branch information.
+# - Color variables (RED, GREEN, YELLOW, etc.) for terminal output.
+
+# Functions:
+# 1. spinner: Displays a spinner animation during long-running tasks.
+# 2. update_and_upgrade: Installs and configures Apache, sets up CGI scripts, and adjusts permissions.
+# 3. gui_update: Installs and configures Gotty for a web-based terminal interface.
+# 4. terminal_web: Sets up the web terminal interface and ensures proper permissions.
+# 5. create_main_dir: Creates the main directory structure and updates system packages.
+# 6. configure_ufw: Configures UFW firewall rules for secure access.
+# 7. install_tor: Installs and configures Tor for enhanced privacy.
+# 8. postgres_db: Installs and configures PostgreSQL for LND database usage.
+# 9. download_lnd: Downloads and verifies the LND binary.
+# 10. configure_lnd: Configures LND with options for PostgreSQL or bbolt databases.
+# 11. create_wallet: Guides the user through creating a new LND wallet with a 24-word seed phrase.
+# 12. install_bitcoind: Installs and configures Bitcoin Core.
+# 13. install_nodejs: Installs Node.js if not already installed.
+# 14. install_bos: Installs Balance of Satoshis (BOS) for managing the Lightning node.
+# 15. install_thunderhub: Installs and configures ThunderHub for managing the Lightning node.
+# 16. install_lndg: Installs and configures LNDG for advanced Lightning node management.
+# 17. lnbits_install: Installs LNbits, a Lightning wallet and payment processor.
+# 18. tailscale_vpn: Installs Tailscale VPN for secure remote access.
+# 19. toogle_bitcoin, toogle_on, toogle_off: Toggles between local and remote Bitcoin Core configurations.
+# 20. manutencao_script: Provides maintenance options for updating or uninstalling components.
+# 21. get_simple_wallet, simple_lnwallet: Installs and configures Simple LNWallet.
+# 22. submenu_opcoes: Displays additional options for toggling Bitcoin Core or performing maintenance.
+# 23. ip_finder: Retrieves the local IP address.
+# 24. system_detector: Detects the system architecture.
+# 25. system_preparations: Prepares the system by installing dependencies and configuring the environment.
+# 26. menu: Main menu for selecting installation and configuration options.
+
+# Usage:
+# - Run the script as a Bash script on a Linux system.
+# - Follow the interactive prompts to install and configure the desired components.
+# - Use the menu to manage the node, install additional tools, or perform maintenance tasks.
+
+# Notes:
+# - Ensure the script is run with root or sudo privileges for proper installation.
+# - Some components require user input, such as passwords or configuration choices.
+# - The script includes options for verbose or silent installation modes.
+# - Logs are redirected to /dev/null for silent mode, but can be enabled for debugging.
 #!/bin/bash
 SCRIPT_VERSION=v0.9.1-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
