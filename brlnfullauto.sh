@@ -202,6 +202,7 @@ update_and_upgrade
         sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
       fi
     done
+  fi
 }
 
 terminal_web() {
