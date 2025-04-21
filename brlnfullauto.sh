@@ -631,8 +631,9 @@ curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
 # Instala o qrencode para gerar QR codes
 sudo apt install qrencode -y >> /dev/null 2>&1
 log_file="tailscale_up.log"
-rm -f "$log_file" # remove log antigo se existir
-touch "$log_file" # cria um novo log
+sudo rm -f "$log_file" # remove log antigo se existir
+sudo touch "$log_file" # cria um novo log
+sudo chmod 666 "$log_file" # garante permissões de leitura e escrita
 # 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
 echo "▶️ Iniciando 'tailscale up' em background..."
 (sudo tailscale up > "$log_file" 2>&1) &
@@ -643,8 +644,7 @@ echo "▶️ Iniciando 'tailscale up' em background..."
   done
   echo -ne "\n"
 # 3️⃣ Tenta extrair o link de autenticação do log
-echo "🔍 Procurando o link de autenticação..."
-url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
+url=$(sudo grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
 if [[ -n "$url" ]]; then
     echo "✅ Link encontrado: $url"
     echo "📲 QR Code:"
