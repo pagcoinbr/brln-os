@@ -1179,6 +1179,7 @@ menu() {
 
   case $option in
     1)
+      app="network"
       sudo -v
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
@@ -1209,6 +1210,7 @@ menu() {
       ;;
 
     2)
+      app="bitcoin"
       sudo -v
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
@@ -1227,6 +1229,7 @@ menu() {
       menu
       ;;
     3)
+      app="lnd"
       sudo -v
       echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
@@ -1247,6 +1250,7 @@ menu() {
       menu
       ;;
     4)
+      app="simple_lnwallet"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
       simple_lnwallet
@@ -1254,6 +1258,7 @@ menu() {
       menu
       ;;
     5)
+      app="thunderhub"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1287,6 +1292,7 @@ menu() {
       menu
       ;;
     6)
+      app="lndg"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1310,6 +1316,7 @@ menu() {
       menu
       ;;
     7)
+      app="lnbits"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       read -p "Deseja exigir logs? (y/n): " verbose_mode
@@ -1327,6 +1334,7 @@ menu() {
       menu
       ;;
     8)
+      app="gui"
       sudo -v
       echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
       gui_update
