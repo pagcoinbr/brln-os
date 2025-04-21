@@ -169,11 +169,11 @@ gui_update() {
 terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
-    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
     # Baixa o binário como admin
     update_and_upgrade
     gotty_install
     tailscale_vpn
+    opening
     exit 0
   else
     if [[ $atual_user == "admin" ]]; then
