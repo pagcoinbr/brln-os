@@ -220,7 +220,7 @@ Por isso usamos:
 ## 💬 Contato
 
 - Telegram: https://t.me/pagcoinbr
-- Email: suporte.brln@gmail.com
+- Email: suporte.brln@gmail.com ou suporte@pagcoin.org
 - Projeto: https://services.br-ln.com
 - Colabore: Fork, PRs e ideias são bem-vindos!
 
