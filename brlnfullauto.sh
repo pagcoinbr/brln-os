@@ -1071,10 +1071,19 @@ echo ""
 echo "📱 Aponte sua câmera para o QR Code acima para abrir: $BOT_LINK"
 echo ""
 
-echo -e "${YELLOW}⚡️ Crie um bot no Telegram usando o BotFather e obtenha a API Key.${NC}"
+echo "⚡️ Crie um bot no Telegram usando o BotFather e obtenha a API Key."
 read -p "Pressione Enter após criar o bot no Telegram..."
 
-/home/admin/.npm-global/bin/bos telegram
+echo ""
+echo "🛠️ Agora será iniciado o processo de autenticação do BOS Telegram."
+echo "✅ Ao ver a mensagem '🤖 Connected to <nome do seu node>', pressione ENTER aqui para continuar."
+echo ""
+
+# ⚡ Abre um subshell para rodar bos telegram
+bash -c '/home/admin/.npm-global/bin/bos telegram' &
+
+# Aguarda o usuário confirmar que recebeu a conexão
+read -p "Pressione ENTER aqui após a conexão ser concluída no Telegram..."
 
 echo "✍️ Digite o Connection Code do seu bot Telegram:"
 read -r connection_code
