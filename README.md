@@ -75,6 +75,7 @@ O script exibe um menu com várias opções. Siga a ordem de cima pra baixo:
 
 💬 Durante a instalação, o script vai perguntar:
 - Se você quer exibir os logs ("y" para ver o que acontece por trás, "n" para uma instalação mais limpa.)
+** É sabido que alguns sistemas podem travar durante a instalação sem logs, dê preferência por ver os logs**
 - Se quer usar o Bitcoin remoto da BRLN ou o local
 - Qual nome dar para o seu node Lightning
 - Se prefere PostgreSQL ou Bbolt como banco de dados
@@ -115,8 +116,10 @@ Via menu > opção VPN:
 
 📱 Baixe o app do Tailscale no celular e escaneie o QR code. Pronto, seu node virou seu parceiro de viagem!
 
+- **Teve algum problema? Até agora, se você não depositou nenhum fundo e não está conseguindo progredir pois fez alguma coisa errada? Basta reiniciar o processo formatando a máquina e fazendo a instalação do ubuntu, novamente.**
+
 ---
-![ChatGPT Image 21 de abr  de 2025, 02_47_48](https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4){width="50%"}
+![ChatGPT Image 21 de abr  de 2025, 02_47_48](https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4)
 ---
 
 ## 📚 Bibliografia e Repositórios Utilizados
