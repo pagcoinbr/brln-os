@@ -34,10 +34,10 @@ spinner() {
     while kill -0 $pid 2>/dev/null; do
         local emoji=""
         for ((i=0; i<=count; i++)); do
-            emoji+="⚡"
+            emoji+="⚡ "
         done
 
-        printf "\r\033[KBR%s LN..." "$emoji"
+        printf "\r\033[KBR%sLN..." "$emoji"
 
         sleep $delay
         count=$(( (count + 1) % (max + 1) ))
