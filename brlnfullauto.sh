@@ -44,7 +44,7 @@ spinner() {
         j=$(( (j + 1) % 4 ))
         count=$(( (count + 1) % (max + 1) ))
 
-        printf "\r\033[KInstalando BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        printf "\r\033[KInstalando $app no seu BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
         sleep "$delay"
     done
 
@@ -53,9 +53,9 @@ spinner() {
 
     tput cnorm
     if [[ $exit_code -eq 0 ]]; then
-        printf "\r\033[K${GREEN}✔️ BR⚡LN Finalizado com sucesso!${NC}\n"
+        printf "\r\033[K${GREEN}✔️ Processo finalizado com sucesso!${NC}\n"
     else
-        printf "\r\033[K${RED}❌ BR⚡LN falhou com erro (código: $exit_code)${NC}\n"
+        printf "\r\033[K${RED}❌ Processo finalizado com erro (código: $exit_code)${NC}\n"
     fi
 
     return $exit_code
