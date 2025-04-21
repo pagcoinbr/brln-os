@@ -26,8 +26,10 @@ NC='\033[0m' # Sem cor
 spinner() {
     local pid=$!
     local delay=0.2
-    local max=10
-    local count=0
+    local max=20
+    local spinlen=${#spinstr}
+    local i=0
+    local j=0
 
     tput civis
 
@@ -37,7 +39,7 @@ spinner() {
             emoji+="⚡ "
         done
 
-        printf "\r\033[KBR%sLN..." "$emoji"
+        printf "\r\033[KBRLN... %c %s" "$emoji"
 
         sleep $delay
         count=$(( (count + 1) % (max + 1) ))
