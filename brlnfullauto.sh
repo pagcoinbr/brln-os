@@ -97,14 +97,15 @@ sudo mv /home/admin/gotty /usr/local/bin/gotty
 sudo chmod +x /usr/local/bin/gotty
 
 # Define arrays for services and ports
-SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
-PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "gotty-bos-telegram")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "3939")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
-          "allow cli on port 3232 from local network" 
-          "allow bitcoinlogs on port 3434 from local network" 
-          "allow lndlogs on port 3535 from local network"
-          "allow btc-editor on port 3636 from local network"
-          "allow lnd-editor on port 3333 from local network")
+  "allow cli on port 3232 from local network" 
+  "allow bitcoinlogs on port 3434 from local network" 
+  "allow lndlogs on port 3535 from local network"
+  "allow btc-editor on port 3636 from local network"
+  "allow lnd-editor on port 3333 from local network"
+  "allow bos-telegram on port 3939 from local network")
 
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
@@ -1009,15 +1010,7 @@ echo "📱 Aponte sua câmera para o QR Code acima para abrir: $BOT_LINK"
 echo ""
 
 echo "⚡️ Crie um bot no Telegram usando o BotFather e obtenha a API Key."
-read -p "Pressione Enter após criar o bot no Telegram..."
-
-echo ""
-echo "🛠️ Agora será iniciado o processo de autenticação do BOS Telegram."
-echo "✅ Ao ver a mensagem '🤖 Connected to <nome do seu node>', pressione ENTER aqui para continuar."
-echo ""
-
-# ⚡ Abre um subshell para rodar bos telegram
-bash -c '/home/admin/.npm-global/bin/bos telegram' &
+echo "🌐 Agora acesse a interface web, vá em \"Configurações\" e clique em \" Autenticar Bos Telegram\"."
 
 # Aguarda o usuário confirmar que recebeu a conexão
 read -p "Pressione ENTER aqui após a conexão ser concluída no Telegram..."
