@@ -1023,9 +1023,14 @@ if [[ -z "$connection_code" ]]; then
   exit 1
 fi
 
-# 📝 Inserir Connection Code diretamente no serviço
-  sudo sed -i "s|ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
-  echo "✅ Connection Code inserido com sucesso no serviço."
+# 📝 Adiciona ou substitui ExecStart com o Connection Code
+if grep -q '^ExecStart=' "$SERVICE_FILE"; then
+  sudo sed -i "s|^ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
+else
+  sudo sed -i "/^\[Service\]/a ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code" "$SERVICE_FILE"
+fi
+
+echo "✅ Connection Code inserido com sucesso no serviço bos-telegram."
 
 # 🔄 Recarrega o systemd e reinicia o serviço
 echo "🔄 Recarregando daemon do systemd..."
