@@ -11,7 +11,7 @@ WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 atual_user=$(whoami)
-branch=teste_v0.9
+branch=main
 git_user=pagcoinbr
 
 # Cores
