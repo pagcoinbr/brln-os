@@ -1,94 +1,66 @@
 #!/bin/bash
-branch=teste_v0.9
-git_user=pagcoinbr
-# Cores
+
+# 🧠 Configurações iniciais
+branch="teste_v0.9"
+git_user="pagcoinbr"
+INSTALL_DIR="/home/admin/brlnfullauto"
+ADMIN_PASS="admin"  # Senha temporária (pode substituir por outra ou gerar aleatória)
+
+# 🎨 Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
-MAGENTA='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m' # Sem cor
+NC='\033[0m'
 
-INSTALL_DIR="/home/admin/brlnfullauto"
+# 🚫 Silencia a saída padrão e de erro
+QUIET=">> /dev/null 2>&1"
 
-echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
+echo -e "${BLUE}🔐 Criando usuário 'admin' se necessário...${NC}"
 sleep 1
 
-brln_check () {
-  if [[ -d "$INSTALL_DIR" ]]; then
-    echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
-  else
-    sudo -u admin git clone -q https://github.com/$git_user/brlnfullauto.git "$INSTALL_DIR"
-    sudo chown -R admin:admin "$INSTALL_DIR"
-    sleep 2
-    sudo -u admin git -C "$INSTALL_DIR" switch $branch > /dev/null
+create_admin_user() {
+  # Cria grupo 'admin' se não existir
+  getent group admin $QUIET || sudo groupadd admin $QUIET
+
+  # Cria usuário admin se necessário
+  if ! id "admin" &>/dev/null; then
+    sudo useradd -m -s /bin/bash -g admin -G sudo,adm,cdrom,dip,plugdev,lxd admin $QUIET
+    echo "admin:$ADMIN_PASS" | sudo chpasswd
+    sudo chage -d 0 admin  # Força troca de senha no primeiro login
   fi
 
-  sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-  sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
-  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
-  exit 0
-}
-
-dir_check () {
-  # Verifica se o diretório /home/admin existe
-if [[ -d "/home/admin" ]]; then
-  # Verifica se o dono do diretório é o usuário 'admin'
-  owner=$(stat -c '%U' /home/admin)
-
-  if [[ "$owner" != "admin" ]]; then
-    echo "⚠️ O diretório /home/admin existe, mas pertence a $owner. Corrigindo..."
-    
-    # Encerra todos os processos do usuário admin (precaução, caso haja)
-    pkill -u admin 2>/dev/null
-
-    # Remove com segurança
-    sudo rm -rf /home/admin
-
-    # Recria o diretório
-    sudo mkdir -p /home/admin
-    sudo chown admin:admin /home/admin
-    sudo chmod 755 /home/admin
-  else
-    echo 
-  fi
-else
-  echo
-  sudo mkdir -p /home/admin
-  sudo chown admin:admin /home/admin
+  # Ajusta permissões da home
+  sudo mkdir -p /home/admin $QUIET
+  sudo chown -R admin:admin /home/admin
   sudo chmod 755 /home/admin
-  echo
-fi
 }
 
-main_call () {
-# Identifica e cria o usuário/grupo admin
-atual_user=$(whoami)
-if [[ $atual_user = "admin" ]]; then
-  echo -e "${GREEN} Você já está logado como admin! ${NC}"
-  dir_check
-  brln_check
-else
-  if id "admin" &>/dev/null; then
-  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
-  exit 0
+clone_repo_if_needed() {
+  if [[ ! -d "$INSTALL_DIR" ]]; then
+    echo -e "${BLUE}📦 Clonando repositório do BRLN FullAuto...${NC}"
+    sudo -u admin git clone -q "https://github.com/$git_user/brlnfullauto.git" "$INSTALL_DIR"
+    sudo -u admin git -C "$INSTALL_DIR" switch "$branch" $QUIET
+    sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
   fi
-fi
-  sudo groupadd admin >> /dev/null 2>&1
-# Garante que o usuário 'admin' existe
-if id "admin" &>/dev/null; then
-  sudo passwd admin
-  dir_check
-  brln_check
-  exit 0
-else
-  sudo adduser --gecos "" --ingroup admin admin
-  dir_check
-  brln_check
-  exit 0
-fi
+}
+
+launch_main_script() {
+  echo -e "${GREEN}🚀 Iniciando o BRLN FullAuto como usuário admin...${NC}"
+  exec sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+}
+
+# 🔁 Execução principal
+main_call() {
+  atual_user=$(whoami)
+  if [[ "$atual_user" == "admin" ]]; then
+    clone_repo_if_needed
+    launch_main_script
+  else
+    create_admin_user
+    clone_repo_if_needed
+    launch_main_script
+  fi
 }
 
 main_call
-exit 0
