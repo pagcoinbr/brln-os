@@ -52,7 +52,7 @@ O script exibe um menu com várias opções. Siga a ordem de cima pra baixo:
    5 - Instalar Thunderhub + Balance of Satoshis
    6 - Instalar LNDG
    7 - Instalar LNbits
-   8 - Mais opções ( atualizações, Telegram)
+   8 - Mais opções ( Atualizações, Telegram)
 ```
 
 💬 Durante a instalação, o script vai perguntar:
