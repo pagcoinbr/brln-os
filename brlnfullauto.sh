@@ -625,7 +625,6 @@ sudo systemctl start lnbits.service
 echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
-tailscale_vpn () {
 tailscale_vpn() {
   LOGFILE="/tmp/tailscale_up.log"
   echo -e "${BLUE}▶️ Iniciando 'tailscale up' em background...${NC}"
@@ -764,8 +763,6 @@ toogle_off () {
     fi
 }
 
-manutencao_script () {
-  # Executa o script de manutenção
 lnd_update () {
   cd /tmp
 LND_VERSION=$(curl -s https://api.github.com/repos/lightningnetwork/lnd/releases/latest | grep -oP '"tag_name": "\Kv[0-9]+\.[0-9]+\.[0-9]+(?=-beta)')
@@ -968,6 +965,8 @@ menu_manutencao() {
   esac
 }
 
+manutencao_script () {
+  # Executa o script de manutenção
 lnd --version
 bitcoin-cli --version
 menu_manutencao
