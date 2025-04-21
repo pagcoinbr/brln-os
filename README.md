@@ -39,6 +39,24 @@ ssh admin@<seu_ip_local>
 E repita o comando de instalação acima.
 
 ---
+![image](https://github.com/user-attachments/assets/88ff977e-89b3-4c08-b4a7-6b35bd0cd64f)
+
+![image](https://github.com/user-attachments/assets/3877bc5c-83e6-4919-b079-f6891f224c7b)
+
+### 5. 🌐 Acesse a Interface Gráfica
+
+Após instalar os aplicativos, acesse via navegador:
+```bash
+http://<seu_ip_local> ou http://<seu_ip_tailscale>
+```
+
+Você verá um painel com botões para:
+- Thunderhub
+- LNDg
+- LNbits
+- Simple LNWallet
+- Logs do sistema
+- Configurações avançadas
 
 ### 3. 🧭 Use o Menu Interativo
 
@@ -46,13 +64,13 @@ O script exibe um menu com várias opções. Siga a ordem de cima pra baixo:
 
 ```bash
    1 - Instalar Interface de Rede e Gráfica
-   2 - Instalar Bitcoin Core (bitcoind)
+   2 - Instalar Bitcoin Core ( bitcoind )
    3 - Instalar LND e criar a carteira
    4 - Instalar Simple LNWallet
    5 - Instalar Thunderhub + Balance of Satoshis
    6 - Instalar LNDG
    7 - Instalar LNbits
-   8 - Mais opções ( Atualizações, Telegram)
+   8 - Mais opções ( Atualizações, Telegram )
 ```
 
 💬 Durante a instalação, o script vai perguntar:
@@ -72,25 +90,6 @@ Ao instalar o LND (passo 3), o script te guiará para:
 - Gerar uma nova seed de 24 palavras
 
 🧠 **IMPORTANTE:** Anote suas 24 palavras com muito carinho e guarde em local seguro. Sem elas, seus fundos podem ser perdidos PARA SEMPRE.
-
----
-
-### 5. 🌐 Acesse a Interface Gráfica
-
-Após instalar os aplicativos, acesse via navegador:
-```bash
-http://<seu_ip_local>
-```
-
-Você verá um painel com botões para:
-- Thunderhub
-- LNDg
-- LNbits
-- Simple LNWallet
-- Logs do sistema
-- Configurações avançadas
-
-💡 Todos os botões abrem aplicações ou scripts CGI usando o terminal via Gotty (interface web de terminal).
 
 ---
 
