@@ -24,35 +24,30 @@ CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
 # Spinner com ⚡ piscando, largura estável
-spinner() {
+spinner_raios() {
     local pid=$!
     local delay=0.2
-    local spinstr='|/-\'
-    local spinlen=${#spinstr}
-    local i=0
-    local j=0
+    local max=10
+    local count=0
 
     tput civis  # Esconde o cursor
 
     while kill -0 $pid 2>/dev/null; do
-        # Gira o emoji e o spinner
         local emoji=""
-        if (( i % 2 == 0 )); then
-            emoji=" ⚡ "
-        else
-            emoji="⚡⚡"  # dois espaços para compensar a largura do ⚡
-        fi
+        for ((i=0; i<=count; i++)); do
+            emoji+="⚡"
+        done
 
-        local spin_char="${spinstr:j:1}"
-
-        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
+        printf "\rBR%s..." "$emoji"
 
         sleep $delay
-        i=$(( (i + 1) % 4 ))
-        j=$(( (j + 1) % spinlen ))
+        count=$(( (count + 1) % (max + 1) ))
     done
+
     tput cnorm  # Mostra o cursor de volta
+    printf "\rBR⚡⚡⚡LN carregado com sucesso! 🎉\n"
 }
+
 
 update_and_upgrade() {
 echo "Instalando Apache..."
