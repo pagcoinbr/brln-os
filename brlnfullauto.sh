@@ -49,7 +49,7 @@ spinner() {
         j=$(( (j + 1) % spinlen ))
         count=$(( (count + 1) % (max + 1) ))
 
-        printf "\r\033[KBR${YELLOW}%s${NC}LN ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        printf "\r\033[KBR⚡LN...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
         sleep "$delay"
     done
 
