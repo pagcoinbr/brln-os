@@ -200,7 +200,7 @@ Usados dentro de `menu_manutencao()` e acessados via submenu.
 
 - Ubuntu Server 22.04 ou superior
 - Usuário "admin" com sudo
-- Pelo menos 2GB RAM e 32GB de armazenamento
+- Pelo menos 8GB RAM e 32GB de armazenamento
 - Acesso root ou sudo
 
 ---
@@ -213,14 +213,15 @@ Por isso usamos:
 - Bash puro e CGI acessível via HTML
 - Systemd nativo
 - Tor e Tailscale para privacidade
-- Interfaces com QRCode e Telegram
+- Interfaces gáficas e conexão com o Telegram.
 
 ---
 
 ## 💬 Contato
 
-- Telegram: https://t.me/BRLNcommunity
-- Projeto: https://br-ln.com
+- Telegram: https://t.me/pagcoinbr
+- Email: suporte.brln@gmail.com
+- Projeto: https://services.br-ln.com
 - Colabore: Fork, PRs e ideias são bem-vindos!
 
 ---
