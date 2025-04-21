@@ -25,6 +25,8 @@ Execute um comando:
 bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
 ```
 
+[![Captura-de-tela-2025-04-21-132716.png](https://i.postimg.cc/L5RwGBsr/Captura-de-tela-2025-04-21-132716.png)](https://postimg.cc/8JKZ6vMH)
+
 💡 Esse script vai:
 - Criar o usuário `admin`
 - Iniciar o script principal `brlnfullauto.sh`
