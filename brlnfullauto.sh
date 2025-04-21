@@ -678,18 +678,20 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 tailscale_vpn () {
-# Instala Tailscale e QRCode (sem logs)
-curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
-sudo apt install qrencode -y >> /dev/null 2>&1
+echo "⚙️ Iniciando Tailscale..."
+sudo tailscale logout &>/dev/null
 
-# Roda o tailscale up em segundo plano, salvando log
-sudo tailscale up > /dev/null 2>&1 | tee /tmp/tailscale.log &
+# Roda o tailscale up e CAPTURA a URL de autenticação
+AUTH_LINK=$(sudo tailscale up 2>&1 | grep -o "https://login.tailscale.com/.*")
 
-# Aguarda alguns segundos pra gerar a URL
-sleep 5
+if [[ -z "$AUTH_LINK" ]]; then
+  echo "❌ Link de autenticação não encontrado. Tente novamente."
+  exit 1
+fi
 
-# Extrai o link de autenticação
-url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]*' /tmp/tailscale.log | head -n 1)
+echo -e "\n📸 Escaneie este QR Code para autenticar sua tailnet:"
+qrencode -t ansiutf8 "$AUTH_LINK"
+echo -e "\n🌐 Ou acesse:\n$AUTH_LINK"
 
 echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
 echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
@@ -698,12 +700,8 @@ echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
 echo
 echo -e "${RED} Ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
 echo
-if [[ -n "$url" ]]; then
-  echo "$url" | qrencode -t ANSIUTF8
+  echo "$AUTH_LINK" | qrencode -t ANSIUTF8
   echo ""
-else
-  echo "❌ Link de autenticação não encontrado. Tente novamente."
-fi
 
 echo
 echo -e "${GREEN} Em seguida escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
