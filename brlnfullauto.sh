@@ -1,6 +1,56 @@
+# This script automates the installation and configuration of a Lightning Network node and related services.
+# It includes functionalities for setting up Bitcoin Core, LND, and various management tools like ThunderHub, LNbits, and LNDG.
+# Below is a breakdown of the script's main components and their purposes:
+
+# Variables:
+# - SCRIPT_VERSION: Version of the script.
+# - TOR_LINIK, TOR_GPGLINK: URLs for Tor installation.
+# - LND_VERSION, BTC_VERSION: Versions of LND and Bitcoin Core to install.
+# - VERSION_THUB: Fetches the latest ThunderHub version from GitHub.
+# - HTML_SRC, CGI_DST, WWW_HTML: Paths for web interface files.
+# - SERVICES, POETRY_BIN: Paths for services and Poetry binary.
+# - atual_user, branch, git_user: User and Git branch information.
+# - Color variables (RED, GREEN, YELLOW, etc.) for terminal output.
+
+# Functions:
+# 1. spinner: Displays a spinner animation during long-running tasks.
+# 2. update_and_upgrade: Installs and configures Apache, sets up CGI scripts, and adjusts permissions.
+# 3. gui_update: Installs and configures Gotty for a web-based terminal interface.
+# 4. terminal_web: Sets up the web terminal interface and ensures proper permissions.
+# 5. create_main_dir: Creates the main directory structure and updates system packages.
+# 6. configure_ufw: Configures UFW firewall rules for secure access.
+# 7. install_tor: Installs and configures Tor for enhanced privacy.
+# 8. postgres_db: Installs and configures PostgreSQL for LND database usage.
+# 9. download_lnd: Downloads and verifies the LND binary.
+# 10. configure_lnd: Configures LND with options for PostgreSQL or bbolt databases.
+# 11. create_wallet: Guides the user through creating a new LND wallet with a 24-word seed phrase.
+# 12. install_bitcoind: Installs and configures Bitcoin Core.
+# 13. install_nodejs: Installs Node.js if not already installed.
+# 14. install_bos: Installs Balance of Satoshis (BOS) for managing the Lightning node.
+# 15. install_thunderhub: Installs and configures ThunderHub for managing the Lightning node.
+# 16. install_lndg: Installs and configures LNDG for advanced Lightning node management.
+# 17. lnbits_install: Installs LNbits, a Lightning wallet and payment processor.
+# 18. tailscale_vpn: Installs Tailscale VPN for secure remote access.
+# 19. toogle_bitcoin, toogle_on, toogle_off: Toggles between local and remote Bitcoin Core configurations.
+# 20. manutencao_script: Provides maintenance options for updating or uninstalling components.
+# 21. get_simple_wallet, simple_lnwallet: Installs and configures Simple LNWallet.
+# 22. submenu_opcoes: Displays additional options for toggling Bitcoin Core or performing maintenance.
+# 23. ip_finder: Retrieves the local IP address.
+# 24. system_detector: Detects the system architecture.
+# 25. system_preparations: Prepares the system by installing dependencies and configuring the environment.
+# 26. menu: Main menu for selecting installation and configuration options.
+
+# Usage:
+# - Run the script as a Bash script on a Linux system.
+# - Follow the interactive prompts to install and configure the desired components.
+# - Use the menu to manage the node, install additional tools, or perform maintenance tasks.
+
+# Notes:
+# - Ensure the script is run with root or sudo privileges for proper installation.
+# - Some components require user input, such as passwords or configuration choices.
+# - The script includes options for verbose or silent installation modes.
+# - Logs are redirected to /dev/null for silent mode, but can be enabled for debugging.
 #!/bin/bash
-set -euo pipefail
-IFS=$'\n\t'
 SCRIPT_VERSION=v0.9.1-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
@@ -57,76 +107,110 @@ spinner() {
 }
 
 update_and_upgrade() {
-  echo -e "${GREEN}🔧 Instalando Apache e preparando ambiente Web...${NC}"
-  sudo -v
-  set -e
+echo "Instalando Apache..."
+sudo -v
+sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
+echo "Habilitando módulos do Apache..."
+sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
+echo "Reiniciando o serviço Apache..."
+sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
-  sudo apt install apache2 -y >> /dev/null
-  sudo a2enmod cgid dir >> /dev/null
-  sudo systemctl restart apache2 >> /dev/null
+# Criar diretórios e mover arquivos
+sudo mkdir -p "$CGI_DST"
+sudo rm -f "$WWW_HTML/"*.html
+sudo rm -f "$WWW_HTML"/*.png
+sudo rm -f "$CGI_DST/"*.sh
+sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
+sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
+sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
-  echo -e "${GREEN}📁 Organizando arquivos web e CGI...${NC}"
-  sudo mkdir -p "$CGI_DST"
-  sudo rm -f "$WWW_HTML/"*.html "$WWW_HTML/"*.png "$CGI_DST/"*.sh || true
-  sudo cp "$HTML_SRC/"*.html "$HTML_SRC/"*.png "$WWW_HTML/" || true
-  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/" || true
-  sudo chmod +x "$CGI_DST/"*.sh
+# Corrigir permissões de execução
+sudo chmod +x "$CGI_DST"/*.sh
+for script in "$CGI_DST"/*.sh; do
+  sudo chmod +x "$script"
+done
 
-  # Configura CGI apenas se ainda não estiver presente
-  if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
-    echo -e "${YELLOW}⚙️  Adicionando suporte CGI ao Apache...${NC}"
-    sudo sed -i '/<\/VirtualHost>/i \
+# Configurar o Apache para permitir CGI no diretório correto
+if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
+  echo "Adicionando bloco de configuração CGI ao Apache..."
+  sudo sed -i '/<\/VirtualHost>/i \
 <Directory "/usr/lib/cgi-bin">\n\
   AllowOverride None\n\
   Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
   Require all granted\n\
   AddHandler cgi-script .sh\n\
 </Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
-  fi
+else
+  echo "Bloco de configuração CGI já existe no Apache."
+fi
 
-  echo -e "${GREEN}🔐 Configurando permissões sudoers para www-data...${NC}"
-  SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | paste -sd "," -)
-  [[ -n "$SCRIPT_LIST" ]] && echo "www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST" | sudo tee /etc/sudoers.d/www-data-scripts > /dev/null
+# Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
+SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
 
-  echo -e "${GREEN}🌐 Liberando acesso à porta 80 via UFW...${NC}"
-  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'Allow Apache from local network' > /dev/null
-  sudo usermod -aG admin www-data
-  sudo systemctl restart apache2
+if [ -n "$SCRIPT_LIST" ]; then
+  sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
+EOF
+fi
+# Abre a posta 80 no UFW
+if ! sudo ufw status | grep -q "80/tcp"; then
+  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
+fi
+sudo usermod -aG admin www-data
+sudo systemctl restart apache2
 }
 
+gotty_install () {
+if [[ $arch == "x86_64" ]]; then
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz \
+    -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
+  wait
+  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -C /home/admin >> /dev/null 2>&1
+else
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz \
+    -O /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz >> /dev/null 2>&1 & spinner
+  wait
+  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz -C /home/admin >> /dev/null 2>&1
+fi
 
-gotty_install() {
-  echo -e "${GREEN}🖥️ Instalando gotty e preparando terminal web...${NC}"
-  set -e
+# Move e torna executável
+sudo mv /home/admin/gotty /usr/local/bin/gotty
+sudo chmod +x /usr/local/bin/gotty
 
-  local url
-  if [[ $arch == "x86_64" ]]; then
-    url="https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz"
-  else
-    url="https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz"
+# Define arrays for services and ports
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
+COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
+          "allow cli on port 3232 from local network" 
+          "allow bitcoinlogs on port 3434 from local network" 
+          "allow lndlogs on port 3535 from local network"
+          "allow btc-editor on port 3636 from local network"
+          "allow lnd-editor on port 3333 from local network")
+
+# Remove and copy service files
+for service in "${SERVICES[@]}"; do
+  sudo rm -f /etc/systemd/system/$service.service
+  sudo cp /home/admin/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
+done
+
+# Reload systemd and enable/start services
+sudo systemctl daemon-reload
+for service in "${SERVICES[@]}"; do
+  if ! sudo systemctl is-enabled --quiet $service.service; then
+    sudo systemctl enable $service.service >> /dev/null 2>&1
+    sudo systemctl restart $service.service >> /dev/null 2>&1 & spinner
   fi
+done
 
-  curl -sL "$url" -o /tmp/gotty.tar.gz
-  tar -xzf /tmp/gotty.tar.gz -C /tmp
-  sudo mv /tmp/gotty /usr/local/bin/
-  sudo chmod +x /usr/local/bin/gotty
-
-  echo -e "${GREEN}📦 Instalando serviços gotty...${NC}"
-  for service in "${SERVICES[@]}"; do
-    sudo cp "/home/admin/brlnfullauto/services/$service.service" "/etc/systemd/system/"
-  done
-
-  sudo systemctl daemon-reload
-
-  for service in "${SERVICES[@]}"; do
-    sudo systemctl enable --now "$service" >> /dev/null
-  done
-
-  for i in "${!PORTS[@]}"; do
-    sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" > /dev/null
-  done
+# Configure UFW rules for ports
+for i in "${!PORTS[@]}"; do
+  if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
+    sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
+  fi
+done
 }
-
 
 gui_update() {
   update_and_upgrade
@@ -135,23 +219,25 @@ gui_update() {
 }
 
 terminal_web() {
-  echo -e "${GREEN}⚙️ Iniciando Terminal Web...${NC}"
+  echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
-    echo -e "${YELLOW}💡 Instalando requisitos...${NC}"
+    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+    # Baixa o binário como admin
     update_and_upgrade
     gotty_install
     tailscale_vpn
     exit 0
-  fi
-
-  if [[ "$atual_user" == "admin" ]]; then
-    menu
   else
-    echo -e "${RED}⚠️ Você não está logado como admin! Alternando para admin...${NC}"
-    exec sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+    if [[ $atual_user == "admin" ]]; then
+      menu
+    else
+      echo -e "${RED} Você não está logado como admin! ${NC}"
+      echo -e "${RED} Logando como admin e executando o script... ${NC}"
+      sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+    fi
+    exit 0
   fi
 }
-
 
 create_main_dir() {
 echo "Atualizando pacotes do sistema..."
@@ -596,7 +682,7 @@ echo "⚙️ Iniciando Tailscale..."
 
 # Executa tailscale up e captura saída
 AUTH_OUTPUT=$(sudo tailscale up 2>&1)
-
+sleep	7 >> /dev/null 2>&1 & spinner
 # Pega o link da saída
 AUTH_LINK=$(echo "$AUTH_OUTPUT" | grep -o "https://login.tailscale.com/.*")
 
@@ -622,6 +708,7 @@ echo -e "${GREEN}🤨 Mas me diz... ainda vai confiar seus sats na mão dos outr
 echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
 echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com${NC}"
 echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
+
 }
 
 toogle_bitcoin () {
