@@ -45,7 +45,7 @@ spinner_raios() {
     done
 
     tput cnorm  # Mostra o cursor de volta
-    printf "\rBR⚡⚡⚡LN carregado com sucesso! 🎉\n"
+    printf "\rBR⚡⚡⚡ 🎉\n"
 }
 
 
@@ -1179,7 +1179,10 @@ menu() {
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Poderá demorar 10 min. ou mais. Seja paciente.${NC}"
-        system_preparations >> /dev/null 2>&1 & spinner
+        system_preparations >> /dev/null 2>&1 &
+        pid=$!
+        spinner $pid
+        wait $pid
         clear
       else
         echo "Opção inválida."
