@@ -1,13 +1,13 @@
 [Unit]
-Description=Terminal Web para autenticar BOS Telegram
+Description=Terminal Web para rodar bos telegram via gotty
 After=network.target
 
 [Service]
 User=admin
 WorkingDirectory=/home/admin
-Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3939 -w bash -c 'bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/start-bos-telegram.sh)'
+ExecStart=/usr/local/bin/gotty -p 3939 -w bash -c "/home/admin/.npm-global/bin/bos telegram"
 Restart=always
+Environment=TERM=xterm
 
 [Install]
 WantedBy=multi-user.target
