@@ -1,13 +1,22 @@
+# Systemd unit for Bos-Telegram Bot
+# /etc/systemd/system/bos-telegram.service
+# Substitua as variáveis iniciadas com $ com suas informações
+# Não esquece de apagar o $
+
 [Unit]
-Description=Terminal Web para autenticar BOS Telegram
-After=network.target
+Description=bos-telegram
+Wants=lnd.service
+After=lnd.service
 
 [Service]
+
 User=admin
-WorkingDirectory=/home/admin
-Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3939 -w bash -c 'bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/teste_v0.9/start-bos-telegram.sh)'
 Restart=always
+TimeoutSec=120
+RestartSec=30
+StandardOutput=null
+StandardError=journal
+Environment=BOS_DEFAULT_LND_PATH=/data/lnd
 
 [Install]
 WantedBy=multi-user.target
