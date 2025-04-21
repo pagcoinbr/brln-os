@@ -38,9 +38,9 @@ spinner() {
         # Gira o emoji e o spinner
         local emoji=""
         if (( i % 2 == 0 )); then
-            emoji="⚡"
+            emoji=" ⚡ "
         else
-            emoji="  "  # dois espaços para compensar a largura do ⚡
+            emoji="⚡⚡"  # dois espaços para compensar a largura do ⚡
         fi
 
         local spin_char="${spinstr:j:1}"
@@ -188,10 +188,6 @@ terminal_web() {
 }
 
 create_main_dir() {
-echo "Atualizando pacotes do sistema..."
-sudo apt update -y
-echo "Atualizando pacotes para a versão mais recente..."
-sudo apt full-upgrade -y
 sudo mkdir /data
 sudo chown admin:admin /data
 }
