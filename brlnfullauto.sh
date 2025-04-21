@@ -161,46 +161,56 @@ sudo systemctl restart apache2
 }
 
 gotty_install () {
-    if [[ $arch == "x86_64" ]]; then
-    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
-    sudo tar -xvzf /home/admin/gotty_linux_amd64.tar.gz -C /usr/local/bin
-    else
-    echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-    sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz -O /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz >> /dev/null 2>&1 & spinner
-    sudo tar -xvzf /home/admin/gotty_linux_arm.tar.gz -C /usr/local/bin
-  fi
-    sudo chmod +x /usr/local/bin/gotty
-    sudo chmod +x /home/admin/brlnfullauto/html/scripts/bos-telegram.sh
-    # Define arrays for services and ports
-    SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "gotty-bos-telegram")
-    PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "3737")
-    COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
+if [[ $arch == "x86_64" ]]; then
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz \
+    -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
+  wait
+  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -C /home/admin >> /dev/null 2>&1
+else
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz \
+    -O /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz >> /dev/null 2>&1 & spinner
+  wait
+  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz -C /home/admin >> /dev/null 2>&1
+fi
+
+# Move e torna executável
+sudo mv /home/admin/gotty /usr/local/bin/gotty
+sudo chmod +x /usr/local/bin/gotty
+sudo chmod +x /home/admin/brlnfullauto/html/scripts/bos-telegram.sh
+
+# Define arrays for services and ports
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
+COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
           "allow cli on port 3232 from local network" 
           "allow bitcoinlogs on port 3434 from local network" 
-          "allow lndlogs on port 3535 from local network")
+          "allow lndlogs on port 3535 from local network"
+          "allow btc-editor on port 3636 from local network"
+          "allow lnd-editor on port 3333 from local network"
 
-    # Remove and copy service files
-    for service in "${SERVICES[@]}"; do
-      sudo rm -f /etc/systemd/system/$service.service
-      sudo cp /home/admin/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
-    done
+# Remove and copy service files
+for service in "${SERVICES[@]}"; do
+  sudo rm -f /etc/systemd/system/$service.service
+  sudo cp /home/admin/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
+done
 
-    # Reload systemd and enable/start services
-    sudo systemctl daemon-reload
-    for service in "${SERVICES[@]}"; do
-      if ! sudo systemctl is-enabled --quiet $service.service; then
-        sudo systemctl enable $service.service >> /dev/null 2>&1
-        sudo systemctl restart $service.service >> /dev/null 2>&1 & spinner
-      fi
-    done
+# Reload systemd and enable/start services
+sudo systemctl daemon-reload
+for service in "${SERVICES[@]}"; do
+  if ! sudo systemctl is-enabled --quiet $service.service; then
+    sudo systemctl enable $service.service >> /dev/null 2>&1
+    sudo systemctl restart $service.service >> /dev/null 2>&1 & spinner
+  fi
+done
 
-    # Configure UFW rules for ports
-    for i in "${!PORTS[@]}"; do
-      if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
-        sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
-      fi
-    done
+# Configure UFW rules for ports
+for i in "${!PORTS[@]}"; do
+  if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
+    sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
+  fi
+done
 }
 
 gui_update() {
