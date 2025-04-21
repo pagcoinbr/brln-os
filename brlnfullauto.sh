@@ -1179,7 +1179,7 @@ menu() {
 
   case $option in
     1)
-      app="network"
+      app="Rede Privada"
       sudo -v
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
@@ -1210,7 +1210,7 @@ menu() {
       ;;
 
     2)
-      app="bitcoin"
+      app="Bitcoin"
       sudo -v
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
@@ -1229,7 +1229,7 @@ menu() {
       menu
       ;;
     3)
-      app="lnd"
+      app="Lnd"
       sudo -v
       echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
@@ -1250,7 +1250,7 @@ menu() {
       menu
       ;;
     4)
-      app="simple_lnwallet"
+      app="Simple Wallet"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
       simple_lnwallet
@@ -1258,7 +1258,7 @@ menu() {
       menu
       ;;
     5)
-      app="thunderhub"
+      app="Balance of Satoshis"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1278,6 +1278,7 @@ menu() {
       read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
+      app="Thunderhub"
       if [[ "$verbose_mode" == "y" ]]; then
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
@@ -1292,7 +1293,7 @@ menu() {
       menu
       ;;
     6)
-      app="lndg"
+      app="Lndg"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1316,7 +1317,7 @@ menu() {
       menu
       ;;
     7)
-      app="lnbits"
+      app="Lnbits"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       read -p "Deseja exigir logs? (y/n): " verbose_mode
@@ -1334,7 +1335,7 @@ menu() {
       menu
       ;;
     8)
-      app="gui"
+      app="Gui"
       sudo -v
       echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
       gui_update
