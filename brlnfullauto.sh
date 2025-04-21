@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_VERSION=v0.8.9.1-beta
+SCRIPT_VERSION=v0.9.1-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.5
@@ -10,6 +10,9 @@ CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
+atual_user=$(whoami)
+branch=teste_v0.9
+git_user=REDACTED_USERbr
 
 # Cores
 RED='\033[0;31m'
@@ -20,45 +23,15 @@ MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
-# Spinner com ⚡ piscando, largura estável
-spinner() {
-    local pid=$!
-    local delay=0.2
-    local spinstr='|/-\'
-    local spinlen=${#spinstr}
-    local i=0
-    local j=0
-
-    tput civis  # Esconde o cursor
-
-    while kill -0 $pid 2>/dev/null; do
-        # Gira o emoji e o spinner
-        local emoji=""
-        if (( i % 2 == 0 )); then
-            emoji="⚡"
-        else
-            emoji="  "  # dois espaços para compensar a largura do ⚡
-        fi
-
-        local spin_char="${spinstr:j:1}"
-
-        printf "\rBR%sLN a instalar... [%c]" "$emoji" "$spin_char"
-
-        sleep $delay
-        i=$(( (i + 1) % 4 ))
-        j=$(( (j + 1) % spinlen ))
-    done
-
-    printf "\r✅ BRLN instalado com sucesso!     \n"
-    tput cnorm  # Mostra o cursor de volta
-}
-
 update_and_upgrade() {
-# Atualizar sistema e instalar Apache + módulos
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install apache2 -y
-sudo a2enmod cgid dir
-sudo systemctl restart apache2
+app="Interface Gráfica"
+echo "Instalando Apache..."
+sudo -v
+sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
+echo "Habilitando módulos do Apache..."
+sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
+echo "Reiniciando o serviço Apache..."
+sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
 # Criar diretórios e mover arquivos
 sudo mkdir -p "$CGI_DST"
@@ -90,28 +63,98 @@ else
 fi
 
 # Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
-echo "Atualizando permissões sudo para www-data nos scripts do CGI..."
-
-SCRIPT_LIST=$(find /usr/lib/cgi-bin/ -maxdepth 1 -type f -name "*.sh" | sort | paste -sd ", " -)
+SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
 
 if [ -n "$SCRIPT_LIST" ]; then
   sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
 www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
-  echo "Permissões atualizadas com sucesso!"
-else
-  echo "Nenhum script encontrado no diretório /usr/lib/cgi-bin/. Verifique se os scripts estão no local correto."
 fi
 # Abre a posta 80 no UFW
 if ! sudo ufw status | grep -q "80/tcp"; then
-  echo "Abrindo a porta 80 no UFW..."
-  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network'
-else
-  echo "A porta 80 já está aberta no UFW."
+  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
 fi
 sudo usermod -aG admin www-data
 sudo systemctl restart apache2
-echo "✅ Interface web do node Lightning instalada com sucesso!"
+}
+
+gotty_install () {
+if [[ $arch == "x86_64" ]]; then
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz \
+    -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
+  wait
+  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -C /home/admin >> /dev/null 2>&1
+else
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz \
+    -O /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz >> /dev/null 2>&1 & spinner
+  wait
+  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz -C /home/admin >> /dev/null 2>&1
+fi
+
+# Move e torna executável
+sudo mv /home/admin/gotty /usr/local/bin/gotty
+sudo chmod +x /usr/local/bin/gotty
+
+# Define arrays for services and ports
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
+COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
+  "allow cli on port 3232 from local network" 
+  "allow bitcoinlogs on port 3434 from local network" 
+  "allow lndlogs on port 3535 from local network"
+  "allow btc-editor on port 3636 from local network"
+  "allow lnd-editor on port 3333 from local network")
+
+# Remove and copy service files
+for service in "${SERVICES[@]}"; do
+  sudo rm -f /etc/systemd/system/$service.service
+  sudo cp /home/admin/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
+done
+
+# Reload systemd and enable/start services
+sudo systemctl daemon-reload
+for service in "${SERVICES[@]}"; do
+  if ! sudo systemctl is-enabled --quiet $service.service; then
+    sudo systemctl enable $service.service >> /dev/null 2>&1
+    sudo systemctl restart $service.service >> /dev/null 2>&1 & spinner
+  fi
+done
+
+# Configure UFW rules for ports
+for i in "${!PORTS[@]}"; do
+  if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
+    sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
+  fi
+done
+}
+
+gui_update() {
+  update_and_upgrade
+  gotty_install
+  menu
+}
+
+terminal_web() {
+  echo -e "${GREEN} Iniciando... ${NC}"
+  if [[ ! -f /usr/local/bin/gotty ]]; then
+    # Baixa o binário como admin
+    update_and_upgrade
+    gotty_install
+    tailscale_vpn
+    opening
+    exit 0
+  else
+    if [[ $atual_user == "admin" ]]; then
+      menu
+    else
+      echo -e "${RED} Você não está logado como admin! ${NC}"
+      echo -e "${RED} Logando como admin e executando o script... ${NC}"
+      sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+    fi
+    exit 0
+  fi
 }
 
 create_main_dir() {
@@ -130,7 +173,7 @@ install_tor() {
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
 deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
-  sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null"
+  sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg"
   sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
   sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
   sudo systemctl reload tor
@@ -227,18 +270,18 @@ configure_lnd() {
   echo -e "${YELLOW} Caso você não seja membro, escolha a opção ${RED}não${NC} ${YELLOW}e prossiga.${NC}"
   echo -e "${GREEN}################################################################${NC}"  
   echo
-  read -p "Você deseja utilizar o bitcoind da BRLN? (yes/no): " use_brlnd
-  if [[ $use_brlnd == "yes" ]]; then
+  read -p "Você deseja utilizar o bitcoind da BRLN? (y/n): " use_brlnd
+  if [[ $use_brlnd == "y" ]]; then
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
     read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
     sudo sed -i "75s|.*|bitcoind.rpcuser=$bitcoind_rpcuser|" "$file_path"
     sudo sed -i "76s|.*|bitcoind.rpcpass=$bitcoind_rpcpass|" "$file_path"
-  elif [[ $use_brlnd == "no" ]]; then
+  elif [[ $use_brlnd == "n" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
     toogle_on
   else
-    echo -e "${RED} Opção inválida. Por favor, escolha 'yes' ou 'no'. ${NC}"
+    echo -e "${RED} Opção inválida. Por favor, escolha 'y' ou 'n'. ${NC}"
     exit 1
   fi
   local alias_line="alias=$alias | BR⚡️LN"
@@ -247,15 +290,15 @@ configure_lnd() {
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
     echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
-    read -p "Você deseja exibir os logs da instalação? (yes/no): " show_logs
-    if [[ $show_logs == "yes" ]]; then
+    read -p "Você deseja exibir os logs da instalação? (y/n): " show_logs
+    if [[ $show_logs == "y" ]]; then
       echo -e "${GREEN}Exibindo logs da instalação do Postgres...${NC}"
       postgres_db
-    elif [[ $show_logs == "no" ]]; then
+    elif [[ $show_logs == "n" ]]; then
       echo -e "${RED}Você escolheu não exibir os logs da instalação do Postgres!${NC}"
-      postgres_db >> /dev/null 2>&1
+      postgres_db >> /dev/null 2>&1 & spinner
     else
-      echo -e "${RED}Opção inválida. Por favor, escolha 'yes' ou 'no'.${NC}"
+      echo -e "${RED}Opção inválida. Por favor, escolha 'y' ou 'n'.${NC}"
       exit 1
     fi
     psql -V
@@ -303,15 +346,15 @@ EOF
   sudo cp $file_path /data/lnd/lnd.conf
   sudo chown admin:admin /data/lnd/lnd.conf
   sudo chmod 640 /data/lnd/lnd.conf
-if [[ $use_brlnd == "yes" ]]; then
+if [[ $use_brlnd == "y" ]]; then
   create_wallet
 else
   echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
   echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS.${YELLOW} Para isso você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
   echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
   echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
-  read -p "Seu bitcoin core já está completamente sincronizado? (yes/no): " sync_choice
-  if [[ $sync_choice == "yes" ]]; then
+  read -p "Seu bitcoin core já está completamente sincronizado? (y/n): " sync_choice
+  if [[ $sync_choice == "y" ]]; then
   echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
   toogle_on >> /dev/null 2>&1
   sleep 5
@@ -323,8 +366,8 @@ fi
 24_word_confirmation () {
   echo -e "${YELLOW} Você confirma que anotou a sua frase de 24 palavras corretamente? Ela não poderá ser recuperada no futuro, se não anotada agora!!! ${NC}"
   echo -e "${RED}Se voce não guardar esta informação de forma segura, você pode perder seus fundos depositados neste node, permanentemente!!!${NC}"
-  read -p "Você confirma que anotou a sua frase de 24 palavras corretamente? (yes/no): " confirm_phrase
-  if [[ $confirm_phrase == "yes" ]]; then
+  read -p "Você confirma que anotou a sua frase de 24 palavras corretamente? (y/n): " confirm_phrase
+  if [[ $confirm_phrase == "y" ]]; then
     echo -e "${GREEN} Você confirmou que anotou a frase de 24 palavras! ${NC}"
   else
     echo -e "${RED} Opção inválida. Por favor, confirme se anotou a frase de segurança. ${NC}"
@@ -420,9 +463,7 @@ if [[ -d ~/.npm-global ]]; then
 if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
   echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
 fi
-  source ~/.profile
   npm i -g balanceofsatoshis
-  bos --version
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
   sudo chown -R admin:admin /data/lnd
   sudo chmod -R 755 /data/lnd
@@ -486,9 +527,9 @@ git clone https://github.com/cryptosharks131/lndg.git
 cd lndg
 sudo apt install -y virtualenv
 virtualenv -p python3 .venv
-.venv/bin/pip install -r requirements.txt >> /dev/null 2>&1
-.venv/bin/pip install whitenoise >> /dev/null 2>&1
-.venv/bin/python3 initialize.py --whitenoise >> /dev/null 2>&1
+.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install whitenoise
+.venv/bin/python3 initialize.py --whitenoise
 sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
 sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
 sudo systemctl daemon-reload
@@ -550,40 +591,56 @@ sudo systemctl start lnbits.service
 echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
-tailscale_vpn () {
-# Instalação do Tailscale VPN
-curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
-# Instala o qrencode para gerar QR codes
-sudo apt install qrencode -y >> /dev/null 2>&1
-log_file="tailscale_up.log"
-rm -f "$log_file" # remove log antigo se existir
-touch "$log_file" # cria um novo log
-# 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
-echo "▶️ Iniciando 'tailscale up' em background..."
-(sudo tailscale up > "$log_file" 2>&1) &
-# 2️⃣ Aguarda a autenticação do Tailscale
-  for i in {20..1}; do
-    echo -ne "Aguardando $i segundos...\r"
+tailscale_vpn() {
+  echo -e "${CYAN}🌐 Instalando Tailscale VPN...${NC}"
+  curl -fsSL https://tailscale.com/install.sh | sh > /dev/null 2>&1
+  sudo apt install qrencode -y > /dev/null 2>&1
+
+  LOGFILE="/tmp/tailscale_up.log"
+  QRFILE="/tmp/tailscale_qr.log"
+
+  sudo rm -f "$LOGFILE" "$QRFILE"
+  sudo touch "$LOGFILE"
+  sudo chmod 666 "$LOGFILE"
+
+  echo -e "${BLUE}▶️ Executando 'tailscale up'...${NC}"
+  (sudo tailscale up > "$LOGFILE" 2>&1) &
+
+  echo -e "${YELLOW}⏳ Aguardando link de autenticação do Tailscale (sem timeout)...${NC}"
+
+  while true; do
+    url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$LOGFILE" | head -n1)
+    if [[ -n "$url" ]]; then
+      echo -e "${GREEN}✅ Link encontrado: $url${NC}"
+      echo "$url" | qrencode -t ANSIUTF8 | tee "$QRFILE"
+      echo -e "${GREEN}🔗 QR Code salvo em: $QRFILE${NC}"
+      break
+    fi
     sleep 1
   done
-  echo -ne "\n"
-# 3️⃣ Tenta extrair o link de autenticação do log
-echo "🔍 Procurando o link de autenticação..."
-url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
-if [[ -n "$url" ]]; then
-    echo "✅ Link encontrado: $url"
-    echo "📲 QR Code:"
-    echo "$url" | qrencode -t ANSIUTF8
-    touch tailscale_qr.log # cria o log do QR code
-    echo "🔗 QR Code salvo em tailscale_qr.log"
-    echo "$url" | qrencode -t ANSIUTF8 >> tailscale_qr.log 2>&1
-else
-    echo "❌ Não foi possível encontrar o link no log."
-    cat "$log_file"
-fi
-# 4️⃣ Aguarda a finalização do tailscale up
-echo "⏳ Aguardando autenticação para finalizar o comando..."
-echo "✅ tailscale up finalizado."
+  opening
+}
+
+opening () {
+clear
+  echo
+  echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
+  echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
+  echo
+  echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+  echo
+  echo -e "${RED} Ou escaneie o QR Code abaixo para conectar sua tailnet: ${NC}"
+  echo
+  echo "$url" | qrencode -t ANSIUTF8
+  echo
+  echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
+  echo
+  echo -e "${GREEN}⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏${NC}"
+  echo -e "${GREEN}🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?${NC}"
+  echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
+  echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉${BLUE} https://br-ln.com${NC}"
+  echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
+echo
 }
 
 toogle_bitcoin () {
@@ -675,8 +732,6 @@ toogle_off () {
     fi
 }
 
-manutencao_script () {
-  # Executa o script de manutenção
 lnd_update () {
   cd /tmp
 LND_VERSION=$(curl -s https://api.github.com/repos/lightningnetwork/lnd/releases/latest | grep -oP '"tag_name": "\Kv[0-9]+\.[0-9]+\.[0-9]+(?=-beta)')
@@ -732,8 +787,8 @@ thunderhub_update () {
     return 1
   fi
   echo "📦 Última versão encontrada: $LATEST_VERSION"
-  read -p "Deseja continuar com a atualização para a versão $LATEST_VERSION? (yes/no): " CONFIRMA
-  if [[ "$CONFIRMA" != "yes" ]]; then
+  read -p "Deseja continuar com a atualização para a versão $LATEST_VERSION? (y/n): " CONFIRMA
+  if [[ "$CONFIRMA" != "n" ]]; then
     echo "❌ Atualização cancelada."
     return 1
   fi
@@ -879,59 +934,114 @@ menu_manutencao() {
   esac
 }
 
+manutencao_script () {
+  # Executa o script de manutenção
 lnd --version
 bitcoin-cli --version
 menu_manutencao
 }	
 
 get_simple_wallet () {
+  arch=$(uname -m)
 if [[ -f ./simple-lnwallet ]]; then
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
     cd /home/admin
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.1/simple-lnwallet
+  if [[ $arch == "x86_64" ]]; then
+    echo "Arquitetura x86_64 detectada."
+    simple_arch="simple-lnwallet"
+  else
+    simple_arch="simple-lnwallet-rpi"
+  fi
+    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/$simple_arch
     chmod +x simple-lnwallet
     sudo apt install xxd -y
   fi
 }
 
 simple_lnwallet () {
-  read -p "Deseja exibir os logs da instalação? (yes/no): " logs_choice
-  if [[ $logs_choice == "yes" ]]; then
+  read -p "Deseja exibir os logs da instalação? (y/n): " logs_choice
+  if [[ $logs_choice == "y" ]]; then
     get_simple_wallet
   elif
-  [[ $logs_choice == "no" ]]; then
+  [[ $logs_choice == "n" ]]; then
     get_simple_wallet > /dev/null 2>&1
   else
     echo "Opção inválida!"
     exit 1
   fi
+  sudo rm -f /etc/systemd/system/simple-lnwallet.service
+  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+  sleep 1
+  sudo systemctl daemon-reload
+  sleep 1
+  sudo systemctl enable simple-lnwallet
+  sudo systemctl start simple-lnwallet
+  sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
   xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
   cat ~/brlnfullauto/macaroon.hex
-  rm -f ~/brlnfullauto/macaroon.hex
+  echo
   echo
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
   xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
   cat ~/brlnfullauto/tls.hex
-  rm -f ~/brlnfullauto/tls.hex
   echo
   echo
-  echo -e "${YELLOW} Acesse o endereço de IP do seu nó:${NC}"
-  echo -e "${YELLOW} http://<IP_DO_SEU_NODE>:<PORTA>${NC}"
-  sudo rm -f /etc/systemd/system/simple-lnwallet.service
-  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-  sudo systemctl daemon-reexec
-  sudo systemctl daemon-reload
-  sudo systemctl enable simple-lnwallet
-  sudo systemctl start simple-lnwallet
-  sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
-  echo -e "${YELLOW}🕒 Aguardando o Simple LNWallet iniciar...${NC}"
-  sleep 6
-  sudo systemctl status simple-lnwallet.service
+}
+
+config_bos_telegram () {
+# ⚡ Script para configurar o BOS Telegram no systemd
+# 🔐 Substitui o placeholder pelo Connection Code fornecido
+# 🛠️ Reinicia o serviço após modificação
+
+SERVICE_FILE="/etc/systemd/system/bos-telegram.service"
+BOT_LINK="https://t.me/BotFather"
+
+echo "🔗 Gerando QR Code para acessar o bot do Telegram..."
+qrencode -t ansiutf8 "$BOT_LINK"
+
+echo ""
+echo "📱 Aponte sua câmera para o QR Code acima para abrir: $BOT_LINK"
+echo ""
+
+echo "⚡️ Crie um bot no Telegram usando o BotFather e obtenha a API Key."
+echo "🌐 Agora acesse a interface web, vá em \"Configurações\" e clique em \" Autenticar Bos Telegram\"."
+
+# Aguarda o usuário confirmar que recebeu a conexão
+read -p "Pressione ENTER aqui após a conexão ser concluída no Telegram..."
+
+echo "✍️ Digite o Connection Code do seu bot Telegram:"
+read -r connection_code
+
+# 🧠 Validação simples
+if [[ -z "$connection_code" ]]; then
+  echo "❌ Connection Code não pode estar vazio."
+  exit 1
+fi
+
+# 📝 Adiciona ou substitui ExecStart com o Connection Code
+if grep -q '^ExecStart=' "$SERVICE_FILE"; then
+  sudo sed -i "s|^ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
+else
+  sudo sed -i "/^\[Service\]/a ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code" "$SERVICE_FILE"
+fi
+
+echo "✅ Connection Code inserido com sucesso no serviço bos-telegram."
+
+# 🔄 Recarrega o systemd e reinicia o serviço
+echo "🔄 Recarregando daemon do systemd..."
+sudo systemctl daemon-reload
+
+echo "🚀 Ativando e iniciando o serviço bos-telegram..."
+sudo systemctl enable bos-telegram
+sudo systemctl start bos-telegram
+
+echo "✅ Serviço bos-telegram configurado e iniciado com sucesso!"
+echo "💬 Verifique se recebeu a mensagem: 🤖 Connected to <nome do seu node>"
 }
 
 submenu_opcoes() {
@@ -940,10 +1050,12 @@ submenu_opcoes() {
   echo -e "   ${GREEN}1${NC}- 🏠 Trocar para o bitcoin local."
   echo -e "   ${GREEN}2${NC}- ☁️ Trocar para o bitcoin remoto."
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
+  echo -e "   ${GREEN}4${NC}- 🔧 Ativar o Bos Telegram no boot do sistema."
+  echo -e "   ${GREEN}5${NC}- 🔄 Atualizar interface gráfica."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
-  read -p "👉 Digite sua escolha: " suboption
+  read -p "👉  Digite sua escolha:     " suboption
 
   case $suboption in
     1)
@@ -960,6 +1072,21 @@ submenu_opcoes() {
       ;;
     3)
       manutencao_script
+      submenu_opcoes
+      ;;
+    4)
+      echo -e "${YELLOW}🔧 Configurando o Bos Telegram...${NC}"
+      config_bos_telegram
+      submenu_opcoes
+      ;;
+    5)
+      echo -e "${YELLOW} Atualizando interface gráfica...${NC}"
+            app="Gui"
+      sudo -v
+      echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
+      gui_update
+      echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
+      exit 0
       ;;
     0)
       menu
@@ -980,7 +1107,6 @@ system_detector () {
 }
 
 system_preparations () {
-  update_and_upgrade
   create_main_dir
   configure_ufw
   echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
@@ -989,8 +1115,45 @@ system_preparations () {
   install_nodejs
 }
 
+spinner() {
+    local pid=$!
+    local delay=0.2
+    local max=${SPINNER_MAX:-20}
+    local count=0
+    local spinstr='|/-\\'
+    local j=0
+
+    tput civis
+
+    # Monitorar processo
+    while kill -0 "$pid" 2>/dev/null; do
+        local emoji=""
+        for ((i=0; i<=count; i++)); do
+            emoji+="⚡"
+        done
+
+        local spin_char="${spinstr:j:1}"
+        j=$(( (j + 1) % 4 ))
+        count=$(( (count + 1) % (max + 1) ))
+
+        printf "\r\033[KInstalando $app no seu BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        sleep "$delay"
+    done
+
+    wait "$pid"
+    exit_code=$?
+
+    tput cnorm
+    if [[ $exit_code -eq 0 ]]; then
+        printf "\r\033[K${GREEN}✔️ Processo finalizado com sucesso!${NC}\n"
+    else
+        printf "\r\033[K${RED}❌ Processo finalizado com erro (código: $exit_code)${NC}\n"
+    fi
+
+    return $exit_code
+}
+
 menu() {
-  echo
   echo
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
@@ -1002,7 +1165,7 @@ menu() {
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- Instalar Interface Gráfica & Interface de Rede"
+  echo -e "   ${GREEN}1${NC}- Instalar Interface de Rede"
   echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core"
   echo -e "   ${GREEN}3${NC}- Instalar LND & Criar Carteira"
   echo 
@@ -1012,37 +1175,49 @@ menu() {
   echo -e "   ${GREEN}5${NC}- Instalar Thunderhub & Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}8${NC}- Instalar Tailscale VPN"
-  echo -e "   ${GREEN}9${NC}- Mais opções"
+  echo -e "   ${GREEN}8${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  read -p "👉 Digite sua escolha: " option
+  read -p "👉   Digite sua escolha:   " option
+  echo
 
   case $option in
     1)
+      app="Rede Privada"
+      sudo -v
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Deseja exibir logs? (y/n): " verbose_mode
     # Força pedido de password antes do background
       sudo -v
+      sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Poderá demorar 10 min. ou mais. Seja paciente.${NC}"
-        system_preparations >> /dev/null 2>&1 & spinner
+        system_preparations >> /dev/null 2>&1 &
+        pid=$!
+        if declare -f spinner > /dev/null; then
+          spinner $pid
+        else
+          echo -e "${RED}Erro: Função 'spinner' não encontrada.${NC}"
+          wait $pid
+        fi
         clear
       else
         echo "Opção inválida."
       fi      
       wait
-      echo -e "\033[43m\033[30m ✅ Instalação da interface e gráfica e interface de rede concluída! \033[0m"
+      echo -e "\033[43m\033[30m ✅ Instalação da interface de rede concluída! \033[0m"
       menu      
       ;;
 
     2)
+      app="Bitcoin"
+      sudo -v
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
@@ -1060,6 +1235,8 @@ menu() {
       menu
       ;;
     3)
+      app="Lnd"
+      sudo -v
       echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
       read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW} instalando o lnd...${NC}"
@@ -1079,12 +1256,16 @@ menu() {
       menu
       ;;
     4)
+      app="Simple Wallet"
+      sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
       simple_lnwallet
       echo -e "\033[43m\033[30m ✅ Simple LNWallet instalado com sucesso! \033[0m"
       menu
       ;;
     5)
+      app="Balance of Satoshis"
+      sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
@@ -1103,6 +1284,7 @@ menu() {
       read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
+      app="Thunderhub"
       if [[ "$verbose_mode" == "y" ]]; then
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
@@ -1117,6 +1299,8 @@ menu() {
       menu
       ;;
     6)
+      app="Lndg"
+      sudo -v
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
@@ -1139,6 +1323,8 @@ menu() {
       menu
       ;;
     7)
+      app="Lnbits"
+      sudo -v
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
       read -p "Deseja exigir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
@@ -1155,12 +1341,6 @@ menu() {
       menu
       ;;
     8)
-      echo -e "${CYAN}🚀 Instalando Tailscale VPN...${NC}"
-      tailscale_vpn
-      echo -e "\033[43m\033[30m ✅ Tailscale instalado com sucesso! \033[0m"
-      exit 0
-      ;;
-    9)
       submenu_opcoes
       ;;
     0)
@@ -1175,4 +1355,4 @@ menu() {
 
 system_detector
 ip_finder
-menu
+terminal_web
