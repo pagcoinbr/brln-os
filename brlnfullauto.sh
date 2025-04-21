@@ -188,7 +188,7 @@ COMMENTS=("allow BRLNfullauto on port 3131 from local network"
           "allow bitcoinlogs on port 3434 from local network" 
           "allow lndlogs on port 3535 from local network"
           "allow btc-editor on port 3636 from local network"
-          "allow lnd-editor on port 3333 from local network"
+          "allow lnd-editor on port 3333 from local network")
 
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
