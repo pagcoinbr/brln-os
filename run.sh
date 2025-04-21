@@ -50,8 +50,6 @@ if [[ -d "/home/admin" ]]; then
     sudo mkdir -p /home/admin
     sudo chown admin:admin /home/admin
     sudo chmod 755 /home/admin
-  else
-    echo 
   fi
 else
   echo
@@ -66,7 +64,6 @@ main_call () {
 # Identifica e cria o usuário/grupo admin
 atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
-  echo -e "${GREEN} Você já está logado como admin! ${NC}"
   dir_check
   brln_check
 else
