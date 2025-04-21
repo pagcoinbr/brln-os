@@ -25,20 +25,15 @@ NC='\033[0m' # Sem cor
 
 spinner() {
     local pid=$!
-    if ! kill -0 "$pid" 2>/dev/null; then
-        echo -e "${RED}❌ Nenhum processo em segundo plano encontrado para o spinner acompanhar.${NC}"
-        return 1
-    fi
-
     local delay=0.2
     local max=${SPINNER_MAX:-20}
     local count=0
     local spinstr='|/-\\'
-    local spinlen=${#spinstr}
     local j=0
 
-    tput civis  # Esconde o cursor
+    tput civis
 
+    # Monitorar processo
     while kill -0 "$pid" 2>/dev/null; do
         local emoji=""
         for ((i=0; i<=count; i++)); do
@@ -46,15 +41,24 @@ spinner() {
         done
 
         local spin_char="${spinstr:j:1}"
-        j=$(( (j + 1) % spinlen ))
+        j=$(( (j + 1) % 4 ))
         count=$(( (count + 1) % (max + 1) ))
 
-        printf "\r\033[KBR⚡LN...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        printf "\r\033[KInstalando BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
         sleep "$delay"
     done
 
+    wait "$pid"
+    exit_code=$?
+
     tput cnorm
-    printf "\r\033[K${GREEN}✔️ sucesso!${NC}\n"
+    if [[ $exit_code -eq 0 ]]; then
+        printf "\r\033[K${GREEN}✔️ BR⚡LN Finalizado com sucesso!${NC}\n"
+    else
+        printf "\r\033[K${RED}❌ BR⚡LN falhou com erro (código: $exit_code)${NC}\n"
+    fi
+
+    return $exit_code
 }
 
 update_and_upgrade() {
