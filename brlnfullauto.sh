@@ -627,47 +627,50 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 
 tailscale_vpn() {
   echo -e "${CYAN}🌐 Instalando Tailscale VPN...${NC}"
-
-  # Instala o Tailscale e qrencode silenciosamente
   curl -fsSL https://tailscale.com/install.sh | sh > /dev/null 2>&1
   sudo apt install qrencode -y > /dev/null 2>&1
 
-  # Arquivos temporários
   LOGFILE="/tmp/tailscale_up.log"
   QRFILE="/tmp/tailscale_qr.log"
 
-  # Limpa e recria os arquivos
   sudo rm -f "$LOGFILE" "$QRFILE"
   sudo touch "$LOGFILE"
   sudo chmod 666 "$LOGFILE"
 
-  # Roda tailscale up em segundo plano e envia saída pro log
-  echo -e "${BLUE}▶️ Iniciando 'tailscale up'...${NC}"
+  echo -e "${BLUE}▶️ Executando 'tailscale up'...${NC}"
   (sudo tailscale up > "$LOGFILE" 2>&1) &
 
-  # Aguarda até 20 segundos
-  for i in {20..1}; do
-    echo -ne "${YELLOW}⏳ Aguardando autenticação do Tailscale... $i seg\r${NC}"
+  echo -e "${YELLOW}⏳ Aguardando link de autenticação do Tailscale (sem timeout)...${NC}"
+
+  while true; do
+    url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$LOGFILE" | head -n1)
+    if [[ -n "$url" ]]; then
+      echo -e "${GREEN}✅ Link encontrado: $url${NC}"
+      echo "$url" | qrencode -t ANSIUTF8 | tee "$QRFILE"
+      echo -e "${GREEN}🔗 QR Code salvo em: $QRFILE${NC}"
+      break
+    fi
     sleep 1
   done
-  echo ""
 
-  # Extrai o link do log
-  url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$LOGFILE" | head -n1)
-
-  if [[ -n "$url" ]]; then
-    echo -e "${GREEN}✅ Link encontrado: $url${NC}"
-    echo -e "${CYAN}📲 Escaneie o QR Code abaixo:${NC}"
-    echo "$url" | qrencode -t ANSIUTF8
-    echo "$url" | qrencode -t ANSIUTF8 > "$QRFILE"
-    echo -e "${GREEN}🔗 QR Code salvo em: $QRFILE${NC}"
-  else
-    echo -e "${RED}❌ Não foi possível extrair o link de autenticação.${NC}"
-    echo -e "${YELLOW}ℹ️ Tente rodar manualmente: ${NC} ${BLUE}sudo tailscale up${NC}"
-    exit 1
-  fi
+  echo
+  echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
+  echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
+  echo
+  echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+  echo
+  echo -e "${RED} Ou escaneie o QR Code acima para conectar sua tailnet: ${NC}"
+  echo
+  echo "$url" | qrencode -t ANSIUTF8
+  echo
+  echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
+  echo
+  echo -e "${GREEN}⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏${NC}"
+  echo -e "${GREEN}🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?${NC}"
+  echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
+  echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com${NC}"
+  echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
 }
-
 
 opening () {
 clear
