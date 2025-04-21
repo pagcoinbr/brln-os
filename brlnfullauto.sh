@@ -679,11 +679,10 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 
 tailscale_vpn () {
 echo "⚙️ Iniciando Tailscale..."
-sudo tailscale logout &>/dev/null
 
 # Roda o tailscale up e CAPTURA a URL de autenticação
-AUTH_LINK=$(sudo tailscale up 2>&1 | grep -o "https://login.tailscale.com/.*")
-sleep 10 >> /dev/null 2>&1 & spinner
+AUTH_LINK=$(sudo tailscale up 2>&1 & sleep 10 | grep -o "https://login.tailscale.com/.*")
+
 if [[ -z "$AUTH_LINK" ]]; then
   echo "❌ Link de autenticação não encontrado. Tente novamente."
   exit 1
