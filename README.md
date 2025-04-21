@@ -1,5 +1,7 @@
 # 🚀 Instalação Passo a Passo - BR⚡LN Bolt
 
+![Captura de tela 2025-04-21 132716](https://github.com/user-attachments/assets/765fc080-120c-4646-9c51-20fe27292573)
+
 ### 1. 🖥️ Instale o Ubuntu Server (Recomendado: 24.04 LTS)
 
 Prepare o terreno:
@@ -24,8 +26,6 @@ Execute um comando:
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
 ```
-
-[![Captura-de-tela-2025-04-21-132716.png](https://i.postimg.cc/L5RwGBsr/Captura-de-tela-2025-04-21-132716.png)](https://postimg.cc/8JKZ6vMH)
 
 💡 Esse script vai:
 - Criar o usuário `admin`
