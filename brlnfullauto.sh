@@ -108,6 +108,7 @@ spinner() {
 
 update_and_upgrade() {
 echo "Instalando Apache..."
+sudo -v
 sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
 echo "Habilitando módulos do Apache..."
 sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
@@ -161,7 +162,6 @@ sudo systemctl restart apache2
 
 gui_update() {
 update_and_upgrade
-  if [[ ! -f /usr/local/bin/gotty ]]; then
   if [[ $arch == "x86_64" ]]; then
     echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
     sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
@@ -202,7 +202,7 @@ update_and_upgrade
         sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
       fi
     done
-  fi
+  menu
 }
 
 terminal_web() {
