@@ -999,7 +999,6 @@ config_bos_telegram () {
 # 🛠️ Reinicia o serviço após modificação
 
 SERVICE_FILE="/etc/systemd/system/bos-telegram.service"
-PLACEHOLDER="<seu_connect_code_aqui>"
 BOT_LINK="https://t.me/BotFather"
 
 echo "🔗 Gerando QR Code para acessar o bot do Telegram..."
@@ -1024,8 +1023,8 @@ if [[ -z "$connection_code" ]]; then
   exit 1
 fi
 
-# 📝 Substituir placeholder
-  sudo sed -i "s|$PLACEHOLDER|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
+# 📝 Inserir Connection Code diretamente no serviço
+  sudo sed -i "s|ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
   echo "✅ Connection Code inserido com sucesso no serviço."
 
 # 🔄 Recarrega o systemd e reinicia o serviço
