@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=admin
 WorkingDirectory=/home/admin
-ExecStart=/usr/local/bin/gotty -p 3939 -w bos telegram
+ExecStart=/usr/local/bin/gotty -p 3939 -w bash -c "/home/admin/.npm-global/bin/bos telegram"
 Restart=always
 Environment=TERM=xterm
 

@@ -24,6 +24,7 @@ CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
 update_and_upgrade() {
+app="Interface Gráfica"
 echo "Instalando Apache..."
 sudo -v
 sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
@@ -1046,7 +1047,7 @@ submenu_opcoes() {
   echo -e "   ${GREEN}1${NC}- 🏠 Trocar para o bitcoin local."
   echo -e "   ${GREEN}2${NC}- ☁️ Trocar para o bitcoin remoto."
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
-  echo -e "   ${GREEN}4${NC}- 🔧 Configurar o Bos Telegram."
+  echo -e "   ${GREEN}4${NC}- 🔧 Ativar o Bos Telegram no boot do sistema."
   echo -e "   ${GREEN}5${NC}- 🔄 Atualizar interface gráfica."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo

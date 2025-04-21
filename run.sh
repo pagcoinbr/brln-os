@@ -87,6 +87,5 @@ else
 fi
 }
 
-#sudo -v
 main_call
 exit 0
