@@ -23,14 +23,13 @@ MAGENTA='\033[1;35m'
 CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
-# Spinner com ⚡ piscando, largura estável
 spinner() {
     local pid=$!
     local delay=0.2
     local max=10
     local count=0
 
-    tput civis  # Esconde o cursor
+    tput civis
 
     while kill -0 $pid 2>/dev/null; do
         local emoji=""
@@ -38,15 +37,14 @@ spinner() {
             emoji+="⚡"
         done
 
-        # Limpa a linha antes de escrever a próxima
         printf "\r\033[KBR%sLN..." "$emoji"
 
         sleep $delay
         count=$(( (count + 1) % (max + 1) ))
     done
 
-    tput cnorm  # Mostra o cursor de volta
-    printf "\rBR⚡LN 🎉\n"
+    tput cnorm
+    printf "\r\033[KBR⚡LN 🎉\n"
 }
 
 update_and_upgrade() {
