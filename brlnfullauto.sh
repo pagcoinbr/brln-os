@@ -1054,10 +1054,11 @@ submenu_opcoes() {
   echo -e "   ${GREEN}2${NC}- ☁️ Trocar para o bitcoin remoto."
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
   echo -e "   ${GREEN}4${NC}- 🔧 Configurar o Bos Telegram."
+  echo -e "   ${GREEN}5${NC}- 🔄 Atualizar interface gráfica."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
-  read -p "👉 Digite sua escolha:   " suboption
+  read -p "👉  Digite sua escolha:     " suboption
 
   case $suboption in
     1)
@@ -1080,6 +1081,15 @@ submenu_opcoes() {
       echo -e "${YELLOW}🔧 Configurando o Bos Telegram...${NC}"
       config_bos_telegram
       submenu_opcoes
+      ;;
+    5)
+      echo -e "${YELLOW} Atualizando interface gráfica...${NC}"
+            app="Gui"
+      sudo -v
+      echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
+      gui_update
+      echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
+      exit 0
       ;;
     0)
       menu
@@ -1168,13 +1178,12 @@ menu() {
   echo -e "   ${GREEN}5${NC}- Instalar Thunderhub & Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}8${NC}- Atualizar a interface gráfica"
-  echo -e "   ${GREEN}9${NC}- Mais opções"
+  echo -e "   ${GREEN}8${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
   echo
-  read -p "👉 Digite sua escolha:   " option
+  read -p "👉   Digite sua escolha:   " option
   echo
 
   case $option in
@@ -1335,14 +1344,6 @@ menu() {
       menu
       ;;
     8)
-      app="Gui"
-      sudo -v
-      echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
-      gui_update
-      echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
-      exit 0
-      ;;
-    9)
       submenu_opcoes
       ;;
     0)
