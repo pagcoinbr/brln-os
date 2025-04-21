@@ -116,7 +116,7 @@ Via menu > opção VPN:
 📱 Baixe o app do Tailscale no celular e escaneie o QR code. Pronto, seu node virou seu parceiro de viagem!
 
 ---
-![ChatGPT Image 21 de abr  de 2025, 02_47_48](https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4)
+![ChatGPT Image 21 de abr  de 2025, 02_47_48](https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4){width="50%"}
 ---
 
 ## 📚 Bibliografia e Repositórios Utilizados
