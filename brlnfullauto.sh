@@ -37,7 +37,7 @@ spinner() {
             emoji+="⚡"
         done
 
-        printf "\r\033[KBR%sLN..." "$emoji"
+        printf "\r\033[KBR%s LN..." "$emoji"
 
         sleep $delay
         count=$(( (count + 1) % (max + 1) ))
