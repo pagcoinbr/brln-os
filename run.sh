@@ -1,24 +1,28 @@
 #!/bin/bash
-
+branch=teste_v0.9
+git_user=pagcoinbr
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
-echo -e "${BLUE}Iniciando instalação do BRLN FullAuto...${NC}"
+echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
 sleep 1
 
 brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
     echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
   else
-    echo -e "${RED}Diretório brlnfullauto não encontrado, baixando como admin...${NC}"
-    sudo -u admin git clone https://github.com/pagcoinbr/brlnfullauto.git "$INSTALL_DIR"
-        sudo chown -R admin:admin "$INSTALL_DIR"
+    sudo -u admin git clone -q https://github.com/$git_user/brlnfullauto.git "$INSTALL_DIR"
+    sudo chown -R admin:admin "$INSTALL_DIR"
     sleep 2
-    sudo -u admin git -C "$INSTALL_DIR" checkout main
+    sudo -u admin git -C "$INSTALL_DIR" switch $branch > /dev/null
   fi
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
@@ -46,17 +50,13 @@ if [[ -d "/home/admin" ]]; then
     sudo mkdir -p /home/admin
     sudo chown admin:admin /home/admin
     sudo chmod 755 /home/admin
-
-    echo "✅ Diretório /home/admin corrigido com sucesso."
-  else
-    echo 
   fi
 else
-  echo "➕ Criando diretório /home/admin..."
+  echo
   sudo mkdir -p /home/admin
   sudo chown admin:admin /home/admin
   sudo chmod 755 /home/admin
-  echo "✅ Diretório /home/admin criado com sucesso."
+  echo
 fi
 }
 
@@ -64,40 +64,28 @@ main_call () {
 # Identifica e cria o usuário/grupo admin
 atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
-  echo -e "${GREEN} Você já está logado como admin! ${NC}"
   dir_check
   brln_check
 else
-  echo -e "${RED} Você não está logado como admin! ${NC}"
-  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
+  if id "admin" &>/dev/null; then
+  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+  exit 0
+  fi
 fi
-read -p "Você deseja criar o usuário admin? (yes/no): " create_user
-if [[ $create_user == "yes" ]]; then
-# Garante que o grupo 'admin' existe
-if getent group admin > /dev/null; then
-    echo "✅ Grupo 'admin' já existe."
-else
-    echo "➕ Criando grupo 'admin'..."
-    sudo groupadd admin
-fi
-
+  sudo groupadd admin >> /dev/null 2>&1
 # Garante que o usuário 'admin' existe
 if id "admin" &>/dev/null; then
-  echo "✅ Usuário 'admin' já existe."
   sudo passwd admin
   dir_check
   brln_check
+  exit 0
 else
-  echo "➕ Criando usuário 'admin' e adicionando ao grupo 'admin'..."
   sudo adduser --gecos "" --ingroup admin admin
   dir_check
   brln_check
-fi
-elif [[ $create_user == "no" ]]; then
-  echo -e "${RED} Você escolheu não criar um usuário admin! ${NC}"
-  echo -e "${YELLOW} Você precisa estar logado como admin para prosseguir com a instalação do lnd! ${NC}"
-  exit 1
+  exit 0
 fi
 }
 
 main_call
+exit 0
