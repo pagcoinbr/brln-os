@@ -172,7 +172,7 @@ update_and_upgrade
     sudo tar -xvzf /home/admin/gotty_linux_arm.tar.gz -C /usr/local/bin
   fi
     sudo chmod +x /usr/local/bin/gotty
-    sudo chmod +x /home/admin/brlnfullauto/html/sciripts/bos-telegram.sh
+    sudo chmod +x /home/admin/brlnfullauto/html/scripts/bos-telegram.sh
     # Define arrays for services and ports
     SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "gotty-bos-telegram")
     PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "3737")
