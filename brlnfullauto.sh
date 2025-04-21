@@ -626,37 +626,48 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 tailscale_vpn() {
-# Instalação do Tailscale VPN
-curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
-# Instala o qrencode para gerar QR codes
-sudo apt install qrencode -y >> /dev/null 2>&1
-log_file="tailscale_up.log"
-sudo rm -f "$log_file" # remove log antigo se existir
-sudo touch "$log_file" # cria um novo log
-sudo chmod 666 "$log_file" # garante permissões de leitura e escrita
-# 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
-echo "▶️ Iniciando 'tailscale up' em background..."
-(sudo tailscale up > "$log_file" 2>&1) &
-# 2️⃣ Aguarda a autenticação do Tailscale
+  echo -e "${CYAN}🌐 Instalando Tailscale VPN...${NC}"
+
+  # Instala o Tailscale e qrencode silenciosamente
+  curl -fsSL https://tailscale.com/install.sh | sh > /dev/null 2>&1
+  sudo apt install qrencode -y > /dev/null 2>&1
+
+  # Arquivos temporários
+  LOGFILE="/tmp/tailscale_up.log"
+  QRFILE="/tmp/tailscale_qr.log"
+
+  # Limpa e recria os arquivos
+  sudo rm -f "$LOGFILE" "$QRFILE"
+  sudo touch "$LOGFILE"
+  sudo chmod 666 "$LOGFILE"
+
+  # Roda tailscale up em segundo plano e envia saída pro log
+  echo -e "${BLUE}▶️ Iniciando 'tailscale up'...${NC}"
+  (sudo tailscale up > "$LOGFILE" 2>&1) &
+
+  # Aguarda até 20 segundos
   for i in {20..1}; do
-    echo -ne "Aguardando $i segundos...\r"
+    echo -ne "${YELLOW}⏳ Aguardando autenticação do Tailscale... $i seg\r${NC}"
     sleep 1
   done
-  echo -ne "\n"
-# 3️⃣ Tenta extrair o link de autenticação do log
-url=$(sudo grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
-if [[ -n "$url" ]]; then
-    echo "✅ Link encontrado: $url"
-    echo "📲 QR Code:"
+  echo ""
+
+  # Extrai o link do log
+  url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$LOGFILE" | head -n1)
+
+  if [[ -n "$url" ]]; then
+    echo -e "${GREEN}✅ Link encontrado: $url${NC}"
+    echo -e "${CYAN}📲 Escaneie o QR Code abaixo:${NC}"
     echo "$url" | qrencode -t ANSIUTF8
-    touch tailscale_qr.log # cria o log do QR code
-    echo "🔗 QR Code salvo em tailscale_qr.log"
-    echo "$url" | qrencode -t ANSIUTF8 >> tailscale_qr.log 2>&1
-else
-    echo "❌ Não foi possível encontrar o link no log."
-    tailscale_vpn
-fi
+    echo "$url" | qrencode -t ANSIUTF8 > "$QRFILE"
+    echo -e "${GREEN}🔗 QR Code salvo em: $QRFILE${NC}"
+  else
+    echo -e "${RED}❌ Não foi possível extrair o link de autenticação.${NC}"
+    echo -e "${YELLOW}ℹ️ Tente rodar manualmente: ${NC} ${BLUE}sudo tailscale up${NC}"
+    exit 1
+  fi
 }
+
 
 opening () {
 clear
