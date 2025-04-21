@@ -626,33 +626,37 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 tailscale_vpn () {
-echo "⚙️ Iniciando Tailscale..."
-
-# Arquivo temporário para capturar a saída
-TMP_LOG="/tmp/tailscale_output.log"
-> "$TMP_LOG"
-
-# Executa o comando em segundo plano e aguarda
-sudo tailscale up > "$TMP_LOG" 2>&1 &
-PID=$!
-
-# Spinner enquanto aguarda
-spinner "🔐 Aguardando autenticação Tailscale..." &
-SPINNER_PID=$!
-
-wait $PID
-kill $SPINNER_PID &>/dev/null
-
-# Captura o link da saída
-AUTH_LINK=$(grep -o "https://login.tailscale.com/.*" "$TMP_LOG")
-
-# Validação
-if [[ -z "$AUTH_LINK" ]]; then
-  echo "❌ Link de autenticação não encontrado. Tente novamente."
-  exit 1
+# Instalação do Tailscale VPN
+curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
+# Instala o qrencode para gerar QR codes
+sudo apt install qrencode -y >> /dev/null 2>&1
+log_file="tailscale_up.log"
+rm -f "$log_file" # remove log antigo se existir
+touch "$log_file" # cria um novo log
+# 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
+echo "▶️ Iniciando 'tailscale up' em background..."
+(sudo tailscale up > "$log_file" 2>&1) &
+# 2️⃣ Aguarda a autenticação do Tailscale
+  for i in {20..1}; do
+    echo -ne "Aguardando $i segundos...\r"
+    sleep 1
+  done
+  echo -ne "\n"
+# 3️⃣ Tenta extrair o link de autenticação do log
+echo "🔍 Procurando o link de autenticação..."
+url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
+if [[ -n "$url" ]]; then
+    echo "✅ Link encontrado: $url"
+    echo "📲 QR Code:"
+    echo "$url" | qrencode -t ANSIUTF8
+    touch tailscale_qr.log # cria o log do QR code
+    echo "🔗 QR Code salvo em tailscale_qr.log"
+    echo "$url" | qrencode -t ANSIUTF8 >> tailscale_qr.log 2>&1
+else
+    echo "❌ Não foi possível encontrar o link no log."
+    cat "$log_file"
 fi
-
-# Exibição final
+clear
 echo
 echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
 echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
