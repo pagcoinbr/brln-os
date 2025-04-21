@@ -698,6 +698,7 @@ fi
 
 echo
 echo -e "${GREEN} Em seguida escolha ${YELLOW}"Configurações"${NC}${GREEN} e depois ${YELLOW}"Iniciar BrlnFullAuto" ${NC}"
+echo
 echo -e "${GREEN}⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏${NC}"
 echo -e "${GREEN}🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?${NC}"
 echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
@@ -1095,13 +1096,8 @@ if [[ -z "$connection_code" ]]; then
 fi
 
 # 📝 Substituir placeholder
-if grep -q "$PLACEHOLDER" "$SERVICE_FILE"; then
-  sudo sed -i "s|$PLACEHOLDER|$connection_code|g" "$SERVICE_FILE"
+  sudo sed -i "s|$PLACEHOLDER|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
   echo "✅ Connection Code inserido com sucesso no serviço."
-else
-  echo "⚠️ Placeholder não encontrado. Verifique se o arquivo está correto."
-  exit 1
-fi
 
 # 🔄 Recarrega o systemd e reinicia o serviço
 echo "🔄 Recarregando daemon do systemd..."
