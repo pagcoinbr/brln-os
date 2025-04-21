@@ -15,7 +15,7 @@ echo ""
 echo "📱 Aponte sua câmera para o QR Code acima para abrir: $BOT_LINK"
 echo ""
 
-bos telegram
+/home/admin/.npm-global/bin/bos telegram
 
 echo "✍️ Digite o Connection Code do seu bot Telegram:"
 read -r connection_code

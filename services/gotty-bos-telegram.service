@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=admin
 WorkingDirectory=/home/admin
-ExecStart=/usr/local/bin/gotty -p 3133 -w /bin/bash /home/admin/brlnfullauto/html/scripts/bos-telegram.sh
+ExecStart=/usr/local/bin/gotty -p 3133 -w /bin/bash -c "source /home/admin/.profile && /home/admin/brlnfullauto/html/scripts/bos-telegram.sh"
 Restart=always
 Environment=TERM=xterm
 
