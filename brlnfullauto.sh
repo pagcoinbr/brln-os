@@ -1179,8 +1179,12 @@ menu() {
         echo -e "${YELLOW}🕒 ATENÇÃO: Poderá demorar 10 min. ou mais. Seja paciente.${NC}"
         system_preparations >> /dev/null 2>&1 &
         pid=$!
-        spinner $pid
-        wait $pid
+        if declare -f spinner > /dev/null; then
+          spinner $pid
+        else
+          echo -e "${RED}Erro: Função 'spinner' não encontrada.${NC}"
+          wait $pid
+        fi
         clear
       else
         echo "Opção inválida."
