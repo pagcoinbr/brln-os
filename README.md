@@ -32,31 +32,31 @@ bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run
 - Iniciar o script principal `brlnfullauto.sh`
 - Apresentar o menu gráfico interativo.
 
-**ATENÇÃO!** Após a criação do usuário `admin`, você será desconectado. Faça login novamente com:
+**ATENÇÃO!** Após a criação do usuário `admin`, o script vai finalizar da seguinte maneira:
+
+![Captura de tela 2025-04-21 141434](https://github.com/user-attachments/assets/419765f3-83ab-45ca-863e-f5d45c3c7651)
+
+### . 🌐 Agora Acesse a Interface Gráfica
+
+Após a instalação inicial, acesse via navegador:
 ```bash
-ssh admin@<seu_ip_local>
+http://<seu_ip_local> ou http://<seu_ip_tailscale>
 ```
-E repita o comando de instalação acima.
 
 ---
 ![image](https://github.com/user-attachments/assets/88ff977e-89b3-4c08-b4a7-6b35bd0cd64f)
 
 ![image](https://github.com/user-attachments/assets/3877bc5c-83e6-4919-b079-f6891f224c7b)
 
-### 5. 🌐 Acesse a Interface Gráfica
-
-Após instalar os aplicativos, acesse via navegador:
-```bash
-http://<seu_ip_local> ou http://<seu_ip_tailscale>
-```
-
 Você verá um painel com botões para:
 - Thunderhub
 - LNDg
 - LNbits
 - Simple LNWallet
-- Logs do sistema
-- Configurações avançadas
+- ...
+- Configurações (Acesse aqui)
+
+No menu de botões escolha: ⚡ BRLNFullAuto.
 
 ### 3. 🧭 Use o Menu Interativo
 
