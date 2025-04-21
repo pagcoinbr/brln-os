@@ -626,36 +626,35 @@ echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 tailscale_vpn () {
-# Instalação do Tailscale VPN
-curl -fsSL https://tailscale.com/install.sh | sh >> /dev/null 2>&1
-# Instala o qrencode para gerar QR codes
-sudo apt install qrencode -y >> /dev/null 2>&1
-log_file="tailscale_up.log"
-rm -f "$log_file" # remove log antigo se existir
-touch "$log_file" # cria um novo log
-# 1️⃣ Roda tailscale up em segundo plano e envia a saída pro log
-echo "▶️ Iniciando 'tailscale up' em background..."
-(sudo tailscale up > "$log_file" 2>&1) &
-# 2️⃣ Aguarda a autenticação do Tailscale
-  for i in {20..1}; do
-    echo -ne "Aguardando $i segundos...\r"
+tailscale_vpn() {
+  LOGFILE="/tmp/tailscale_up.log"
+  echo -e "${BLUE}▶️ Iniciando 'tailscale up' em background...${NC}"
+
+  # Limpa o log anterior
+  sudo rm -f "$LOGFILE" 2>/dev/null || true
+  sudo touch "$LOGFILE"
+  sudo chown admin:admin "$LOGFILE"
+
+  # Executa tailscale up e redireciona a saída para log
+  sudo tailscale up > "$LOGFILE" 2>&1 &
+  TAILSCALE_PID=$!
+
+  # Aguarda com spinner
+  echo -ne "${YELLOW}Aguardando autenticação do Tailscale...${NC}"
+  for i in {7..1}; do
+    echo -ne " $i"
     sleep 1
   done
-  echo -ne "\n"
-# 3️⃣ Tenta extrair o link de autenticação do log
-echo "🔍 Procurando o link de autenticação..."
-url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$log_file")
-if [[ -n "$url" ]]; then
-    echo "✅ Link encontrado: $url"
-    echo "📲 QR Code:"
-    echo "$url" | qrencode -t ANSIUTF8
-    touch tailscale_qr.log # cria o log do QR code
-    echo "🔗 QR Code salvo em tailscale_qr.log"
-    echo "$url" | qrencode -t ANSIUTF8 >> tailscale_qr.log 2>&1
-else
-    echo "❌ Não foi possível encontrar o link no log."
-    cat "$log_file"
-fi
+  echo
+
+  # Captura o link do log
+  AUTH_LINK=$(grep -o "https://login.tailscale.com/.*" "$LOGFILE")
+
+  if [[ -z "$AUTH_LINK" ]]; then
+    echo -e "${RED}❌ Link de autenticação não encontrado. Tente novamente.${NC}"
+    exit 1
+  fi
+
 clear
 echo
 echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
