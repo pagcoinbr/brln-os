@@ -652,7 +652,11 @@ tailscale_vpn() {
     fi
     sleep 1
   done
+  opening
+}
 
+opening () {
+clear
   echo
   echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
   echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
@@ -670,27 +674,6 @@ tailscale_vpn() {
   echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
   echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com${NC}"
   echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
-}
-
-opening () {
-clear
-echo
-echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
-echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
-echo
-echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
-echo
-echo -e "${RED} Ou escaneie o qr code abaixo para conectar sua tailnet: ${NC}"
-echo
-echo "$AUTH_LINK" | qrencode -t ANSIUTF8
-echo
-echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
-echo
-echo -e "${GREEN}⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏${NC}"
-echo -e "${GREEN}🤨 Mas me diz... ainda vai confiar seus sats na mão dos outros?${NC}"
-echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
-echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉 https://br-ln.com${NC}"
-echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
 echo
 }
 
