@@ -98,15 +98,14 @@ sudo mv /home/admin/gotty /usr/local/bin/gotty
 sudo chmod +x /usr/local/bin/gotty
 
 # Define arrays for services and ports
-SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "gotty-bos-telegram")
-PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "3939")
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
   "allow cli on port 3232 from local network" 
   "allow bitcoinlogs on port 3434 from local network" 
   "allow lndlogs on port 3535 from local network"
   "allow btc-editor on port 3636 from local network"
-  "allow lnd-editor on port 3333 from local network"
-  "allow bos-telegram on port 3939 from local network")
+  "allow lnd-editor on port 3333 from local network")
 
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
