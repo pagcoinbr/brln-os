@@ -178,7 +178,6 @@ fi
 # Move e torna executável
 sudo mv /home/admin/gotty /usr/local/bin/gotty
 sudo chmod +x /usr/local/bin/gotty
-sudo chmod +x /home/admin/brlnfullauto/html/scripts/bos-telegram.sh
 
 # Define arrays for services and ports
 SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
