@@ -25,28 +25,36 @@ NC='\033[0m' # Sem cor
 
 spinner() {
     local pid=$!
+    if ! kill -0 "$pid" 2>/dev/null; then
+        echo -e "${RED}❌ Nenhum processo em segundo plano encontrado para o spinner acompanhar.${NC}"
+        return 1
+    fi
+
     local delay=0.2
-    local max=20
+    local max=${SPINNER_MAX:-20}
+    local count=0
+    local spinstr='|/-\\'
     local spinlen=${#spinstr}
-    local i=0
     local j=0
 
-    tput civis
+    tput civis  # Esconde o cursor
 
-    while kill -0 $pid 2>/dev/null; do
+    while kill -0 "$pid" 2>/dev/null; do
         local emoji=""
         for ((i=0; i<=count; i++)); do
-            emoji+="⚡ "
+            emoji+="⚡"
         done
 
-        printf "\r\033[KBRLN... %c %s" "$emoji"
-
-        sleep $delay
+        local spin_char="${spinstr:j:1}"
+        j=$(( (j + 1) % spinlen ))
         count=$(( (count + 1) % (max + 1) ))
+
+        printf "\r\033[KBR${YELLOW}%s${NC}LN ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        sleep "$delay"
     done
 
     tput cnorm
-    printf "\r\033[KBR⚡LN 🎉\n"
+    printf "\r\033[K${GREEN}✔️ sucesso!${NC}\n"
 }
 
 update_and_upgrade() {
