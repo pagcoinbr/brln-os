@@ -1,5 +1,5 @@
 [Unit]
-Description=Edita o lnd.conf
+Description=Aciona o script de swapout (By JVX)
 After=network.target
 
 [Service]
