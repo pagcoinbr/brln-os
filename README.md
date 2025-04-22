@@ -1,4 +1,5 @@
 # 🚀 Instalação Passo a Passo - BR⚡LN Bolt
+# Lightning Node Bootstrap
 
 ![Captura de tela 2025-04-21 132716](https://github.com/user-attachments/assets/765fc080-120c-4646-9c51-20fe27292573)
 
