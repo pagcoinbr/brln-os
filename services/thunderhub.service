@@ -3,21 +3,28 @@
 
 [Unit]
 Description=ThunderHub
-Requires=lnd.service
-After=lnd.service
+After=network.target lnd.service
 
 [Service]
+User=admin
 WorkingDirectory=/home/admin/thunderhub
+
+# Aguarda o LND responder na porta gRPC 10009
+ExecStartPre=/bin/bash -c 'until nc -z 127.0.0.1 10009; do echo "⏳ Aguardando LND..."; sleep 5; done'
+
+# Inicia o ThunderHub com npm
 ExecStart=/usr/bin/npm run start
 
-User=admin
+# Ambiente correto se você usa venv
+Environment=PATH=/home/admin/.myenv/bin:/usr/bin:/bin
+Environment=HOME=/home/admin
 
-# Process management
-####################
+# Reinício automático
+Restart=on-failure
+RestartSec=10
 TimeoutSec=300
 
-# Hardening Measures
-####################
+# Segurança extra
 PrivateTmp=true
 ProtectSystem=full
 NoNewPrivileges=true

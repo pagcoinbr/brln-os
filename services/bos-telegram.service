@@ -5,7 +5,6 @@
 
 [Unit]
 Description=bos-telegram
-Wants=lnd.service
 After=lnd.service
 
 [Service]
