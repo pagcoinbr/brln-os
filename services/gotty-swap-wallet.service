@@ -1,0 +1,13 @@
+[Unit]
+Description=Edita o lnd.conf
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3333 -w python3 /home/admin/brlnfullauto/local_apps/nr-tools/swap-wallet21.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
