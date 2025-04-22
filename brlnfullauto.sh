@@ -78,24 +78,26 @@ sudo usermod -aG admin www-data
 sudo systemctl restart apache2
 }
 
-gotty_install () {
+gotty_do () {
+echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
 if [[ $arch == "x86_64" ]]; then
-  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_amd64.tar.gz \
-    -O /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz >> /dev/null 2>&1 & spinner
-  wait
-  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -C /home/admin >> /dev/null 2>&1
+  sudo tar -xvzf /home/admin/brlnfullauto/local_apps/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -C /home/admin >> /dev/null 2>&1
 else
-  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-  sudo -u admin wget https://github.com/yudai/gotty/releases/download/v2.0.0-alpha.3/gotty_2.0.0-alpha.3_linux_arm.tar.gz \
-    -O /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz >> /dev/null 2>&1 & spinner
-  wait
-  sudo tar -xvzf /home/admin/gotty_2.0.0-alpha.3_linux_arm.tar.gz -C /home/admin >> /dev/null 2>&1
+  sudo tar -xvzf /home/admin/brlnfullauto/local_apps/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz -C /home/admin >> /dev/null 2>&1
 fi
-
 # Move e torna executável
 sudo mv /home/admin/gotty /usr/local/bin/gotty
 sudo chmod +x /usr/local/bin/gotty
+}
+
+gotty_install () {
+if [[ ! -f /usr/local/bin/gotty ]]; then
+  gotty_do
+else
+  echo -e "${RED} Gotty já existe, atualizando... ${NC}"
+  sudo rm -f /usr/local/bin/gotty
+  gotty_do
+fi
 
 # Define arrays for services and ports
 SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
@@ -148,12 +150,17 @@ terminal_web() {
   else
     if [[ $atual_user == "admin" ]]; then
       menu
+      exit 0
     else
       echo -e "${RED} Você não está logado como admin! ${NC}"
       echo -e "${RED} Logando como admin e executando o script... ${NC}"
+      if [[ ! -f /usr/local/bin/gotty ]]; then
+        update_and_upgrade
+        gotty_install
+      fi
       sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+      exit 0
     fi
-    exit 0
   fi
 }
 
