@@ -6,7 +6,6 @@
   <title>BR⚡LN Bolt - Redirecionando...</title>
   <style>
     body {
-      background: linear-gradient(135deg, #000428, #004e92);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -16,6 +15,9 @@
       font-family: Arial, sans-serif;
       margin: 0;
       text-align: center;
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
     }
 
     .spinner {
@@ -39,18 +41,39 @@
     }
   </style>
   <script>
-    const tema = localStorage.getItem("temaAtual") || "dark";
-    const destino = tema === "light" ? "index_light.html" : "index_dark.html";
-    setTimeout(() => {
-      window.location.href = destino;
-    }, 1500);
+    window.onload = () => {
+      let tema = localStorage.getItem("temaAtual");
+
+      if (!tema) {
+        // Define padrão como dark, mas poderia abrir modal no futuro
+        tema = "dark";
+        localStorage.setItem("temaAtual", "dark");
+      }
+
+      const isConfig = window.location.pathname.includes("config");
+
+      // Define o fundo com base no tema
+      if (tema === "light") {
+        document.body.style.backgroundImage = "url('sky.png')";
+        document.body.style.color = "#000";
+      } else {
+        document.body.style.background = "linear-gradient(135deg, #000428, #004e92)";
+      }
+
+      // Redireciona após visualização do fundo aplicado
+      setTimeout(() => {
+        if (isConfig) {
+          window.location.href = tema === "light" ? "config_light.html" : "config_dark.html";
+        } else {
+          window.location.href = tema === "light" ? "index_light.html" : "index_dark.html";
+        }
+      }, 1500);
+    }
   </script>
 </head>
 <body>
   <h1>⚡ Bem-vindo ao BRLN Bolt</h1>
-  <p>Redirecionando...</p>
-  <p>v1.0-beta</p>
+  <p>Redirecionando para seu tema preferido...</p>
   <div class="spinner"></div>
 </body>
 </html>
-
