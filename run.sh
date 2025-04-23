@@ -1,5 +1,5 @@
 #!/bin/bash
-branch=main
+branch=v1.0-beta
 git_user=pagcoinbr
 # Cores
 RED='\033[0;31m'
