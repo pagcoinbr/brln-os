@@ -6,7 +6,7 @@ import requests
 from datetime import datetime, timedelta
 
 # Replace with your API_KEY - you can get it on https://sparkseer.space/account
-API_KEY = "<API_SparkSeer>"
+API_KEY = "Sua_chave_API_aqui"
 PAYMENTS_API_URL = "https://api.sparkseer.space/v1/sats4stats/payouts"
 PROBES_API_URL = "https://api.sparkseer.space/v1/sats4stats/probes"
 

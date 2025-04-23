@@ -981,6 +981,7 @@ simple_lnwallet () {
   fi
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
+  sudo ln -s /home/admin/brlnfullauto/local_apps/nr-tools/swap-wallet21.py /home/admin/swap-wallet21.py
   sleep 1
   sudo systemctl daemon-reload
   sleep 1

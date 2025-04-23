@@ -1,19 +1,54 @@
-# Charge-LND Docker - Gestão de Max_HTLC
-## Procedimento GERAL
-No diretorio do usuario umbrel / admin ou qualquer outro que seja o que você utiliza
-```
-mkdir charge-lnd
-```
+# ⚡ **Instalação do charge-lnd no Node Standalone** ⚡
 
-```
+## 🔹 **1. Clonar ou Atualizar o Repositório charge-lnd**
+Primeiro, clone o repositório com:
+
+```bash
+git clone https://github.com/accumulator/charge-lnd.git
 cd charge-lnd
 ```
 
+---
+
+## 🔹 **2. Criar um Ambiente Virtual**
+Para evitar conflitos com pacotes do sistema, crie um ambiente virtual dedicado para o `charge-lnd`:
+
+```bash
+export CHARGE_LND_ENV=~/charge-lnd-venv
+python3 -m venv ${CHARGE_LND_ENV}
+source ${CHARGE_LND_ENV}/bin/activate
 ```
+
+---
+
+## 🔹 **3. Instalar o `charge-lnd` e suas Dependências**
+Com o ambiente virtual ativado, instale o `charge-lnd` e os pacotes necessários:
+
+```bash
+pip3 install -r requirements.txt .
+```
+
+---
+
+## 🔹 **4. Criar um Macaroon Limitado**
+Para que o `charge-lnd` opere com as permissões mínimas necessárias, gere um **macaroon** limitado com o comando:
+
+```bash
+lncli bakemacaroon offchain:read offchain:write onchain:read info:read --save_to=~/.lnd/data/chain/bitcoin/mainnet/charge-lnd.macaroon
+```
+
+---
+
+## 🔹 **5. Configurar o `charge.config`**
+Edite o arquivo de configuração `charge.config` com:
+
+```bash
 nano charge.config
 ```
-Copiar o conteúdo
-```
+
+Cole o conteúdo abaixo no arquivo:
+
+```plaintext
 [default]
 
 [0-mydefaults]
@@ -157,15 +192,34 @@ chan.max_ratio = 0.02
 strategy = static
 max_htlc_msat_ratio = 0.005
 ```
-Sair e Salvar: CTRL+X teclar Y
 
-## COMANDO para UMBREL (Atencao ao Diretorio)
-O comando considera para o caso do umbrel, o usuário umbrel. Se o seu usuário for outro, alterar `/home/umbrel/umbrel` para `home/<seu_user>/umbrel`
-```
-docker run --name charge --rm -it --network=umbrel_main_network -e GRPC_LOCATION=10.21.21.9:10009 -e LND_DIR=/data/.lnd -e CONFIG_LOCATION=/app/charge.config -v /home/umbrel/umbrel/app-data/lightning/data/lnd:/data/.lnd -v /home/umbrel/charge-lnd/charge.config:/app/charge.config accumulator/charge-lnd:latest
+Salve e saia com `CTRL+X`, depois pressione `Y`.
+
+---
+
+## 🔹 **6. Executar o charge-lnd**
+Para testar, rode o seguinte comando:
+
+```bash
+/home/admin/charge-lnd-venv/bin/charge-lnd --lnddir /data/lnd -c ~/charge-lnd/charge.config --dry-run
 ```
 
-## COMANDO para Standalone (Considera user Admin e Instalacao do lnd no /data/lnd)
-```
-docker run --name charge --rm -t -e GRPC_LOCATION=localhost:10009 -e LND_DIR=/data/.lnd -e CONFIG_LOCATION=/app/charge.config -v /data/lnd:/data/.lnd -v /admin/charge-lnd/charge.config:/app/charge.config accumulator/charge-lnd:latest
-```
+---
+
+## 🔹 **7. Agendar Execução Automática**
+Para rodar o `charge-lnd` automaticamente todos os dias à meia-noite, configure o **crontab**:
+
+1. Edite o crontab:
+   ```bash
+   crontab -e
+   ```
+
+2. Adicione a linha:
+   ```bash
+   0 0 * * * /home/admin/charge-lnd-venv/bin/charge-lnd --lnddir /data/lnd -c /home/admin/charge-lnd/charge.config >> ~/charge-lnd/charge-lnd.log 2>&1
+   ```
+
+---
+
+### 🎯 **Conclusão**
+O `charge-lnd` está instalado e configurado no seu **Node Standalone**! 🚀⚡  
