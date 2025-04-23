@@ -139,7 +139,8 @@
         <br><br>
         <a>🛠️ Ferramentas Extras</a>
         <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
-            <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
+        <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
+        <button class="botao" onclick="alternarTema()">🌗 Alternar Tema</button>
           </div>          
     <div class="section">
         <h2>🙏 Apoie Nosso Projeto</h2>
@@ -152,7 +153,7 @@
     </div>
     
     <div class="voltar-container">
-        <a href="index.html" class="back botao">⬅️ Voltar</a>
+        <a href="index_dark.html" class="back botao">⬅️ Voltar</a>
     </div>
 
 
@@ -202,6 +203,27 @@
         window.open(`http://${ip}:${porta}`, '_blank',
             `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
     }
+
+    function alternarTema() {
+    const caminho = window.location.pathname;
+    const nomeArquivo = caminho.substring(caminho.lastIndexOf('/') + 1);
+
+    let proximaPagina = '';
+
+    if (nomeArquivo.includes('index_dark')) {
+      proximaPagina = 'index_light.html';
+    } else if (nomeArquivo.includes('index_light')) {
+      proximaPagina = 'index_dark.html';
+    } else if (nomeArquivo.includes('config_dark')) {
+      proximaPagina = 'config_light.html';
+    } else if (nomeArquivo.includes('config_light')) {
+      proximaPagina = 'config_dark.html';
+    }
+
+    if (proximaPagina !== '') {
+      window.location.href = proximaPagina;
+    }
+  }
 </script>
 
 

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações do Node</title>
+    <link rel="icon" type="image/png" href="logopreto.png">
+    <style>
+        body {
+            background-image: url('sky.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .botao {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .botao:hover {
+            background-color: #218838;
+        }
+
+        /* Botão piscando */
+        @keyframes piscar {
+            0%, 100% { 
+            box-shadow: 0 0 10px #ffffff88, 0 0 20px #ffffff88; 
+            }
+            50% { 
+            box-shadow: 0 0 25px #00ff37, 0 0 40px #ffffff; 
+            }
+        }
+
+        /* Classe extra para botões que piscam */
+        .piscando {
+            animation: piscar 2s infinite ease-in-out;
+        }
+
+        .section {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            width: 90%;
+            box-sizing: border-box;
+        }
+
+        .status {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .back {
+            width: auto;
+            max-width: 90%;
+            font-size: 16px;
+            padding: 12px 24px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .voltar-container {
+            margin-top: 30px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        pre {
+            background-color: #eee;
+            padding: 10px;
+            text-align: left;
+            max-height: 300px;
+            overflow: auto;
+            font-size: 14px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 768px) {
+            .botao {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+
+            .status {
+                font-size: 16px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>⚙️ Painel de Configurações</h1>
+
+    <div class="section">
+        <h2>📊 Status do Sistema</h2>
+        <div id="cpu" class="status">CPU: ...</div>
+        <div id="ram" class="status">RAM: ...</div>
+        <div id="lnd" class="status">LND: ...</div>
+        <div id="bitcoind" class="status">Bitcoind: ...</div>
+        <div id="tor" class="status">Tor: ...</div>
+        <div id="blockchain" class="status">Blockchain: ...</div>
+
+    </div>
+    <div class="section">
+        <h2>🖥️ Painel de Controle</h2>
+        <br><br>
+        <a>Para colar no terminal utilize, Ctrl + Shift + V</a>
+        <br><br>
+        <button class="botao piscando" onclick="abrirApp(3131)">⚡ BRLN FullAuto</button>
+        <button class="botao" onclick="abrirApp(3232)">🖥️ Acessar Terminal Web</button>
+        <br>
+        <button class="botao" onclick="abrirApp(3535)">⚡ Ver Logs do LND</button>
+        <button class="botao" onclick="abrirApp(3434)">🪙 Ver Logs do Bitcoind</button>
+        <br>
+        <button class="botao" onclick="abrirApp(3333)">✏️ Editar lnd.conf</button>
+        <button class="botao" onclick="abrirApp(3636)">✏️ Editar bitcoin.conf</button>
+        <br><br>
+        <a>🛠️ Ferramentas Extras</a>
+        <br><br>
+        <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
+        <button class="botao" onclick="alternarTema()">🌗 Alternar Tema</button>
+    </div>
+    <div class="section">
+        <h2>🙏 Apoie Nosso Projeto</h2>
+        <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>
+    
+        <!-- QR Code clicável -->
+        <a href="lightning:brlnfullauto@wallet.br-ln.com" style="display: inline-block;">
+            <img src="donate.png" alt="QR Code para doação" style="m</a>ax-width: 200px; width: 50%; height: auto; margin: 10px auto; cursor: pointer;">
+        </a>
+    </div>
+    
+    <div class="voltar-container">
+        <a href="index_light.html" class="back botao">⬅️ Voltar</a>
+    </div>
+
+
+<script>
+    function atualizarStatus() {
+        fetch('/cgi-bin/status.sh')
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Erro ao obter status do sistema.');
+                }
+                return res.text(); // ✅ <- Aqui trocamos para texto simples
+            })
+            .then(text => {
+                const lines = text.split('\n');
+                for (const line of lines) {
+                    if (line.includes("CPU:")) {
+                        document.getElementById("cpu").innerText = line;
+                    } else if (line.includes("RAM:")) {
+                        document.getElementById("ram").innerText = line;
+                    } else if (line.includes("LND:")) {
+                        document.getElementById("lnd").innerText = line;
+                    } else if (line.includes("Bitcoind:")) {
+                        document.getElementById("bitcoind").innerText = line;
+                    } else if (line.includes("Tor:")) {
+                        document.getElementById("tor").innerText = line;
+                    } else if (line.includes("Blockchain:")) {
+                        document.getElementById("blockchain").innerText = line;
+                    }
+                }
+            })
+            .catch(error => {
+                alert("Erro ao atualizar status: " + error.message);
+            });
+    }
+
+        // Atualiza a cada 5 segundos
+        setInterval(atualizarStatus, 5000);
+        window.onload = atualizarStatus;
+
+    function abrirApp(porta) {
+        const ip = window.location.hostname;
+        const width = 900;
+        const height = 600;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+
+        window.open(`http://${ip}:${porta}`, '_blank',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
+    }
+
+  function alternarTema() {
+    const caminho = window.location.pathname;
+    const nomeArquivo = caminho.substring(caminho.lastIndexOf('/') + 1);
+
+    let proximaPagina = '';
+
+    if (nomeArquivo.includes('index_dark')) {
+      proximaPagina = 'index_light.html';
+    } else if (nomeArquivo.includes('index_light')) {
+      proximaPagina = 'index_dark.html';
+    } else if (nomeArquivo.includes('config_dark')) {
+      proximaPagina = 'config_light.html';
+    } else if (nomeArquivo.includes('config_light')) {
+      proximaPagina = 'config_dark.html';
+    }
+
+    if (proximaPagina !== '') {
+      window.location.href = proximaPagina;
+    }
+  }
+
+</script>
+
+
+</body>
+</html>
