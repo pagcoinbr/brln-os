@@ -6,7 +6,7 @@
 # 2. Defines the VM name as "brlnbolt".
 # 3. Stops and deletes any existing VM with the same name, then purges unused data.
 # 4. Creates a new VM with the specified name, allocating 4GB of RAM and 25GB of disk space.
-# 5. Outputs instructions to access the newly created VM using the Multipass shell command.
+# 5. Outputs instructions to access the newly created VM using the Multipass shell command and tests in a invoriment that not affects your main system.
 
 if [[ ! $(command -v multipass) ]]; then
     echo "🔄 Multipass não encontrado. Instalando via Snap..."
