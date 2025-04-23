@@ -100,14 +100,15 @@ else
 fi
 
 # Define arrays for services and ports
-SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
-PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "gotty-swap-wallet")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "4040")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
   "allow cli on port 3232 from local network" 
   "allow bitcoinlogs on port 3434 from local network" 
   "allow lndlogs on port 3535 from local network"
   "allow btc-editor on port 3636 from local network"
-  "allow lnd-editor on port 3333 from local network")
+  "allow lnd-editor on port 3333 from local network"
+  "allow swap-wallet on port 4040 from local network")
 
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
