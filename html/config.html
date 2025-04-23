@@ -1,172 +1,113 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações do Node</title>
-    <link rel="icon" type="image/png" href="logopreto.png">
-    <style>
-        body {
-            background-image: url('sky.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-            margin: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações do Node</title>
+  <link rel="icon" type="image/png" href="logopreto.png">
 
-        .botao {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            margin: 10px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.3s;
-        }
+<style>
+    body {
+        background: linear-gradient(135deg, #000428, #004e92);
+        background-size: cover;
+        background-attachment: fixed;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        margin: 0;
+        color: white;
+    }
 
-        .botao:hover {
-            background-color: #218838;
-        }
+    .botao {
+        display: inline-block;
+        background: linear-gradient(45deg, #1f0f79, #4d00ff);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        margin: 10px;
+        font-size: 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease-in-out;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88;
+    }
 
-        .section {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 600px;
-            width: 90%;
-            box-sizing: border-box;
-        }
+    .botao::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(120deg, transparent, #ffffffaa, transparent);
+        transform: skewX(-20deg);
+        z-index: 1;
+        transition: left 0.4s ease-in-out;
+    }
 
-        .status {
-            font-size: 18px;
-            margin: 10px 0;
-        }
+    .botao:hover::after {
+        left: 130%;
+    }
 
-        .back {
-            width: auto;
-            max-width: 90%;
-            font-size: 16px;
-            padding: 12px 24px;
-            text-align: center;
-            box-sizing: border-box;
-        }
+.botao:hover {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
+  transform: scale(1.05);
+}
 
-        .voltar-container {
-            margin-top: 30px;
-            margin-bottom: 40px;
-            display: flex;
-            justify-content: center;
-        }
+/* Botão piscando */
+@keyframes piscar {
+  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
+  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
+}
 
-        pre {
-            background-color: #eee;
-            padding: 10px;
-            text-align: left;
-            max-height: 300px;
-            overflow: auto;
-            font-size: 14px;
-        }
+/* Classe extra para botões que piscam */
+.piscando {
+  animation: piscar 2s infinite ease-in-out;
+}
 
-        img {
-            max-width: 100%;
-            height: auto;
-        }
+    .section {
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 600px;
+      width: 90%;
+    }
 
-        @media (max-width: 768px) {
-            .botao {
-                font-size: 14px;
-                padding: 10px 20px;
-            }
+    .status {
+      font-size: 18px;
+      margin: 10px 0;
+    }
 
-            .status {
-                font-size: 16px;
-            }
-        }
-    </style>
-</head>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Configurações do Node</title>
-    <link rel="icon" type="image/png" href="logopreto.png">
-    <style>
-        body {
-            background-image: url('sky.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
+    .voltar-container {
+      margin-top: 30px;
+      margin-bottom: 40px;
+      display: flex;
+      justify-content: center;
+    }
 
-        .botao {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            margin: 10px;
-            font-size: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background 0.3s;
-            display: inline-block; /* Ensures buttons are displayed side by side */
-        }
+    pre {
+      background-color: #111;
+      color: #0f0;
+      padding: 10px;
+      text-align: left;
+      max-height: 300px;
+      overflow: auto;
+      font-size: 14px;
+      border-radius: 6px;
+    }
 
-        .botao:hover {
-            background-color: #218838;
-        }
-
-        .section {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 600px;
-        }
-
-        .status {
-            font-size: 18px;
-            margin: 10px 0;
-        }
-
-        .back {
-            width: auto;
-            max-width: 90%;
-            font-size: 16px;
-            padding: 12px 24px;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .voltar-container {
-            margin-top: 30px;
-            margin-bottom: 40px;
-            display: flex;
-            justify-content: center;
-        }
-
-        pre {
-            background-color: #eee;
-            padding: 10px;
-            text-align: left;
-            max-height: 300px;
-            overflow: auto;
-            font-size: 14px;
-        }
-    </style>
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
 </head>
 <body>
 
@@ -187,20 +128,20 @@
         <br><br>
         <a>Para colar no terminal utilize, Ctrl + Shift + V</a>
         <br><br>
-        <button class="botao" onclick="abrirApp(3131)">⚡ BRLN FullAuto</button>
+        <button class="botao piscando" onclick="abrirApp(3131)">⚡ BRLN FullAuto</button>
         <button class="botao" onclick="abrirApp(3232)">🖥️ Acessar Terminal Web</button>
         <br>
-        <button class="botao" onclick="abrirApp(3535)">⚡ Ver Logs do LND</button>
-        <button class="botao" onclick="abrirApp(3434)">🪙 Ver Logs do Bitcoind</button>
+        <button class="botao" onclick="abrirApp(3535)">⚡ Logs - LND</button>
+        <button class="botao" onclick="abrirApp(3434)">🪙 Logs - Bitcoin</button>
         <br>
         <button class="botao" onclick="abrirApp(3333)">✏️ Editar lnd.conf</button>
         <button class="botao" onclick="abrirApp(3636)">✏️ Editar bitcoin.conf</button>
         <br><br>
         <a>🛠️ Ferramentas Extras</a>
-        <br><br>
-        <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
-        <button class="botao" onclick="abrirApp(3838)">🔄 Swap Wallet 21 (By JVX)</button>
-    </div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+            <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
+            <button class="botao" onclick="abrirApp(3838)">🔄 Swap Wallet 21 (By JVX)</button>
+          </div>          
     <div class="section">
         <h2>🙏 Apoie Nosso Projeto</h2>
         <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>

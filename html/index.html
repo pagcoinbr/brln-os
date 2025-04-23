@@ -6,81 +6,160 @@
   <link rel="icon" type="image/png" href="logopreto.png" />
   <title>BRLN Open Bank</title>
   <style>
-    body {
-      background-image: url('sky.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      font-family: Arial, sans-serif;
-      color: black;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    
-    img {
-      max-width: 50%;
-      margin: 1px auto;
-    }
-
-    .linha {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 10px;
+body {
+  background: linear-gradient(135deg, #000428, #004e92);
+  background-size: cover;
+  background-attachment: fixed;
+  color: white;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin: 20px;
-    }
+img {
+  max-width: 50%;
+  margin: 10px auto;
+}
 
-    .botao {
-      background-color: #28a745; /* Verde */
-      color: white;
-      border: none;
-      padding: 20px 10px;
-      font-size: 16px;
-      border-radius: 30px;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      min-width: 150px;
-      box-sizing: border-box;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      max-width: 90%;
-      flex: 1 1 400px; /* Flex-grow, flex-shrink, flex-basis */
-      transition: background 0.3s;
-    }
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px;
+}
 
-    .botao:hover {
-      background-color: #1e7e34;
-    }
+.botao {
+  background: linear-gradient(45deg, #1f0f79, #4d00ff);
+  color: #fff;
+  border: none;
+  padding: 15px 25px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  min-width: 180px;
+  max-width: 90%;
+  box-sizing: border-box;
+  box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88;
+  flex: 1 1 300px;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
 
-    .footer-links {
-      margin-top: 20px;
-    }
+/* Shine effect on hover */
+.botao::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #ffffffaa, transparent);
+  transform: skewX(-20deg);
+  z-index: 1;
+  transition: left 0.4s ease-in-out;
+}
 
-    .footer-links a {
-      display: inline-block;
-      margin: 5px 10px;
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-    }
+.botao:hover::after {
+  left: 130%;
+}
 
-    @media (max-width: 600px) {
-      .botao {
-        font-size: 14px;
-        padding: 12px 20px;
-        min-width: 120px;
-      }
-    }
+.botao:hover {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
+  transform: scale(1.05);
+}
+
+/* Botão piscando */
+@keyframes piscar {
+  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
+  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
+}
+
+/* Classe extra para botões que piscam */
+.piscando {
+  animation: piscar 2s infinite ease-in-out;
+}
+
+/* Links no rodapé */
+.footer-links {
+  margin-top: 30px;
+}
+
+.footer-links a {
+  display: inline-block;
+  margin: 5px 10px;
+  text-decoration: none;
+  color: #ccc;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #ffdd00;
+}
+
+@media (max-width: 600px) {
+  .botao {
+    font-size: 16px;
+    padding: 12px 20px;
+    min-width: 140px;
+  }
+}
+
+@keyframes raio {
+  0% {
+    transform: rotate(0deg) translateX(0px);
+    opacity: 0.2;
+  }
+  50% {
+    transform: rotate(180deg) translateX(10px);
+    opacity: 0.6;
+  }
+  100% {
+    transform: rotate(360deg) translateX(0px);
+    opacity: 0.2;
+  }
+}
+
+.botao:hover {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
+  transform: scale(1.05);
+}
+
+.footer-links {
+  margin-top: 30px;
+}
+
+.footer-links a {
+  display: inline-block;
+  margin: 5px 10px;
+  text-decoration: none;
+  color: #ccc;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.footer-links a:hover {
+  color: #ffdd00;
+}
+
+@media (max-width: 600px) {
+  .botao {
+    font-size: 16px;
+    padding: 12px 20px;
+    min-width: 140px;
+  }
+}
   </style>
 </head>
 <body>
@@ -88,20 +167,15 @@
   <img src="BRLNlogo.png" alt="BRLN Open Bank logo" />
 
   <div class="container" id="botoes">
-    <div class="linha">
-      <button id="lndg-btn" class="botao" onclick="abrirApp(8889)">LNDg</button>
-      <button id="thunder-btn" class="botao" onclick="abrirApp(3000)">Thunderhub</button>
-      <button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">LNBits</button>
-      <button id="simple-btn" class="botao" onclick="abrirApp(35671)">Simple LNWallet</button>
-    </div>
-    <div class="linha">
-      <a href="https://amboss.space" class="botao" target="_blank">AMBOSS</a>
-      <a href="https://lightningnetwork.plus/" class="botao" target="_blank">➕ Lightning Network +</a>
-      <a href="https://mempool.space" class="botao" target="_blank">Mempool</a>
-      <a href="config.html" class="botao">⚙️ Configurações</a>
-    </div>
+    <td><button id="lndg-btn" class="botao" onclick="abrirApp(8889)">⚡ LNDg</button></td>
+    <td><button id="thunder-btn" class="botao" onclick="abrirApp(3000)">🌩️ Thunderhub</button></td>
+    <td><button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">💰 LNBits</button></td>
+    <td><button id="simple-btn" class="botao" onclick="abrirApp(35671)">📱 Simple LNWallet</button></td>
+    <a href="https://amboss.space" class="botao" target="_blank">🌐 AMBOSS</a>
+    <a href="https://lightningnetwork.plus/" class="botao" target="_blank">Lightning Network ➕</a>
+    <a href="https://mempool.space" class="botao" target="_blank">📊 Mempool</a>
+    <a href="config.html" class="botao">⚙️ Configurações</a>
   </div>
-  
 
   <div class="footer-links">
     <a href="https://services.br-ln.com">Clique aqui para acessar o site da BR⚡LN. Junte-se a nós! </a>
