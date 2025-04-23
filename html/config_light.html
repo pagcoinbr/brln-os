@@ -204,26 +204,26 @@
             `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
     }
 
-  function alternarTema() {
-    const caminho = window.location.pathname;
-    const nomeArquivo = caminho.substring(caminho.lastIndexOf('/') + 1);
+    function alternarTema() {
+  const caminho = window.location.pathname;
+  const nomeArquivo = caminho.substring(caminho.lastIndexOf('/') + 1);
 
-    let proximaPagina = '';
+  let proximaPagina = '';
+  let novoTema = '';
 
-    if (nomeArquivo.includes('index_dark')) {
-      proximaPagina = 'index_light.html';
-    } else if (nomeArquivo.includes('index_light')) {
-      proximaPagina = 'index_dark.html';
-    } else if (nomeArquivo.includes('config_dark')) {
-      proximaPagina = 'config_light.html';
-    } else if (nomeArquivo.includes('config_light')) {
-      proximaPagina = 'config_dark.html';
-    }
-
-    if (proximaPagina !== '') {
-      window.location.href = proximaPagina;
-    }
+  if (nomeArquivo.includes('config_dark')) {
+    proximaPagina = 'config_light.html';
+    novoTema = 'light';
+  } else if (nomeArquivo.includes('config_light')) {
+    proximaPagina = 'config_dark.html';
+    novoTema = 'dark';
   }
+
+  if (proximaPagina !== '') {
+    localStorage.setItem("temaAtual", novoTema); // salva preferência do usuário
+    window.location.href = proximaPagina;
+  }
+}
 
 </script>
 

@@ -11,13 +11,13 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: white;
       font-family: Arial, sans-serif;
       margin: 0;
       text-align: center;
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
+      color: white;
     }
 
     .spinner {
@@ -44,15 +44,13 @@
     window.onload = () => {
       let tema = localStorage.getItem("temaAtual");
 
-      if (!tema) {
-        // Define padrão como dark, mas poderia abrir modal no futuro
+      // Se o tema ainda não foi definido (primeiro acesso), define como dark
+      if (tema !== "light" && tema !== "dark") {
         tema = "dark";
         localStorage.setItem("temaAtual", "dark");
       }
 
-      const isConfig = window.location.pathname.includes("config");
-
-      // Define o fundo com base no tema
+      // Aplica o fundo visual antes do redirecionamento
       if (tema === "light") {
         document.body.style.backgroundImage = "url('sky.png')";
         document.body.style.color = "#000";
@@ -60,20 +58,17 @@
         document.body.style.background = "linear-gradient(135deg, #000428, #004e92)";
       }
 
-      // Redireciona após visualização do fundo aplicado
+      // Redireciona para o index_* correspondente após breve espera
       setTimeout(() => {
-        if (isConfig) {
-          window.location.href = tema === "light" ? "config_light.html" : "config_dark.html";
-        } else {
-          window.location.href = tema === "light" ? "index_light.html" : "index_dark.html";
-        }
+        const destino = tema === "light" ? "index_light.html" : "index_dark.html";
+        window.location.href = destino;
       }, 1500);
-    }
+    };
   </script>
 </head>
 <body>
   <h1>⚡ Bem-vindo ao BRLN Bolt</h1>
-  <p>Redirecionando para seu tema preferido...</p>
+  <p>Redirecionando...</p>
   <div class="spinner"></div>
 </body>
 </html>
