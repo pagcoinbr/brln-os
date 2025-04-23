@@ -24,6 +24,14 @@
       margin: 1px auto;
     }
 
+    .linha {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
     .container {
       display: flex;
       flex-wrap: wrap;
@@ -36,9 +44,9 @@
       background-color: #28a745; /* Verde */
       color: white;
       border: none;
-      padding: 15px 25px;
+      padding: 20px 10px;
       font-size: 16px;
-      border-radius: 8px;
+      border-radius: 30px;
       cursor: pointer;
       text-decoration: none;
       text-align: center;
@@ -46,7 +54,7 @@
       box-sizing: border-box;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       max-width: 90%;
-      flex: 1 1 200px; /* Flex-grow, flex-shrink, flex-basis */
+      flex: 1 1 400px; /* Flex-grow, flex-shrink, flex-basis */
       transition: background 0.3s;
     }
 
@@ -80,14 +88,20 @@
   <img src="BRLNlogo.png" alt="BRLN Open Bank logo" />
 
   <div class="container" id="botoes">
-    <td><button id="lndg-btn" class="botao" onclick="abrirApp(8889)">LNDg</button></td>
-    <td><button id="thunder-btn" class="botao" onclick="abrirApp(3000)">Thunderhub</button></td>
-    <td><button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">LNBits</button></td>
-    <td><button id="simple-btn" class="botao" onclick="abrirApp(35671)">Simple LNWallet</button></td>
-    <a href="https://amboss.space" class="botao" target="_blank">AMBOSS</a>
-    <a href="https://mempool.space" class="botao" target="_blank">Mempool</a>
-    <a href="config.html" class="botao" >⚙️ Configurações</a>
+    <div class="linha">
+      <button id="lndg-btn" class="botao" onclick="abrirApp(8889)">LNDg</button>
+      <button id="thunder-btn" class="botao" onclick="abrirApp(3000)">Thunderhub</button>
+      <button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">LNBits</button>
+      <button id="simple-btn" class="botao" onclick="abrirApp(35671)">Simple LNWallet</button>
+    </div>
+    <div class="linha">
+      <a href="https://amboss.space" class="botao" target="_blank">AMBOSS</a>
+      <a href="https://lightningnetwork.plus/" class="botao" target="_blank">➕ Lightning Network +</a>
+      <a href="https://mempool.space" class="botao" target="_blank">Mempool</a>
+      <a href="config.html" class="botao">⚙️ Configurações</a>
+    </div>
   </div>
+  
 
   <div class="footer-links">
     <a href="https://services.br-ln.com">Clique aqui para acessar o site da BR⚡LN. Junte-se a nós! </a>
