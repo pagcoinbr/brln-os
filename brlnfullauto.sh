@@ -80,10 +80,11 @@ sudo systemctl restart apache2
 
 gotty_do () {
 echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+LOCAL_APPS="/home/admin/brlnfullauto/nr-tools-by-jvx"
 if [[ $arch == "x86_64" ]]; then
-  sudo tar -xvzf /home/admin/brlnfullauto/local_apps/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz -C /home/admin >> /dev/null 2>&1
+  sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/admin >> /dev/null 2>&1
 else
-  sudo tar -xvzf /home/admin/brlnfullauto/local_apps/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz -C /home/admin >> /dev/null 2>&1
+  sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /home/admin >> /dev/null 2>&1
 fi
 # Move e torna executável
 sudo mv /home/admin/gotty /usr/local/bin/gotty
@@ -981,7 +982,6 @@ simple_lnwallet () {
   fi
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-  sudo ln -s /home/admin/brlnfullauto/local_apps/nr-tools/swap-wallet21.py /home/admin/swap-wallet21.py
   sleep 1
   sudo systemctl daemon-reload
   sleep 1
