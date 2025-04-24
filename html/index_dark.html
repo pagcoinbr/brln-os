@@ -184,6 +184,18 @@ img {
       <a>v1.0-beta</a>
   </div>
 
+  <iframe id="audio-panel" src="painel-audio.html" style="
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 160px;
+  height: 60px;
+  border: none;
+  z-index: 9999;
+  box-shadow: 0 0 10px #00ffffaa;
+  border-radius: 10px;
+"></iframe>
+
   <script>
     function abrirApp(porta) {
       const ip = window.location.hostname;
@@ -253,17 +265,5 @@ img {
     });
   </script>
   
-  <iframe id="audio-panel" src="painel-audio.html" style="
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 160px;
-  height: 60px;
-  border: none;
-  z-index: 9999;
-  box-shadow: 0 0 10px #00ffffaa;
-  border-radius: 10px;
-"></iframe>
-
 </body>
 </html>
