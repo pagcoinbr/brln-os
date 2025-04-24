@@ -1205,7 +1205,7 @@ menu() {
         system_preparations
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
-        echo -e "${YELLOW}🕒 ATENÇÃO: Poderá demorar 10 min. ou mais. Seja paciente.${NC}"
+        echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
         system_preparations >> /dev/null 2>&1 &
         pid=$!
         if declare -f spinner > /dev/null; then
@@ -1279,7 +1279,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde p.f. Isso pode demorar um pouco...${NC}  "
+        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco...${NC}  "
         install_bos >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1296,7 +1296,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_thunderhub
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde p.f. Poderá demorar 5 min. ou mais. Seja paciente...${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde, isso poderá demorar 10min ou mais. Seja paciente...${NC}"
         install_thunderhub >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1314,7 +1314,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         install_lndg
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde p.f. Isso pode demorar um pouco...${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco...${NC}"
         install_lndg >> /dev/null 2>&1 & spinner
         clear
       else
@@ -1338,7 +1338,7 @@ menu() {
       if [[ "$verbose_mode" == "y" ]]; then
         lnbits_install
       elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde p.f. Isso pode demorar um pouco... Seja paciente.${NC}"
+        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco... Seja paciente.${NC}"
         lnbits_install >> /dev/null 2>&1 & spinner
         clear
       else
