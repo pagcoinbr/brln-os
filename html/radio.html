@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: sans-serif;
+    }
+    button {
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="togglePlay()">▶ Rádio BRLN</button>
+  <audio id="radioPlayer" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
+
+  <script>
+    const player = document.getElementById('radioPlayer');
+    let isPlaying = false;
+
+    function togglePlay() {
+      if (isPlaying) {
+        player.pause();
+      } else {
+        player.play();
+      }
+      isPlaying = !isPlaying;
+    }
+  </script>
+</body>
+</html>
