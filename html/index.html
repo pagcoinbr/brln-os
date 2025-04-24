@@ -1,74 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BR⚡LN Bolt - Redirecionando...</title>
+  <meta charset="UTF-8">
+  <title>BRLN FullAuto</title>
   <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
+    body, html {
       margin: 0;
-      text-align: center;
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      color: white;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
     }
-
-    .spinner {
-      margin-top: 20px;
-      border: 8px solid #fff;
-      border-top: 8px solid #00ffff;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1.2s linear infinite;
+    #mainFrame {
+      height: calc(100% - 40px);
+      width: 100%;
+      border: none;
     }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    h1 {
-      font-size: 24px;
-      margin-bottom: 10px;
+    #radioFrame {
+      height: 40px;
+      width: 100%;
+      border: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      background: #111;
+      z-index: 9999;
     }
   </style>
-  <script>
-    window.onload = () => {
-      let tema = localStorage.getItem("temaAtual");
-
-      // Se o tema ainda não foi definido (primeiro acesso), define como dark
-      if (tema !== "light" && tema !== "dark") {
-        tema = "dark";
-        localStorage.setItem("temaAtual", "dark");
-      }
-
-      // Aplica o fundo visual antes do redirecionamento
-      if (tema === "light") {
-        document.body.style.backgroundImage = "url('sky.png')";
-        document.body.style.color = "#000";
-      } else {
-        document.body.style.background = "linear-gradient(135deg, #000428, #004e92)";
-      }
-
-      // Redireciona para o index_* correspondente após breve espera
-      setTimeout(() => {
-        const destino = tema === "light" ? "index_light.html" : "index_dark.html";
-        window.location.href = destino;
-      }, 1500);
-    };
-  </script>
 </head>
 <body>
-  <h1>⚡ Bem-vindo ao BRLN Bolt</h1>
-  <p>Redirecionando...</p>
-  <div class="spinner"></div>
+  <!-- Frame para conteúdo principal -->
+  <iframe id="mainFrame" src="index2.html" name="mainContent"></iframe>
+
+  <!-- Frame persistente para o player de rádio -->
+  <iframe id="radioFrame" src="radio.html" name="radioPlayer"></iframe>
 </body>
 </html>
