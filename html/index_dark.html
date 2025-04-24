@@ -184,17 +184,20 @@ img {
       <a>v1.0-beta</a>
   </div>
 
-  <iframe id="audio-panel" src="painel-audio.html" style="
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 160px;
-  height: 60px;
-  border: none;
-  z-index: 9999;
-  box-shadow: 0 0 10px #00ffffaa;
-  border-radius: 10px;
-"></iframe>
+   <!-- Painel de áudio fixo -->
+   <iframe src="painel-audio.html"
+   style="position: fixed; bottom: 10px; right: 10px; width: 150px; height: 50px; border: none; z-index: 9999;"></iframe>
+
+<!-- Frame de navegação que carrega todo o conteúdo -->
+<iframe id="navegador" src="home.html"
+   style="width: 100vw; height: 100vh; border: none;"></iframe>
+
+<script>
+// Exemplo: navega para uma nova "página"
+function navegarPara(pagina) {
+document.getElementById('navegador').src = pagina;
+}
+</script>
 
   <script>
     function abrirApp(porta) {
