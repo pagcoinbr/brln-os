@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>BRLN FullAuto</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    #mainFrame {
+      height: calc(100% - 40px);
+      width: 100%;
+      border: none;
+    }
+    #radioFrame {
+      height: 40px;
+      width: 100%;
+      border: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      background: #111;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <!-- Frame para conteúdo principal -->
+  <iframe id="mainFrame" src="html/config_dark.html" name="mainContent"></iframe>
+
+  <!-- Frame persistente para o player de rádio -->
+  <iframe id="radioFrame" src="radio.html" name="radioPlayer"></iframe>
+</body>
+</html>
