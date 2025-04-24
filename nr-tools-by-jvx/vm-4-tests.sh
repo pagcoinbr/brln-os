@@ -14,6 +14,8 @@ if [[ ! $(command -v multipass) ]]; then
         sudo snap install multipass
     else
         echo "❌ Snap não encontrado. Instale o Snap e execute"
+    fi
+fi
 
 VM_NAME="brlnbolt"
 
