@@ -24,71 +24,71 @@ CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
 update_and_upgrade() {
-app="Interface Gráfica"
-echo "Instalando Apache..."
-sudo -v
-sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
-echo "Habilitando módulos do Apache..."
-sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
-echo "Reiniciando o serviço Apache..."
-sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
+  app="Interface Gráfica"
+  echo "Instalando Apache..."
+  sudo -v
+  sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
+  echo "Habilitando módulos do Apache..."
+  sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
+  echo "Reiniciando o serviço Apache..."
+  sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
-# Criar diretórios e mover arquivos
-sudo mkdir -p "$CGI_DST"
-sudo rm -f "$WWW_HTML/"*.html
-sudo rm -f "$WWW_HTML"/*.png
-sudo rm -f "$CGI_DST/"*.sh
-sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
-sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
-sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
+  # Criar diretórios e mover arquivos
+  sudo mkdir -p "$CGI_DST"
+  sudo rm -f "$WWW_HTML/"*.html
+  sudo rm -f "$WWW_HTML"/*.png
+  sudo rm -f "$CGI_DST/"*.sh
+  sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
+  sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
+  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
-# Corrigir permissões de execução
-sudo chmod +x "$CGI_DST"/*.sh
-for script in "$CGI_DST"/*.sh; do
-  sudo chmod +x "$script"
-done
+  # Corrigir permissões de execução
+  sudo chmod +x "$CGI_DST"/*.sh
+  for script in "$CGI_DST"/*.sh; do
+    sudo chmod +x "$script"
+  done
 
-# Configurar o Apache para permitir CGI no diretório correto
-if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
-  echo "Adicionando bloco de configuração CGI ao Apache..."
-  sudo sed -i '/<\/VirtualHost>/i \
-<Directory "/usr/lib/cgi-bin">\n\
-  AllowOverride None\n\
-  Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
-  Require all granted\n\
-  AddHandler cgi-script .sh\n\
-</Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
-else
-  echo "Bloco de configuração CGI já existe no Apache."
-fi
+  # Configurar o Apache para permitir CGI no diretório correto
+  if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
+    echo "Adicionando bloco de configuração CGI ao Apache..."
+    sudo sed -i '/<\/VirtualHost>/i \
+    <Directory "/usr/lib/cgi-bin">\n\
+      AllowOverride None\n\
+      Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
+      Require all granted\n\
+      AddHandler cgi-script .sh\n\
+    </Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
+  else
+    echo "Bloco de configuração CGI já existe no Apache."
+  fi
 
-# Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
-SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
+  # Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
+  SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
 
-if [ -n "$SCRIPT_LIST" ]; then
-  sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
+  if [ -n "$SCRIPT_LIST" ]; then
+    sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
 www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
-fi
-# Abre a posta 80 no UFW
-if ! sudo ufw status | grep -q "80/tcp"; then
-  sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
-fi
-sudo usermod -aG admin www-data
-sudo systemctl restart apache2
+  fi
+  # Abre a posta 80 no UFW
+  if ! sudo ufw status | grep -q "80/tcp"; then
+    sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
+  fi
+  sudo usermod -aG admin www-data
+  sudo systemctl restart apache2
 }
 
 gotty_do () {
-echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-LOCAL_APPS="/home/admin/brlnfullauto/nr-tools-by-jvx"
-if [[ $arch == "x86_64" ]]; then
-  sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/admin >> /dev/null 2>&1
-else
-  sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /home/admin >> /dev/null 2>&1
-fi
-# Move e torna executável
-sudo mv /home/admin/gotty /usr/local/bin/gotty
-sudo chmod +x /usr/local/bin/gotty
+  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
+  LOCAL_APPS="/home/admin/brlnfullauto/nr-tools-by-jvx"
+  if [[ $arch == "x86_64" ]]; then
+    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/admin >> /dev/null 2>&1
+  else
+    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /home/admin >> /dev/null 2>&1
+  fi
+  # Move e torna executável
+  sudo mv /home/admin/gotty /usr/local/bin/gotty
+  sudo chmod +x /usr/local/bin/gotty
 }
 
 gotty_install () {
@@ -166,8 +166,8 @@ terminal_web() {
 }
 
 create_main_dir() {
-sudo mkdir /data
-sudo chown admin:admin /data
+  sudo mkdir /data
+  sudo chown admin:admin /data
 }
 
 configure_ufw() {
@@ -180,7 +180,7 @@ configure_ufw() {
 install_tor() {
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
-deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
+  deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
   sudo su -c "wget -qO- $TOR_GPGLINK | gpg --dearmor | tee /usr/share/keyrings/tor-archive-keyring.gpg"
   sudo apt update && sudo apt install -y tor deb.torproject.org-keyring
   sudo sed -i 's/^#ControlPort 9051/ControlPort 9051/' /etc/tor/torrc
@@ -345,30 +345,30 @@ EOF
   sudo mkdir -p /data/lnd
   sudo chown -R admin:admin /data/lnd
   if [[ ! -L /home/admin/.lnd ]]; then
-  ln -s /data/lnd /home/admin/.lnd
+    ln -s /data/lnd /home/admin/.lnd
   fi
-  sudo chmod -R g+X /data/lnd
-  sudo chmod 640 /run/tor/control.authcookie
-  sudo chmod 750 /run/tor
-  sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
-  sudo cp $file_path /data/lnd/lnd.conf
-  sudo chown admin:admin /data/lnd/lnd.conf
-  sudo chmod 640 /data/lnd/lnd.conf
-if [[ $use_brlnd == "y" ]]; then
-  create_wallet
-else
-  echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
-  echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS.${YELLOW} Para isso você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
-  echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
-  echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
-  read -p "Seu bitcoin core já está completamente sincronizado? (y/n): " sync_choice
-  if [[ $sync_choice == "y" ]]; then
-  echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
-  toogle_on >> /dev/null 2>&1
-  sleep 5
-  create_wallet
-fi
-fi
+    sudo chmod -R g+X /data/lnd
+    sudo chmod 640 /run/tor/control.authcookie
+    sudo chmod 750 /run/tor
+    sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
+    sudo cp $file_path /data/lnd/lnd.conf
+    sudo chown admin:admin /data/lnd/lnd.conf
+    sudo chmod 640 /data/lnd/lnd.conf
+  if [[ $use_brlnd == "y" ]]; then
+    create_wallet
+  else
+    echo -e "${RED}Você escolheu não usar o bitcoind remoto da BRLN!${NC}"
+    echo -e "${YELLOW}Agora Você irá criar sua ${RED}FRASE DE 24 PALAVRAS.${YELLOW} Para isso você precisa aguardar seu bitcoin core sincronizar para prosseguir com a instalação, este processo pode demorar de 3 a 7 dias, dependendo do seu hardware.${NC}"
+    echo -e "${YELLOW}Para acompanhar a sincronização do bitcoin core, use o comando ${RED} journalctl -fu bitcoind ${YELLOW}. Ao atingir 100%, você deve iniciar este programa novamente e escolher a opção ${RED}2 ${YELLOW}mais uma vez. ${NC}"
+    echo -e "${YELLOW}Apenas após o termino deste processo, você pode prosseguir com a instalação do lnd, caso contrário você receberá um erro na criação da carteira.${NC}"
+    read -p "Seu bitcoin core já está completamente sincronizado? (y/n): " sync_choice
+      if [[ $sync_choice == "y" ]]; then
+        echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
+        toogle_on >> /dev/null 2>&1
+        sleep 5
+        create_wallet
+      fi
+  fi
 }
 
 24_word_confirmation () {
@@ -388,7 +388,7 @@ fi
 
 create_wallet () {
   if [[ ! -L /home/admin/.lnd ]]; then
-  ln -s /data/lnd /home/admin/.lnd
+    ln -s /data/lnd /home/admin/.lnd
   fi
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
@@ -454,23 +454,23 @@ install_bitcoind() {
 }
 
 install_nodejs() {
-if [[ -d ~/.npm-global ]]; then
+  if [[ -d ~/.npm-global ]]; then
     echo "Node.js já está instalado."
-    else
-  curl -sL https://deb.nodesource.com/setup_21.x | sudo -E bash -
-  sudo apt-get install nodejs -y
-fi
+  else
+    curl -sL https://deb.nodesource.com/setup_21.x | sudo -E bash -
+    sudo apt-get install nodejs -y
+  fi
 }
 
 install_bos() {
-if [[ -d ~/.npm-global ]]; then
+  if [[ -d ~/.npm-global ]]; then
     echo "Balance of Satoshis já está instalado."
-    else
-  mkdir -p ~/.npm-global
-  npm config set prefix '~/.npm-global'
-if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
-  echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
-fi
+  else
+    mkdir -p ~/.npm-global
+    npm config set prefix '~/.npm-global'
+    if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
+      echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
+    fi
   npm i -g balanceofsatoshis
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
   sudo chown -R admin:admin /data/lnd
@@ -488,15 +488,15 @@ fi
   "socket": "localhost:10009"
 }
 EOF"
-sudo cp $SERVICES/bos-telegram.service /etc/systemd/system/bost-elegram.service
+  sudo cp $SERVICES/bos-telegram.service /etc/systemd/system/bost-elegram.service
   sudo systemctl daemon-reload
-fi
+  fi
 }
 
 install_thunderhub() {
-if [[ -d ~/thunderhub ]]; then
+  if [[ -d ~/thunderhub ]]; then
     echo "ThunderHub já está instalado."
-    else
+  else
   node -v
   npm -v
   sudo apt update && sudo apt full-upgrade -y
@@ -506,10 +506,10 @@ if [[ -d ~/thunderhub ]]; then
   git verify-commit v$VERSION_THUB
   npm install
   npm run build
-sudo ufw allow from 192.168.0.0/23 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
-cp /home/admin/thunderhub/.env /home/admin/thunderhub/.env.local
-sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/admin/thunderhub/.env.local
-bash -c "cat <<EOF > thubConfig.yaml
+  sudo ufw allow from 192.168.0.0/23 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
+  cp /home/admin/thunderhub/.env /home/admin/thunderhub/.env.local
+  sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/admin/thunderhub/.env.local
+  bash -c "cat <<EOF > thubConfig.yaml
 masterPassword: '$thub_senha'
 accounts:
   - name: 'BRLNBolt'
@@ -518,85 +518,85 @@ accounts:
     certificatePath: '/data/lnd/tls.cert'
     password: '$thub_senha'
 EOF"
-sudo cp $SERVICES/thunderhub.service /etc/systemd/system/thunderhub.service
-sudo systemctl start thunderhub.service
-sudo systemctl enable thunderhub.service
-fi
+  sudo cp $SERVICES/thunderhub.service /etc/systemd/system/thunderhub.service
+  sudo systemctl start thunderhub.service
+  sudo systemctl enable thunderhub.service
+  fi
 }
 
 install_lndg () {
-if [[ -d /home/admin/lndg ]]; then
+  if [[ -d /home/admin/lndg ]]; then
     echo "LNDG já está instalado."
-    else
-sudo apt install -y python3-pip python3-venv
-sudo ufw allow from 192.168.0.0/23 to any port 8889 proto tcp comment 'allow lndg from local network'
-cd
-git clone https://github.com/cryptosharks131/lndg.git
-cd lndg
-sudo apt install -y virtualenv
-virtualenv -p python3 .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/pip install whitenoise
-.venv/bin/python3 initialize.py --whitenoise
-sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
-sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
-sudo systemctl daemon-reload
-sudo systemctl enable lndg-controller.service
-sudo systemctl start lndg-controller.service
-sudo systemctl enable lndg.service
-sudo systemctl start lndg.service
-fi
+  else
+  sudo apt install -y python3-pip python3-venv
+  sudo ufw allow from 192.168.0.0/23 to any port 8889 proto tcp comment 'allow lndg from local network'
+  cd
+  git clone https://github.com/cryptosharks131/lndg.git
+  cd lndg
+  sudo apt install -y virtualenv
+  virtualenv -p python3 .venv
+  .venv/bin/pip install -r requirements.txt
+  .venv/bin/pip install whitenoise
+  .venv/bin/python3 initialize.py --whitenoise
+  sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
+  sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
+  sudo systemctl daemon-reload
+  sudo systemctl enable lndg-controller.service
+  sudo systemctl start lndg-controller.service
+  sudo systemctl enable lndg.service
+  sudo systemctl start lndg.service
+  fi
 }
 
 lnbits_install() {
-# Atualiza e instala dependências básicas
-sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
+  # Atualiza e instala dependências básicas
+  sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
 
-# Instala Poetry (não precisa ativar venv manual)
-curl -sSL https://install.python-poetry.org | python3 -
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/admin/.bashrc"
-export PATH="$HOME/.local/bin:$PATH"
+  # Instala Poetry (não precisa ativar venv manual)
+  curl -sSL https://install.python-poetry.org | python3 -
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/admin/.bashrc"
+  export PATH="$HOME/.local/bin:$PATH"
 
-# Verifica versão do Poetry
-"$POETRY_BIN" self update || true
-"$POETRY_BIN" --version
+  # Verifica versão do Poetry
+  "$POETRY_BIN" self update || true
+  "$POETRY_BIN" --version
 
-# Clona o repositório LNbits
-git clone https://github.com/lnbits/lnbits.git "/home/admin/lnbits"
-sudo chown -R admin:admin "/home/admin/lnbits"
+  # Clona o repositório LNbits
+  git clone https://github.com/lnbits/lnbits.git "/home/admin/lnbits"
+  sudo chown -R admin:admin "/home/admin/lnbits"
 
-# Entra no diretório e instala dependências com Poetry
-cd "/home/admin/lnbits"
-git checkout main
-"$POETRY_BIN" install
+  # Entra no diretório e instala dependências com Poetry
+  cd "/home/admin/lnbits"
+  git checkout main
+  "$POETRY_BIN" install
 
-# Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
-cp .env.example .env
-sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
+  # Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
+  cp .env.example .env
+  sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
-# Criar o script de inicialização dinâmico
-cat > "/home/admin/lnbits/start-lnbits.sh" <<EOF
+  # Criar o script de inicialização dinâmico
+  cat > "/home/admin/lnbits/start-lnbits.sh" <<EOF
 #!/bin/bash
 cd /home/admin/lnbits
 export PATH="\$HOME/.local/bin:\$PATH"
 exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
 EOF
 
-# Torna o script executável
-chmod +x "/home/admin/lnbits/start-lnbits.sh"
+  # Torna o script executável
+  chmod +x "/home/admin/lnbits/start-lnbits.sh"
 
-# Configurações do lnbits no ufw
-sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
+  # Configurações do lnbits no ufw
+  sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
 
-# Configura systemd
-sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
+  # Configura systemd
+  sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
 
-# Ativa e inicia o serviço
-sudo systemctl daemon-reload
-sudo systemctl enable lnbits.service
-sudo systemctl start lnbits.service
+  # Ativa e inicia o serviço
+  sudo systemctl daemon-reload
+  sudo systemctl enable lnbits.service
+  sudo systemctl start lnbits.service
 
-echo "✅ LNbits instalado e rodando como serviço systemd!"
+  echo "✅ LNbits instalado e rodando como serviço systemd!"
 }
 
 tailscale_vpn() {
@@ -630,7 +630,7 @@ tailscale_vpn() {
 }
 
 opening () {
-clear
+  clear
   echo
   echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
   echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
@@ -648,7 +648,7 @@ clear
   echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
   echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉${BLUE} https://br-ln.com${NC}"
   echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
-echo
+  echo
 }
 
 toogle_bitcoin () {
@@ -759,8 +759,8 @@ echo "$LND_VERSION"
     sudo systemctl restart lnd
     cd
 } &> /dev/null &
-echo "Atualizando LND... Por favor, aguarde."
-wait
+  echo "Atualizando LND... Por favor, aguarde."
+  wait
   echo "LND atualizado!"
 }
 
@@ -769,21 +769,21 @@ bitcoin_update () {
 VERSION=$(curl -s https://bitcoincore.org/en/download/ | grep -oP 'bitcoin-core-\K[0-9]+\.[0-9]+' | head -n1)
 echo "$VERSION"
 {
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
-wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
-sha256sum --ignore-missing --check SHA256SUMS
-curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
-gpg --verify SHA256SUMS.asc
-tar -xvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
-bitcoind --version
-sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
+  wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
+  wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
+  wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
+  sha256sum --ignore-missing --check SHA256SUMS
+  curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
+  gpg --verify SHA256SUMS.asc
+  tar -xvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
+  sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
+  bitcoind --version
+  sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
     sudo systemctl restart bitcoind
     cd
 } &> /dev/null &
-echo "Atualizando Bitcon Core... Por favor, aguarde."
-wait
+  echo "Atualizando Bitcon Core... Por favor, aguarde."
+  wait
   echo "Bitcoin Core atualizado!"
 }
 
@@ -944,14 +944,14 @@ menu_manutencao() {
 
 manutencao_script () {
   # Executa o script de manutenção
-lnd --version
-bitcoin-cli --version
-menu_manutencao
+  lnd --version
+  bitcoin-cli --version
+  menu_manutencao
 }	
 
 get_simple_wallet () {
   arch=$(uname -m)
-if [[ -f ./simple-lnwallet ]]; then
+  if [[ -f ./simple-lnwallet ]]; then
     echo "O binário simple-lnwallet já existe."
   else
     echo "O binário simple-lnwallet não foi encontrado. Baixando..."
@@ -1002,54 +1002,54 @@ simple_lnwallet () {
 }
 
 config_bos_telegram () {
-# ⚡ Script para configurar o BOS Telegram no systemd
-# 🔐 Substitui o placeholder pelo Connection Code fornecido
-# 🛠️ Reinicia o serviço após modificação
+  # ⚡ Script para configurar o BOS Telegram no systemd
+  # 🔐 Substitui o placeholder pelo Connection Code fornecido
+  # 🛠️ Reinicia o serviço após modificação
 
-SERVICE_FILE="/etc/systemd/system/bos-telegram.service"
-BOT_LINK="https://t.me/BotFather"
+  SERVICE_FILE="/etc/systemd/system/bos-telegram.service"
+  BOT_LINK="https://t.me/BotFather"
 
-echo "🔗 Gerando QR Code para acessar o bot do Telegram..."
-qrencode -t ansiutf8 "$BOT_LINK"
+  echo "🔗 Gerando QR Code para acessar o bot do Telegram..."
+  qrencode -t ansiutf8 "$BOT_LINK"
 
-echo ""
-echo "📱 Aponte sua câmera para o QR Code acima para abrir: $BOT_LINK"
-echo ""
+  echo ""
+  echo "📱 Aponte sua câmera para o QR Code acima para abrir: $BOT_LINK"
+  echo ""
 
-echo "⚡️ Crie um bot no Telegram usando o BotFather e obtenha a API Key."
-echo "🌐 Agora acesse a interface web, vá em \"Configurações\" e clique em \" Autenticar Bos Telegram\"."
+  echo "⚡️ Crie um bot no Telegram usando o BotFather e obtenha a API Key."
+  echo "🌐 Agora acesse a interface web, vá em \"Configurações\" e clique em \" Autenticar Bos Telegram\"."
 
-# Aguarda o usuário confirmar que recebeu a conexão
-read -p "Pressione ENTER aqui após a conexão ser concluída no Telegram..."
+  # Aguarda o usuário confirmar que recebeu a conexão
+  read -p "Pressione ENTER aqui após a conexão ser concluída no Telegram..."
 
-echo "✍️ Digite o Connection Code do seu bot Telegram:"
-read -r connection_code
+  echo "✍️ Digite o Connection Code do seu bot Telegram:"
+  read -r connection_code
 
-# 🧠 Validação simples
-if [[ -z "$connection_code" ]]; then
-  echo "❌ Connection Code não pode estar vazio."
-  exit 1
-fi
+  # 🧠 Validação simples
+  if [[ -z "$connection_code" ]]; then
+    echo "❌ Connection Code não pode estar vazio."
+    exit 1
+  fi
 
-# 📝 Adiciona ou substitui ExecStart com o Connection Code
-if grep -q '^ExecStart=' "$SERVICE_FILE"; then
-  sudo sed -i "s|^ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
-else
-  sudo sed -i "/^\[Service\]/a ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code" "$SERVICE_FILE"
-fi
+  # 📝 Adiciona ou substitui ExecStart com o Connection Code
+  if grep -q '^ExecStart=' "$SERVICE_FILE"; then
+    sudo sed -i "s|^ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
+  else
+    sudo sed -i "/^\[Service\]/a ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code" "$SERVICE_FILE"
+  fi
 
-echo "✅ Connection Code inserido com sucesso no serviço bos-telegram."
+  echo "✅ Connection Code inserido com sucesso no serviço bos-telegram."
 
-# 🔄 Recarrega o systemd e reinicia o serviço
-echo "🔄 Recarregando daemon do systemd..."
-sudo systemctl daemon-reload
+  # 🔄 Recarrega o systemd e reinicia o serviço
+  echo "🔄 Recarregando daemon do systemd..."
+  sudo systemctl daemon-reload
 
-echo "🚀 Ativando e iniciando o serviço bos-telegram..."
-sudo systemctl enable bos-telegram
-sudo systemctl start bos-telegram
+  echo "🚀 Ativando e iniciando o serviço bos-telegram..."
+  sudo systemctl enable bos-telegram
+  sudo systemctl start bos-telegram
 
-echo "✅ Serviço bos-telegram configurado e iniciado com sucesso!"
-echo "💬 Verifique se recebeu a mensagem: 🤖 Connected to <nome do seu node>"
+  echo "✅ Serviço bos-telegram configurado e iniciado com sucesso!"
+  echo "💬 Verifique se recebeu a mensagem: 🤖 Connected to <nome do seu node>"
 }
 
 submenu_opcoes() {
