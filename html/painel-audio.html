@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel de Áudio</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #00ffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    button {
+      background-color: #222;
+      color: #00ffff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <button id="playBtn">🎵 Rádio</button>
+
+  <script>
+    let audio = new Audio("https://dc1.serverse.com/proxy/dnutqhxl/stream");
+    audio.volume = 0.05;
+    audio.loop = true;
+    let isPlaying = false;
+
+    document.getElementById("playBtn").addEventListener("click", () => {
+      if (!isPlaying) {
+        audio.play();
+        isPlaying = true;
+        document.getElementById("playBtn").textContent = "🔊 Rádio Ligada";
+      } else {
+        audio.pause();
+        isPlaying = false;
+        document.getElementById("playBtn").textContent = "🎵 Rádio";
+      }
+    });
+  </script>
+</body>
+</html>
