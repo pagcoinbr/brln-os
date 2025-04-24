@@ -1,29 +1,39 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BRLN FullAuto</title>
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
       height: 100%;
+      font-family: Arial, sans-serif;
+      background-color: #000428;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
+
     #mainFrame {
-      height: calc(100% - 40px);
+      flex: 1 1 auto;
       width: 100%;
       border: none;
     }
+
     #radioFrame {
       height: 40px;
       width: 100%;
       border: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
       background: #111;
       z-index: 9999;
+    }
+
+    @media screen and (max-width: 768px) {
+      #radioFrame {
+        height: 50px;
+      }
     }
   </style>
 </head>
