@@ -166,6 +166,13 @@ img {
 
   <img src="BRLNlogo.png" alt="BRLN Open Bank logo" />
 
+      <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px; border-radius: 10px;">
+        <audio id="radioPlayer" src="URL_DA_SUA_RADIO_STREAM" controls autoplay style="width: 200px;"></audio>
+        <button onclick="toggleRadio()" style="background: none; color: white; border: none; cursor: pointer; margin-left: 10px;">
+          <span id="radioIcon">🔊</span>
+        </button>
+      </div> 
+
   <div class="container" id="botoes">
     <td><button id="lndg-btn" class="botao" onclick="abrirApp(8889)">⚡ LNDg</button></td>
     <td><button id="thunder-btn" class="botao" onclick="abrirApp(3000)">🌩️ Thunderhub</button></td>
@@ -252,6 +259,36 @@ img {
       setTimeout(verificarServicosPrincipais, 1000);
     });
   </script>
+
+<script>
+      // Sua função abrirApp existente
+      function abrirApp(porta) {
+        const ip = window.location.hostname;
+        window.open(`https://dc1.serverse.com/proxy/dnutqhxl/stream`, '_blank');
+      }
+  
+      // Sua função verificarServicosPrincipais existente
+      function verificarServicosPrincipais() {
+        // ... (seu código de verificação de serviços) ...
+      }
+  
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(verificarServicosPrincipais, 1000);
+      });
+  
+      // Função para controlar o play/pause do rádio
+      function toggleRadio() {
+        const radio = document.getElementById('radioPlayer');
+        const icon = document.getElementById('radioIcon');
+        if (radio.paused) {
+          radio.play();
+          icon.textContent = '🔊';
+        } else {
+          radio.pause();
+          icon.textContent = '🔇';
+        }
+      }
+    </script>
   
 </body>
 </html>
