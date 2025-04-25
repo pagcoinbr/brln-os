@@ -72,40 +72,80 @@
     audio {
       display: none;
     }
+
+    .vol-control {
+  background-color: #222;
+  color: #00ffff;
+  border: none;
+  font-size: 18px;
+  padding: 4px 10px;
+  margin-left: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.vol-control:hover {
+  background-color: #00cccc;
+}
+
   </style>
 </head>
 <body>
-  <!-- Botão de rádio -->
-  <button id="radio-button" onclick="toggleRadio()">▶️ Rádio</button>
-
-  <!-- Letreiro animado -->
-  <div class="marquee">
-    <div class="marquee-content">
-      <a href="https://services.br-ln.com" target="_blank">⚡ Clique aqui para acessar o site da BRLN. Junte-se a nós!</a>
-      <span class="version">| v1.0-beta</span>
+    <!-- Controles -->
+    <div style="display: flex; align-items: center; height: 100%; padding-left: 10px;">
+      <button id="radio-button">▶️ Rádio</button>
+      <button class="vol-control" id="vol-down">−</button>
+      <button class="vol-control" id="vol-up">+</button>
     </div>
-  </div>
-
-  <!-- Player de áudio invisível -->
-  <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
-
-  <script>
-    const player = document.getElementById('radio-player');
-    const button = document.getElementById('radio-button');
   
-    // Define o volume inicial para 10%
-    player.volume = 0.1;
+    <!-- Letreiro animado -->
+    <div class="marquee">
+      <div class="marquee-content">
+        <a href="https://services.br-ln.com" target="_blank">⚡ Clique aqui para acessar o site da BRLN. Junte-se a nós!</a>
+        <span class="version">| v1.0-beta</span>
+      </div>
+    </div>
   
-    function toggleRadio() {
-      if (player.paused) {
-        player.play();
-        button.innerText = "⏸️ Parar";
-      } else {
-        player.pause();
-        button.innerText = "▶️ Rádio";
+    <!-- Player de áudio invisível -->
+    <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
+
+    <script>
+      const player = document.getElementById('radio-player');
+      const button = document.getElementById('radio-button');
+      const volUp = document.getElementById('vol-up');
+      const volDown = document.getElementById('vol-down');
+    
+      // Volume inicial
+      player.volume = 0.1;
+    
+      function toggleRadio() {
+        if (player.paused) {
+          player.play()
+            .then(() => {
+              button.innerText = "⏸️ Parar";
+            })
+            .catch((e) => {
+              alert("Clique para ativar o som. O navegador pode estar a bloquear o autoplay.");
+            });
+        } else {
+          player.pause();
+          button.innerText = "▶️ Rádio";
+        }
       }
-    }
-  </script>
+    
+      function ajustarVolume(direcao) {
+        let novoVolume = player.volume + (direcao === 'up' ? 0.1 : -0.1);
+        novoVolume = Math.max(0, Math.min(1, novoVolume)); // mantém entre 0 e 1
+        player.volume = novoVolume;
+        console.log("Volume atual:", Math.round(novoVolume * 100) + "%");
+      }
+    
+      button.addEventListener('click', toggleRadio);
+      volUp.addEventListener('click', () => ajustarVolume('up'));
+      volDown.addEventListener('click', () => ajustarVolume('down'));
+    </script>
+    
   
 </body>
 </html>
