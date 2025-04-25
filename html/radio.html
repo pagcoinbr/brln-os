@@ -114,78 +114,103 @@
     const button = document.getElementById('radio-button');
     const volUp = document.getElementById('vol-up');
     const volDown = document.getElementById('vol-down');
-
-    // Volume inicial
+  
     player.volume = 0.1;
-
-    // Variáveis de controlo
-    const trechos = ["trecho1.mp3", "trecho2.mp3", "trecho3.mp3"];
+  
     const jinglePlayer = new Audio();
     jinglePlayer.volume = 0.8;
-    let radioIniciada = false;
-    let trechoInicialTocado = false;
-
+  
+    const intro = new Audio("intro.mp3");
+    intro.volume = 0.8;
+  
+    const trechos = [
+      "trecho1.mp3",
+      "trecho2.mp3",
+      "trecho3.mp3"
+    ];
+  
+    let novidadesAtivas = false;
+    let intervaloTrechos = null;
+  
     function toggleRadio() {
-      if (!radioIniciada) {
-        radioIniciada = true;
-        const intro = "intro.mp3";
-        player.pause(); // por segurança
-        jinglePlayer.src = intro;
-        jinglePlayer.play().then(() => {
-          console.log("Intro tocando:", intro);
+      if (player.paused) {
+        intro.play().then(() => {
+          console.log("Intro iniciada");
           button.innerText = "⏸️ Parar";
-        }).catch((e) => {
+        }).catch(() => {
           alert("Clique para ativar o som. O navegador pode estar a bloquear o autoplay.");
         });
-
-        // Após intro, iniciar rádio
-        jinglePlayer.addEventListener("ended", () => {
-          trechoInicialTocado = true;
-          player.play();
-        }, { once: true });
-
-      } else if (player.paused) {
-        player.play();
-        button.innerText = "⏸️ Parar";
+  
+        intro.addEventListener("ended", () => {
+          player.play().then(() => {
+            console.log("Rádio iniciada");
+          });
+        });
+  
       } else {
         player.pause();
+        intro.pause();
+        intro.currentTime = 0;
         button.innerText = "▶️ Rádio";
       }
     }
-
+  
     function ajustarVolume(direcao) {
       let novoVolume = player.volume + (direcao === 'up' ? 0.1 : -0.1);
       novoVolume = Math.max(0, Math.min(1, novoVolume));
       player.volume = novoVolume;
       console.log("Volume atual:", Math.round(novoVolume * 100) + "%");
     }
-
-    button.addEventListener('click', toggleRadio);
-    volUp.addEventListener('click', () => ajustarVolume('up'));
-    volDown.addEventListener('click', () => ajustarVolume('down'));
-
+  
     function tocarInterrupcao() {
-      if (trechoInicialTocado && !player.paused) {
+      if (!player.paused) {
         const indice = Math.floor(Math.random() * trechos.length);
         const trechoSelecionado = trechos[indice];
         jinglePlayer.src = trechoSelecionado;
-
         player.pause();
         jinglePlayer.play().then(() => {
-          console.log("Tocando trecho aleatório:", trechoSelecionado);
+          console.log("Tocando novidade:", trechoSelecionado);
         });
       }
     }
-
+  
     jinglePlayer.addEventListener("ended", () => {
       player.play().then(() => {
         console.log("Rádio retomada");
       });
     });
-
-    // Executa a cada 90 segundos (ajusta conforme necessário)
-    setInterval(tocarInterrupcao, 90000);
+  
+    button.addEventListener('click', toggleRadio);
+    volUp.addEventListener('click', () => ajustarVolume('up'));
+    volDown.addEventListener('click', () => ajustarVolume('down'));
+  
+    // NOVO BOTÃO DE NOVIDADES (Agora com o ícone 📢)
+    const botaoNovidades = document.createElement("button");
+    botaoNovidades.textContent = "📢";
+    botaoNovidades.className = "vol-control";
+    botaoNovidades.title = "Ativar/Desativar Novidades";
+    button.parentNode.appendChild(botaoNovidades);
+  
+    botaoNovidades.addEventListener("click", () => {
+      novidadesAtivas = !novidadesAtivas;
+  
+      if (novidadesAtivas) {
+        // Toca o primeiro trecho imediatamente
+        tocarInterrupcao();
+  
+        // Inicia o intervalo para os próximos trechos após 5 minutos
+        intervaloTrechos = setInterval(tocarInterrupcao, 60000); // 1 minuto
+        botaoNovidades.style.backgroundColor = "#006666"; // Ativo
+        console.log("Novidades ativadas");
+      } else {
+        clearInterval(intervaloTrechos);
+        botaoNovidades.style.backgroundColor = ""; // Reset
+        console.log("Novidades desativadas");
+      }
+    });
   </script>
+  
+  
 </body>
 </html>
 
