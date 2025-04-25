@@ -144,6 +144,30 @@
       button.addEventListener('click', toggleRadio);
       volUp.addEventListener('click', () => ajustarVolume('up'));
       volDown.addEventListener('click', () => ajustarVolume('down'));
+
+      // Novo player para trechos curtos
+  const jinglePlayer = new Audio("testeradio.mp3"); // substitui "trecho.mp3" pelo teu ficheiro real
+  jinglePlayer.volume = 0.8;
+
+  // Função para interrupção temporária
+  function tocarInterrupcao() {
+    if (!player.paused) {
+      player.pause();
+      jinglePlayer.play().then(() => {
+        console.log("Trecho iniciado");
+      });
+    }
+  }
+
+  // Quando o jingle terminar, volta à rádio
+  jinglePlayer.addEventListener('ended', () => {
+    player.play().then(() => {
+      console.log("Rádio retomada");
+    });
+  });
+
+  // Inicia interrupções a cada X minutos (ex: 5 minutos = 300000 ms)
+  setInterval(tocarInterrupcao, 25000); // 5 minutos
     </script>
     
   
