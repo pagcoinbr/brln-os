@@ -74,113 +74,118 @@
     }
 
     .vol-control {
-  background-color: #222;
-  color: #00ffff;
-  border: none;
-  font-size: 18px;
-  padding: 4px 10px;
-  margin-left: 5px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
+      background-color: #222;
+      color: #00ffff;
+      border: none;
+      font-size: 18px;
+      padding: 4px 10px;
+      margin-left: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-.vol-control:hover {
-  background-color: #00cccc;
-}
-
+    .vol-control:hover {
+      background-color: #00cccc;
+    }
   </style>
 </head>
 <body>
-    <!-- Controles -->
-    <div style="display: flex; align-items: center; height: 100%; padding-left: 10px;">
-      <button id="radio-button">▶️ Rádio</button>
-      <button class="vol-control" id="vol-down">−</button>
-      <button class="vol-control" id="vol-up">+</button>
+  <!-- Controles -->
+  <div style="display: flex; align-items: center; height: 100%; padding-left: 10px;">
+    <button id="radio-button">▶️ Rádio</button>
+    <button class="vol-control" id="vol-down">−</button>
+    <button class="vol-control" id="vol-up">+</button>
+  </div>
+
+  <!-- Letreiro animado -->
+  <div class="marquee">
+    <div class="marquee-content">
+      <a href="https://services.br-ln.com" target="_blank">⚡ Clique aqui para acessar o site da BRLN. Junte-se a nós!</a>
+      <span class="version">| v1.0-beta</span>
     </div>
-  
-    <!-- Letreiro animado -->
-    <div class="marquee">
-      <div class="marquee-content">
-        <a href="https://services.br-ln.com" target="_blank">⚡ Clique aqui para acessar o site da BRLN. Junte-se a nós!</a>
-        <span class="version">| v1.0-beta</span>
-      </div>
-    </div>
-  
-    <!-- Player de áudio invisível -->
-    <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
+  </div>
 
-    <script>
-      const player = document.getElementById('radio-player');
-      const button = document.getElementById('radio-button');
-      const volUp = document.getElementById('vol-up');
-      const volDown = document.getElementById('vol-down');
-    
-      // Volume inicial
-      player.volume = 0.1;
-    
-      function toggleRadio() {
-        if (player.paused) {
-          player.play()
-            .then(() => {
-              button.innerText = "⏸️ Parar";
-            })
-            .catch((e) => {
-              alert("Clique para ativar o som. O navegador pode estar a bloquear o autoplay.");
-            });
-        } else {
-          player.pause();
-          button.innerText = "▶️ Rádio";
-        }
+  <!-- Player de áudio invisível -->
+  <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
+
+  <script>
+    const player = document.getElementById('radio-player');
+    const button = document.getElementById('radio-button');
+    const volUp = document.getElementById('vol-up');
+    const volDown = document.getElementById('vol-down');
+
+    // Volume inicial
+    player.volume = 0.1;
+
+    // Variáveis de controlo
+    const trechos = ["trecho1.mp3", "trecho2.mp3", "trecho3.mp3"];
+    const jinglePlayer = new Audio();
+    jinglePlayer.volume = 0.8;
+    let radioIniciada = false;
+    let trechoInicialTocado = false;
+
+    function toggleRadio() {
+      if (!radioIniciada) {
+        radioIniciada = true;
+        const intro = "intro.mp3";
+        player.pause(); // por segurança
+        jinglePlayer.src = intro;
+        jinglePlayer.play().then(() => {
+          console.log("Intro tocando:", intro);
+          button.innerText = "⏸️ Parar";
+        }).catch((e) => {
+          alert("Clique para ativar o som. O navegador pode estar a bloquear o autoplay.");
+        });
+
+        // Após intro, iniciar rádio
+        jinglePlayer.addEventListener("ended", () => {
+          trechoInicialTocado = true;
+          player.play();
+        }, { once: true });
+
+      } else if (player.paused) {
+        player.play();
+        button.innerText = "⏸️ Parar";
+      } else {
+        player.pause();
+        button.innerText = "▶️ Rádio";
       }
-    
-      function ajustarVolume(direcao) {
-        let novoVolume = player.volume + (direcao === 'up' ? 0.1 : -0.1);
-        novoVolume = Math.max(0, Math.min(1, novoVolume)); // mantém entre 0 e 1
-        player.volume = novoVolume;
-        console.log("Volume atual:", Math.round(novoVolume * 100) + "%");
-      }
-    
-      button.addEventListener('click', toggleRadio);
-      volUp.addEventListener('click', () => ajustarVolume('up'));
-      volDown.addEventListener('click', () => ajustarVolume('down'));
-
-      const trechos = [
-    "trecho1.mp3",
-    "trecho2.mp3",
-    "trecho3.mp3"
-  ];
-
-  const jinglePlayer = new Audio();
-  jinglePlayer.volume = 0.8;
-
-  function tocarInterrupcao() {
-    if (!player.paused) {
-      // Sorteia um dos trechos
-      const indice = Math.floor(Math.random() * trechos.length);
-      const trechoSelecionado = trechos[indice];
-      jinglePlayer.src = trechoSelecionado;
-
-      // Pausa a rádio e toca o trecho
-      player.pause();
-      jinglePlayer.play().then(() => {
-        console.log("Tocando:", trechoSelecionado);
-      });
     }
-  }
 
-  // Retoma a rádio após o fim do trecho
-  jinglePlayer.addEventListener("ended", () => {
-    player.play().then(() => {
-      console.log("Rádio retomada");
+    function ajustarVolume(direcao) {
+      let novoVolume = player.volume + (direcao === 'up' ? 0.1 : -0.1);
+      novoVolume = Math.max(0, Math.min(1, novoVolume));
+      player.volume = novoVolume;
+      console.log("Volume atual:", Math.round(novoVolume * 100) + "%");
+    }
+
+    button.addEventListener('click', toggleRadio);
+    volUp.addEventListener('click', () => ajustarVolume('up'));
+    volDown.addEventListener('click', () => ajustarVolume('down'));
+
+    function tocarInterrupcao() {
+      if (trechoInicialTocado && !player.paused) {
+        const indice = Math.floor(Math.random() * trechos.length);
+        const trechoSelecionado = trechos[indice];
+        jinglePlayer.src = trechoSelecionado;
+
+        player.pause();
+        jinglePlayer.play().then(() => {
+          console.log("Tocando trecho aleatório:", trechoSelecionado);
+        });
+      }
+    }
+
+    jinglePlayer.addEventListener("ended", () => {
+      player.play().then(() => {
+        console.log("Rádio retomada");
+      });
     });
-  });
 
-  // Executa a cada 5 minutos (300000 ms)
-  setInterval(tocarInterrupcao, 25000);
-      
-    </script>
-    
-  
+    // Executa a cada 90 segundos (ajusta conforme necessário)
+    setInterval(tocarInterrupcao, 90000);
+  </script>
 </body>
 </html>
+
