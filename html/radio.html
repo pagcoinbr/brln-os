@@ -1,43 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #111;
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: white;
-      font-family: sans-serif;
+      justify-content: space-between;
+      height: 40px;
     }
-    button {
-      background-color: #444;
-      color: white;
+
+    #radio-button {
+      background-color: #00ffff;
+      color: #111;
       border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
+      padding: 8px 16px;
+      font-weight: bold;
       cursor: pointer;
+      margin-left: 10px;
+      border-radius: 8px;
+    }
+
+    #radio-button:hover {
+      background-color: #00cccc;
+    }
+
+    .marquee {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      box-sizing: border-box;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+    }
+
+    .marquee-content {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 15s linear infinite;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .marquee-content a {
+      color: #00ffff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .marquee-content a:hover {
+      text-decoration: underline;
+    }
+
+    .version {
+      margin-left: 30px;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    audio {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <button onclick="togglePlay()">▶ Rádio BRLN</button>
-  <audio id="radioPlayer" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
+  <!-- Botão de rádio -->
+  <button id="radio-button" onclick="toggleRadio()">▶️ Rádio</button>
+
+  <!-- Letreiro animado -->
+  <div class="marquee">
+    <div class="marquee-content">
+      <a href="https://services.br-ln.com" target="_blank">⚡ Clique aqui para acessar o site da BRLN. Junte-se a nós!</a>
+      <span class="version">| v1.0-beta</span>
+    </div>
+  </div>
+
+  <!-- Player de áudio invisível -->
+  <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
 
   <script>
-    const player = document.getElementById('radioPlayer');
-    let isPlaying = false;
+    const player = document.getElementById('radio-player');
+    const button = document.getElementById('radio-button');
 
-    function togglePlay() {
-      if (isPlaying) {
-        player.pause();
-      } else {
+    function toggleRadio() {
+      if (player.paused) {
         player.play();
+        button.innerText = "⏸️ Parar";
+      } else {
+        player.pause();
+        button.innerText = "▶️ Rádio";
       }
-      isPlaying = !isPlaying;
     }
   </script>
 </body>

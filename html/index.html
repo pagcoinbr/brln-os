@@ -10,38 +10,40 @@
       padding: 0;
       height: 100%;
       font-family: Arial, sans-serif;
-      background-color: #000428;
-      display: flex;
-      flex-direction: column;
+      background: transparent;
       overflow: hidden;
     }
 
-    #mainFrame {
-      flex: 1 1 auto;
-      width: 100%;
-      border: none;
-    }
-
     #radioFrame {
-      height: 40px;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
+      height: 40px;
       border: none;
-      background: #111;
-      z-index: 9999;
+      background: transparent;
+      z-index: 1000;
     }
 
-    @media screen and (max-width: 768px) {
-      #radioFrame {
-        height: 50px;
-      }
+    #mainFrame {
+      position: absolute;
+      top: 40px; /* empurra o mainFrame para baixo do player */
+      left: 0;
+      width: 100%;
+      height: calc(100% - 40px);
+      border: none;
+      background: transparent;
+      z-index: 1;
     }
+
   </style>
 </head>
 <body>
-  <!-- Frame para conteúdo principal -->
-  <iframe id="mainFrame" src="index2.html" name="mainContent"></iframe>
-
-  <!-- Frame persistente para o player de rádio -->
+  <!-- Frame para o player de música no topo -->
   <iframe id="radioFrame" src="radio.html" name="radioPlayer"></iframe>
+
+  <!-- Frame principal transparente -->
+  <iframe id="mainFrame" src="index2.html" name="mainContent"></iframe>
 </body>
 </html>
+
