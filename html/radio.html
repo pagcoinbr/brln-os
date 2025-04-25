@@ -92,7 +92,10 @@
   <script>
     const player = document.getElementById('radio-player');
     const button = document.getElementById('radio-button');
-
+  
+    // Define o volume inicial para 10%
+    player.volume = 0.1;
+  
     function toggleRadio() {
       if (player.paused) {
         player.play();
@@ -103,5 +106,6 @@
       }
     }
   </script>
+  
 </body>
 </html>
