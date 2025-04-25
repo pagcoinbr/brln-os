@@ -1,6 +1,6 @@
 #!/bin/bash
 branch=v1.0-beta
-git_user=pagcoinbr
+git_user=Redinpais
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'

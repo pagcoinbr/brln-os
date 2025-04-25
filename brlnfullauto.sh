@@ -12,7 +12,7 @@ SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 atual_user=$(whoami)
 branch=v1.0-beta
-git_user=pagcoinbr
+git_user=Redinpais
 
 # Cores
 RED='\033[0;31m'
