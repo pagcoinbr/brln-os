@@ -297,7 +297,8 @@ configure_lnd() {
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " bitcoind_rpcuser
     read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
-    sudo sed -i "/bitcoind\.rpchost=/a bitcoind.rpcuser=$bitcoind_rpcuser\nbitcoind.rpcpass=$bitcoind_rpcpass" "$file_path"
+    sed -i "s|^bitcoind\.rpcuser=.*|bitcoind.rpcuser=${bitcoind_rpcuser}|" "$file_path"
+    sed -i "s|^bitcoind\.rpcpass=.*|bitcoind.rpcpass=${bitcoind_rpcpass}|" "$file_path"
   elif [[ $use_brlnd == "n" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
     toogle_on
@@ -307,7 +308,7 @@ configure_lnd() {
   fi
   # Coloca o alias lá na linha 8 (essa parte pode manter igual)
   local alias_line="alias=$alias | BR⚡️LN"
-  sudo sed -i "8i$alias_line" "$file_path"
+  sudo sed -i "s|^alias=.*|$alias_line|" "$file_path"
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
     echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
@@ -350,7 +351,7 @@ EOF
     exit 1
   fi
   # Inserir a configuração no arquivo lnd.conf na linha 100
-  sudo sed -i "/routing\.strictgraphpruning=true/a \ \n$(echo "$lnd_db")" "$file_path"
+  sed -i "/^routing\.strictgraphpruning=true/a \ \n$lnd_db" "$file_path"
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
