@@ -12,7 +12,7 @@ SERVICES="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 atual_user=$(whoami)
 branch=v1.0-beta
-git_user=Redinpais
+git_user=pagcoinbr
 
 # Cores
 RED='\033[0;31m'
@@ -33,20 +33,32 @@ update_and_upgrade() {
   echo "Reiniciando o serviço Apache..."
   sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
-  # Criar diretórios e mover arquivos
-  sudo mkdir -p "$CGI_DST"
+  # Variáveis
+  REPO_DIR="/home/admin/brlnfullauto"
+  HTML_SRC="$REPO_DIR/html"
+  WWW_HTML="/var/www/html"
+  CGI_DST="/usr/lib/cgi-bin"
 
-  # Remover arquivos antigos
-  sudo rm -f "$WWW_HTML/"*.html
-  sudo rm -f "$WWW_HTML/"*.png
-  sudo rm -f "$WWW_HTML/"*.mp3
-  sudo rm -f "$CGI_DST/"*.sh
+  echo "🚀 Atualizando repositório BRLNFullAuto..."
 
-  # Copiar arquivos novos
-  sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
-  sudo cp "$HTML_SRC/"*.png "$WWW_HTML/"
-  sudo cp "$HTML_SRC/"*.mp3 "$WWW_HTML/"
-  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
+  # Executa o git dentro do diretório, sem precisar dar cd
+  git -C "$REPO_DIR" stash || true
+  git -C "$REPO_DIR" pull origin "$branch"
+
+  echo "🧹 Limpando arquivos antigos da interface web..."
+  sudo rm -f "$WWW_HTML"/*.html
+  sudo rm -f "$WWW_HTML"/*.png
+  sudo rm -f "$WWW_HTML"/*.mp3
+  sudo rm -f "$CGI_DST"/*.sh
+
+  echo "📥 Copiando novos arquivos para a interface web..."
+
+  sudo cp "$HTML_SRC"/*.html "$WWW_HTML"/
+  sudo cp "$HTML_SRC"/*.png "$WWW_HTML"/
+  sudo cp "$HTML_SRC"/*.mp3 "$WWW_HTML"/
+  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST"/
+
+  echo "✅ Atualização concluída com sucesso!"
 
   # Corrigir permissões de execução
   sudo chmod +x "$CGI_DST"/*.sh
