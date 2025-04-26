@@ -712,8 +712,8 @@ toggle_on () {
   )
 
   # Função interna para comentar linhas
-  sed -i 's|^[[:space:]]*\(\[Bitcoind\]\)|#\1|' /data/admin/lnd.conf
-  sed -i 's|^[[:space:]]*\(bitcoind\.[^=]*=.*\)|#\1|' /data/admin/lnd.conf
+  sed -i 's|^[[:space:]]*\(\[Bitcoind\]\)|#\1|' /data/lnd/lnd.conf
+  sed -i 's|^[[:space:]]*\(bitcoind\.[^=]*=.*\)|#\1|' /data/lnd/lnd.conf
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
@@ -740,8 +740,8 @@ toggle_off () {
   )
 
   # Função interna para descomentar linhas
-  sed -i 's|^[[:space:]]*#\([[:space:]]*\[Bitcoind\]\)|\1|' /data/admin/lnd.conf
-  sed -i 's|^[[:space:]]*#\([[:space:]]*bitcoind\.[^=]*=.*\)|\1|' /data/admin/lnd.conf
+  sed -i 's|^[[:space:]]*#\([[:space:]]*\[Bitcoind\]\)|\1|' /data/lnd/lnd.conf
+  sed -i 's|^[[:space:]]*#\([[:space:]]*bitcoind\.[^=]*=.*\)|\1|' /data/lnd/lnd.conf
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
