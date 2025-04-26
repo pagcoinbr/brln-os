@@ -629,7 +629,7 @@ tailscale_vpn() {
   (sudo tailscale up > "$LOGFILE" 2>&1) &
 
   echo -e "${YELLOW}⏳ Aguardando link de autenticação do Tailscale (sem timeout)...${NC}"
-  echo -e "${YELLOW} Caso não prigrida em 5 minutos, pressione Ctrl+C e faça "tailscale up"${NC}"
+  echo -e "${YELLOW} Caso esta etapa não progrida em 5 minutos, pressione Ctrl+C e faça ${RED}"tailscale up"${NC}"
 
   while true; do
     url=$(grep -Eo 'https://login\.tailscale\.com/[a-zA-Z0-9/]+' "$LOGFILE" | head -n1)
