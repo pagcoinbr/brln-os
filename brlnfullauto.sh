@@ -355,7 +355,7 @@ EOF
     exit 1
   fi
   # Inserir a configuração no arquivo lnd.conf na linha 100
-  echo "$lnd_db" | sudo sed -i '100r /dev/stdin' $file_path
+  sudo sed -i "/bitcoind\.rpchost=/a $(echo "$lnd_db")" "$file_path"
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
@@ -713,7 +713,7 @@ toogle_on () {
   )
 
   # Função interna para comentar linhas
-  sed -i '/### ⛔ INÍCIO BLOCO BITCOIND LOCAL ⛔ ###/,/### ✅ FIM BLOCO BITCOIND LOCAL ✅ ###/s/^[[:space:]]*\([^#]\)/#\1/' /data/admin/lnd.conf
+  sed -i '/### INÍCIO BLOCO BITCOIND LOCAL/,/### FIM BLOCO BITCOIND LOCAL/s/^[[:space:]]*\([^#]\)/#\1/' /data/admin/lnd.conf
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
