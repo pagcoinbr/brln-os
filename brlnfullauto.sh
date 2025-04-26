@@ -307,7 +307,7 @@ configure_lnd() {
     exit 1
   fi
   # Coloca o alias lá na linha 8 (essa parte pode manter igual)
-  local alias_line="alias=$alias | BR⚡️LN"
+  local alias_line="alias=$alias - BR⚡️LN"
   sudo sed -i "s|^alias=.*|$alias_line|" "$file_path"
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
