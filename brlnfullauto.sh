@@ -722,7 +722,7 @@ toogle_off () {
   )
 
   # Função interna para descomentar linhas
-sed -i '/### ⛔ INÍCIO BLOCO BITCOIND LOCAL ⛔ ###/,/### ✅ FIM BLOCO BITCOIND LOCAL ✅ ###/s/^#[[:space:]]*//' /data/admin/lnd.conf
+sed -i '/### INÍCIO BLOCO BITCOIND LOCAL/,/### FIM BLOCO BITCOIND LOCAL/s/^#[[:space:]]*//' /data/admin/lnd.conf
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
