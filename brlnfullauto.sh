@@ -39,13 +39,11 @@ update_and_upgrade() {
   WWW_HTML="/var/www/html"
   CGI_DST="/usr/lib/cgi-bin"
 
-  echo "🚀 Atualizando repositório BRLNFullAuto..."
-
   # Executa o git dentro do diretório, sem precisar dar cd
   git -C "$REPO_DIR" stash || true
   git -C "$REPO_DIR" pull origin "$branch"
 
-  echo "🧹 Limpando arquivos antigos da interface web..."
+  echo "🧹 Limpando arquivos da interface web..."
   sudo rm -f "$WWW_HTML"/*.html
   sudo rm -f "$WWW_HTML"/*.png
   sudo rm -f "$WWW_HTML"/*.mp3
@@ -57,8 +55,6 @@ update_and_upgrade() {
   sudo cp "$HTML_SRC"/*.png "$WWW_HTML"/
   sudo cp "$HTML_SRC"/*.mp3 "$WWW_HTML"/
   sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST"/
-
-  echo "✅ Atualização concluída com sucesso!"
 
   # Corrigir permissões de execução
   sudo chmod +x "$CGI_DST"/*.sh
@@ -299,10 +295,9 @@ configure_lnd() {
   read -p "Você deseja utilizar o bitcoind da BRLN? (y/n): " use_brlnd
   if [[ $use_brlnd == "y" ]]; then
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
-    read -p "Digite o bitcoind.rpcuser(BRLN): " "bitcoind_rpcuser"
-    read -p "Digite o bitcoind.rpcpass(BRLN): " "bitcoind_rpcpass"
-    sudo sed -i "75s|.*|bitcoind.rpcuser=$bitcoind_rpcuser|" "$file_path"
-    sudo sed -i "76s|.*|bitcoind.rpcpass=$bitcoind_rpcpass|" "$file_path"
+    read -p "Digite o bitcoind.rpcuser(BRLN): " bitcoind_rpcuser
+    read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
+    sudo sed -i "/bitcoind\.rpchost=/a bitcoind.rpcuser=$bitcoind_rpcuser\nbitcoind.rpcpass=$bitcoind_rpcpass" "$file_path"
   elif [[ $use_brlnd == "n" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
     toogle_on
@@ -310,8 +305,8 @@ configure_lnd() {
     echo -e "${RED} Opção inválida. Por favor, escolha 'y' ou 'n'. ${NC}"
     exit 1
   fi
+  # Coloca o alias lá na linha 8 (essa parte pode manter igual)
   local alias_line="alias=$alias | BR⚡️LN"
-  # Insere a linha na posição 8
   sudo sed -i "8i$alias_line" "$file_path"
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
@@ -355,7 +350,7 @@ EOF
     exit 1
   fi
   # Inserir a configuração no arquivo lnd.conf na linha 100
-  sudo sed -i "/bitcoind\.rpchost=/a $(echo "$lnd_db")" "$file_path"
+  sudo sed -i "/routing\.strictgraphpruning=true/a \ \n$(echo "$lnd_db")" "$file_path"
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
