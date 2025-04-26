@@ -35,11 +35,17 @@ update_and_upgrade() {
 
   # Criar diretórios e mover arquivos
   sudo mkdir -p "$CGI_DST"
+
+  # Remover arquivos antigos
   sudo rm -f "$WWW_HTML/"*.html
-  sudo rm -f "$WWW_HTML"/*.png
+  sudo rm -f "$WWW_HTML/"*.png
+  sudo rm -f "$WWW_HTML/"*.mp3
   sudo rm -f "$CGI_DST/"*.sh
+
+  # Copiar arquivos novos
   sudo cp "$HTML_SRC/"*.html "$WWW_HTML/"
-  sudo cp "$HTML_SRC"/*.png "$WWW_HTML/"
+  sudo cp "$HTML_SRC/"*.png "$WWW_HTML/"
+  sudo cp "$HTML_SRC/"*.mp3 "$WWW_HTML/"
   sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
   # Corrigir permissões de execução
