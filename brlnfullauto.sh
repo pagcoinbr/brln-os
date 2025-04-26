@@ -301,7 +301,7 @@ configure_lnd() {
     sed -i "s|^bitcoind\.rpcpass=.*|bitcoind.rpcpass=${bitcoind_rpcpass}|" "$file_path"
   elif [[ $use_brlnd == "n" ]]; then
     echo -e "${RED} Você escolheu não usar o bitcoind remoto da BRLN! ${NC}"
-    toogle_on
+    toggle_on
   else
     echo -e "${RED} Opção inválida. Por favor, escolha 'y' ou 'n'. ${NC}"
     exit 1
@@ -378,7 +378,7 @@ EOF
     read -p "Seu bitcoin core já está completamente sincronizado? (y/n): " sync_choice
       if [[ $sync_choice == "y" ]]; then
         echo -e "${GREEN} Você escolheu que o bitcoin core já está sincronizado! ${NC}"
-        toogle_on >> /dev/null 2>&1
+        toggle_on >> /dev/null 2>&1
         sleep 5
         create_wallet
       fi
@@ -667,7 +667,7 @@ opening () {
   echo
 }
 
-toogle_bitcoin () {
+toggle_bitcoin () {
     # Exibir o menu para o usuário
     while true; do
         echo "Escolha uma opção:"
@@ -679,13 +679,13 @@ toogle_bitcoin () {
         case $choice in
             1)
                 echo "Trocando para o Bitcoin Core local..."
-                toogle_on
+                toggle_on
                 wait
                 echo "Trocado para o Bitcoin Core local."
                 ;;
             2)
                 echo "Trocando para o node Bitcoin remoto..."
-                toogle_off
+                toggle_off
                 wait 
                 echo "Trocado para o node Bitcoin remoto."
                 ;;
@@ -701,7 +701,7 @@ toogle_bitcoin () {
     done
 }
 
-toogle_on () {
+toggle_on () {
   local FILES_TO_DELETE=(
     "/home/admin/.lnd/tls.cert"
     "/home/admin/.lnd/tls.key"
@@ -728,7 +728,7 @@ toogle_on () {
     fi
 }
 
-toogle_off () {
+toggle_off () {
   local FILES_TO_DELETE=(
     "/home/admin/.lnd/tls.cert"
     "/home/admin/.lnd/tls.key"
@@ -1153,13 +1153,13 @@ submenu_opcoes() {
   case $suboption in
     1)
       echo -e "${YELLOW}🏠 🔁 Trocar para o bitcoin local...${NC}"
-      toogle_on
+      toggle_on
       echo -e "${GREEN}✅ Serviços reiniciados!${NC}"
       submenu_opcoes
       ;;
     2)
       echo -e "${YELLOW}🔁 ☁️ Trocar para o bitcoin remoto...${NC}"
-      toogle_off
+      toggle_off
       echo -e "${GREEN}✅ Atualização concluída!${NC}"
       submenu_opcoes
       ;;
