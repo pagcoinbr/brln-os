@@ -351,7 +351,10 @@ EOF
     exit 1
   fi
   # Inserir a configuração no arquivo lnd.conf na linha 100
-  sed -i "/^routing\.strictgraphpruning=true/a \ \n$lnd_db" "$file_path"
+  sed -i "/^routing\.strictgraphpruning=true/r /dev/stdin" "$file_path" <<< "
+
+$lnd_db"
+
   sudo usermod -aG debian-tor admin
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
