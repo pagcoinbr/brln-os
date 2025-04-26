@@ -692,8 +692,8 @@ toogle_on () {
     "/home/admin/.lnd/v3_onion_private_key"
   )
 
-  # Função interna para comentar linhas 73 a 78
-    sed -i '73,78 s/^/#/' "/data/lnd/lnd.conf"
+  # Função interna para comentar linhas
+  sed -i '/### ⛔ INÍCIO BLOCO BITCOIND LOCAL ⛔ ###/,/### ✅ FIM BLOCO BITCOIND LOCAL ✅ ###/s/^[[:space:]]*\([^#]\)/#\1/' /data/admin/lnd.conf
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
@@ -719,8 +719,8 @@ toogle_off () {
     "/home/admin/.lnd/v3_onion_private_key"
   )
 
-  # Função interna para descomentar linhas 73 a 78
-    sed -i '73,78 s/^#//' "/data/lnd/lnd.conf"
+  # Função interna para descomentar linhas
+sed -i '/### ⛔ INÍCIO BLOCO BITCOIND LOCAL ⛔ ###/,/### ✅ FIM BLOCO BITCOIND LOCAL ✅ ###/s/^#[[:space:]]*//' /data/admin/lnd.conf
   # Função interna para apagar os arquivos
     for file in "${FILES_TO_DELETE[@]}"; do
       if [ -f "$file" ]; then
