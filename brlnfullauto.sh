@@ -1,17 +1,47 @@
 #!/bin/bash
+# Versão do script
 SCRIPT_VERSION=v1.0-beta
+
+# Link para o repositório do Tor
 TOR_LINIK=https://deb.torproject.org/torproject.org
+
+# Link para a chave GPG do Tor
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
+
+# Versão do LND a ser instalada
 LND_VERSION=0.18.5
+
+# Versão do Bitcoin Core a ser instalada
 BTC_VERSION=28.1
+
+# Obtém a última versão do Thunderhub disponível no GitHub
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+
+# Caminho para os arquivos HTML da interface web
 HTML_SRC=/home/admin/brlnfullauto/html
+
+# Diretório de destino para scripts CGI
 CGI_DST="/usr/lib/cgi-bin"
+
+# Diretório de destino para arquivos HTML no Apache
 WWW_HTML="/var/www/html"
+
+# Caminho para os arquivos de serviços do systemd
 SERVICES="/home/admin/brlnfullauto/services"
+
+# Caminho para o binário do Poetry
 POETRY_BIN="/home/admin/.local/bin/poetry"
+
+# Diretório do ambiente virtual do Flask
+FLASKVENV_DIR="/home/admin/envflask"
+
+# Usuário atual que está executando o script
 atual_user=$(whoami)
+
+# Branch do repositório Git a ser utilizada
 branch=v1.0-beta
+
+# Nome do usuário Git configurado
 git_user=pagcoinbr
 
 # Cores
@@ -48,6 +78,7 @@ update_and_upgrade() {
   sudo rm -f "$WWW_HTML"/*.png
   sudo rm -f "$WWW_HTML"/*.mp3
   sudo rm -f "$CGI_DST"/*.sh
+  sudo rm -f "/home/admin/control-systemd.py"
 
   echo "📥 Copiando novos arquivos para a interface web..."
 
@@ -55,6 +86,7 @@ update_and_upgrade() {
   sudo cp "$HTML_SRC"/*.png "$WWW_HTML"/
   sudo cp "$HTML_SRC"/*.mp3 "$WWW_HTML"/
   sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST"/
+  sudo cp "/home/admin/brlnfullauto/control-systemd.py" "/home/admin/" 
 
   # Corrigir permissões de execução
   sudo chmod +x "$CGI_DST"/*.sh
@@ -95,31 +127,23 @@ EOF
   else
     echo "python3-venv já está instalado."
   fi
-  python3 -m venv envflask
-  source envflask/bin/activate
+  # Criar ambiente virtual de flask na home do admin
+  python3 -m venv "$FLASKVENV_DIR"
+  source "$FLASKVENV_DIR/bin/activate"
   pip install flask
-  #!/bin/bash
+  # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
+  SUDOERS_TMP="/etc/sudoers.d/admin-services"
 
-  # 🛡️ Caminho do arquivo sudoers
-  SUDOERS_TMP="/etc/sudoers.d/temp_sudoers_edit"
-
-  # 📝 Linha a ser adicionada
-  LINE="admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service"
-
-  # 🛡️ Copia o sudoers atual para um arquivo temporário
-  sudo cp /etc/sudoers "$SUDOERS_TMP"
-
-  # ➕ Adiciona a linha ao final
-  echo "$LINE" | sudo tee -a "$SUDOERS_TMP" > /dev/null
+  # 📝 Criação segura do arquivo usando here-document
+  sudo tee "$SUDOERS_TMP" > /dev/null <<EOF
+admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service
+EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
   if sudo visudo -c -f "$SUDOERS_TMP"; then
-    echo "✅ Novo sudoers válido. Aplicando as mudanças..."
-    sudo cp "$SUDOERS_TMP" /etc/sudoers
-    sudo rm -f "$SUDOERS_TMP"
-    echo "✅ Mudanças aplicadas com sucesso."
+    echo "✅ Novo arquivo sudoers.d/admin-services válido!"
   else
-    echo "⛔ Erro na validação do novo sudoers! Nenhuma mudança foi feita."
+    echo "⛔ Erro na validação! Arquivo inválido, removendo."
     sudo rm -f "$SUDOERS_TMP"
     exit 1
   fi
