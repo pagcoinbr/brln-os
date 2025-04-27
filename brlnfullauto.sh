@@ -89,6 +89,40 @@ EOF
     sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
   fi
   sudo usermod -aG admin www-data
+  if ! dpkg -l | grep -q python3-venv; then
+    echo "python3-venv não está instalado. Instalando agora..."
+    sudo apt install python3-venv -y
+  else
+    echo "python3-venv já está instalado."
+  fi
+  python3 -m venv envflask
+  source envflask/bin/activate
+  pip install flask
+  #!/bin/bash
+
+  # 🛡️ Caminho do arquivo sudoers
+  SUDOERS_TMP="/etc/sudoers.d/temp_sudoers_edit"
+
+  # 📝 Linha a ser adicionada
+  LINE="admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service"
+
+  # 🛡️ Copia o sudoers atual para um arquivo temporário
+  sudo cp /etc/sudoers "$SUDOERS_TMP"
+
+  # ➕ Adiciona a linha ao final
+  echo "$LINE" | sudo tee -a "$SUDOERS_TMP" > /dev/null
+
+  # ✅ Valida se o novo arquivo sudoers é válido
+  if sudo visudo -c -f "$SUDOERS_TMP"; then
+    echo "✅ Novo sudoers válido. Aplicando as mudanças..."
+    sudo cp "$SUDOERS_TMP" /etc/sudoers
+    sudo rm -f "$SUDOERS_TMP"
+    echo "✅ Mudanças aplicadas com sucesso."
+  else
+    echo "⛔ Erro na validação do novo sudoers! Nenhuma mudança foi feita."
+    sudo rm -f "$SUDOERS_TMP"
+    exit 1
+  fi
   sudo systemctl restart apache2
 }
 
@@ -115,14 +149,15 @@ else
 fi
 
 # Define arrays for services and ports
-SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
-PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "control-systemd")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "5001")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
   "allow cli on port 3232 from local network" 
   "allow bitcoinlogs on port 3434 from local network" 
   "allow lndlogs on port 3535 from local network"
   "allow btc-editor on port 3636 from local network"
-  "allow lnd-editor on port 3333 from local network")
+  "allow lnd-editor on port 3333 from local network"
+  "allow control-systemd on port 5001 from local network")
 
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do

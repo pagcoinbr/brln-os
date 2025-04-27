@@ -1,0 +1,13 @@
+[Unit]
+Description=Servidor Flask para Controle do LNBits
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin/
+Environment="PATH=/home/admin/envflask/bin"
+ExecStart=/home/admin/envflask/bin/python3 /home/admin/control-systemd.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

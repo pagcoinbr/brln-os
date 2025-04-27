@@ -141,6 +141,10 @@
         <br><br>
         <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
         <button class="botao" onclick="alternarTema()">🌗 Alternar Tema</button>
+        <h1>Gerenciador de Serviços ⚡</h1>
+   <div id="buttons-container">
+     <!-- Botões serão inseridos aqui dinamicamente -->
+  </div>
     </div>
     <div class="section">
         <h2>🙏 Apoie Nosso Projeto</h2>
@@ -224,6 +228,76 @@
     window.location.href = proximaPagina;
   }
 }
+
+// Lista dos apps que vamos gerenciar
+const apps = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd"];
+    const buttonsContainer = document.getElementById('buttons-container');
+
+    // Cria um botão para cada app
+    apps.forEach(appName => {
+      const button = document.createElement('button');
+      button.id = `${appName}-button`;
+      button.textContent = `Carregando ${appName}...`;
+      button.dataset.app = appName;
+      button.style.margin = '10px';
+      button.addEventListener('click', () => toggleService(appName));
+      buttonsContainer.appendChild(button);
+    });
+
+    // Atualiza o status dos botões
+    async function updateButtons() {
+      for (const appName of apps) {
+        const button = document.getElementById(`${appName}-button`);
+        try {
+          const response = await fetch(`/service-status?app=${appName}`);
+          const data = await response.json();
+          if (data.active) {
+            button.textContent = `Parar ${formatAppName(appName)}`;
+            button.dataset.action = "stop";
+          } else {
+            button.textContent = `Iniciar ${formatAppName(appName)}`;
+            button.dataset.action = "start";
+          }
+        } catch (error) {
+          button.textContent = `Erro ao carregar ${formatAppName(appName)}`;
+          console.error(error);
+        }
+      }
+    }
+
+    // Função para start/stop do serviço
+    async function toggleService(appName) {
+      try {
+        const response = await fetch(`/toggle-service?app=${appName}`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+          await updateButtons();
+        } else {
+          alert('Erro: ' + (data.error || 'Ação falhou'));
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Erro ao enviar ação');
+      }
+    }
+
+    // Função para melhorar os nomes exibidos
+    function formatAppName(appName) {
+      switch (appName) {
+        case "lnbits": return "LNbits";
+        case "thunderhub": return "Thunderhub";
+        case "simple": return "Simple LNWallet";
+        case "lndg": return "LNDG";
+        case "lndg-controller": return "LNDG Controller";
+        case "lnd": return "LND";
+        default: return appName;
+      }
+    }
+
+    // Atualiza todos os botões ao carregar a página
+    updateButtons();
 
 </script>
 
