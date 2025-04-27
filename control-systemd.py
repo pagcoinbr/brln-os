@@ -1,7 +1,9 @@
-import subprocess
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+import subprocess
 
 app = Flask(__name__)
+CORS(app)  # <- liberação de CORS
 
 # Mapeamento de apps para serviços systemd
 APP_TO_SERVICE = {

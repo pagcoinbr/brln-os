@@ -123,7 +123,7 @@ EOF
   sudo usermod -aG admin www-data
   if ! dpkg -l | grep -q python3-venv; then
     echo "python3-venv não está instalado. Instalando agora..."
-    sudo apt install python3-venv -y
+    sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
   else
     echo "python3-venv já está instalado."
   fi
@@ -131,6 +131,9 @@ EOF
   python3 -m venv "$FLASKVENV_DIR"
   source "$FLASKVENV_DIR/bin/activate"
   pip install flask
+  source /home/admin/envflask/bin/activate
+  pip install flask-cors
+
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
   SUDOERS_TMP="/etc/sudoers.d/admin-services"
 
