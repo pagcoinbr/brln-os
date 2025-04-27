@@ -83,66 +83,70 @@
     });
   </script>
 
-  <script>
-    const lnbitsBtn = document.getElementById('lnbits-btn');
+<script>
+  const lnbitsBtn = document.getElementById('lnbits-btn');
 
-    let startX = 0;
-    let moveX = 0;
-    let deltaX = 0;
-    let isSwiping = false;
+  let startX = 0;
+  let moveX = 0;
+  let deltaX = 0;
+  let isSwiping = false;
 
-    lnbitsBtn.addEventListener('touchstart', (e) => {
-      startX = e.touches[0].clientX;
-      isSwiping = false;
-    });
+  lnbitsBtn.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isSwiping = false;
+  });
 
-    lnbitsBtn.addEventListener('touchmove', (e) => {
-      moveX = e.touches[0].clientX;
-      deltaX = moveX - startX;
+  lnbitsBtn.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Impede que a página role enquanto desliza o botão
+    moveX = e.touches[0].clientX;
+    deltaX = moveX - startX;
 
-      if (Math.abs(deltaX) > 10) {
-        isSwiping = true;
-      }
+    if (Math.abs(deltaX) > 10) {
+      isSwiping = true;
+    }
 
-      lnbitsBtn.style.transform = `translateX(${deltaX}px)`;
+    lnbitsBtn.style.transform = `translateX(${deltaX}px)`;
 
-      if (deltaX < -50) {
-        lnbitsBtn.classList.add('swipe-left');
-        lnbitsBtn.classList.remove('swipe-right');
-      } else if (deltaX > 50) {
-        lnbitsBtn.classList.add('swipe-right');
-        lnbitsBtn.classList.remove('swipe-left');
-      } else {
-        lnbitsBtn.classList.remove('swipe-left', 'swipe-right');
-      }
-    });
-
-    lnbitsBtn.addEventListener('touchend', (e) => {
-      if (deltaX < -80) {
-        console.log('🛑 Parando serviço LNBits');
-        fetch('/stop-service')
-          .then(response => response.text())
-          .then(data => alert(data))
-          .catch(err => alert('Erro ao parar o serviço'));
-      } else if (deltaX > 80) {
-        console.log('✅ Iniciando serviço LNBits');
-        fetch('/start-service')
-          .then(response => response.text())
-          .then(data => alert(data))
-          .catch(err => alert('Erro ao iniciar o serviço'));
-      } else if (!isSwiping) {
-        console.log('👉 Clique normal: abrir página LNBits');
-        abrirApp(5000);
-      }
-
-      // Resetar
-      lnbitsBtn.style.transform = 'translateX(0)';
+    if (deltaX < -50) {
+      lnbitsBtn.classList.add('swipe-left');
+      lnbitsBtn.classList.remove('swipe-right');
+    } else if (deltaX > 50) {
+      lnbitsBtn.classList.add('swipe-right');
+      lnbitsBtn.classList.remove('swipe-left');
+    } else {
       lnbitsBtn.classList.remove('swipe-left', 'swipe-right');
-      startX = 0;
-      moveX = 0;
-      deltaX = 0;
-    });
-  </script>
+    }
+  });
+
+  lnbitsBtn.addEventListener('touchend', (e) => {
+    const ip = window.location.hostname; // Captura o IP aqui
+
+    if (deltaX < -80) {
+      console.log('🛑 Enviando pedido para PARAR serviço LNBits');
+      fetch(`http://${ip}:5001/stop-service`)
+        .then(response => response.text())
+        .then(data => alert('Serviço parado: ' + data))
+        .catch(err => alert('Erro ao parar o serviço'));
+    } else if (deltaX > 80) {
+      console.log('✅ Enviando pedido para INICIAR serviço LNBits');
+      fetch(`http://${ip}:5001/start-service`)
+        .then(response => response.text())
+        .then(data => alert('Serviço iniciado: ' + data))
+        .catch(err => alert('Erro ao iniciar o serviço'));
+    } else if (!isSwiping) {
+      console.log('👉 Clique normal: abrir página LNBits');
+      abrirApp(5000);
+    }
+
+    // Resetar botão
+    lnbitsBtn.style.transform = 'translateX(0)';
+    lnbitsBtn.classList.remove('swipe-left', 'swipe-right');
+    startX = 0;
+    moveX = 0;
+    deltaX = 0;
+  });
+</script>
+
 
 </body>
 </html>
