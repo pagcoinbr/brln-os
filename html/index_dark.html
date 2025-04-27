@@ -52,7 +52,6 @@ img {
   z-index: 0;
 }
 
-/* Shine effect on hover */
 .botao::after {
   content: '';
   position: absolute;
@@ -77,82 +76,6 @@ img {
   transform: scale(1.05);
 }
 
-/* Botão piscando */
-@keyframes piscar {
-  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
-  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
-}
-
-/* Classe extra para botões que piscam */
-.piscando {
-  animation: piscar 2s infinite ease-in-out;
-}
-
-/* Links no rodapé */
-.footer-links {
-  margin-top: 30px;
-}
-
-.footer-links a {
-  display: inline-block;
-  margin: 5px 10px;
-  text-decoration: none;
-  color: #ccc;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-
-.footer-links a:hover {
-  color: #ffdd00;
-}
-
-@media (max-width: 600px) {
-  .botao {
-    font-size: 16px;
-    padding: 12px 20px;
-    min-width: 140px;
-  }
-}
-
-@keyframes raio {
-  0% {
-    transform: rotate(0deg) translateX(0px);
-    opacity: 0.2;
-  }
-  50% {
-    transform: rotate(180deg) translateX(10px);
-    opacity: 0.6;
-  }
-  100% {
-    transform: rotate(360deg) translateX(0px);
-    opacity: 0.2;
-  }
-}
-
-.botao:hover {
-  background: #ffdd00;
-  color: #000;
-  box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
-  transform: scale(1.05);
-}
-
-.footer-links {
-  margin-top: 30px;
-}
-
-.footer-links a {
-  display: inline-block;
-  margin: 5px 10px;
-  text-decoration: none;
-  color: #ccc;
-  font-weight: bold;
-  transition: color 0.3s;
-}
-
-.footer-links a:hover {
-  color: #ffdd00;
-}
-
 @media (max-width: 600px) {
   .botao {
     font-size: 16px;
@@ -169,7 +92,7 @@ img {
   <div class="container" id="botoes">
     <td><button id="lndg-btn" class="botao" onclick="abrirApp(8889)">⚡ LNDg</button></td>
     <td><button id="thunder-btn" class="botao" onclick="abrirApp(3000)">🌩️ Thunderhub</button></td>
-    <td><button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">💰 LNBits</button></td>
+    <td><button id="lnbits-btn" class="botao">💰 LNBits</button></td>
     <td><button id="simple-btn" class="botao" onclick="abrirApp(35671)">📱 Simple LNWallet</button></td>
     <a href="https://amboss.space" class="botao" target="_blank">🌐 AMBOSS</a>
     <a href="https://lightningnetwork.plus/" class="botao" target="_blank">Lightning Network ➕</a>
@@ -183,8 +106,7 @@ img {
       const ip = window.location.hostname;
       window.open(`http://${ip}:${porta}`, '_blank');
     }
-  
-    // Função para verificar os serviços, começando com todos desativados e repetindo até o serviço ser encontrado
+
     function verificarServicosPrincipais() {
       const apps = [
         { id: 'lndg-btn', porta: 8889 },
@@ -192,11 +114,10 @@ img {
         { id: 'lnbits-btn', porta: 5000 },
         { id: 'simple-btn', porta: 35671 },
       ];
-  
+
       const ip = window.location.hostname;
-      const timeout = 2000; // tempo máximo de espera em milissegundos para cada verificação
-  
-      // Inicialmente, desativa todos os botões
+      const timeout = 2000;
+
       apps.forEach(app => {
         const botao = document.getElementById(app.id);
         botao.disabled = true;
@@ -204,25 +125,23 @@ img {
         botao.style.cursor = "not-allowed";
         botao.title = "Verificando serviço...";
       });
-  
-      // Função para tentar verificar o serviço repetidamente até encontrá-lo
+
       apps.forEach(app => {
         const url = `http://${ip}:${app.porta}`;
-  
+
         const checkService = () => {
           const fetchWithTimeout = new Promise((resolve, reject) => {
-            const timer = setTimeout(() => reject('Timeout'), timeout); // timeout de 2 segundos
+            const timer = setTimeout(() => reject('Timeout'), timeout);
             fetch(url, { method: 'HEAD', mode: 'no-cors' })
-              .then((response) => {
-                clearTimeout(timer); // Limpa o timeout se a resposta chegar
+              .then(response => {
+                clearTimeout(timer);
                 resolve(response);
               })
               .catch(reject);
           });
-  
+
           fetchWithTimeout
             .then(() => {
-              // Se o serviço for encontrado, habilita o botão
               const botao = document.getElementById(app.id);
               botao.disabled = false;
               botao.style.opacity = "1";
@@ -230,123 +149,38 @@ img {
               botao.title = "Serviço disponível";
             })
             .catch(() => {
-              // Se o serviço não for encontrado, continua tentando
-              setTimeout(checkService, 2000); // Repetir a verificação após 2 segundos
+              setTimeout(checkService, 2000);
             });
         };
-  
-        // Inicia a verificação do serviço
+
         checkService();
       });
     }
-  
-    // Chama a função assim que a página for carregada
+
     document.addEventListener('DOMContentLoaded', () => {
-      // Dá 1 segundo para "mostrar" que a plataforma está verificando
       setTimeout(verificarServicosPrincipais, 1000);
     });
-  </script>
 
-<script>
-  const lnbitsBtn = document.getElementById('lnbits-btn');
-  
-  let startX = 0;
-  let moveX = 0;
-  let deltaX = 0;
-  let isSwiping = false;
-  
-  lnbitsBtn.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-    isSwiping = false;
-  });
-  
-  lnbitsBtn.addEventListener('touchmove', (e) => {
-    moveX = e.touches[0].clientX;
-    deltaX = moveX - startX;
-    
-    if (Math.abs(deltaX) > 10) {
-      isSwiping = true;
-    }
-    
-    lnbitsBtn.style.transform = `translateX(${deltaX}px)`;
-  
-    if (deltaX < -50) {
-      lnbitsBtn.classList.add('swipe-left');
-      lnbitsBtn.classList.remove('swipe-right');
-    } else if (deltaX > 50) {
-      lnbitsBtn.classList.add('swipe-right');
-      lnbitsBtn.classList.remove('swipe-left');
-    } else {
-      lnbitsBtn.classList.remove('swipe-left', 'swipe-right');
-    }
-  });
-  
-  lnbitsBtn.addEventListener('touchend', (e) => {
-    if (deltaX < -80) {
-      console.log('🛑 Enviando pedido para PARAR serviço LNBits');
-      fetch('/stop-service')
-        .then(response => response.text())
-        .then(data => alert(data))
-        .catch(err => alert('Erro ao parar o serviço'));
-    } else if (deltaX > 80) {
-      console.log('✅ Enviando pedido para INICIAR serviço LNBits');
-      fetch('/start-service')
-        .then(response => response.text())
-        .then(data => alert(data))
-        .catch(err => alert('Erro ao iniciar o serviço'));
-    } else if (!isSwiping) {
-      console.log('👉 Clique normal: abrir página LNBits');
-      abrirApp(5000);
-    }
-  
-    // Resetar botão
-    lnbitsBtn.style.transform = 'translateX(0)';
-    lnbitsBtn.classList.remove('swipe-left', 'swipe-right');
-    startX = 0;
-    moveX = 0;
-    deltaX = 0;
-  });
-  </script>
- 
- <script>
-  const button = document.getElementById('lnbits-btn');
-  
-  let startX = 0;
-  let endX = 0;
-  const threshold = 50; // Distância mínima para considerar swipe
-  
-  button.addEventListener('touchstart', function(e) {
-    startX = e.touches[0].clientX;
-  });
-  
-  button.addEventListener('touchmove', function(e) {
-    endX = e.touches[0].clientX;
-  });
-  
-  button.addEventListener('touchend', function(e) {
-    const diffX = endX - startX;
-  
-    if (Math.abs(diffX) > threshold) {
-      if (diffX > 0) {
-        // Swipe para a direita -> INICIAR SERVIÇO
-        fetch('http://${ip}:5001/start-service')
-          .then(response => response.text())
-          .then(data => alert('Serviço iniciado: ' + data))
-          .catch(error => alert('Erro ao iniciar serviço: ' + error));
-      } else {
-        // Swipe para a esquerda -> PARAR SERVIÇO
-        fetch('http://${ip}:5001/stop-service')
-          .then(response => response.text())
-          .then(data => alert('Serviço parado: ' + data))
-          .catch(error => alert('Erro ao parar serviço: ' + error));
-      }
-    } else {
-      // Clique normal -> abrir página
-      abrirApp(5000);
-    }
-  });
-  </script>
-  
+    // Novo comportamento para o botão LNBits
+    const lnbitsBtn = document.getElementById('lnbits-btn');
 
+    lnbitsBtn.addEventListener('click', function() {
+      const ip = window.location.hostname;
+
+      // Primeiro tenta abrir normalmente
+      fetch(`http://${ip}:5000`, { method: 'HEAD', mode: 'no-cors' })
+        .then(() => {
+          abrirApp(5000);
+        })
+        .catch(() => {
+          if (confirm("O serviço LNBits parece estar desligado. Deseja iniciar?")) {
+            fetch(`http://${ip}:5001/start-service`)
+              .then(response => response.text())
+              .then(data => alert('Serviço iniciado: ' + data))
+              .catch(error => alert('Erro ao iniciar serviço: ' + error));
+          }
+        });
+    });
+  </script> 
 </body>
 </html>
