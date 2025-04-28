@@ -1,0 +1,187 @@
+/* ----- Estilos comuns (compartilhados) ----- */
+img {
+  max-width: 50%;
+  margin: 10px auto;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px;
+}
+
+@media (max-width: 600px) {
+  .botao {
+    font-size: 14px;
+    padding: 12px 20px;
+    min-width: 120px;
+  }
+}
+
+/* Botão piscando */
+@keyframes piscar {
+  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
+  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
+}
+
+.piscando {
+  animation: piscar 2s infinite ease-in-out;
+}
+
+/* Seções e outros elementos comuns */
+.section {
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 600px;
+  width: 90%;
+}
+
+.status {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+.voltar-container {
+  margin-top: 30px;
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+pre {
+  padding: 10px;
+  text-align: left;
+  max-height: 300px;
+  overflow: auto;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+/* ----- Tema Dark ----- */
+body.dark-theme {
+  background: linear-gradient(135deg, #000428, #004e92);
+  background-size: cover;
+  background-attachment: fixed;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body.dark-theme .botao {
+  background: linear-gradient(45deg, #1f0f79, #4d00ff);
+  color: #fff;
+  border: none;
+  padding: 15px 25px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  min-width: 150px;
+  max-width: 90%;
+  box-sizing: border-box;
+  box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88;
+  flex: 1 1 250px;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+body.dark-theme .botao::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #ffffffaa, transparent);
+  transform: skewX(-20deg);
+  z-index: 1;
+  transition: left 0.4s ease-in-out;
+}
+
+body.dark-theme .botao:hover::after {
+  left: 130%;
+}
+
+body.dark-theme .botao:hover {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
+  transform: scale(1.05);
+}
+
+body.dark-theme .section {
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+body.dark-theme pre {
+  background-color: #111;
+  color: #0f0;
+}
+
+/* ----- Tema Light ----- */
+body.light-theme {
+  background-image: url('imagens/sky.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  font-family: Arial, sans-serif;
+  color: black;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+body.light-theme .botao {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  min-width: 150px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  flex: 1 1 300px;
+  transition: background 0.3s;
+}
+
+body.light-theme .botao:hover {
+  background-color: #1e7e34;
+}
+
+body.light-theme .section {
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+body.light-theme pre {
+  background-color: #eee;
+  color: #000;
+}
+
+.footer-links {
+  margin-top: 20px;
+}
+
+.footer-links a {
+  display: inline-block;
+  margin: 5px 10px;
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+}

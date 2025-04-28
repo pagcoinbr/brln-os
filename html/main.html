@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="imagens/logopreto.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <title>BRLN Open Bank</title>
+</head>
+<body>
+
+  <!-- Logo Centralizado -->
+  <img src="imagens/BRLNlogo.png" alt="BRLN Open Bank logo" />
+
+  <!-- Botões em container flexível -->
+  <div class="container" id="botoes">
+    <button id="lndg-btn" class="botao" onclick="abrirApp(8889)">⚡ LNDg</button>
+    <button id="thunder-btn" class="botao" onclick="abrirApp(3000)">🌩️ Thunderhub</button>
+    <button id="lnbits-btn" class="botao">💰 LNBits</button>
+    <button id="simple-btn" class="botao" onclick="abrirApp(35671)">📱 Simple LNWallet</button>
+    <a href="https://amboss.space" class="botao" target="_blank">🌐 AMBOSS</a>
+    <a href="https://lightningnetwork.plus/" class="botao" target="_blank">➕ Lightning Network +</a>
+    <a href="https://mempool.space" class="botao" target="_blank">📊 Mempool</a>
+    <a href="config.html" class="botao" onclick="salvarPagina('config.html')">⚙️ Configurações</a>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
+

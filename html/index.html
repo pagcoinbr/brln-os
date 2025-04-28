@@ -1,49 +1,63 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BRLN FullAuto</title>
+  <link rel="icon" type="image/png" href="imagens/logopreto.png" />
+  
+  <!-- CSS principal para o estilo dark/light e demais componentes -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <title>BRLN Open Bank</title>
+
+  <!-- Estilos internos específicos só para posicionamento dos iframes -->
   <style>
+    /* Estilo básico para html e body */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       font-family: Arial, sans-serif;
-      background: transparent;
-      overflow: hidden;
+      overflow: hidden; /* Evita barras de rolagem */
     }
 
+    /* Frame superior para o rádio */
     #radioFrame {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
-      height: 40px;
+      height: 40px; /* Altura fixa para o rádio */
       border: none;
       background: transparent;
-      z-index: 1000;
+      z-index: 1000; /* Fica acima do mainFrame */
     }
 
+    /* Frame principal para o conteúdo do site */
     #mainFrame {
       position: absolute;
-      top: 40px; /* empurra o mainFrame para baixo do player */
+      top: 40px; /* Deixa espaço para o rádio */
       left: 0;
       width: 100%;
-      height: calc(100% - 40px);
+      height: calc(100% - 40px); /* O resto da tela */
       border: none;
       background: transparent;
       z-index: 1;
     }
-
   </style>
 </head>
+
 <body>
-  <!-- Frame para o player de música no topo -->
+
+  <!-- Frame para o player de música (rádio) -->
   <iframe id="radioFrame" src="radio.html" name="radioPlayer"></iframe>
 
-  <!-- Frame principal transparente -->
-  <iframe id="mainFrame" src="index2.html" name="mainContent"></iframe>
+  <!-- Frame principal para o conteúdo -->
+  <iframe id="mainFrame" name="mainContent"></iframe>
+  <script>
+    const ultimaPagina = localStorage.getItem('ultimaPaginaMainFrame') || 'main.html';
+    document.getElementById('mainFrame').src = ultimaPagina;
+  </script>
+    
 </body>
 </html>
-
