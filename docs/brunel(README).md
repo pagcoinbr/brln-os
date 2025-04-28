@@ -1,4 +1,4 @@
-# 📘 README - BRLN Bolt FullAuto
+# 📘 README - BRLN brunel.sh
 
 > Instale e gerencie seu próprio node Bitcoin + Lightning com um script interativo, modular e soberano. Um projeto criado para empoderar brasileiros a rodarem sua infraestrutura financeira com liberdade total.
 
@@ -6,7 +6,7 @@
 
 ## 🧠 Visão Geral
 
-O `brlnfullauto.sh` é um script Bash que automatiza a instalação completa de um node Bitcoin Lightning. Ele:
+O `brunel.sh` é um script Bash que automatiza a instalação completa de um node Bitcoin Lightning. Ele:
 
 - Configura Bitcoin Core e LND (Lightning Network Daemon);
 - Instala aplicativos web para gerenciamento como ThunderHub, LNbits e LNDg;
@@ -22,7 +22,7 @@ O `brlnfullauto.sh` é um script Bash que automatiza a instalação completa de 
 
 ## 📂 Estrutura Geral do Script
 
-O script principal `brlnfullauto.sh` organiza sua lógica em funções. Vamos entender cada uma delas com detalhes:
+O script principal `brunel.sh` organiza sua lógica em funções. Vamos entender cada uma delas com detalhes:
 
 ---
 
