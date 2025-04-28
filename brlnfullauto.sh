@@ -121,18 +121,32 @@ EOF
     sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
   fi
   sudo usermod -aG admin www-data
+  # Garante que o pacote python3-venv esteja instalado
   if ! dpkg -l | grep -q python3-venv; then
-    echo "python3-venv não está instalado. Instalando agora..."
+    echo "📦 Instalando python3-venv..."
     sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
   else
-    echo "python3-venv já está instalado."
+    echo "✅ python3-venv já está instalado."
   fi
-  # Criar ambiente virtual de flask na home do admin
-  python3 -m venv "$FLASKVENV_DIR"
-  source "$FLASKVENV_DIR/bin/activate"
-  pip install flask
-  source /home/admin/envflask/bin/activate
-  pip install flask-cors
+
+  # Define o diretório do ambiente virtual
+  FLASKVENV_DIR="/home/admin/envflask"
+
+  # Cria o ambiente virtual apenas se ainda não existir
+  if [ ! -d "$FLASKVENV_DIR" ]; then
+    echo "📂 Criando ambiente virtual em $FLASKVENV_DIR..."
+    python3 -m venv "$FLASKVENV_DIR" >> /dev/null 2>&1 & spinner
+  else
+    echo "✅ Ambiente virtual já existe em $FLASKVENV_DIR."
+  fi
+
+  # Ativa o ambiente virtual
+  echo "⚡ Ativando ambiente virtual..."
+  source "$FLASKVENV_DIR/bin/activate" >> /dev/null 2>&1 & spinner
+
+  # Instala Flask e Flask-CORS
+  echo "📦 Instalando Flask e Flask-CORS..."
+  pip install flask flask-cors >> /dev/null 2>&1 & spinner
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
   SUDOERS_TMP="/etc/sudoers.d/admin-services"
@@ -144,7 +158,7 @@ EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
   if sudo visudo -c -f "$SUDOERS_TMP"; then
-    echo "✅ Novo arquivo sudoers.d/admin-services válido!"
+    echo "✅ Novo sudoers.d/admin-services autenticado!"
   else
     echo "⛔ Erro na validação! Arquivo inválido, removendo."
     sudo rm -f "$SUDOERS_TMP"
