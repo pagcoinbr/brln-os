@@ -45,7 +45,7 @@ const appsPrincipais = [
 ];
 
 // Lista dos apps gerenciados no painel de serviços
-const appsServicos = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd"];
+const appsServicos = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd", "bitcoind", "bos-telegram", "tor"];
 
 document.addEventListener('DOMContentLoaded', () => {
   // Aplica o tema salvo
