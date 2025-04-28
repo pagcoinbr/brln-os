@@ -144,11 +144,11 @@ EOF
 
   # Ativa o ambiente virtual
   echo "⚡ Ativando ambiente virtual..."
-  source "$FLASKVENV_DIR/bin/activate" >> /dev/null 2>&1 & spinner
+  source "$FLASKVENV_DIR/bin/activate"
 
   # Instala Flask e Flask-CORS
   echo "📦 Instalando Flask e Flask-CORS..."
-  pip install flask flask-cors
+  pip install flask flask-cors >> /dev/null 2>&1 & spinner
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
   SUDOERS_TMP="/etc/sudoers.d/admin-services"
