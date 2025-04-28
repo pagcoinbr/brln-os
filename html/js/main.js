@@ -81,32 +81,54 @@ function abrirApp(porta) {
   window.open(`http://${ip}:${porta}`, '_blank');
 }
 
-// Verifica os serviços principais e habilita/desabilita botões do menu
 function verificarServicosPrincipais() {
-  const ip = window.location.hostname;
+  const apps = [
+    { id: 'lndg-btn', porta: 8889 },
+    { id: 'thunderhub-btn', porta: 3000 },
+    { id: 'lnbits-btn', porta: 5000 },
+    { id: 'simple-btn', porta: 35671 },
+  ];
 
-  appsPrincipais.forEach(app => {
+  const ip = window.location.hostname;
+  const timeout = 2000;
+
+  apps.forEach(app => {
     const botao = document.getElementById(app.id);
     if (botao) {
       botao.disabled = true;
       botao.style.opacity = "0.5";
       botao.style.cursor = "not-allowed";
+      botao.title = "Verificando serviço...";
     }
 
     const url = `http://${ip}:${app.porta}`;
+
     const checkService = () => {
-      fetch(url, { method: 'HEAD', mode: 'no-cors' })
+      const fetchWithTimeout = new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject('Timeout'), timeout);
+        fetch(url, { method: 'HEAD', mode: 'no-cors' })
+          .then(response => {
+            clearTimeout(timer);
+            resolve(response);
+          })
+          .catch(reject);
+      });
+
+      fetchWithTimeout
         .then(() => {
+          const botao = document.getElementById(app.id);
           if (botao) {
             botao.disabled = false;
             botao.style.opacity = "1";
             botao.style.cursor = "pointer";
+            botao.title = "Serviço disponível";
           }
         })
         .catch(() => {
           setTimeout(checkService, 2000);
         });
     };
+
     checkService();
   });
 }

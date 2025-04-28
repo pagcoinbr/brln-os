@@ -23,8 +23,16 @@ def get_service_status(service_name):
             capture_output=True,
             text=True
         )
-        return result.stdout.strip() == "active"
+        status = result.stdout.strip().lower()
+
+        # Vamos considerar apenas "active" como verdadeiro
+        if status == "active":
+            return True
+        else:
+            return False
+
     except Exception as e:
+        # Se der qualquer erro no subprocess, é falso também
         return False
 
 @app.route('/service-status')
