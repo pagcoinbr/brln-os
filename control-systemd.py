@@ -13,6 +13,7 @@ APP_TO_SERVICE = {
     "lndg": "lndg.service",
     "lndg-controller": "lndg-controller.service",
     "lnd": "lnd.service",
+    "bitcoind": "bitcoind.service",
 }
 
 # Função auxiliar para verificar o status do serviço
