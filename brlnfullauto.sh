@@ -69,11 +69,12 @@ update_and_upgrade() {
   git -C "$REPO_DIR" pull origin "$branch"
 
   echo "🧹 Limpando interface web antiga..."
-  sudo rm -f "$WWW_HTML"/*.html
+  sudo rm -rf "$WWW_HTML"/*.html
   sudo rm -rf "$WWW_HTML/css"
   sudo rm -rf "$WWW_HTML/js"
   sudo rm -rf "$WWW_HTML/imagens"
-  sudo rm -f "$CGI_DST"/*.sh
+  sudo rm -rf "$WWW_HTML/radio"
+  sudo rm -rf "$CGI_DST"/*.sh
 
   echo "📥 Copiando novos arquivos da interface web..."
 
@@ -84,6 +85,7 @@ update_and_upgrade() {
   sudo cp -r "$HTML_SRC/css" "$WWW_HTML/"
   sudo cp -r "$HTML_SRC/js" "$WWW_HTML/"
   sudo cp -r "$HTML_SRC/imagens" "$WWW_HTML/"
+  sudo cp -r "$HTML_SRC/radio" "$WWW_HTML/"
 
   # Copia scripts CGI para /usr/lib/cgi-bin
   sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
