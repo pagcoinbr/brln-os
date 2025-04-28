@@ -15,7 +15,7 @@ APP_TO_SERVICE = {
     "lnd": "lnd.service",
     "bitcoind": "bitcoind.service",
     "bos-telegram": "bos-telegram.service",
-    "gotty": "gotty.service",
+    "tor": "tor.service",
 }
 
 # Função auxiliar para verificar o status do serviço
