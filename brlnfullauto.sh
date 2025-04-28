@@ -148,7 +148,7 @@ EOF
 
   # Instala Flask e Flask-CORS
   echo "📦 Instalando Flask e Flask-CORS..."
-  pip install flask flask-cors >> /dev/null 2>&1 & spinner
+  pip install flask flask-cors
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
   SUDOERS_TMP="/etc/sudoers.d/admin-services"
