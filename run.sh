@@ -26,8 +26,8 @@ brln_check () {
   fi
 
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-  sudo chmod +x "$INSTALL_DIR/brlnfullauto.sh"
-  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+  sudo chmod +x "$INSTALL_DIR/brunel.sh"
+  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
   exit 0
 }
 
@@ -68,7 +68,7 @@ if [[ $atual_user = "admin" ]]; then
   brln_check
 else
   if id "admin" &>/dev/null; then
-  sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
   exit 0
   fi
 fi

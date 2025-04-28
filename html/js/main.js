@@ -98,7 +98,7 @@ function verificarServicosPrincipais() {
       botao.disabled = true;
       botao.style.opacity = "0.5";
       botao.style.cursor = "not-allowed";
-      botao.title = "Verificando serviço...";
+      botao.title = "Seviço Desativado.";
     }
 
     const url = `http://${ip}:${app.porta}`;

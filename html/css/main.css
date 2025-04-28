@@ -20,10 +20,10 @@ body.dark-theme {
 
 /* Tema Claro */
 body.light-theme {
-  background: linear-gradient(135deg, #00c9ff, #92fe9d);
+  background: linear-gradient(135deg, #fcfda5, #0b7dff);
   background-size: cover;
   background-attachment: fixed;
-  color: black;
+  color: rgb(0, 0, 0);
 }
 
 /* ------------------------------
@@ -31,8 +31,8 @@ body.light-theme {
 ------------------------------ */
 
 img {
-  width: 600px;
-  max-width: 90%;
+  width: 1000px;
+  max-width: 100%;
   margin: 20px auto;
   display: block;
 }
@@ -46,7 +46,7 @@ img {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 colunas */
   gap: 15px;
-  max-width: 600px;
+  max-width: 1050px;
   margin: 20px auto;
 }
 
@@ -77,7 +77,7 @@ img {
   justify-content: center;
   align-items: center;
   width: 100%;
-  min-height: 50px; /* altura mínima */
+  min-height: 70px; /* altura mínima */
   max-width: 300px; /* largura máxima para manter proporção */
   padding: 1px 20px;
   font-size: 18px;
@@ -117,8 +117,8 @@ body.dark-theme .botao, body.dark-theme a.botao {
 
 /* Estilo Light */
 body.light-theme .botao, body.light-theme a.botao {
-  background: linear-gradient(45deg, #28a745, #019a41);
-  color: #003366;
+  background: linear-gradient(45deg, #0257d6, #0d6dfd);
+  color: #ffffff;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
@@ -150,8 +150,9 @@ body.dark-theme .botao:hover, body.dark-theme a.botao:hover {
 
 /* Hover Claro */
 body.light-theme .botao:hover, body.light-theme a.botao:hover {
-  background: #20c997;
-  color: white;
+  background: #32c5ff;
+  color: #000;
+  box-shadow: 0 0 25px #32c5ff, 0 0 50px #32c5ff;
   transform: scale(1.02);
 }
 

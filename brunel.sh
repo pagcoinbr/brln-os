@@ -68,7 +68,6 @@ update_and_upgrade() {
   git -C "$REPO_DIR" stash || true
   git -C "$REPO_DIR" pull origin "$branch"
 
-  echo "🧹 Limpando interface web antiga..."
   sudo rm -rf "$WWW_HTML"/*.html
   sudo rm -rf "$WWW_HTML/css"
   sudo rm -rf "$WWW_HTML/js"
@@ -125,7 +124,6 @@ EOF
   sudo usermod -aG admin www-data
   # Garante que o pacote python3-venv esteja instalado
   if ! dpkg -l | grep -q python3-venv; then
-    echo "📦 Instalando python3-venv..."
     sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
   else
     echo "✅ python3-venv já está instalado."
@@ -136,7 +134,6 @@ EOF
 
   # Cria o ambiente virtual apenas se ainda não existir
   if [ ! -d "$FLASKVENV_DIR" ]; then
-    echo "📂 Criando ambiente virtual em $FLASKVENV_DIR..."
     python3 -m venv "$FLASKVENV_DIR" >> /dev/null 2>&1 & spinner
   else
     echo "✅ Ambiente virtual já existe em $FLASKVENV_DIR."
@@ -147,7 +144,6 @@ EOF
   source "$FLASKVENV_DIR/bin/activate"
 
   # Instala Flask e Flask-CORS
-  echo "📦 Instalando Flask e Flask-CORS..."
   pip install flask flask-cors >> /dev/null 2>&1 & spinner
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
@@ -251,7 +247,7 @@ terminal_web() {
         update_and_upgrade
         gotty_install
       fi
-      sudo -u admin bash "$INSTALL_DIR/brlnfullauto.sh"
+      sudo -u admin bash "$INSTALL_DIR/brunel.sh"
       exit 0
     fi
   fi
