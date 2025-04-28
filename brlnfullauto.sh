@@ -18,7 +18,8 @@ BTC_VERSION=28.1
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 
 # Caminho para os arquivos HTML da interface web
-HTML_SRC=/home/admin/brlnfullauto/html
+REPO_DIR="/home/admin/brlnfullauto"
+HTML_SRC="$REPO_DIR/html"
 
 # Diretório de destino para scripts CGI
 CGI_DST="/usr/lib/cgi-bin"
@@ -63,30 +64,29 @@ update_and_upgrade() {
   echo "Reiniciando o serviço Apache..."
   sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
-  # Variáveis
-  REPO_DIR="/home/admin/brlnfullauto"
-  HTML_SRC="$REPO_DIR/html"
-  WWW_HTML="/var/www/html"
-  CGI_DST="/usr/lib/cgi-bin"
-
   # Executa o git dentro do diretório, sem precisar dar cd
   git -C "$REPO_DIR" stash || true
   git -C "$REPO_DIR" pull origin "$branch"
 
-  echo "🧹 Limpando arquivos da interface web..."
+  echo "🧹 Limpando interface web antiga..."
   sudo rm -f "$WWW_HTML"/*.html
-  sudo rm -f "$WWW_HTML"/*.png
-  sudo rm -f "$WWW_HTML"/*.mp3
+  sudo rm -rf "$WWW_HTML/css"
+  sudo rm -rf "$WWW_HTML/js"
+  sudo rm -rf "$WWW_HTML/imagens"
   sudo rm -f "$CGI_DST"/*.sh
-  sudo rm -f "/home/admin/control-systemd.py"
 
-  echo "📥 Copiando novos arquivos para a interface web..."
+  echo "📥 Copiando novos arquivos da interface web..."
 
-  sudo cp "$HTML_SRC"/*.html "$WWW_HTML"/
-  sudo cp "$HTML_SRC"/*.png "$WWW_HTML"/
-  sudo cp "$HTML_SRC"/*.mp3 "$WWW_HTML"/
-  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST"/
-  sudo cp "/home/admin/brlnfullauto/control-systemd.py" "/home/admin/" 
+  # Copia os HTMLs principais
+  sudo cp "$HTML_SRC"/*.html "$WWW_HTML/"
+
+  # Copia pastas CSS, JS, Imagens
+  sudo cp -r "$HTML_SRC/css" "$WWW_HTML/"
+  sudo cp -r "$HTML_SRC/js" "$WWW_HTML/"
+  sudo cp -r "$HTML_SRC/imagens" "$WWW_HTML/"
+
+  # Copia scripts CGI para /usr/lib/cgi-bin
+  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
   # Corrigir permissões de execução
   sudo chmod +x "$CGI_DST"/*.sh

@@ -1,0 +1,224 @@
+/* ------------------------------
+   Estilos Base Gerais
+------------------------------ */
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Tema Escuro */
+body.dark-theme {
+  background: linear-gradient(135deg, #000428, #004e92);
+  background-size: cover;
+  background-attachment: fixed;
+  color: white;
+}
+
+/* Tema Claro */
+body.light-theme {
+  background: linear-gradient(135deg, #00c9ff, #92fe9d);
+  background-size: cover;
+  background-attachment: fixed;
+  color: black;
+}
+
+/* ------------------------------
+   Logo Responsivo
+------------------------------ */
+
+img {
+  width: 600px;
+  max-width: 90%;
+  margin: 20px auto;
+  display: block;
+}
+
+/* ------------------------------
+   Containers dos Botões
+------------------------------ */
+
+/* Container principal (menu) */
+#botoes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+  gap: 15px;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+/* Container para ferramentas extras */
+#ferramentas-extras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+/* Container para seções */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin: 20px;
+}
+
+/* ------------------------------
+   Botões
+------------------------------ */
+
+.botao, a.botao {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 50px; /* altura mínima */
+  max-width: 300px; /* largura máxima para manter proporção */
+  padding: 1px 20px;
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  border: none;
+  box-sizing: border-box;
+  margin: 5px;
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Botões dentro do #botoes */
+#botoes .botao, #botoes a.botao {
+  width: 100%;
+}
+
+/* Botões dentro do #ferramentas-extras */
+#ferramentas-extras .botao, #ferramentas-extras a.botao {
+  flex: 1 1 45%; /* Deixa 2 botões por linha */
+}
+
+/* ------------------------------
+   Estilos Visuais dos Botões
+------------------------------ */
+
+/* Estilo Dark */
+body.dark-theme .botao, body.dark-theme a.botao {
+  background: linear-gradient(45deg, #1f0f79, #4d00ff);
+  color: #fff;
+  box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88;
+}
+
+/* Estilo Light */
+body.light-theme .botao, body.light-theme a.botao {
+  background: linear-gradient(45deg, #28a745, #019a41);
+  color: #003366;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Brilho que passa no botão */
+.botao::after, a.botao::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, #ffffffaa, transparent);
+  transform: skewX(-20deg);
+  z-index: 1;
+  transition: left 0.4s ease-in-out;
+}
+
+.botao:hover::after, a.botao:hover::after {
+  left: 130%;
+}
+
+/* Hover Escuro */
+body.dark-theme .botao:hover, body.dark-theme a.botao:hover {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
+  transform: scale(1.02);
+}
+
+/* Hover Claro */
+body.light-theme .botao:hover, body.light-theme a.botao:hover {
+  background: #20c997;
+  color: white;
+  transform: scale(1.02);
+}
+
+/* ------------------------------
+   Estilo das Seções e Textos
+------------------------------ */
+
+.section {
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 600px;
+  width: 90%;
+}
+
+.status {
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+.voltar-container {
+  margin-top: 30px;
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+pre {
+  background-color: #111;
+  color: #0f0;
+  padding: 10px;
+  text-align: left;
+  max-height: 300px;
+  overflow: auto;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+/* ------------------------------
+   Animação de Piscar (Se necessário)
+------------------------------ */
+
+@keyframes piscar {
+  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
+  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
+}
+
+.piscando {
+  animation: piscar 2s infinite ease-in-out;
+}
+
+/* ------------------------------
+   Responsividade
+------------------------------ */
+
+@media (max-width: 600px) {
+  #botoes {
+    grid-template-columns: 1fr;
+  }
+  #ferramentas-extras .botao, #ferramentas-extras a.botao {
+    flex: 1 1 100%;
+  }
+  .botao, a.botao {
+    font-size: 16px;
+    padding: 12px 20px;
+  }
+}
