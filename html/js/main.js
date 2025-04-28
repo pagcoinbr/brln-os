@@ -1,3 +1,38 @@
+function atualizarStatus() {
+  fetch('/cgi-bin/status.sh')
+      .then(res => {
+          if (!res.ok) {
+              throw new Error('Erro ao obter status do sistema.');
+          }
+          return res.text(); // ✅ <- Aqui trocamos para texto simples
+      })
+      .then(text => {
+          const lines = text.split('\n');
+          for (const line of lines) {
+              if (line.includes("CPU:")) {
+                  document.getElementById("cpu").innerText = line;
+              } else if (line.includes("RAM:")) {
+                  document.getElementById("ram").innerText = line;
+              } else if (line.includes("LND:")) {
+                  document.getElementById("lnd").innerText = line;
+              } else if (line.includes("Bitcoind:")) {
+                  document.getElementById("bitcoind").innerText = line;
+              } else if (line.includes("Tor:")) {
+                  document.getElementById("tor").innerText = line;
+              } else if (line.includes("Blockchain:")) {
+                  document.getElementById("blockchain").innerText = line;
+              }
+          }
+      })
+      .catch(error => {
+          alert("Erro ao atualizar status: " + error.message);
+      });
+}
+
+  // Atualiza a cada 5 segundos
+  setInterval(atualizarStatus, 5000);
+  window.onload = atualizarStatus;
+
 // Base URL do Flask
 const flaskBaseURL = `http://${window.location.hostname}:5001`;
 

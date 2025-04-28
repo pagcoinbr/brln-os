@@ -44,7 +44,7 @@ img {
 /* Container principal (menu) */
 #botoes {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas */
   gap: 15px;
   max-width: 600px;
   margin: 20px auto;
@@ -52,10 +52,9 @@ img {
 
 /* Container para ferramentas extras */
 #ferramentas-extras {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+  gap: 15px;
   max-width: 600px;
   margin: 20px auto;
 }
@@ -165,9 +164,9 @@ body.light-theme .botao:hover, body.light-theme a.botao:hover {
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.5);
   padding: 20px;
-  margin: 20px auto;
-  max-width: 600px;
-  width: 90%;
+  margin: 20px;
+  width: 90%; /* ocupa 90% da largura da tela */
+  max-width: 1200px; /* limite para não estourar demais */
 }
 
 .status {
