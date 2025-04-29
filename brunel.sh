@@ -28,7 +28,7 @@ CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
 
 # Caminho para os arquivos de serviços do systemd
-SERVICES="/home/admin/brlnfullauto/services"
+SERVICES="/home/admin/brlnfullauto/services"  
 
 # Caminho para o binário do Poetry
 POETRY_BIN="/home/admin/.local/bin/poetry"
@@ -658,23 +658,12 @@ lnbits_install() {
 
   # Entra no diretório e instala dependências com Poetry
   cd "/home/admin/lnbits"
-  git checkout main
+  git checkout  v0.12.12
   "$POETRY_BIN" install
 
   # Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
   cp .env.example .env
   sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
-
-  # Criar o script de inicialização dinâmico
-  cat > "/home/admin/lnbits/start-lnbits.sh" <<EOF
-#!/bin/bash
-cd /home/admin/lnbits
-export PATH="\$HOME/.local/bin:\$PATH"
-exec $POETRY_BIN run lnbits --port 5000 --host 0.0.0.0
-EOF
-
-  # Torna o script executável
-  chmod +x "/home/admin/lnbits/start-lnbits.sh"
 
   # Configurações do lnbits no ufw
   sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
