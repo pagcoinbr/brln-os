@@ -167,7 +167,7 @@ EOF
 
 gotty_do () {
   echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-  LOCAL_APPS="/home/admin/brlnfullauto/nr-tools-by-jvx"
+  LOCAL_APPS="/home/admin/brlnfullauto/local_apps"
   if [[ $arch == "x86_64" ]]; then
     sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/admin >> /dev/null 2>&1
   else
