@@ -1242,8 +1242,7 @@ get_network_cidr() {
   n3=$(( (network_as_int >> 8) & 0xFF ))
   n4=$(( network_as_int & 0xFF ))
 
-  echo "${n1}.${n2}.${n3}.${n4}/${prefix}"
-  subnet=$(get_network_cidr)
+  subnet="${n1}.${n2}.${n3}.${n4}/${prefix}"
 }
 
 system_detector () {
