@@ -1016,7 +1016,7 @@ get_simple_wallet () {
   fi
   cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin
   if [[ ! -f /home/admin/simple-lnwallet-rpi ]]; then
-  mv /home/admin/$simple_arch /home/admin/simple-lnwallet
+  mv /home/admin/simple-lnwallet-rpi /home/admin/simple-lnwallet
   fi
   chmod +x /home/admin/simple-lnwallet
   sudo apt install xxd -y
