@@ -182,7 +182,7 @@ gotty_install () {
 if [[ ! -f /usr/local/bin/gotty ]]; then
   gotty_do
 else
-  echo -e "${RED} Gotty já existe, atualizando... ${NC}"
+  echo -e "${GREEN} Gotty já instalado, atualizando... ${NC}"
   sudo rm -f /usr/local/bin/gotty
   gotty_do
 fi
@@ -1046,34 +1046,19 @@ manutencao_script () {
 
 get_simple_wallet () {
   arch=$(uname -m)
-  if [[ -f ./simple-lnwallet ]]; then
-    echo "O binário simple-lnwallet já existe."
-  else
-    echo "O binário simple-lnwallet não foi encontrado. Baixando..."
-    cd /home/admin
   if [[ $arch == "x86_64" ]]; then
     echo "Arquitetura x86_64 detectada."
     simple_arch="simple-lnwallet"
   else
+    echo "Arquitetura ARM64 detectada."
     simple_arch="simple-lnwallet-rpi"
   fi
-    wget https://github.com/jvxis/simple-lnwallet-go/releases/download/v.0.0.2/$simple_arch
-    chmod +x simple-lnwallet
-    sudo apt install xxd -y
-  fi
+  mv /home/admin/brlnfullauto/local_apps/$simple_arch /home/admin/simple-lnwallet
+  chmod +x simple-lnwallet
+  sudo apt install xxd -y
 }
 
 simple_lnwallet () {
-  read -p "Deseja exibir os logs da instalação? (y/n): " logs_choice
-  if [[ $logs_choice == "y" ]]; then
-    get_simple_wallet
-  elif
-  [[ $logs_choice == "n" ]]; then
-    get_simple_wallet > /dev/null 2>&1
-  else
-    echo "Opção inválida!"
-    exit 1
-  fi
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
   sleep 1
