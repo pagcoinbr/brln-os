@@ -6,7 +6,7 @@ After=network.target
 User=admin
 WorkingDirectory=/home/admin/
 Environment="PATH=/home/admin/envflask/bin"
-ExecStart=/home/admin/envflask/bin/python3 /home/admin/control-systemd.py
+ExecStart=/home/admin/envflask/bin/python3 /home/admin/brlnfullauto/control-systemd.py
 Restart=always
 
 [Install]
