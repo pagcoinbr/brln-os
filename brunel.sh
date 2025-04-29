@@ -1014,12 +1014,14 @@ get_simple_wallet () {
     echo "Arquitetura ARM64 detectada."
     simple_arch="simple-lnwallet-rpi"
   fi
-  sudo cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin
-  chmod +x simple-lnwallet
+  cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin
+  mv /home/admin/$simple_arch /home/admin/simple-lnwallet
+  chmod +x /home/admin/simple-lnwallet
   sudo apt install xxd -y
 }
 
 simple_lnwallet () {
+  get_simple_wallet
   sudo rm -f /etc/systemd/system/simple-lnwallet.service
   sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
   sleep 1
