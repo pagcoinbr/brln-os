@@ -30,7 +30,7 @@ bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run
 
 💡 Esse script vai:
 - Criar o usuário `admin`
-- Iniciar o script principal `brlnfullauto.sh`
+- Iniciar o script principal `brunel.sh`
 - Apresentar o menu gráfico interativo.
 
 **ATENÇÃO!** Após a criação do usuário `admin`, o script vai finalizar da seguinte maneira:
