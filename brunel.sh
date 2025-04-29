@@ -119,7 +119,7 @@ EOF
   fi
   # Abre a posta 80 no UFW
   if ! sudo ufw status | grep -q "80/tcp"; then
-    sudo ufw allow from 192.168.0.0/23 to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
+    sudo ufw allow from $get_network_cidr to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
   fi
   sudo usermod -aG admin www-data
   # Garante que o pacote python3-venv esteja instalado
@@ -216,7 +216,7 @@ done
 # Configure UFW rules for ports
 for i in "${!PORTS[@]}"; do
   if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
-    sudo ufw allow from 192.168.0.0/23 to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
+    sudo ufw allow from $get_network_cidr to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
   fi
 done
 }
@@ -261,7 +261,7 @@ create_main_dir() {
 configure_ufw() {
   sudo sed -i 's/^IPV6=yes/IPV6=no/' /etc/default/ufw
   sudo ufw logging off
-  sudo ufw allow from 192.168.0.0/23 to any port 22 proto tcp comment 'allow SSH from local network'
+  sudo ufw allow from $get_network_cidr to any port 22 proto tcp comment 'allow SSH from local network'
   sudo ufw --force enable
 }
 
@@ -597,7 +597,7 @@ install_thunderhub() {
   git verify-commit v$VERSION_THUB
   npm install
   npm run build
-  sudo ufw allow from 192.168.0.0/23 to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
+  sudo ufw allow from $get_network_cidr to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
   cp /home/admin/thunderhub/.env /home/admin/thunderhub/.env.local
   sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/admin/thunderhub/.env.local
   bash -c "cat <<EOF > thubConfig.yaml
@@ -620,7 +620,7 @@ install_lndg () {
     echo "LNDG já está instalado."
   else
   sudo apt install -y python3-pip python3-venv
-  sudo ufw allow from 192.168.0.0/23 to any port 8889 proto tcp comment 'allow lndg from local network'
+  sudo ufw allow from $get_network_cidr to any port 8889 proto tcp comment 'allow lndg from local network'
   cd
   git clone https://github.com/cryptosharks131/lndg.git
   cd lndg
@@ -666,7 +666,7 @@ lnbits_install() {
   sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
 
   # Configurações do lnbits no ufw
-  sudo ufw allow from 192.168.0.0/23 to any port 5000 proto tcp comment 'allow LNbits from local network'
+  sudo ufw allow from $get_network_cidr to any port 5000 proto tcp comment 'allow LNbits from local network'
 
   # Configura systemd
   sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
@@ -1055,7 +1055,7 @@ simple_lnwallet () {
   sleep 1
   sudo systemctl enable simple-lnwallet
   sudo systemctl start simple-lnwallet
-  sudo ufw allow from 192.168.0.0/23 to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
+  sudo ufw allow from $get_network_cidr to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
   echo
   echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
   xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
@@ -1526,5 +1526,6 @@ menu() {
   }
 
 system_detector
+get_network_cidr
 ip_finder
 terminal_web
