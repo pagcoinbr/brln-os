@@ -533,7 +533,7 @@ install_bos() {
     if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
       echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
     fi
-  cd ~/.npm-global/bin
+  cd ~
   npm i -g balanceofsatoshis
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
   sudo chown -R admin:admin /data/lnd
