@@ -127,7 +127,7 @@ EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
   if sudo visudo -c -f "$SUDOERS_TMP"; then
-    echo "✅ Novo sudoers.d/admin-services autenticado!"
+    sleep 1
   else
     echo "⛔ Erro na validação! Arquivo inválido, removendo."
     sudo rm -f "$SUDOERS_TMP"
@@ -529,10 +529,11 @@ install_bos() {
     echo "Balance of Satoshis já está instalado."
   else
     mkdir -p ~/.npm-global
-    npm config set prefix '~/.npm-global'
+    npm config set prefix ~/.npm-global
     if ! grep -q 'PATH="$HOME/.npm-global/bin:$PATH"' ~/.profile; then
       echo 'PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile
     fi
+  cd ~/.npm-global/bin
   npm i -g balanceofsatoshis
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
   sudo chown -R admin:admin /data/lnd
@@ -550,7 +551,7 @@ install_bos() {
   "socket": "localhost:10009"
 }
 EOF"
-  sudo cp $SERVICES/bos-telegram.service /etc/systemd/system/bost-elegram.service
+  sudo cp $SERVICES/bos-telegram.service /etc/systemd/system/bos-telegram.service
   sudo systemctl daemon-reload
   fi
 }
