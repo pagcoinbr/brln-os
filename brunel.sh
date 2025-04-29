@@ -1248,6 +1248,32 @@ ip_finder () {
   ip_local=$(hostname -I | awk '{print $1}')
 }  
 
+get_network_cidr() {
+  interface=$(ip route | grep default | awk '{print $5}')
+  if [[ -z "$interface" ]]; then
+    echo "Error: No default route found. Please check your network configuration." >&2
+    exit 1
+  fi
+
+  ip_info=$(ip -o -f inet addr show "$interface" | awk '{print $4}')
+  ip_address=$(echo "$ip_info" | cut -d'/' -f1)
+  prefix=$(echo "$ip_info" | cut -d'/' -f2)
+
+  IFS='.' read -r o1 o2 o3 o4 <<< "$ip_address"
+
+  mask=$(( 0xFFFFFFFF << (32 - $prefix) & 0xFFFFFFFF ))
+
+  ip_as_int=$(( (o1 << 24) + (o2 << 16) + (o3 << 8) + o4 ))
+  network_as_int=$(( ip_as_int & mask ))
+
+  n1=$(( (network_as_int >> 24) & 0xFF ))
+  n2=$(( (network_as_int >> 16) & 0xFF ))
+  n3=$(( (network_as_int >> 8) & 0xFF ))
+  n4=$(( network_as_int & 0xFF ))
+
+  echo "${n1}.${n2}.${n3}.${n4}/${prefix}"
+}
+
 system_detector () {
   arch=$(uname -m)
 }
