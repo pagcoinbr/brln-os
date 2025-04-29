@@ -1497,5 +1497,6 @@ menu() {
   }
 
 system_detector
+get_network_cidr
 ip_finder
 terminal_web
