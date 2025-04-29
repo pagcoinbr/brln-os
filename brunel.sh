@@ -90,7 +90,7 @@ EOF
   fi
   # Abre a posta 80 no UFW
   if ! sudo ufw status | grep -q "80/tcp"; then
-    sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null
+    sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network'
   fi
   sudo usermod -aG admin www-data
   # Garante que o pacote python3-venv esteja instalado
