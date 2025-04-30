@@ -37,7 +37,7 @@
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
         <div id="blockchain" class="status">Blockchain: ...</div>
-
+ 
     </div>
     <div class="section">
       <h2>🖥️ Painel de Controle</h2>
@@ -57,16 +57,84 @@
       <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Calc.</a>
       <button class="botao" onclick="alternarTema()">🌗 Alternar Tema</button>
 
-      </div>
-          </div> 
-          <div class="section">
-            <h2>Gerenciador de Serviços ⚡</h2>
-        
-          <div id="buttons-container">
-            <!-- Botões serão inseridos aqui dinamicamente -->
+        <h2>Gerenciador de Serviços ⚡</h2>
+        <div class="service-grid">
+          
+          <div class="service-row">
+            <label for="lnbits-button">LNBits</label>
+            <label class="switch">
+              <input type="checkbox" id="lnbits-button" onchange="toggleService('lnbits')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="thunderhub-button">Thunderhub</label>
+            <label class="switch">
+              <input type="checkbox" id="thunderhub-button" onchange="toggleService('thunderhub')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="simple-button">Simple LNWallet</label>
+            <label class="switch">
+              <input type="checkbox" id="simple-button" onchange="toggleService('simple')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="lndg-button">LNDg</label>
+            <label class="switch">
+              <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="lndg-controller-button">LNDg Controller</label>
+            <label class="switch">
+              <input type="checkbox" id="lndg-controller-button" onchange="toggleService('lndg-controller')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="lnd-button">LND</label>
+            <label class="switch">
+              <input type="checkbox" id="lnd-button" onchange="toggleService('lnd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="bitcoind-button">Bitcoind</label>
+            <label class="switch">
+              <input type="checkbox" id="bitcoind-button" onchange="toggleService('bitcoind')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="bos-telegram-button">BOS Telegram</label>
+            <label class="switch">
+              <input type="checkbox" id="bos-telegram-button" onchange="toggleService('bos-telegram')">
+              <span class="slider"></span>
+            </label>
+          </div>
+      
+          <div class="service-row">
+            <label for="tor-button">Tor</label>
+            <label class="switch">
+              <input type="checkbox" id="tor-button" onchange="toggleService('tor')">
+              <span class="slider"></span>
+            </label>
+          </div>    
+            
           </div>
         </div>
-    <div class="section">
+
         <h2>🙏 Apoie Nosso Projeto</h2>
         <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>
     

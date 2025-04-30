@@ -52,19 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const temaSalvo = localStorage.getItem('temaAtual') || 'dark';
   document.body.classList.add(`${temaSalvo}-theme`);
 
-  // Cria botões do painel de serviços
-  const buttonsContainer = document.getElementById('buttons-container');
-  appsServicos.forEach(appName => {
-    const button = document.createElement('button');
-    button.id = `${appName}-button`;
-    button.textContent = `Carregando ${formatAppName(appName)}...`;
-    button.dataset.app = appName;
-    button.classList.add('botao'); // Adiciona a classe correta
-    button.style.margin = '10px';
-    button.addEventListener('click', () => toggleService(appName));
-    buttonsContainer.appendChild(button);
-  });
-
   // Atualiza status dos botões
   updateButtons();
 
@@ -141,21 +128,16 @@ async function updateButtons() {
     try {
       const response = await fetch(`${flaskBaseURL}/service-status?app=${appName}`);
       const data = await response.json();
-      if (data.active) {
-        button.textContent = `⏹️ Parar ${formatAppName(appName)}`;
-        button.dataset.action = "stop";
-      } else {
-        button.textContent = `▶️ Iniciar ${formatAppName(appName)}`;
-        button.dataset.action = "start";
-      }
+
+      button.checked = data.active; // marca ou desmarca o switch
+      button.dataset.action = data.active ? "stop" : "start";
+
     } catch (error) {
-      button.textContent = `❌ Erro: ${formatAppName(appName)}`;
-      console.error(error);
+      console.error(`Erro ao verificar status de ${appName}:`, error);
     }
   }
 }
 
-// Envia comando para iniciar/parar serviço
 async function toggleService(appName) {
   try {
     const response = await fetch(`${flaskBaseURL}/toggle-service?app=${appName}`, {
