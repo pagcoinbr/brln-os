@@ -1015,7 +1015,7 @@ get_simple_wallet () {
     simple_arch="simple-lnwallet-rpi"
   fi
   cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin
-  if [[ ! -f /home/admin/simple-lnwallet-rpi ]]; then
+  if [[ -f /home/admin/simple-lnwallet-rpi ]]; then
   mv /home/admin/$simple_arch /home/admin/simple-lnwallet
   fi
   chmod +x /home/admin/$simple_arch

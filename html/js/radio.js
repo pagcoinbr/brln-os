@@ -82,16 +82,32 @@ botaoNovidades.addEventListener("click", () => {
   novidadesAtivas = !novidadesAtivas;
 
   if (novidadesAtivas) {
-    // Toca o primeiro trecho imediatamente
     tocarInterrupcao();
-
-    // Inicia o intervalo para os próximos trechos após 5 minutos
     intervaloTrechos = setInterval(tocarInterrupcao, 60000); // 1 minuto
-    botaoNovidades.style.backgroundColor = "#006666"; // Ativo
+    botaoNovidades.style.backgroundColor = "#006666";
     console.log("Novidades ativadas");
   } else {
     clearInterval(intervaloTrechos);
-    botaoNovidades.style.backgroundColor = ""; // Reset
+    botaoNovidades.style.backgroundColor = "";
     console.log("Novidades desativadas");
   }
 });
+
+// Monitorar o arquivo de flag de atualizações
+let ultimoTimestamp = null;
+
+setInterval(() => {
+  fetch('/html/radio/update_available.flag')
+    .then(response => response.text())
+    .then(timestamp => {
+      timestamp = timestamp.trim();
+      if (timestamp !== ultimoTimestamp) {
+        ultimoTimestamp = timestamp;
+        botaoNovidades.classList.add("piscando"); // Aplica animação
+        console.log("📢 Nova atualização de áudio na rádio!");
+      }
+    })
+    .catch(err => {
+      console.error("Erro ao verificar atualizações da rádio:", err);
+    });
+}, 60000);

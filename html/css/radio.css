@@ -100,3 +100,13 @@ audio {
 .vol-control:hover {
   background: #ab47bc;
 }
+
+#radio-button.piscando {
+  animation: piscar 1s infinite;
+}
+
+@keyframes piscar {
+  0% { background-color: #ff0000; }
+  50% { background-color: #ffffff; }
+  100% { background-color: #ff0000; }
+}
