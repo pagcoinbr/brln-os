@@ -14,7 +14,7 @@ POETRY_BIN="/home/admin/.local/bin/poetry"
 FLASKVENV_DIR="/home/admin/envflask"
 atual_user=$(whoami)
 branch=v1.0-beta
-git_user=Redinpais
+git_user=pagcoinbr
 
 # Cores
 RED='\033[0;31m'
