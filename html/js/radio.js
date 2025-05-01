@@ -35,6 +35,8 @@ function tocarInterrupcao() {
 // Quando a novidade terminar, volta à rádio
 jinglePlayer.addEventListener("ended", () => {
   novidadesAtivas = false;
+  botaoNovidades.innerText = "📢"; // volta ao ícone original
+  botaoNovidades.title = "Sem novidades no momento";
   player.play().then(() => {
     console.log("▶️ Rádio retomada");
   });
@@ -49,8 +51,10 @@ setInterval(() => {
       if (timestamp && timestamp !== ultimoTimestamp) {
         ultimoTimestamp = timestamp;
         botaoNovidades.classList.add("piscando");
+        botaoNovidades.innerText = "🔔";
+        botaoNovidades.title = "📣 Novidade disponível! Clique para ouvir";
         console.log("🔔 Novidade detectada!");
-      }
+      }         
     })
     .catch(err => {
       console.error("Erro ao verificar atualizações da rádio:", err);
