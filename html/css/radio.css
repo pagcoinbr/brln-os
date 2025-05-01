@@ -110,3 +110,25 @@ audio {
   50% { background-color: #ffffff; }
   100% { background-color: #ff0000; }
 }
+
+#novidades-button {
+  background: linear-gradient(45deg, #ffc107, #ff9800); /* Amarelo alaranjado */
+  color: #0a0a0a;
+  border: none;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ff980088;
+  transition: all 0.3s ease-in-out;
+}
+
+#novidades-button:hover {
+  background: #ffa726;
+  color: white;
+}
+
+#novidades-button.piscando {
+  animation: piscar 1s infinite;
+}

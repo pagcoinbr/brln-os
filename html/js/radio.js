@@ -2,6 +2,10 @@ const player = document.getElementById('radio-player');
 const button = document.getElementById('radio-button');
 const volUp = document.getElementById('vol-up');
 const volDown = document.getElementById('vol-down');
+const botaoNovidades = document.getElementById("novidades-button");
+
+let ultimoTimestamp = null;
+let novidadesAtivas = false;
 
 player.volume = 0.1;
 
@@ -11,18 +15,53 @@ jinglePlayer.volume = 0.8;
 const intro = new Audio("radio/intro.mp3");
 
 const trechos = [
-  "radio/trecho1.mp3",
-  "radio/trecho2.mp3",
-  "radio/trecho3.mp3"
+  "radio/trecho1.mp3"
 ];
 
-let novidadesAtivas = false;
-let intervaloTrechos = null;
+// Função para tocar trecho de novidade
+function tocarInterrupcao() {
+  if (!player.paused && !novidadesAtivas) {
+    const indice = Math.floor(Math.random() * trechos.length);
+    const trechoSelecionado = trechos[indice];
+    jinglePlayer.src = trechoSelecionado;
+    novidadesAtivas = true;
+    player.pause();
+    jinglePlayer.play().then(() => {
+      console.log("📢 Tocando novidade:", trechoSelecionado);
+    });
+  }
+}
 
+// Quando a novidade terminar, volta à rádio
+jinglePlayer.addEventListener("ended", () => {
+  novidadesAtivas = false;
+  player.play().then(() => {
+    console.log("▶️ Rádio retomada");
+  });
+});
+
+// Verifica o arquivo de flag e pisca o botão de novidades se necessário
+setInterval(() => {
+  fetch('/html/radio/update_available.flag?ts=' + Date.now())
+    .then(response => response.text())
+    .then(timestamp => {
+      timestamp = timestamp.trim();
+      if (timestamp && timestamp !== ultimoTimestamp) {
+        ultimoTimestamp = timestamp;
+        botaoNovidades.classList.add("piscando");
+        console.log("🔔 Novidade detectada!");
+      }
+    })
+    .catch(err => {
+      console.error("Erro ao verificar atualizações da rádio:", err);
+    });
+}, 60000);
+
+// Lógica do botão de rádio
 function toggleRadio() {
   if (player.paused) {
     intro.play().then(() => {
-      console.log("Intro iniciada");
+      console.log("▶️ Intro iniciada");
       button.innerText = "⏸️ Parar";
     }).catch(() => {
       alert("Clique para ativar o som. O navegador pode estar a bloquear o autoplay.");
@@ -30,7 +69,7 @@ function toggleRadio() {
 
     intro.addEventListener("ended", () => {
       player.play().then(() => {
-        console.log("Rádio iniciada");
+        console.log("▶️ Rádio iniciada");
       });
     });
 
@@ -42,72 +81,15 @@ function toggleRadio() {
   }
 }
 
+// Ajuste de volume
 function ajustarVolume(direcao) {
   let novoVolume = player.volume + (direcao === 'up' ? 0.1 : -0.1);
-  novoVolume = Math.max(0, Math.min(1, novoVolume));
-  player.volume = novoVolume;
-  console.log("Volume atual:", Math.round(novoVolume * 100) + "%");
+  player.volume = Math.max(0, Math.min(1, novoVolume));
+  console.log("🔊 Volume:", Math.round(player.volume * 100) + "%");
 }
 
-function tocarInterrupcao() {
-  if (!player.paused) {
-    const indice = Math.floor(Math.random() * trechos.length);
-    const trechoSelecionado = trechos[indice];
-    jinglePlayer.src = trechoSelecionado;
-    player.pause();
-    jinglePlayer.play().then(() => {
-      console.log("Tocando novidade:", trechoSelecionado);
-    });
-  }
-}
-
-jinglePlayer.addEventListener("ended", () => {
-  player.play().then(() => {
-    console.log("Rádio retomada");
-  });
-});
-
+// Eventos
 button.addEventListener('click', toggleRadio);
 volUp.addEventListener('click', () => ajustarVolume('up'));
 volDown.addEventListener('click', () => ajustarVolume('down'));
-
-// NOVO BOTÃO DE NOVIDADES (Agora com o ícone 📢)
-const botaoNovidades = document.createElement("button");
-botaoNovidades.textContent = "📢";
-botaoNovidades.className = "vol-control";
-botaoNovidades.title = "Ativar/Desativar Novidades";
-button.parentNode.appendChild(botaoNovidades);
-
-botaoNovidades.addEventListener("click", () => {
-  novidadesAtivas = !novidadesAtivas;
-
-  if (novidadesAtivas) {
-    tocarInterrupcao();
-    intervaloTrechos = setInterval(tocarInterrupcao, 60000); // 1 minuto
-    botaoNovidades.style.backgroundColor = "#006666";
-    console.log("Novidades ativadas");
-  } else {
-    clearInterval(intervaloTrechos);
-    botaoNovidades.style.backgroundColor = "";
-    console.log("Novidades desativadas");
-  }
-});
-
-// Monitorar o arquivo de flag de atualizações
-let ultimoTimestamp = null;
-
-setInterval(() => {
-  fetch('/html/radio/update_available.flag')
-    .then(response => response.text())
-    .then(timestamp => {
-      timestamp = timestamp.trim();
-      if (timestamp !== ultimoTimestamp) {
-        ultimoTimestamp = timestamp;
-        botaoNovidades.classList.add("piscando"); // Aplica animação
-        console.log("📢 Nova atualização de áudio na rádio!");
-      }
-    })
-    .catch(err => {
-      console.error("Erro ao verificar atualizações da rádio:", err);
-    });
-}, 60000);
+botaoNovidades.addEventListener('click', tocarInterrupcao);
