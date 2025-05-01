@@ -66,7 +66,6 @@
       <hr style="border: none; border-top: 1px solid #6e6e6e; margin: 10px 0; margin-top: 20px; margin-bottom: 20px;">
         <h3>Gerenciador de Serviços ⚡</h3>
         <div class="service-grid">
-          
           <div class="service-row">
             <label for="lnbits-button">LNBits</label>
             <label class="switch">
@@ -74,7 +73,7 @@
               <span class="slider"></span>
             </label>
           </div>
-      
+            
           <div class="service-row">
             <label for="thunderhub-button">Thunderhub</label>
             <label class="switch">
@@ -82,7 +81,7 @@
               <span class="slider"></span>
             </label>
           </div>
-      
+            
           <div class="service-row">
             <label for="simple-button">Simple LNWallet</label>
             <label class="switch">
@@ -90,15 +89,23 @@
               <span class="slider"></span>
             </label>
           </div>
-      
-            <div class="service-row">
-            <label for="lnd-lndg-button">LNDG & LNDg Controller</label>
+
+          <div class="service-row">
+            <label for="lnd-lndg-button">LNDg</label>
             <label class="switch">
-              <input type="checkbox" id="lndg-lndg-button" onchange="toggleService('lndg')">
+              <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
               <span class="slider"></span>
             </label>
-            </div>
-      
+          </div>
+
+          <div class="service-row">
+            <label for="lndg-controller-button">LNDg Backend</label>
+            <label class="switch">
+              <input type="checkbox" id="lndg-controller-button" onchange="toggleService('lndg-controller')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <div class="service-row">
             <label for="lnd-button">LND</label>
             <label class="switch">
@@ -106,7 +113,7 @@
               <span class="slider"></span>
             </label>
           </div>
-      
+            
           <div class="service-row">
             <label for="bitcoind-button">Bitcoind</label>
             <label class="switch">
@@ -114,7 +121,7 @@
               <span class="slider"></span>
             </label>
           </div>
-      
+            
           <div class="service-row">
             <label for="bos-telegram-button">BOS Telegram</label>
             <label class="switch">
@@ -122,7 +129,7 @@
               <span class="slider"></span>
             </label>
           </div>
-      
+            
           <div class="service-row">
             <label for="tor-button">Tor</label>
             <label class="switch">
