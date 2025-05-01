@@ -65,15 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // Função para abrir apps principais
 function abrirApp(porta) {
   const ip = window.location.hostname;
-  const width = 900;
-  const height = 600;
-  const left = (screen.width - width) / 2;
-  const top = (screen.height - height) / 2;
-  
-  window.open(`http://${ip}:${porta}`, '_blank',
-  `width=${width},height=${height},left=${left},top=${top},resizable=yes`);
+  window.open(`http://${ip}:${porta}`, '_blank');
 }
-
 
 function verificarServicosPrincipais() {
   const apps = [
