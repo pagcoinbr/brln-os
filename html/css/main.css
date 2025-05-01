@@ -20,7 +20,7 @@ body.dark-theme {
 
 /* Tema Claro */
 body.light-theme {
-  background: linear-gradient(135deg, #caaeff, #8ac5fc, #5dffd6);
+  background: linear-gradient(135deg, #d3befc, #a3d1fc, #a6fae5);
   background-size: cover;
   background-attachment: fixed;
   color: rgb(0, 0, 0);
