@@ -203,6 +203,7 @@ terminal_web() {
   if [[ ! -f /usr/local/bin/gotty ]]; then
     # Baixa o binário como admin
     update_and_upgrade
+    radio_update
     gotty_install
     tailscale_vpn
     opening
@@ -1015,7 +1016,7 @@ get_simple_wallet () {
     simple_arch="simple-lnwallet-rpi"
   fi
   cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin
-  if [[ ! -f /home/admin/simple-lnwallet-rpi ]]; then
+  if [[ -f /home/admin/simple-lnwallet-rpi ]]; then
   mv /home/admin/$simple_arch /home/admin/simple-lnwallet
   fi
   chmod +x /home/admin/$simple_arch
@@ -1218,6 +1219,26 @@ submenu_opcoes() {
       submenu_opcoes
       ;;
   esac
+}
+
+radio_update () {
+  # Caminho do script que deve rodar a cada hora
+  SCRIPT="/home/admin/brlnfullauto/html/radio/radioupdate_radio.sh"
+
+  # Linha que será adicionada ao crontab
+  CRON_LINE="0 * * * * $SCRIPT >> /var/log/update_radio.log 2>&1"
+
+  # Verifica se já existe no crontab
+  crontab -l 2>/dev/null | grep -F "$SCRIPT" > /dev/null
+
+  if [ $? -eq 0 ]; then
+    echo "✅ A entrada do crontab já existe. Nenhuma alteração feita."
+  else
+    echo "➕ Adicionando entrada ao crontab..."
+    (crontab -l 2>/dev/null; echo "$CRON_LINE") | crontab -
+    echo "✅ Entrada adicionada com sucesso!"
+  fi
+  sudo chmod +x $SCRIPT
 }
 
 ip_finder () {
