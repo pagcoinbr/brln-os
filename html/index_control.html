@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Index Control</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mainframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    .bottomframe {
+      height: 80px;
+      border: none;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .bottomframe {
+        height: 100px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <iframe class="mainframe" id="main-frame" src=""></iframe>
+  <iframe class="bottomframe" src="boton.html"></iframe>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    const mainFrame = document.getElementById('main-frame');
+
+    if (id) {
+      const ip = window.location.hostname;
+      const appUrl = `http://${ip}:${id}`;
+      console.log("Abrindo app no frame:", appUrl);
+      mainFrame.src = appUrl;
+    } else {
+      mainFrame.src = 'default.html';
+    }
+  </script>
+
+</body>
+</html>
