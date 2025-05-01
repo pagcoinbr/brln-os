@@ -30,9 +30,9 @@
     <a href="https://mempool.space" class="botao" target="_blank">🧱 Mempool</a>
     <a href="https://unsafe.robosats.org/" class="botao" target="_blank">🤖 RoboSats DEX</a>
     <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
-    <button class="botao" onclick="alternarTema()">🌗 Alterar Tema</button>
     <a href="https://bitcoin.clarkmoody.com/dashboard/" class="botao" target="_blank">📊 Bitcoin Dashboard</a>
     <a href="https://bitcoinvisuals.com/lightning" class="botao" target="_blank">📈 Lightning Dashboard</a>
+    <button class="botao" onclick="alternarTema()">🌗 Alterar Tema</button>
 
   </div>
   </div>
@@ -67,41 +67,9 @@
         <h3>Gerenciador de Serviços ⚡</h3>
         <div class="service-grid">
           <div class="service-row">
-            <label for="lnbits-button">LNBits</label>
+            <label for="bitcoind-button">Bitcoind</label>
             <label class="switch">
-              <input type="checkbox" id="lnbits-button" onchange="toggleService('lnbits')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="thunderhub-button">Thunderhub</label>
-            <label class="switch">
-              <input type="checkbox" id="thunderhub-button" onchange="toggleService('thunderhub')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="simple-button">Simple LNWallet</label>
-            <label class="switch">
-              <input type="checkbox" id="simple-button" onchange="toggleService('simple')">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="service-row">
-            <label for="lnd-lndg-button">LNDg</label>
-            <label class="switch">
-              <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="service-row">
-            <label for="lndg-controller-button">LNDg Backend</label>
-            <label class="switch">
-              <input type="checkbox" id="lndg-controller-button" onchange="toggleService('lndg-controller')">
+              <input type="checkbox" id="bitcoind-button" onchange="toggleService('bitcoind')">
               <span class="slider"></span>
             </label>
           </div>
@@ -113,15 +81,47 @@
               <span class="slider"></span>
             </label>
           </div>
-            
+
           <div class="service-row">
-            <label for="bitcoind-button">Bitcoind</label>
+            <label for="lnd-lndg-button">LNDg</label>
             <label class="switch">
-              <input type="checkbox" id="bitcoind-button" onchange="toggleService('bitcoind')">
+              <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
               <span class="slider"></span>
             </label>
           </div>
-            
+ 
+          <div class="service-row">
+            <label for="lndg-controller-button">LNDg Backend</label>
+            <label class="switch">
+              <input type="checkbox" id="lndg-controller-button" onchange="toggleService('lndg-controller')">
+              <span class="slider"></span>
+            </label>
+          </div>         
+
+          <div class="service-row">
+            <label for="thunderhub-button">Thunderhub</label>
+            <label class="switch">
+              <input type="checkbox" id="thunderhub-button" onchange="toggleService('thunderhub')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="lnbits-button">LNBits</label>
+            <label class="switch">
+              <input type="checkbox" id="lnbits-button" onchange="toggleService('lnbits')">
+              <span class="slider"></span>
+            </label>
+          </div>
+         
+          <div class="service-row">
+            <label for="simple-button">Simple LNWallet</label>
+            <label class="switch">
+              <input type="checkbox" id="simple-button" onchange="toggleService('simple')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <div class="service-row">
             <label for="bos-telegram-button">BOS Telegram</label>
             <label class="switch">
