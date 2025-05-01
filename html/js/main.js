@@ -65,8 +65,18 @@ document.addEventListener('DOMContentLoaded', () => {
 // Função para abrir apps principais
 function abrirApp(porta) {
   const ip = window.location.hostname;
-  window.open(`http://${ip}:${porta}`, '_blank');
+  
+  // Verifica se a porta corresponde ao Simple LNWallet
+  if (porta === 35671) {
+    // Se for o Simple LNWallet, abre a nova aba com index_control.html
+    window.open(`index_control.html?id=${porta}`, '_blank');
+  } else {
+    // Para outros aplicativos, abre normalmente na nova aba
+    const urlApp = `http://${ip}:${porta}`;
+    window.open(urlApp, '_blank');
+  }
 }
+
 
 function verificarServicosPrincipais() {
   const apps = [
