@@ -195,8 +195,6 @@ done
 gui_update() {
   update_and_upgrade
   gotty_install
-  sudo chown -R admin:admin /var/www/html/radio
-  sudo chmod +x /var/www/html/radio/radio-update.sh
   menu
 }
 
@@ -706,6 +704,8 @@ opening () {
   echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
   echo
   echo
+  sudo chown -R admin:admin /var/www/html/radio
+  sudo chmod +x /var/www/html/radio/radio-update.sh
 }
 
 toggle_bitcoin () {
