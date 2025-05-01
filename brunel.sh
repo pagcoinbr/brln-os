@@ -196,6 +196,7 @@ gui_update() {
   update_and_upgrade
   gotty_install
   sudo chown -R admin:admin /var/www/html/radio
+  sudo chmod +x /var/www/html/radio/radio-update.sh
   menu
 }
 
