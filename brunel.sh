@@ -9,7 +9,7 @@ REPO_DIR="/home/admin/brlnfullauto"
 HTML_SRC="$REPO_DIR/html"
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-SERVICES="/home/admin/brlnfullauto/services"
+SERVICE_DIR="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 FLASKVENV_DIR="/home/admin/envflask"
 atual_user=$(whoami)
@@ -417,7 +417,7 @@ $lnd_db"
     sudo chmod -R g+X /data/lnd
     sudo chmod 640 /run/tor/control.authcookie
     sudo chmod 750 /run/tor
-    sudo cp $SERVICES/lnd.service /etc/systemd/system/lnd.service
+    sudo cp $SERVICES_DIR/lnd.service /etc/systemd/system/lnd.service
     sudo cp $file_path /data/lnd/lnd.conf
     sudo chown admin:admin /data/lnd/lnd.conf
     sudo chmod 640 /data/lnd/lnd.conf
@@ -513,7 +513,7 @@ install_bitcoind() {
   cd /home/admin/.bitcoin
   wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
   sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
-  sudo cp $SERVICES/bitcoind.service /etc/systemd/system/bitcoind.service
+  sudo cp $SERVICES_DIR/bitcoind.service /etc/systemd/system/bitcoind.service
   sudo systemctl enable bitcoind
   sudo systemctl start bitcoind
   sudo ss -tulpn | grep bitcoind
@@ -556,7 +556,7 @@ install_bos() {
   "socket": "localhost:10009"
 }
 EOF"
-  sudo cp $SERVICES/bos-telegram.service /etc/systemd/system/bos-telegram.service
+  sudo cp $SERVICES_DIR/bos-telegram.service /etc/systemd/system/bos-telegram.service
   sudo systemctl daemon-reload
   fi
 }
@@ -586,7 +586,7 @@ accounts:
     certificatePath: '/data/lnd/tls.cert'
     password: '$thub_senha'
 EOF"
-  sudo cp $SERVICES/thunderhub.service /etc/systemd/system/thunderhub.service
+  sudo cp $SERVICES_DIR/thunderhub.service /etc/systemd/system/thunderhub.service
   sudo systemctl start thunderhub.service
   sudo systemctl enable thunderhub.service
   fi
@@ -606,8 +606,8 @@ install_lndg () {
   .venv/bin/pip install -r requirements.txt
   .venv/bin/pip install whitenoise
   .venv/bin/python3 initialize.py --whitenoise
-  sudo cp $SERVICES/lndg.service /etc/systemd/system/lndg.service
-  sudo cp $SERVICES/lndg-controller.service /etc/systemd/system/lndg-controller.service
+  sudo cp $SERVICES_DIR/lndg.service /etc/systemd/system/lndg.service
+  sudo cp $SERVICES_DIR/lndg-controller.service /etc/systemd/system/lndg-controller.service
   sudo systemctl daemon-reload
   sudo systemctl enable lndg-controller.service
   sudo systemctl start lndg-controller.service
@@ -646,7 +646,7 @@ lnbits_install() {
   sudo ufw allow from $subnet to any port 5000 proto tcp comment 'allow LNbits from local network'
 
   # Configura systemd
-  sudo cp $SERVICES/lnbits.service /etc/systemd/system/lnbits.service
+  sudo cp $SERVICES_DIR/lnbits.service /etc/systemd/system/lnbits.service
 
   # Ativa e inicia o serviço
   sudo systemctl daemon-reload
