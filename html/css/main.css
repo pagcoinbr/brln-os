@@ -20,7 +20,7 @@ body.dark-theme {
 
 /* Tema Claro */
 body.light-theme {
-  background: linear-gradient(135deg, #fcfda5, #0b7dff);
+  background: linear-gradient(135deg, #caaeff, #8ac5fc, #5dffd6);
   background-size: cover;
   background-attachment: fixed;
   color: rgb(0, 0, 0);
@@ -31,7 +31,7 @@ body.light-theme {
 ------------------------------ */
 
 img {
-  width: 600px;
+  width: 800px;
   max-width: 100%;
   margin: 20px auto;
   display: block;
@@ -44,9 +44,9 @@ img {
 /* Container principal (menu) */
 #botoes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+  grid-template-columns: repeat(2, 1fr); /* 2 colunas */
   gap: 15px;
-  max-width: 1050px;
+  max-width: 600px;
   margin: 20px auto;
 }
 
@@ -199,8 +199,8 @@ body.dark-theme .botao, body.dark-theme a.botao {
 
 /* Estilo Light */
 body.light-theme .botao, body.light-theme a.botao {
-  background: linear-gradient(45deg, #0257d6, #0d6dfd);
-  color: #ffffff;
+  background: linear-gradient(45deg, #5d96ff);
+  color: #000000;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
@@ -255,13 +255,6 @@ body.light-theme .botao:hover, body.light-theme a.botao:hover {
 .status {
   font-size: 18px;
   margin: 10px 0;
-}
-
-.voltar-container {
-  margin-top: 30px;
-  margin-bottom: 40px;
-  display: flex;
-  justify-content: center;
 }
 
 pre {
