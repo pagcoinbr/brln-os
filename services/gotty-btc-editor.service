@@ -6,7 +6,7 @@ After=network.target
 User=admin
 WorkingDirectory=/home/admin
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3636 -w nano /data/bitcoin/bitcoin.conf
+ExecStart=/usr/local/bin/gotty -p 3636 -w nano /home/admin/.bitcoin/bitcoin.conf
 Restart=always
 
 [Install]
