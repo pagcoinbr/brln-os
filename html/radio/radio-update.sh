@@ -15,8 +15,8 @@ HASH_ANTERIOR=""
 
 if [ "$HASH_ANTERIOR" != "$HASH_ATUAL" ]; then
   echo "🔁 Novos arquivos detectados. Atualizando rádio..."
-  sudo find "$RADIO_DIR" -type f -name "*.mp3" ! -name "intro.mp3" -exec rm -f {} +
-  sudo cp -r "$REPO_DIR/html/radio/"* "$RADIO_DIR"
+  find "$RADIO_DIR" -type f -name "*.mp3" ! -name "intro.mp3" -exec rm -f {} +
+  cp -r "$REPO_DIR/html/radio/"* "$RADIO_DIR"
 
   date +%s > "$FLAG_FILE"
   echo "$HASH_ATUAL" > "$TRACK_HASH_FILE"
