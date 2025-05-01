@@ -163,6 +163,19 @@ input:checked + .slider:before {
   transition: all 0.3s ease-in-out;
 }
 
+.toggle-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #b8a4d4; /* cinza arroxeado */
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.toggle-btn.rotate {
+  transform: rotate(180deg);
+}
+
 /* Botões dentro do #botoes */
 #botoes .botao, #botoes a.botao {
   width: 100%;

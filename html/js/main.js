@@ -184,3 +184,10 @@ function alternarTema() {
 function salvarPagina(pagina) {
   localStorage.setItem('ultimaPaginaMainFrame', pagina);
 }
+
+function toggleExtras(button) {
+  const extras = document.getElementById("extras");
+  const isHidden = extras.style.display === "none";
+  extras.style.display = isHidden ? "block" : "none";
+  button.classList.toggle("rotate", isHidden);
+}
