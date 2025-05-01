@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REPO_DIR="/home/brlnfullauto"
+REPO_DIR="/home/admin/brlnfullauto"
 RADIO_DIR="$REPO_DIR/html/radio"
 FLAG_FILE="$RADIO_DIR/update_available.flag"
 
