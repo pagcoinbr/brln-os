@@ -112,7 +112,7 @@ audio {
 }
 
 #novidades-button {
-  background: linear-gradient(45deg, #ffc107, #ff9800); /* Amarelo alaranjado */
+  background: linear-gradient(45deg, #6a1b9a, #8e24aa);
   color: #0a0a0a;
   border: none;
   padding: 8px 16px;
@@ -131,4 +131,10 @@ audio {
 
 #novidades-button.piscando {
   animation: piscar 1s infinite;
+}
+
+@keyframes piscar {
+  0%   { background-color: #ff0000; }
+  50%  { background-color: #ffffff; }
+  100% { background-color: #ff0000; }
 }
