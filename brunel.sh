@@ -449,7 +449,6 @@ $lnd_db"
     24_word_confirmation
   fi
   unset password  # limpa da memória, por segurança
-  sudo rm -rf /home/admin/lnd-install
   menu
 } 
 
@@ -654,6 +653,7 @@ lnbits_install() {
   sudo systemctl start lnbits.service
 
   echo "✅ LNbits instalado e rodando como serviço systemd!"
+  sudo rm -rf /home/admin/lnd-install
 }
 
 tailscale_vpn() {
@@ -1011,6 +1011,7 @@ manutencao_script () {
 }	
 
 get_simple_wallet () {
+  cd ~
   arch=$(uname -m)
   if [[ $arch == "x86_64" ]]; then
     echo "Arquitetura x86_64 detectada."
@@ -1019,10 +1020,10 @@ get_simple_wallet () {
     echo "Arquitetura ARM64 detectada."
     simple_arch="simple-lnwallet-rpi"
   fi
-  if [[ ! -d /home/admin/$simple_arch ]]; then
+  if [[ -f /home/admin/$simple_arch ]]; then
     rm -rf /home/admin/$simple_arch
   fi
-  cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin
+  cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin/
   if [[ -f /home/admin/simple-lnwallet-rpi ]]; then
   mv /home/admin/$simple_arch /home/admin/simple-lnwallet
   fi
