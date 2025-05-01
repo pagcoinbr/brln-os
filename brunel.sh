@@ -195,6 +195,8 @@ done
 gui_update() {
   update_and_upgrade
   gotty_install
+  sudo chown -R admin:admin /var/www/html/radio
+  sudo chmod +x /var/www/html/radio/radio-update.sh
   menu
 }
 
@@ -205,6 +207,8 @@ terminal_web() {
     update_and_upgrade
     radio_update
     gotty_install
+    sudo chown -R admin:admin /var/www/html/radio
+    sudo chmod +x /var/www/html/radio/radio-update.sh
     tailscale_vpn
     opening
     exit 0
@@ -704,8 +708,6 @@ opening () {
   echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
   echo
   echo
-  sudo chown -R admin:admin /var/www/html/radio
-  sudo chmod +x /var/www/html/radio/radio-update.sh
 }
 
 toggle_bitcoin () {
@@ -1225,7 +1227,7 @@ submenu_opcoes() {
 
 radio_update () {
   # Caminho do script que deve rodar a cada hora
-  SCRIPT="/home/admin/brlnfullauto/html/radio/radioupdate_radio.sh"
+  SCRIPT="/home/admin/brlnfullauto/html/radio/radio-update.sh"
 
   # Linha que será adicionada ao crontab
   CRON_LINE="0 * * * * $SCRIPT >> /var/log/update_radio.log 2>&1"
