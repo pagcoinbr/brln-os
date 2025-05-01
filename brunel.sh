@@ -195,6 +195,7 @@ done
 gui_update() {
   update_and_upgrade
   gotty_install
+  sudo chown -R admin:admin /var/www/html/radio
   menu
 }
 
