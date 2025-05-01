@@ -3,9 +3,6 @@ const button = document.getElementById('radio-button');
 const volUp = document.getElementById('vol-up');
 const volDown = document.getElementById('vol-down');
 const botaoNovidades = document.getElementById("novidades-button");
-
-let ultimoTimestamp = localStorage.getItem("ultimoTimestamp") || null;
-localStorage.setItem("ultimoTimestamp", timestamp);
 let novidadesAtivas = false;
 
 player.volume = 0.1;
@@ -21,14 +18,21 @@ const trechos = [
 
 // Função para tocar trecho de novidade
 function tocarInterrupcao() {
-  if (timestamp && timestamp !== ultimoTimestamp) {
-    ultimoTimestamp = timestamp;
-    localStorage.setItem("ultimoTimestamp", timestamp);  // <- ADICIONE ISSO
-    botaoNovidades.classList.add("piscando");
-    botaoNovidades.innerText = "🔔";
-    botaoNovidades.title = "📣 Novidade disponível! Clique para ouvir";
-    console.log("🔔 Novidade detectada!");
-  }  
+  if (!player.paused && !novidadesAtivas) {
+    const indice = Math.floor(Math.random() * trechos.length);
+    const trechoSelecionado = trechos[indice];
+    jinglePlayer.src = trechoSelecionado;
+    novidadesAtivas = true;
+
+    botaoNovidades.classList.remove("piscando");
+    botaoNovidades.innerText = "📢";
+    botaoNovidades.title = "Sem novidades no momento";
+
+    player.pause();
+    jinglePlayer.play().then(() => {
+      console.log("📢 Tocando novidade:", trechoSelecionado);
+    });
+  }
 }
 
 // Quando a novidade terminar, volta à rádio
@@ -42,23 +46,28 @@ jinglePlayer.addEventListener("ended", () => {
 });
 
 // Verifica o arquivo de flag e pisca o botão de novidades se necessário
+let ultimoTimestamp = localStorage.getItem("ultimoTimestamp") || null;
+
 setInterval(() => {
   fetch('/html/radio/update_available.flag?ts=' + Date.now())
     .then(response => response.text())
     .then(timestamp => {
       timestamp = timestamp.trim();
+
       if (timestamp && timestamp !== ultimoTimestamp) {
         ultimoTimestamp = timestamp;
+        localStorage.setItem("ultimoTimestamp", timestamp);
         botaoNovidades.classList.add("piscando");
         botaoNovidades.innerText = "🔔";
         botaoNovidades.title = "📣 Novidade disponível! Clique para ouvir";
         console.log("🔔 Novidade detectada!");
-      }         
+      }
     })
     .catch(err => {
       console.error("Erro ao verificar atualizações da rádio:", err);
     });
 }, 60000);
+
 
 // Lógica do botão de rádio
 function toggleRadio() {
