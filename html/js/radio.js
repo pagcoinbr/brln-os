@@ -4,7 +4,8 @@ const volUp = document.getElementById('vol-up');
 const volDown = document.getElementById('vol-down');
 const botaoNovidades = document.getElementById("novidades-button");
 
-let ultimoTimestamp = null;
+let ultimoTimestamp = localStorage.getItem("ultimoTimestamp") || null;
+localStorage.setItem("ultimoTimestamp", timestamp);
 let novidadesAtivas = false;
 
 player.volume = 0.1;
@@ -20,16 +21,14 @@ const trechos = [
 
 // Função para tocar trecho de novidade
 function tocarInterrupcao() {
-  if (!player.paused && !novidadesAtivas) {
-    const indice = Math.floor(Math.random() * trechos.length);
-    const trechoSelecionado = trechos[indice];
-    jinglePlayer.src = trechoSelecionado;
-    novidadesAtivas = true;
-    player.pause();
-    jinglePlayer.play().then(() => {
-      console.log("📢 Tocando novidade:", trechoSelecionado);
-    });
-  }
+  if (timestamp && timestamp !== ultimoTimestamp) {
+    ultimoTimestamp = timestamp;
+    localStorage.setItem("ultimoTimestamp", timestamp);  // <- ADICIONE ISSO
+    botaoNovidades.classList.add("piscando");
+    botaoNovidades.innerText = "🔔";
+    botaoNovidades.title = "📣 Novidade disponível! Clique para ouvir";
+    console.log("🔔 Novidade detectada!");
+  }  
 }
 
 // Quando a novidade terminar, volta à rádio
