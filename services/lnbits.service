@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/home/admin/lnbits
-ExecStart=/home/admin/lnbits/start-lnbits.sh
+ExecStart=/home/admin/.local/bin/poetry run lnbits --port 5000 --host 0.0.0.0
 User=admin
 Restart=always
 TimeoutSec=120

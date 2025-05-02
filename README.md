@@ -1,7 +1,7 @@
 # 🚀 Instalação Passo a Passo - BR⚡LN Bolt
 # Lightning Node Bootstrap
 
-![Captura de tela 2025-04-21 132716](https://github.com/user-attachments/assets/765fc080-120c-4646-9c51-20fe27292573)
+![Tela principal](https://github.com/user-attachments/assets/efbed0d2-5199-4e21-8d10-40bb742b5ef7)
 
 ### 1. 🖥️ Instale o Ubuntu Server (Recomendado: 24.04 LTS)
 
@@ -30,7 +30,7 @@ bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run
 
 💡 Esse script vai:
 - Criar o usuário `admin`
-- Iniciar o script principal `brlnfullauto.sh`
+- Iniciar o script principal `brunel.sh`
 - Apresentar o menu gráfico interativo.
 
 **ATENÇÃO!** Após a criação do usuário `admin`, o script vai finalizar da seguinte maneira:
@@ -45,19 +45,8 @@ http://<seu_ip_local> ou http://<seu_ip_tailscale>
 ```
 
 ---
-![image](https://github.com/user-attachments/assets/88ff977e-89b3-4c08-b4a7-6b35bd0cd64f)
 
-![image](https://github.com/user-attachments/assets/3877bc5c-83e6-4919-b079-f6891f224c7b)
-
-Você verá um painel com botões para:
-- Thunderhub
-- LNDg
-- LNbits
-- Simple LNWallet
-- ...
-- Configurações (Acesse aqui)
-
-No menu de botões escolha: ⚡ BRLNFullAuto.
+No menu de botões escolha: ⚡ BRLN Node Manager.
 
 ### 3. 🧭 Use o Menu Interativo
 
@@ -99,8 +88,8 @@ Ao instalar o LND (passo 3), o script te guiará para:
 
 O script inclui um assistente para configurar o bot BOS Telegram:
 1. Crie seu bot via @BotFather no Telegram
-2. Rode `bos telegram` no terminal
-3. Cole o token do bot
+2. Rode `bos telegram` no "Terminal Web"
+3. Execute a opção "8" do Node Manager
 4. Envie `/start` e `/connect` no Telegram
 5. Copie o Connection Code e insira no terminal
 
