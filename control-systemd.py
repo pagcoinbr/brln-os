@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import subprocess
+import os
+
 
 app = Flask(__name__)
 CORS(app)  # <- liberação de CORS
@@ -72,7 +74,7 @@ def toggle_service():
     
 @app.route("/status_novidade")
 def status_novidade():
-    flag_path = "/home/admin/brlnfullauto/html/radio/update_available.flag"
+    flag_path = "/var/www/html/radio/update_available.flag"
     if os.path.exists(flag_path):
         with open(flag_path, "r") as f:
             timestamp = f.read().strip()
