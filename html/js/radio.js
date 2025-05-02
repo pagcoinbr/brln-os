@@ -58,7 +58,7 @@ setInterval(() => {
         botaoNovidades.classList.add("piscando");
         botaoNovidades.innerText = "🔔";
         botaoNovidades.title = "📣 Novidade disponível! Clique para ouvir";
-        console.log("🔔 Nova novidade detectada.");
+        console.log("🔔 Novidade detectada.");
       }
     })
     .catch(err => {
