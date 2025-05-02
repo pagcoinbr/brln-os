@@ -69,6 +69,15 @@ def toggle_service():
         return jsonify({"success": True, "new_status": not is_active})
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "error": e.stderr}), 500
+    
+@app.route("/status_novidade")
+def status_novidade():
+    flag_path = "/home/admin/brlnfullauto/html/radio/update_available.flag"
+    if os.path.exists(flag_path):
+        with open(flag_path, "r") as f:
+            timestamp = f.read().strip()
+        return jsonify({"novidade": True, "timestamp": timestamp})
+    return jsonify({"novidade": False})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

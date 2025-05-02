@@ -134,6 +134,7 @@ EOF
     exit 1
   fi
   sudo systemctl restart apache2
+  sudo apt install -y python3-flask >> /dev/null 2>&1 & spinner
 }
 
 gotty_do () {
