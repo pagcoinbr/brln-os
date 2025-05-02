@@ -1,0 +1,140 @@
+/* Estilos base */
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a; /* Preto mais "profundo" */
+  color: #e0e0e0; /* Cinza claro para o texto */
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+/* Botão principal de Rádio */
+#radio-button {
+  background: linear-gradient(45deg, #00bcd4, #00838f); /* Azul ciano moderno */
+  color: #0a0a0a;
+  border: none;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #00bcd488;
+  transition: all 0.3s ease-in-out;
+}
+
+#radio-button:hover {
+  background: #0097a7;
+  color: white;
+}
+
+/* Marquee (Letreiro) */
+.marquee {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.marquee-content {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 15s linear infinite;
+  font-family: 'Courier New', Courier, monospace; /* Fonte moderna tipo terminal */
+  font-weight: bold;
+  font-size: 16px;
+  color: #00ffff;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Links dentro do letreiro */
+.marquee-content a {
+  color: #00ffff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.marquee-content a:hover {
+  text-decoration: underline;
+}
+
+/* Versão */
+.version {
+  margin-left: 30px;
+  font-weight: bold;
+  color: #b0b0b0;
+  font-size: 14px;
+}
+
+/* Player de áudio escondido */
+audio {
+  display: none;
+}
+
+/* Controles de Volume */
+.vol-control {
+  background: linear-gradient(45deg, #6a1b9a, #8e24aa); /* Roxo elegante */
+  color: white;
+  border: none;
+  font-size: 16px;
+  padding: 4px 10px;
+  margin-left: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease-in-out;
+}
+
+.vol-control:hover {
+  background: #ab47bc;
+}
+
+#radio-button.piscando {
+  animation: piscar 1s infinite;
+}
+
+@keyframes piscar {
+  0% { background-color: #ff0000; }
+  50% { background-color: #ffffff; }
+  100% { background-color: #ff0000; }
+}
+
+#novidades-button {
+  background: linear-gradient(45deg, #6a1b9a, #8e24aa);
+  color: #0a0a0a;
+  border: none;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ff980088;
+  transition: all 0.3s ease-in-out;
+}
+
+#novidades-button:hover {
+  background: #444444;
+  color: white;
+}
+
+#novidades-button.piscando {
+  animation: piscar 1s infinite;
+}
+
+@keyframes piscar {
+  0%   { background-color: #ff0000; }
+  50%  { background-color: #ffffff; }
+  100% { background-color: #ff0000; }
+}

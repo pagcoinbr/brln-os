@@ -6,7 +6,7 @@ After=network.target
 User=admin
 WorkingDirectory=/home/admin
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash -c 'bash <(curl -s https://raw.githubusercontent.com/REDACTED_USERbr/brlnfullauto/main/brlnfullauto.sh)'
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/admin/brlnfullauto/brunel.sh
 Restart=always
 
 [Install]
