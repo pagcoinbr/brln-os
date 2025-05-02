@@ -13,7 +13,7 @@ SERVICES_DIR="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 FLASKVENV_DIR="/home/admin/envflask"
 atual_user=$(whoami)
-branch=v1.0-beta
+branch=main
 git_user=pagcoinbr
 
 # Cores
