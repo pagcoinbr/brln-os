@@ -198,6 +198,7 @@ gui_update() {
   gotty_install
   sudo chown -R admin:admin /var/www/html/radio
   sudo chmod +x /var/www/html/radio/radio-update.sh
+  sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
   menu
 }
 
@@ -210,6 +211,7 @@ terminal_web() {
     gotty_install
     sudo chown -R admin:admin /var/www/html/radio
     sudo chmod +x /var/www/html/radio/radio-update.sh
+    sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
     tailscale_vpn
     opening
     exit 0
