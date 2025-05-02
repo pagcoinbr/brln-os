@@ -49,25 +49,22 @@ jinglePlayer.addEventListener("ended", () => {
 let ultimoTimestamp = localStorage.getItem("ultimoTimestamp") || null;
 
 setInterval(() => {
-  fetch('/html/radio/update_available.flag?ts=' + Date.now())
-    .then(response => response.text())
-    .then(timestamp => {
-      timestamp = timestamp.trim();
-
-      if (timestamp && timestamp !== ultimoTimestamp) {
-        ultimoTimestamp = timestamp;
-        localStorage.setItem("ultimoTimestamp", timestamp);
+  fetch(`${window.location.protocol}//${window.location.hostname}:5001/status_novidade`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.novidade && data.timestamp !== ultimoTimestamp) {
+        ultimoTimestamp = data.timestamp;
+        localStorage.setItem("ultimoTimestamp", data.timestamp);
         botaoNovidades.classList.add("piscando");
         botaoNovidades.innerText = "🔔";
         botaoNovidades.title = "📣 Novidade disponível! Clique para ouvir";
-        console.log("🔔 Novidade detectada!");
+        console.log("🔔 Nova novidade detectada.");
       }
     })
     .catch(err => {
-      console.error("Erro ao verificar atualizações da rádio:", err);
+      console.error("Erro ao consultar status_novidade:", err);
     });
-}, 60000);
-
+}, 30000); // checa a cada 30 segundos
 
 // Lógica do botão de rádio
 function toggleRadio() {
