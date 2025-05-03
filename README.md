@@ -25,7 +25,7 @@ Se não souber o IP:
 
 Execute um comando:
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
+bash <(curl -sSL https://install.pagcoin.org)
 ```
 
 💡 Esse script vai:
@@ -35,7 +35,7 @@ bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run
 
 **ATENÇÃO!** Após a criação do usuário `admin`, o script vai finalizar da seguinte maneira:
 
-![Captura de tela 2025-04-21 141434](https://github.com/user-attachments/assets/419765f3-83ab-45ca-863e-f5d45c3c7651)
+![Captura de tela 2025-05-03 143532](https://github.com/user-attachments/assets/3a7f16f6-b6f9-4430-85f1-98ca78029681)
 
 ### . 🌐 Agora Acesse a Interface Gráfica
 
