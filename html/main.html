@@ -54,7 +54,17 @@
     <div class="section"> 
       <h2 style="margin-bottom: 40px">🖥️ Painel de Controle</h2>
       <div class="ferramentas-extras"></div>
-      <button class="botao piscando" onclick="abrirApp(3131)">⚡ BRLN Node Manager</button>
+      <button class="botao piscando" onclick="
+      const largura = 900;
+      const altura = 600;
+      const esquerda = (screen.width - largura) / 2;
+      const topo = (screen.height - altura) / 2;
+      window.open(
+        `http://${window.location.hostname}:3131`,
+        '_blank',
+        `width=${largura},height=${altura},left=${esquerda},top=${topo},resizable=yes,scrollbars=yes`
+      );
+    ">⚡ BRLN Node Manager</button>   
       <button class="botao" onclick="abrirApp(3232)">🖥️ Terminal Web</button>
       <br>
       <button class="botao" onclick="abrirApp(3535)">⚡ Logs - LND</button>
