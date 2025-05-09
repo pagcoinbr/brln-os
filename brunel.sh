@@ -1186,6 +1186,7 @@ submenu_opcoes() {
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
   echo -e "   ${GREEN}4${NC}- 🔧 Ativar o Bos Telegram no boot do sistema."
   echo -e "   ${GREEN}5${NC}- 🔄 Atualizar interface gráfica."
+  echo -e "   ${GREEN}6${NC}- 🧅 Tor Adress (acesso remoto)"
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
