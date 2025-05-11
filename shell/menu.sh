@@ -28,12 +28,15 @@ menu1 () {
   read -p "👉  Digite sua escolha:     " option
   case $option in
     1)
+      clear
       menu2
       ;;
     2)
+      clear
       menu3
       ;;
     3)
+      clear
       submenu_opcoes
       ;;
     0)
@@ -41,6 +44,7 @@ menu1 () {
       exit 0
       ;;
     *)
+      clear
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
       cabecalho
       menu1
@@ -61,6 +65,7 @@ menu2 () {
   read -p "👉  Digite sua escolha:     " option
   case $option in
     1)
+      clear
       app="Rede Privada"
       sudo -v
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
@@ -94,6 +99,7 @@ menu2 () {
       menu2      
       ;;
     2)
+      clear
       app="Bitcoin"
       sudo -v
       echo -e "${YELLOW} instalando o bitcoind...${NC}"
@@ -134,6 +140,7 @@ menu2 () {
       menu2
       ;;
     4)
+      clear
       app="Elements"
       sudo -v
       echo -e "${CYAN}🚀 Iniciando a instalação do Elements...${NC}"
@@ -155,9 +162,11 @@ menu2 () {
       menu2
       ;;
     0)
+      clear
       menu1
       ;;
     *)
+      clear
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
       menu2
       ;;
@@ -177,6 +186,7 @@ menu3 () {
   echo
   case $option in
     1)
+      clear
       app="Simple Wallet"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
@@ -185,6 +195,7 @@ menu3 () {
       menu
       ;;
     2)
+      clear
       app="Balance of Satoshis"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
@@ -220,6 +231,7 @@ menu3 () {
       menu
       ;;
     3)
+      clear
       app="Lndg"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
@@ -244,6 +256,7 @@ menu3 () {
       menu
       ;;
     4)
+      clear
       app="Lnbits"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
