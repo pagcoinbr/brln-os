@@ -82,7 +82,7 @@ apache_install() {
   sudo rm -rf "$CGI_DST"/*.sh
 
   echo "📥 Copiando novos arquivos da interface web..."
-  sudo cp "$HTML_SRC"/*.html "$WWW_HTML/"s
+  sudo cp "$HTML_SRC"/*.html "$WWW_HTML/"
   sudo cp -r "$HTML_SRC/css" "$WWW_HTML/"
   sudo cp -r "$HTML_SRC/js" "$WWW_HTML/"
   sudo cp -r "$HTML_SRC/imagens" "$WWW_HTML/"
