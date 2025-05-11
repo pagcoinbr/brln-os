@@ -1,17 +1,13 @@
 #!/bin/bash
 SCRIPT_VERSION=v1.0-beta
 TOR_LINIK=https://deb.torproject.org/torproject.org
-TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
 LND_VERSION=0.18.5
 BTC_VERSION=28.1
-VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 REPO_DIR="/home/admin/brlnfullauto"
-HTML_SRC="$REPO_DIR/html"
-CGI_DST="/usr/lib/cgi-bin"
-WWW_HTML="/var/www/html"
 SERVICES_DIR="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 FLASKVENV_DIR="/home/admin/envflask"
+ELEMENTD_VERSION="23.2.7"
 atual_user=$(whoami)
 branch=main
 git_user=pagcoinbr
@@ -36,6 +32,9 @@ update_and_upgrade() {
   sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
 
   # Executa o git dentro do diretório, sem precisar dar cd
+  HTML_SRC="$REPO_DIR/html"
+  CGI_DST="/usr/lib/cgi-bin"
+  WWW_HTML="/var/www/html"
   git -C "$REPO_DIR" stash || true
   git -C "$REPO_DIR" pull origin "$branch"
 
@@ -245,6 +244,7 @@ configure_ufw() {
 }
 
 install_tor() {
+  TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
   sudo apt install -y apt-transport-https
   echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main
   deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] $TOR_LINIK jammy main" | sudo tee /etc/apt/sources.list.d/tor.list
@@ -711,6 +711,51 @@ opening () {
   echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
   echo
   echo
+}
+
+elementsd-install() {
+  if [[ ! -f /usr/local/bin/elementsd ]]; then
+      elementsd_bin="elements-cli  elementsd  elements-qt  elements-tx  elements-util  elements-wallet"
+      if [[ $arch == "x86_64" ]]; then
+          echo "${GREEN}Instalando Elementd para x86_64...${NC}"
+          elements_arch="elements-$ELEMENTD_VERSION-x86_64-linux-gnu.tar.gz"
+      else
+          echo "${GREEN}Instalando Elementd para arm64...${NC}"
+          elements_arch="elements-$ELEMENTD_VERSION-aarch64-linux-gnu.tar.gz"
+      fi
+      ELEMENTS_DIR="/data/elements"
+      ELEMENTS_CONF="$ELEMENTS_DIR/elements.conf"
+      ELEMENTS_BIN="/usr/local/bin"
+      tar -xvf ~/admin/brlnfullauto/local_apps/$elements_arch
+      cp ~/admin/brlnfullauto/local_apps/$elementsd_bin $ELEMENTS_BIN
+      sudo mkdir -p $ELEMENTS_DIR
+      sudo chown -R admin:admin $ELEMENTS_DIR
+      sudo chmod -R 755 $ELEMENTS_DIR
+      sudo cp ~/admin/brlnfullauto/conf_files/elements.conf $ELEMENTS_CONF
+      sudo chown admin:admin $ELEMENTS_CONF
+      sudo chmod 640 $ELEMENTS_CONF
+      ln -s $ELEMENTS_DIR /home/admin/.elements
+      sleep 1
+      elements-cli loadwallet peerswap
+      sleep 1
+      elements-cli -rpcwallet=peerswap getnewaddress
+      if [[ $? -eq 0 ]]; then
+          echo -e "${GREEN}Elementd instalado com sucesso!${NC}"
+          echo -e "${GREEN}Para criar um novo endereço de recebimento Liquid:${NC}"
+          echo -e "${GREEN}elements-cli -rpcwallet=peerswap getnewaddress${NC}"
+          echo -e "${GREEN}Para enviar L-BTC para um endereço Liquid:${NC}"
+          echo -e "${GREEN}elements-cli -rpcwallet=peerswap sendtoaddress [endereço] [quantidade em formato decimal, ex.: 0.1 para 0.10000000 L-BTC]${NC}"
+      else
+          echo -e "${RED}Erro ao instalar Elementd.${NC}"
+      fi
+  else
+    echo -e "${GREEN}Elementd já está instalado.${NC}"
+    elements-cli loadwallet peerswap
+    echo -e "${GREEN}Para criar um novo endereço de recebimento Liquid:${NC}"
+    echo -e "${GREEN}elements-cli -rpcwallet=peerswap getnewaddress${NC}"
+    echo -e "${GREEN}Para enviar L-BTC para um endereço Liquid:${NC}"
+    echo -e "${GREEN}elements-cli -rpcwallet=peerswap sendtoaddress [endereço] [quantidade em formato decimal, ex.: 0.1 para 0.10000000 L-BTC]${NC}"
+  fi
 }
 
 toggle_bitcoin () {
