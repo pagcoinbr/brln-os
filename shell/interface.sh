@@ -66,9 +66,6 @@ apache_install() {
   sudo systemctl restart apache2
 
   # Executa o git dentro do diretório, sem precisar dar cd
-  HTML_SRC="$REPO_DIR/html"
-  CGI_DST="/usr/lib/cgi-bin"
-  WWW_HTML="/var/www/html"
   git -C "$REPO_DIR" stash || true
   git -C "$REPO_DIR" pull origin "$branch"
 

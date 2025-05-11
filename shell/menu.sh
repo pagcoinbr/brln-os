@@ -91,7 +91,7 @@ menu2 () {
         exit 1
       fi
       echo -e "\033[43m\033[30m ✅ Instalação da interface de rede concluída! \033[0m"
-      menu      
+      menu2      
       ;;
     2)
       app="Bitcoin"
@@ -110,7 +110,7 @@ menu2 () {
         menu
       fi
       echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
-      menu
+      menu2
       ;;
     3)
       app="Lnd"
@@ -131,7 +131,7 @@ menu2 () {
       fi
       configure_lnd
       echo -e "\033[43m\033[30m ✅ Sua instalação do LND foi bem sucedida! \033[0m"
-      menu
+      menu2
       ;;
     4)
       app="Elements"
@@ -152,10 +152,14 @@ menu2 () {
       fi
       configure_elements
       echo -e "\033[43m\033[30m ✅ Sua instalação do Elements foi bem sucedida! \033[0m"
-      menu
+      menu2
       ;;
     0)
       menu1
+      ;;
+    *)
+      echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
+      menu2
       ;;
   esac
 }

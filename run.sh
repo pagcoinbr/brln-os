@@ -24,7 +24,6 @@ brln_check () {
   fi
   clear
   sudo -u admin bash "$SHELL_DIR/interface.sh"
-  sudo -u admin bash "$SHELL_DIR/menu.sh"
   exit 0
 }
 
