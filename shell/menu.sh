@@ -34,6 +34,18 @@ menu1 () {
     2)
       menu3
       ;;
+    3)
+      submenu_opcoes
+      ;;
+    0)
+      echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
+      exit 0
+      ;;
+    *)
+      echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
+      menu1
+      exit 0
+      ;;
   esac
 }
 
@@ -53,11 +65,10 @@ menu2 () {
       echo -e "${CYAN}🚀 Instalando preparações do sistema...${NC}"
       echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
       read -p "Deseja exibir logs? (y/n): " verbose_mode
-    # Força pedido de password antes do background
       sudo -v
       sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
-        system_preparations
+        bash
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
@@ -72,7 +83,7 @@ menu2 () {
         clear
       else
         echo "Opção inválida."
-      fi      
+      fi
       wait
       echo -e "\033[43m\033[30m ✅ Instalação da interface de rede concluída! \033[0m"
       menu      
@@ -156,7 +167,7 @@ menu3 () {
   read -p "👉  Digite sua escolha:     " option
   echo
   case $option in
-    4)
+    1)
       app="Simple Wallet"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
@@ -164,7 +175,7 @@ menu3 () {
       echo -e "\033[43m\033[30m ✅ Simple LNWallet instalado com sucesso! \033[0m"
       menu
       ;;
-    5)
+    2)
       app="Balance of Satoshis"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
@@ -199,7 +210,7 @@ menu3 () {
       echo -e "\033[43m\033[30m ✅ ThunderHub instalado com sucesso! \033[0m"
       menu
       ;;
-    6)
+    3)
       app="Lndg"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
@@ -223,7 +234,7 @@ menu3 () {
       echo -e "\033[43m\033[30m ✅ LNDG instalado com sucesso! \033[0m"
       menu
       ;;
-    7)
+    4)
       app="Lnbits"
       sudo -v
       echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
