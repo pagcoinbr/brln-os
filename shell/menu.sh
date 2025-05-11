@@ -47,6 +47,7 @@ menu1 () {
       exit 0
       ;;
   esac
+  exit 0
 }
 
 menu2 () {
@@ -456,4 +457,5 @@ spinner() {
 }
 
 menu1
+exit 0
 

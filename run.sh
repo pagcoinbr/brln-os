@@ -14,12 +14,15 @@ brln_check () {
   fi
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   echo -e "${GREEN} Iniciando... ${NC}"
-  for i in {5..1}; do
-    for ms in {0..9}; do
-      echo -ne "\rIniciando: $i.$ms segundos"
-      sleep 0.1
+  if [[ ! -f "$WWW_HTML/main.html" ]]; then
+    for i in {4..1}; do
+      for ms in {0..9}; do
+        echo -ne "\rIniciando: $i.$ms segundos"
+        sleep 0.1
+      done
     done
-  done
+  fi
+  clear
   sudo -u admin bash "$SHELL_DIR/interface.sh"
   sudo -u admin bash "$SHELL_DIR/menu.sh"
   exit 0
