@@ -68,7 +68,7 @@ menu2 () {
       sudo -v
       sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
-        bash
+        bash "$SHELL_DIR/network.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
@@ -85,6 +85,10 @@ menu2 () {
         echo "Opção inválida."
       fi
       wait
+      if [[ $? -ne 0 ]]; then
+        echo -e "${RED}Erro na instalação do sistema. Verifique os logs para mais detalhes.${NC}"
+        exit 1
+      fi
       echo -e "\033[43m\033[30m ✅ Instalação da interface de rede concluída! \033[0m"
       menu      
       ;;

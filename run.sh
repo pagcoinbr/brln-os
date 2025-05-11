@@ -13,13 +13,13 @@ brln_check () {
     sudo -u admin git -C "$INSTALL_DIR" switch $branch > /dev/null
   fi
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+  echo -e "${GREEN} Iniciando... ${NC}"
   for i in {5..1}; do
     for ms in {0..9}; do
-      echo -ne "\rCarregando: $i.$ms segundos"
+      echo -ne "\rIniciando: $i.$ms segundos"
       sleep 0.1
     done
   done
-  echo -e "\rContagem regressiva: 0.0 segundos"
   sudo -u admin bash "$SHELL_DIR/interface.sh"
   sudo -u admin bash "$SHELL_DIR/menu.sh"
   exit 0
@@ -86,11 +86,14 @@ autorizar_scripts() {
   for script in "$NODES_DIR"/*.sh "$ADMAPPS_DIR"/*.sh "$SHELL_DIR"/*.sh; do
     if [ -f "$script" ]; then
       chmod +x "$script"
-      echo "Permissão de execução adicionada: $script"
+      echo "Permissão de execução adicionada: $script" >> "$LOG_FILE"
     fi
   done
 }
 
+sudo touch "$LOG_FILE"
+sudo chown admin:admin "$LOG_FILE"
+sudo chmod 644 "$LOG_FILE"
 autorizar_scripts
 main_call
 exit 0
