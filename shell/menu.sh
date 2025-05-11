@@ -13,7 +13,6 @@ cabecalho() {
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  menu1
 }
 
 menu1 () {
@@ -43,6 +42,7 @@ menu1 () {
       ;;
     *)
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
+      cabecalho
       menu1
       exit 0
       ;;
