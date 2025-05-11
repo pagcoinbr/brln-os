@@ -1,5 +1,51 @@
 #!/bin/bash
-source ~/brlnfullauto/shell/.env
+#variáveis do sistema e script
+ip_local=$(hostname -I | awk '{print $1}')
+subnet=$(echo "$ip_local" | awk -F. '{print $1"."$2"."$3".0/23"}')
+arch=$(uname -m)
+atual_user=$(whoami)
+branch="liquid"
+git_user="pagcoinbr"
+
+# Variáveis específicas
+SCRIPT_VERSION="v1.0-beta"
+LND_VERSION="0.18.5"
+BTC_VERSION="28.1"
+REPO_DIR="/home/admin/brlnfullauto"
+INSTALL_DIR="/home/admin/brlnfullauto"
+SERVICES_DIR="/home/admin/brlnfullauto/services"
+POETRY_BIN="/home/admin/.local/bin/poetry"
+FLASKVENV_DIR="/home/admin/envflask"
+ELEMENTD_VERSION="23.2.7"
+LOCAL_APPS="/home/admin/brlnfullauto/local_apps"
+SHELL_DIR="/home/admin/brlnfullauto/shell"
+NODES_DIR="/home/admin/brlnfullauto/shell/nodes"
+ADMAPPS_DIR="/home/admin/brlnfullauto/shell/adm_apps"
+SUDOERS_TMP="/etc/sudoers.d/admin-services"
+LOG_FILE="/home/admin/brlnfullauto/logs/install.log"
+HTML_SRC="/home/admin/brlnfullauto/html"
+CGI_DST="/usr/lib/cgi-bin"
+WWW_HTML="/var/www/html"
+
+# Inserir novo serciço para copiadora de serviços
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "control-systemd")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "5001")
+COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
+  "allow cli on port 3232 from local network" 
+  "allow bitcoinlogs on port 3434 from local network" 
+  "allow lndlogs on port 3535 from local network"
+  "allow btc-editor on port 3636 from local network"
+  "allow lnd-editor on port 3333 from local network"
+  "allow control-systemd on port 5001 from local network")
+
+# Cores
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
+MAGENTA='\033[1;35m'
+CYAN='\033[1;36m'
+NC='\033[0m' # Sem cor
 
 echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
 sleep 1
