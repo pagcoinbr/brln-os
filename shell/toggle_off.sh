@@ -29,3 +29,5 @@ toggle_off () {
       echo "Failed to restart LND service."
     fi
 }
+
+toggle_off

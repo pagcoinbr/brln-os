@@ -28,3 +28,5 @@ toggle_on () {
       echo "Failed to restart LND service."
     fi
 }
+
+toggle_on

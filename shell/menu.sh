@@ -74,11 +74,11 @@ menu2 () {
       sudo -v
       sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
-        bash "$SHELL_DIR/network.sh"
+        bash "$NODES_DIR/network.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
-        bash "$SHELL_DIR/network.sh" >> /dev/null 2>&1 &
+        bash "$NODES_DIR/network.sh" >> /dev/null 2>&1 &
         pid=$!
         if declare -f spinner > /dev/null; then
           spinner $pid
@@ -106,14 +106,14 @@ menu2 () {
       read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        install_bitcoind
+        bash "$NODES_DIR/bitcoind.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
-        install_bitcoind >> /dev/null 2>&1 & spinner
+        bash "$NODES_DIR/bitcoind.sh" >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
-        menu
+        menu2
       fi
       echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
       menu2
@@ -126,16 +126,15 @@ menu2 () {
       echo -e "${YELLOW} instalando o lnd...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        download_lnd
+        bash "$NODES_DIR/lnd.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
-        download_lnd >> /dev/null 2>&1 & spinner
+        bash "$NODES_DIR/lnd.sh" >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
-        menu
+        menu2
       fi
-      configure_lnd
       echo -e "\033[43m\033[30m ✅ Sua instalação do LND foi bem sucedida! \033[0m"
       menu2
       ;;
@@ -148,16 +147,15 @@ menu2 () {
       echo -e "${YELLOW} instalando o elements...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        download_elements
+        bash "$NODES_DIR/elementsd.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
-        download_elements >> /dev/null 2>&1 & spinner
+        bash "$NODES_DIR/elementsd.sh" >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
-        menu
+        menu2
       fi
-      configure_elements
       echo -e "\033[43m\033[30m ✅ Sua instalação do Elements foi bem sucedida! \033[0m"
       menu2
       ;;
@@ -176,10 +174,11 @@ menu2 () {
 menu3 () {
   cabecalho
   echo -e "   ${GREEN}1${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
-  echo -e "   ${GREEN}2${NC}- Instalar Thunderhub & Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}3${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}4${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}5${NC}- Instalar PeerSwapWeb"
+  echo -e "   ${GREEN}2${NC}- Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}3${NC}- Instalar Thunderhub(Exige LND)"
+  echo -e "   ${GREEN}4${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}6${NC}- Instalar PeerSwapWeb"
   echo -e "   ${RED}0${NC}- Voltar"
   echo
   read -p "👉  Digite sua escolha:     " option
@@ -190,7 +189,7 @@ menu3 () {
       app="Simple Wallet"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Simple LNWallet...${NC}"
-      simple_lnwallet
+      bash "$ADMAPPS_DIR/simple_wallet.sh"
       echo -e "\033[43m\033[30m ✅ Simple LNWallet instalado com sucesso! \033[0m"
       menu
       ;;
@@ -201,36 +200,38 @@ menu3 () {
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        install_bos
+        bash "$ADMAPPS_DIR/balance_of_satoshis.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco...${NC}  "
-        install_bos >> /dev/null 2>&1 & spinner
+        bash "$ADMAPPS_DIR/balanceofsatoshis.sh" >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
         menu
       fi
       echo -e "\033[43m\033[30m ✅ Balance of Satoshis instalado com sucesso! \033[0m"
-      echo
+      menu3
+      ;;
+    3)
       echo -e "${YELLOW}🕒 Iniciando a instalação do Thunderhub...${NC}"
       read -p "Digite a senha para ThunderHub: " thub_senha
       echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       app="Thunderhub"
       if [[ "$verbose_mode" == "y" ]]; then
-        install_thunderhub
+        bash "$ADMAPPS_DIR/thunderhub.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde, isso poderá demorar 10min ou mais. Seja paciente...${NC}"
         install_thunderhub >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
-        menu
+        menu3
       fi
       echo -e "\033[43m\033[30m ✅ ThunderHub instalado com sucesso! \033[0m"
-      menu
+      menu3
       ;;
-    3)
+    4)
       clear
       app="Lndg"
       sudo -v
@@ -244,7 +245,7 @@ menu3 () {
         clear
       else
         echo "Opção inválida. Usando o modo padrão."
-        menu
+        menu3
       fi
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
@@ -253,9 +254,9 @@ menu3 () {
       echo
       echo -e "${YELLOW}📝 Você deve mudar essa senha ao final da instalação."
       echo -e "\033[43m\033[30m ✅ LNDG instalado com sucesso! \033[0m"
-      menu
+      menu3
       ;;
-    4)
+    5)
       clear
       app="Lnbits"
       sudo -v
@@ -272,7 +273,25 @@ menu3 () {
         menu
       fi
       echo -e "\033[43m\033[30m ✅ LNbits instalado com sucesso! \033[0m"
-      menu
+      menu3
+      ;;
+    6)
+      clear
+      app="PeerSwapWeb"
+      sudo -v
+      echo -e "${CYAN}🚀 Instalando PeerSwapWeb...${NC}"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        bash "$ADMAPPS_DIR/peerswapweb.sh"
+      elif [[ "$verbose_mode" == "n" ]]; then
+        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco... Seja paciente.${NC}"
+        bash "$ADMAPPS_DIR/peerswapweb.sh" >> /dev/null 2>&1 & spinner
+        clear
+      else
+        echo "Opção inválida."
+        menu3
+      fi
+      echo -e "\033[43m\033[30m ✅ PeerSwapWeb instalado com sucesso! \033[0m"
       ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
@@ -280,7 +299,7 @@ menu3 () {
       ;;
     *)
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
-      menu1
+      menu3
       ;;
   esac
 }
@@ -304,13 +323,13 @@ submenu_opcoes() {
   case $suboption in
     1)
       echo -e "${YELLOW}🏠 🔁 Trocar para o bitcoin local...${NC}"
-      toggle_on
+      bash "$SHELL_DIR/toggle_on.sh"
       echo -e "${GREEN}✅ Serviços reiniciados!${NC}"
       submenu_opcoes
       ;;
     2)
       echo -e "${YELLOW}🔁 ☁️ Trocar para o bitcoin remoto...${NC}"
-      toggle_off
+      bash "$SHELL_DIR/toggle_off.sh"
       echo -e "${GREEN}✅ Atualização concluída!${NC}"
       submenu_opcoes
       ;;
@@ -320,21 +339,21 @@ submenu_opcoes() {
       ;;
     4)
       echo -e "${YELLOW}🔧 Configurando o Bos Telegram...${NC}"
-      config_bos_telegram
+      bash "$SHELL_DIR/bos_telegram.sh"
       submenu_opcoes
       ;;
     5)
       echo -e "${YELLOW} Atualizando interface gráfica...${NC}"
-            app="Gui"
+      app="Gui"
       sudo -v
       echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
-      gui_update
+      bash "$SHELL_DIR/interface.sh"
       echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
       exit 0
       ;;
     6)
       echo -e "${YELLOW}🔄 Criando endereço Tor...${NC}"
-      tor_acess
+      bash "$SHELL_DIR/tor_hs.sh"
       echo -e "${GREEN}✅ Endereço onion encontrado!${NC}"
       submenu_opcoes
       ;;
@@ -346,93 +365,6 @@ submenu_opcoes() {
       submenu_opcoes
       ;;
   esac
-}
-
-menu_manutencao() {
-  echo "Escolha uma opção:"
-  echo "1) Atualizar o LND"
-  echo "2) Atualizar o Bitcoind ATENÇÃO"
-  echo "Antes de atualizar o Bitcoind, leia as notas de atualização"
-  echo "3) Atualizar o Thunderhub"
-  echo "4) Atualizar o LNDg"
-  echo "5) Atualizar o LNbits"
-  echo "6) Atualizar os pacotes do sistema"
-  echo "7) Desinstalar Thunderhub"
-  echo "8) Desinstalar LNDg"
-  echo "9) Desinstalar LNbits"
-  echo "0) Sair"
-  read -p "Opção: " option
-
-  case $option in
-    1)
-      lnd_update
-      ;;
-    2)
-      bitcoin_update
-      ;;
-    3)
-      thunderhub_update
-      ;;
-    4)
-      lndg_update
-      ;;
-    5)
-      lnbits_update
-      ;;
-    6)
-      pacotes_do_sistema
-      ;;
-    7)
-      thunderhub_uninstall
-      ;;
-    8)
-      lndg_unninstall
-      ;;
-    9)
-      lnbits_unninstall
-      ;;
-    0)
-      echo "Saindo..."
-      exit 0
-      ;;
-    *)
-      echo "Opção inválida!"
-      ;;
-  esac
-}
-
-toggle_bitcoin () {
-    # Exibir o menu para o usuário
-    while true; do
-        echo "Escolha uma opção:"
-        echo "1) Trocar para o Bitcoin Core local"
-        echo "2) Trocar para o node Bitcoin remoto"
-        echo "3) Sair"
-        read -p "Digite sua escolha: " choice
-
-        case $choice in
-            1)
-                echo "Trocando para o Bitcoin Core local..."
-                toggle_on
-                wait
-                echo "Trocado para o Bitcoin Core local."
-                ;;
-            2)
-                echo "Trocando para o node Bitcoin remoto..."
-                toggle_off
-                wait 
-                echo "Trocado para o node Bitcoin remoto."
-                ;;
-            3)
-                echo "Saindo."
-                menu
-                ;;
-            *)
-                echo "Escolha inválida. Por favor, tente novamente."
-                ;;
-        esac
-        echo ""
-    done
 }
 
 spinner() {

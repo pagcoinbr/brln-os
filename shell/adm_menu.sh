@@ -1,15 +1,5 @@
-manutencao_script () {
-  # Executa o script de manutenção
-  lnd --version
-  bitcoin-cli --version
-  menu_manutencao
-}	
-
-pacotes_do_sistema () {
-  sudo apt update && sudo apt upgrade -y
-  sudo systemctl reload tor
-  echo "Os pacotes do sistema foram atualizados! Ex: Tor + i2pd + PostgreSQL"
-}
+#!/bin/bash
+source ~/brlnfullauto/shell/.env
 
 lnd_update () {
   cd /tmp
@@ -154,11 +144,80 @@ lnbits_unninstall () {
   echo "LNbits desinstalado!"
 }
 
-gui_update() {
-  update_and_upgrade
-  gotty_install
-  sudo chown -R admin:admin /var/www/html/radio
-  sudo chmod +x /var/www/html/radio/radio-update.sh
-  sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
-  menu
+pacotes_do_sistema () {
+  sudo apt update && sudo apt upgrade -y
+  sudo systemctl reload tor
+  echo "Os pacotes do sistema foram atualizados! Ex: Tor + i2pd + PostgreSQL"
 }
+
+menu_manutencao() {
+  echo "Escolha uma opção:"
+  echo "1) Atualizar o LND"
+  echo "2) Atualizar o Bitcoind ATENÇÃO"
+  echo "Antes de atualizar o Bitcoind, leia as notas de atualização"
+  echo "3) Atualizar o Thunderhub"
+  echo "4) Atualizar o LNDg"
+  echo "5) Atualizar o LNbits"
+  echo "6) Atualizar os pacotes do sistema"
+  echo "7) Desinstalar Thunderhub"
+  echo "8) Desinstalar LNDg"
+  echo "9) Desinstalar LNbits"
+  echo "0) Sair"
+  read -p "Opção: " option
+
+  case $option in
+    1)
+      lnd_update
+      menu_manutencao
+      ;;
+    2)
+      bitcoin_update
+      menu_manutencao
+      ;;
+    3)
+      thunderhub_update
+      menu_manutencao
+      ;;
+    4)
+      lndg_update
+      menu_manutencao
+      ;;
+    5)
+      lnbits_update
+      menu_manutencao
+      ;;
+    6)
+      pacotes_do_sistema
+      menu_manutencao
+      ;;
+    7)
+      thunderhub_uninstall
+      menu_manutencao
+      ;;
+    8)
+      lndg_unninstall
+      menu_manutencao
+      ;;
+    9)
+      lnbits_unninstall
+      menu_manutencao
+      ;;
+    0)
+      clear
+      menu3
+      exit 0
+      ;;
+    *)
+      echo "Opção inválida!"
+      ;;
+  esac
+}
+
+manutencao_script () {
+  # Executa o script de manutenção
+  lnd --version
+  bitcoin-cli --version
+  menu_manutencao
+}	
+
+manutencao_script
