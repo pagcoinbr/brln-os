@@ -102,10 +102,6 @@ EOF
 }
 
 gotty_install () {
-if [[ ! -f /usr/local/bin/gotty ]]; then
-  gotty_do
-fi
-
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
   sudo rm -f /etc/systemd/system/$service.service
