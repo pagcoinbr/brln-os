@@ -1,16 +1,5 @@
 #!/bin/bash
-branch=main
-git_user=pagcoinbr
-# Cores
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-MAGENTA='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m' # Sem cor
-
-INSTALL_DIR="/home/admin/brlnfullauto"
+source ~/brlnfullauto/shell/.env
 
 echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
 sleep 1
@@ -21,13 +10,11 @@ brln_check () {
   else
     sudo -u admin git clone -q https://github.com/$git_user/brlnfullauto.git "$INSTALL_DIR"
     sudo chown -R admin:admin "$INSTALL_DIR"
-    sleep 2
     sudo -u admin git -C "$INSTALL_DIR" switch $branch > /dev/null
   fi
-
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-  sudo chmod +x "$INSTALL_DIR/brunel.sh"
-  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
+  sudo -u admin bash "$SHELL_DIR/interface.sh"
+  sudo -u admin bash "$SHELL_DIR/menu.sh"
   exit 0
 }
 
@@ -61,19 +48,20 @@ fi
 }
 
 main_call () {
-# Identifica e cria o usuário/grupo admin
-atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
   dir_check
   brln_check
+  exit 0
 else
   if id "admin" &>/dev/null; then
-  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
+  dir_check
+  brln_check
   exit 0
   fi
 fi
-  sudo groupadd admin >> /dev/null 2>&1
-# Garante que o usuário 'admin' existe
+if ! getent group admin > /dev/null; then
+  sudo groupadd admin
+fi
 if id "admin" &>/dev/null; then
   sudo passwd admin
   dir_check
@@ -87,5 +75,15 @@ else
 fi
 }
 
+autorizar_scripts() {
+  for script in "$NODES_DIR"/*.sh "$ADMAPPS_DIR"/*.sh "$SHELL_DIR"/*.sh; do
+    if [ -f "$script" ]; then
+      chmod +x "$script"
+      echo "Permissão de execução adicionada: $script"
+    fi
+  done
+}
+
+autorizar_scripts
 main_call
 exit 0
