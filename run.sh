@@ -13,6 +13,13 @@ brln_check () {
     sudo -u admin git -C "$INSTALL_DIR" switch $branch > /dev/null
   fi
   sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+  for i in {5..1}; do
+    for ms in {0..9}; do
+      echo -ne "\rCarregando: $i.$ms segundos"
+      sleep 0.1
+    done
+  done
+  echo -e "\rContagem regressiva: 0.0 segundos"
   sudo -u admin bash "$SHELL_DIR/interface.sh"
   sudo -u admin bash "$SHELL_DIR/menu.sh"
   exit 0
