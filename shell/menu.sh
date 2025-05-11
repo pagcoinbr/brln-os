@@ -347,7 +347,7 @@ submenu_opcoes() {
       app="Gui"
       sudo -v
       echo -e "${CYAN}🚀 Atualizando interface gráfica...${NC}"
-      bash "$SHELL_DIR/interface.sh"
+      bash "$SHELL_DIR/update_interface.sh"
       echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
       exit 0
       ;;
