@@ -72,7 +72,7 @@ menu2 () {
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
-        system_preparations >> /dev/null 2>&1 &
+        bash "$SHELL_DIR/network.sh" >> /dev/null 2>&1 &
         pid=$!
         if declare -f spinner > /dev/null; then
           spinner $pid
@@ -154,7 +154,7 @@ menu2 () {
       menu
       ;;
     0)
-      menu
+      menu1
       ;;
   esac
 }
@@ -262,7 +262,7 @@ menu3 () {
       ;;
     *)
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
-      menu3
+      menu1
       ;;
   esac
 }

@@ -2,7 +2,6 @@
 source ~/brlnfullauto/shell/.env
 
 terminal_web() {
-  echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
     # Baixa o binário como admin
     apache_install

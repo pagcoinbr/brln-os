@@ -86,14 +86,10 @@ autorizar_scripts() {
   for script in "$NODES_DIR"/*.sh "$ADMAPPS_DIR"/*.sh "$SHELL_DIR"/*.sh; do
     if [ -f "$script" ]; then
       chmod +x "$script"
-      echo "Permissão de execução adicionada: $script" >> "$LOG_FILE"
     fi
   done
 }
 
-sudo touch "$LOG_FILE"
-sudo chown admin:admin "$LOG_FILE"
-sudo chmod 644 "$LOG_FILE"
 autorizar_scripts
 main_call
 exit 0
