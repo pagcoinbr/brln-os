@@ -21,6 +21,7 @@ install_bitcoind() {
   cd /home/admin/.bitcoin
   sudo cp ~/brlnfullauto/local_apps/bitcoind/rpcauth.py /home/admin/.bitcoin/rpcauth.py
   sudo sed -i "54s|.*|$(python3 ~/brlnfullauto/local_apps/bitcoind/rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
+  sudo sed -i "35s|.*|$(python3 ~/brlnfullauto/local_apps/bitcoind/rpcauth.py minibolt $rpcpsswd > /home/admin/.elements/rpc.auth | grep '^mainchainrpcpassword=')|" /home/admin/brlnfullauto/conf_files/elements.conf
   sudo cp $SERVICES_DIR/bitcoind.service /etc/systemd/system/bitcoind.service
   sudo systemctl enable bitcoind
   sudo systemctl start bitcoind

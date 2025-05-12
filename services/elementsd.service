@@ -6,7 +6,6 @@ After=network.target
 User=admin
 Group=admin
 ExecStart=/usr/local/bin/elementsd -datadir=/data/elements
-ExecStop=/usr/local/bin/elements-cli -datadir=/data/elements stop
 Restart=on-failure
 RestartSec=30
 TimeoutStartSec=300
