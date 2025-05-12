@@ -3,7 +3,6 @@ source ~/brlnfullauto/shell/.env
 
 elementsd_install() {
   if [[ ! -f /usr/local/bin/elementsd ]]; then
-      elementsd_bin="elements-cli  elementsd  elements-qt  elements-tx  elements-util  elements-wallet"
       if [[ $arch == "x86_64" ]]; then
           echo "${GREEN}Instalando Elementd para x86_64...${NC}"
           elements_arch="elements-$ELEMENTD_VERSION-x86_64-linux-gnu.tar.gz"
@@ -11,18 +10,17 @@ elementsd_install() {
           echo "${GREEN}Instalando Elementd para arm64...${NC}"
           elements_arch="elements-$ELEMENTD_VERSION-aarch64-linux-gnu.tar.gz"
       fi
-      ELEMENTS_DIR="/data/elements"
-      ELEMENTS_CONF="$ELEMENTS_DIR/elements.conf"
-      ELEMENTS_BIN="/usr/local/bin"
-      tar -xvf ~/admin/brlnfullauto/local_apps/$elements_arch
-      cp ~/admin/brlnfullauto/local_apps/$elementsd_bin $ELEMENTS_BIN
+      tar -xvf ~/brlnfullauto/local_apps/$elements_arch
+      cp ~/brlnfullauto/local_apps/elementsd/elements-$ELEMENTD_VERSION/bin/elementsd $LOCAL_BIN
+      cp ~/brlnfullauto/local_apps/elementsd/elements-$ELEMENTD_VERSION/bin/elements-cli $LOCAL_BIN
       sudo mkdir -p $ELEMENTS_DIR
       sudo chown -R admin:admin $ELEMENTS_DIR
       sudo chmod -R 755 $ELEMENTS_DIR
-      sudo cp ~/admin/brlnfullauto/conf_files/elements.conf $ELEMENTS_CONF
+      sudo cp ~/brlnfullauto/conf_files/elements.conf $ELEMENTS_CONF
       sudo chown admin:admin $ELEMENTS_CONF
       sudo chmod 640 $ELEMENTS_CONF
       ln -s $ELEMENTS_DIR /home/admin/.elements
+      cp "$SERVICES_DIR/elementsd.service" "/etc/systemd/system/"
       sleep 1
       elements-cli loadwallet peerswap
       sleep 1
