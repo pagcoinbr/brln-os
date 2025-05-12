@@ -61,8 +61,8 @@ download_lnd() {
     arch_lnd="arm64"
   fi
   tar -xvzf "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz" -C "$LOCAL_APPS/lnd" 
-  sudo cp "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd /usr/local/bin"
-  sudo cp "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli /usr/local/bin"
+  sudo cp "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd" "/usr/local/bin"
+  sudo cp "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli" "/usr/local/bin"
 }
 
 configure_lnd() {
