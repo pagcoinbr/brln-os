@@ -23,6 +23,7 @@ elementsd_install() {
       ln -s $ELEMENTS_DIR /home/admin/.elements
       rm -rf "/etc/systemd/system/elementsd.service"
       sudo cp "$SERVICES_DIR/elementsd.service" "/etc/systemd/system/"
+      sudo systemctl daemon-reload
       if [[ $? -eq 0 ]]; then
           echo -e "${GREEN}Elementd instalado com sucesso!${NC}"
           echo -e "${GREEN}Para criar um novo endereço de recebimento Liquid:${NC}"
