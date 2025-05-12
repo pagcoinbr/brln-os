@@ -69,3 +69,6 @@ spinner() {
 
     return $exit_code
 }
+
+install_thunderhub
+bash ~/brlnfullauto/shell/menu.sh

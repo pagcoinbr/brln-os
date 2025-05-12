@@ -69,3 +69,6 @@ EOF
     exit 1
   fi
 }
+
+tor_acess
+bash ~/brlnfullauto/shell/menu.sh

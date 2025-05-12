@@ -191,7 +191,8 @@ $lnd_db"
     24_word_confirmation
   fi
   unset password  # limpa da memória, por segurança
-  menu
+  bash ~/brlnfullauto/shell/menu.sh
+  exit 0
 } 
 
 create_wallet () {
@@ -262,3 +263,7 @@ spinner() {
 
     return $exit_code
 }
+
+download_lnd
+configure_lnd
+create_wallet

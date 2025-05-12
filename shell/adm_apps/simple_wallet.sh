@@ -83,3 +83,7 @@ spinner() {
 
     return $exit_code
 }
+
+get_simple_wallet
+simple_lnwallet
+bash ~/brlnfullauto/shell/menu.sh

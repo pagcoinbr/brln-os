@@ -71,4 +71,5 @@ spinner() {
     return $exit_code
 }
 
-spinner
+install_bos
+bash ~/brlnfullauto/shell/menu.sh

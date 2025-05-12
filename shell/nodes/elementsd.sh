@@ -1,7 +1,7 @@
 #!/bin/bash
 source ~/brlnfullauto/shell/.env
 
-elementsd-install() {
+elementsd_install() {
   if [[ ! -f /usr/local/bin/elementsd ]]; then
       elementsd_bin="elements-cli  elementsd  elements-qt  elements-tx  elements-util  elements-wallet"
       if [[ $arch == "x86_64" ]]; then
@@ -83,3 +83,5 @@ spinner() {
 
     return $exit_code
 }
+
+elementsd_install

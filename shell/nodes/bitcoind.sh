@@ -74,3 +74,6 @@ spinner() {
 
     return $exit_code
 }
+
+install_bitcoind
+bash ~/brlnfullauto/shell/menu.sh

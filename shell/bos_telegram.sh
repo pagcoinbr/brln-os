@@ -51,3 +51,6 @@ config_bos_telegram () {
   echo "✅ Serviço bos-telegram configurado e iniciado com sucesso!"
   echo "💬 Verifique se recebeu a mensagem: 🤖 Connected to <nome do seu node>"
 }
+
+config_bos_telegram
+bash ~/brlnfullauto/shell/menu.sh

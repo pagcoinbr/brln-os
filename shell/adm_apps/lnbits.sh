@@ -79,3 +79,6 @@ spinner() {
 
     return $exit_code
 }
+
+lnbits_install
+bash ~/brlnfullauto/shell/menu.sh

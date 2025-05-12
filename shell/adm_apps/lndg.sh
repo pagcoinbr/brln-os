@@ -62,3 +62,6 @@ spinner() {
 
     return $exit_code
 }
+
+install_lndg
+bash ~/brlnfullauto/shell/menu.sh
