@@ -8,7 +8,8 @@ install_bitcoind() {
   else
     arch_btc="aarch64"
   fi
-  tar -xzvf ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
+
+  tar -xzvf ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz -C ~/brlnfullauto/local_apps/bitcoind/
   sudo cp ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION/bin/bitcoin-cli /usr/local/bin
   sudo cp ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION/bin/bitcoind /usr/local/bin
   sudo mkdir -p /data/bitcoin
