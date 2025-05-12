@@ -125,6 +125,44 @@ for i in "${!PORTS[@]}"; do
 done
 }
 
+spinner() {
+    local pid=$!
+    local delay=0.2
+    local max=${SPINNER_MAX:-20}
+    local count=0
+    local spinstr='|/-\\'
+    local j=0
+
+    tput civis
+
+    # Monitorar processo
+    while kill -0 "$pid" 2>/dev/null; do
+        local emoji=""
+        for ((i=0; i<=count; i++)); do
+            emoji+="⚡"
+        done
+
+        local spin_char="${spinstr:j:1}"
+        j=$(( (j + 1) % 4 ))
+        count=$(( (count + 1) % (max + 1) ))
+
+        printf "\r\033[KInstalando seu BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        sleep "$delay"
+    done
+
+    wait "$pid"
+    exit_code=$?
+
+    tput cnorm
+    if [[ $exit_code -eq 0 ]]; then
+        printf "\r\033[K${GREEN}✔️ Processo finalizado com sucesso!${NC}\n"
+    else
+        printf "\r\033[K${RED}❌ Processo finalizado com erro (código: $exit_code)${NC}\n"
+    fi
+
+    return $exit_code
+}
+
 apache_install
 gotty_install
 
