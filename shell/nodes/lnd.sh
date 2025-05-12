@@ -55,25 +55,14 @@ postgres_db () {
 
 
 download_lnd() {
-  set -e
-  mkdir -p ~/lnd-install
-  cd ~/lnd-install
   if [[ $arch == "x86_64" ]]; then
     arch_lnd="amd64"
   else
     arch_lnd="arm64"
   fi
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt.ots
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-v$LND_VERSION-beta.txt
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig.ots
-  wget https://github.com/lightningnetwork/lnd/releases/download/v$LND_VERSION-beta/manifest-roasbeef-v$LND_VERSION-beta.sig
-  sha256sum --check manifest-v$LND_VERSION-beta.txt --ignore-missing
-  curl https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
-  gpg --verify manifest-roasbeef-v$LND_VERSION-beta.sig manifest-v$LND_VERSION-beta.txt
-  tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz
-  sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli
-  sudo rm -r lnd-linux-$arch_lnd-v$LND_VERSION-beta lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz manifest-roasbeef-v$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
+  tar -xzf lnd-linux-$arch_lnd-v$LND_VERSION-beta.tar.gz -C "$LOCAL_APPS/lnd" 
+  sudo cp "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta/lnd /usr/local/bin"
+  sudo cp "$LOCAL_APPS/lnd/lnd-linux-$arch_lnd-v$LND_VERSION-beta/lncli /usr/local/bin"
 }
 
 configure_lnd() {
