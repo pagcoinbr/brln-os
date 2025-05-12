@@ -9,7 +9,8 @@ install_bitcoind() {
     arch_btc="aarch64"
   fi
   tar -xzvf ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
-  sudo install -m 0755 -o root -g root -t /usr/local/bin ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
+  sudo cp ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION/bin/bitcoin-cli /usr/local/bin
+  sudo cp ~/brlnfullauto/local_apps/bitcoind/bitcoin-$BTC_VERSION/bin/bitcoind /usr/local/bin
   sudo mkdir -p /data/bitcoin
   sudo chown admin:admin /data/bitcoin
   ln -s /data/bitcoin /home/admin/.bitcoin
@@ -18,7 +19,7 @@ install_bitcoind() {
   sudo chmod 640 /data/bitcoin/bitcoin.conf
   cd /home/admin/.bitcoin
   sudo cp ~/brlnfullauto/local_apps/bitcoind/rpcauth.py /home/admin/.bitcoin/rpcauth.py
-  sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
+  sudo sed -i "54s|.*|$(python3 ~/brlnfullauto/local_apps/bitcoind/rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
   sudo cp $SERVICES_DIR/bitcoind.service /etc/systemd/system/bitcoind.service
   sudo systemctl enable bitcoind
   sudo systemctl start bitcoind
