@@ -16,10 +16,12 @@ elementsd_install() {
       sudo mkdir -p "$ELEMENTS_DIR"
       sudo chown -R admin:admin "$ELEMENTS_DIR"
       sudo chmod -R 755 "$ELEMENTS_DIR"
+      rm -f "$ELEMENTS_CONF"
       sudo cp ~/brlnfullauto/conf_files/elements.conf $ELEMENTS_CONF
       sudo chown admin:admin $ELEMENTS_CONF
       sudo chmod 640 $ELEMENTS_CONF
       ln -s $ELEMENTS_DIR /home/admin/.elements
+      rm -rf "/etc/systemd/system/elementsd.service"
       sudo cp "$SERVICES_DIR/elementsd.service" "/etc/systemd/system/"
       if [[ $? -eq 0 ]]; then
           echo -e "${GREEN}Elementd instalado com sucesso!${NC}"
