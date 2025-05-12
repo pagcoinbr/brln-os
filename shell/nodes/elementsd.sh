@@ -11,8 +11,8 @@ elementsd_install() {
           elements_arch="elements-$ELEMENTD_VERSION-aarch64-linux-gnu.tar.gz"
       fi
       tar -xvzf "$LOCAL_APPS/elementsd/$elements_arch"
-      cp "~/elements-$ELEMENTD_VERSION/bin/elementsd" "$LOCAL_BIN"
-      cp "~/elements-$ELEMENTD_VERSION/bin/elements-cli" "$LOCAL_BIN"
+      sudo cp "~/elements-$ELEMENTD_VERSION/bin/elementsd" "$LOCAL_BIN"
+      sudo cp "~/elements-$ELEMENTD_VERSION/bin/elements-cli" "$LOCAL_BIN"
       sudo mkdir -p "$ELEMENTS_DIR"
       sudo chown -R admin:admin "$ELEMENTS_DIR"
       sudo chmod -R 755 "$ELEMENTS_DIR"
@@ -21,10 +21,6 @@ elementsd_install() {
       sudo chmod 640 $ELEMENTS_CONF
       ln -s $ELEMENTS_DIR /home/admin/.elements
       sudo cp "$SERVICES_DIR/elementsd.service" "/etc/systemd/system/"
-      sleep 1
-      elements-cli loadwallet peerswap
-      sleep 1
-      elements-cli -rpcwallet=peerswap getnewaddress
       if [[ $? -eq 0 ]]; then
           echo -e "${GREEN}Elementd instalado com sucesso!${NC}"
           echo -e "${GREEN}Para criar um novo endereço de recebimento Liquid:${NC}"
