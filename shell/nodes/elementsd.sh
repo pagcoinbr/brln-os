@@ -10,12 +10,12 @@ elementsd_install() {
           echo "${GREEN}Instalando Elementd para arm64...${NC}"
           elements_arch="elements-$ELEMENTD_VERSION-aarch64-linux-gnu.tar.gz"
       fi
-      tar -xvf ~/brlnfullauto/local_apps/$elements_arch
-      cp ~/brlnfullauto/local_apps/elementsd/elements-$ELEMENTD_VERSION/bin/elementsd $LOCAL_BIN
-      cp ~/brlnfullauto/local_apps/elementsd/elements-$ELEMENTD_VERSION/bin/elements-cli $LOCAL_BIN
-      sudo mkdir -p $ELEMENTS_DIR
-      sudo chown -R admin:admin $ELEMENTS_DIR
-      sudo chmod -R 755 $ELEMENTS_DIR
+      tar -xvzf "$LOCAL_APPS/elementsd/$elements_arch"
+      cp "$LOCAL_APPS/elementsd/elements-$ELEMENTD_VERSION/bin/elementsd" "$LOCAL_BIN"
+      cp "$LOCAL_APPS/elementsd/elements-$ELEMENTD_VERSION/bin/elements-cli" "$LOCAL_BIN"
+      sudo mkdir -p "$ELEMENTS_DIR"
+      sudo chown -R admin:admin "$ELEMENTS_DIR"
+      sudo chmod -R 755 "$ELEMENTS_DIR"
       sudo cp ~/brlnfullauto/conf_files/elements.conf $ELEMENTS_CONF
       sudo chown admin:admin $ELEMENTS_CONF
       sudo chmod 640 $ELEMENTS_CONF
