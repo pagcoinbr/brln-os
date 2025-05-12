@@ -23,7 +23,7 @@ install_bitcoind() {
   sudo systemctl enable bitcoind
   sudo systemctl start bitcoind
   sudo ss -tulpn | grep bitcoind
-  if[[ $? -ne 0 ]]; then
+  if [[ $? -ne 0 ]]; then
     echo "Erro ao iniciar o serviço bitcoind. Verifique os logs para mais detalhes."
     exit 1
   else
