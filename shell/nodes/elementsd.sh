@@ -44,6 +44,14 @@ elementsd_install() {
     echo -e "${GREEN}Para enviar L-BTC para um endereço Liquid:${NC}"
     echo -e "${GREEN}elements-cli -rpcwallet=peerswap sendtoaddress [endereço] [quantidade em formato decimal, ex.: 0.1 para 0.10000000 L-BTC]${NC}"
   fi
+  sudo systemctl daemon-reload
+  sudo systemctl enable elementsd.service
+  sudo systemctl start elementsd.service
+  if [[ $? -eq 0 ]]; then
+      echo -e "${GREEN}Elementd iniciado com sucesso!${NC}"
+  else
+      echo -e "${RED}Erro ao iniciar Elementd.${NC}"
+  fi
 }
 
 spinner() {
