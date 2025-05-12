@@ -15,9 +15,9 @@ install_bitcoind() {
   wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS
   wget https://bitcoincore.org/bin/bitcoin-core-$BTC_VERSION/SHA256SUMS.asc
   sha256sum --ignore-missing --check SHA256SUMS
-  curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do
-    curl -s "$url" | gpg --import
-  done
+  # Importação das chaves PGP oficiais do Bitcoin Core
+  curl https://bitcoincore.org/keys/keys.txt | gpg --import
+  # Verificação da assinatura PGP
   gpg --verify SHA256SUMS.asc
   tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
