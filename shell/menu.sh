@@ -46,7 +46,6 @@ menu1 () {
     *)
       clear
       echo -e "${RED}❌ Opção inválida! Tente novamente.${NC}"
-      cabecalho
       menu1
       exit 0
       ;;
@@ -143,7 +142,6 @@ menu2 () {
       app="Elements"
       sudo -v
       echo -e "${CYAN}🚀 Iniciando a instalação do Elements...${NC}"
-      read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
       echo -e "${YELLOW} instalando o elements...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
