@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  bitcoind:
+    container_name: bitcoind
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - ARCH=${ARCH:-x86_64}
+        - BTC_VERSION=${BTC_VERSION:-28.1}
+    restart: unless-stopped
+    stop_grace_period: 10m          
+    volumes:
+      # Monta o diretório de dados do Bitcoin do host
+      - /data/bitcoin:/root/.bitcoin
+      # Em ambos os casos, monte os binários locais
+      - /home/admin/brlnfullauto/local_apps/bitcoind:/local_binaries:ro
+    ports:
+      # P2P port
+      - "8333:8333"
+      # RPC port
+      - "8332:8332"
+      # ZMQ ports (block and tx notifications)
+      - "28332:28332"
+      - "28333:28333"
+    environment:
+      - BITCOIN_NETWORK=mainnet
+      - BITCOIN_EXTRA_ARGS=-zmqpubrawblock=tcp://0.0.0.0:28332 -zmqpubrawtx=tcp://0.0.0.0:28333
+    networks:
+      - bitcoin_network
+
+networks:
+  bitcoin_network:
+    name: bitcoin_network
+    driver: bridge
