@@ -15,14 +15,6 @@ else
   ARCH_TYPE="amd64"
 fi
 
-# Global variables
-PEERSWAP_DIR="/home/admin/.peerswap"
-PEERSWAP_CONF="$PEERSWAP_DIR/peerswap.conf"
-PSWEB_CONFIG="$PEERSWAP_DIR/pswebconfig.json"
-PSWEB_VERSION="1.7.8"
-PSWEB_SERVICE="/etc/systemd/system/psweb.service"
-PSWEB_PORT="1984"
-
 # Function to check if PeerSwap is installed
 check_peerswap_installed() {
   if [ ! -f "$PEERSWAP_CONF" ] || ! command -v pscli &> /dev/null; then

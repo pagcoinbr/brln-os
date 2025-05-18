@@ -15,14 +15,6 @@ else
   ARCH_TYPE="amd64"
 fi
 
-# Global variables
-PEERSWAP_DIR="/home/admin/.peerswap"
-PEERSWAP_CONF="$PEERSWAP_DIR/peerswap.conf"
-POLICY_CONF="$PEERSWAP_DIR/policy.conf"
-PEERSWAP_VERSION="5.0.0-rc2"
-PEERSWAP_TARBALL="peerswap-$PEERSWAP_VERSION.tar.gz"
-PEERSWAP_TARBALL_PATH="/home/admin/brlnfullauto/local_apps/peerswap/$PEERSWAP_TARBALL"
-
 # Function to install PeerSwap
 install_peerswap() {
   echo "Installing PeerSwap..."
