@@ -173,10 +173,10 @@ menu3 () {
   cabecalho
   echo -e "   ${GREEN}1${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
   echo -e "   ${GREEN}2${NC}- Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}3${NC}- Instalar Thunderhub(Exige LND)"
-  echo -e "   ${GREEN}4${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}3${NC}- Instalar Thunderhub(Exige LND)"  echo -e "   ${GREEN}4${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}5${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}6${NC}- Instalar PeerSwapWeb"
+  echo -e "   ${GREEN}6${NC}- Instalar PeerSwap (Exige LND e Elements)"
+  echo -e "   ${GREEN}7${NC}- Instalar PeerSwapWeb"
   echo -e "   ${RED}0${NC}- Voltar"
   echo
   read -p "👉  Digite sua escolha:     " option
@@ -272,8 +272,26 @@ menu3 () {
       fi
       echo -e "\033[43m\033[30m ✅ LNbits instalado com sucesso! \033[0m"
       menu3
+      ;;    6)
+      clear
+      app="PeerSwap"
+      sudo -v
+      echo -e "${CYAN}🚀 Instalando PeerSwap...${NC}"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        bash "$ADMAPPS_DIR/peerswap.sh" install
+      elif [[ "$verbose_mode" == "n" ]]; then
+        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco... Seja paciente.${NC}"
+        bash "$ADMAPPS_DIR/peerswap.sh" install >> /dev/null 2>&1 & spinner
+        clear
+      else
+        echo "Opção inválida."
+        menu3
+      fi
+      echo -e "\033[43m\033[30m ✅ PeerSwap instalado com sucesso! \033[0m"
+      menu3
       ;;
-    6)
+    7)
       clear
       app="PeerSwapWeb"
       sudo -v
@@ -290,6 +308,7 @@ menu3 () {
         menu3
       fi
       echo -e "\033[43m\033[30m ✅ PeerSwapWeb instalado com sucesso! \033[0m"
+      menu3
       ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
