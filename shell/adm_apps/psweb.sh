@@ -1,5 +1,5 @@
 #!/bin/bash
-
+source /home/admin/brlnfullauto/shell/.env.sh
 # BRLNFullauto: PeerSwap Web UI installation and management script
 #
 # This script installs and manages PeerSwap Web UI to provide a graphical
@@ -82,7 +82,7 @@ install_psweb() {
   echo "Building PeerSwap Web UI from source..."
   sudo tar -xvzf /home/admin/brlnfullauto/local_apps/psweb/peerswap-web-$PSWEB_VERSION.tar.gz -C /home/admin/brlnfullauto/local_apps/psweb
   cd /home/admin/brlnfullauto/local_apps/psweb/peerswap-web-$PSWEB_VERSION
-  make install-lnd
+  make -j$(nproc) install-lnd
 
   # Create service file for systemd
   create_service_file

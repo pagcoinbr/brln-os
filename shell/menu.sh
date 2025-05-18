@@ -173,7 +173,8 @@ menu3 () {
   cabecalho
   echo -e "   ${GREEN}1${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
   echo -e "   ${GREEN}2${NC}- Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}3${NC}- Instalar Thunderhub(Exige LND)"  echo -e "   ${GREEN}4${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}3${NC}- Instalar Thunderhub(Exige LND)"  
+  echo -e "   ${GREEN}4${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}5${NC}- Instalar LNbits"
   echo -e "   ${GREEN}6${NC}- Instalar PeerSwap (Exige LND e Elements)"
   echo -e "   ${GREEN}7${NC}- Instalar PeerSwapWeb"

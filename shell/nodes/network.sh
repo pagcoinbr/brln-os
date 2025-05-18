@@ -43,8 +43,9 @@ install_nodejs() {
 }
 
 Install_go (){
-  sudo tar -C /usr/local -xzf "$LOCAL_APPS/golang/go1.24.3.linux-amd64.tar.gz"
-  export PATH=$PATH:/usr/local/go/bin
+  sudo tar -C /usr/local/bin -xzf "$LOCAL_APPS/golang/go1.24.3.linux-amd64.tar.gz"
+  export PATH=$PATH:/usr/local/bin
+  echo "export PATH=\$PATH:/usr/local/bin" >> ~/.bashrc
   sudo apt install make
 }
 
