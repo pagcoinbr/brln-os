@@ -72,25 +72,7 @@ install_peerswap() {
 # Function to create PeerSwap config file
 create_config_file() {
   echo "Creating PeerSwap configuration file..."
-
-  # Extract RPC user and pass from elements.conf
-  local ELEMENTS_CONF="/home/admin/brlnfullauto/conf_files/elements.conf"
-  local RPC_USER=$(grep -w "rpcuser" "$ELEMENTS_CONF" | cut -d '=' -f2)
-  local RPC_PASS=$(grep -w "rpcpassword" "$ELEMENTS_CONF" | cut -d '=' -f2)
-  local RPC_PORT=$(grep -w "rpcport" "$ELEMENTS_CONF" | cut -d '=' -f2)
-
-  # Create L-BTC only config
-  cat <<EOF > "$PEERSWAP_CONF"
-bitcoinswaps=false # disables BTC swaps
-lnd.tlscertpath=/home/admin/.lnd/tls.cert
-lnd.macaroonpath=/home/admin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
-elementsd.rpcuser=$RPC_USER
-elementsd.rpcpass=$RPC_PASS
-elementsd.rpchost=http://127.0.0.1 # the http:// is mandatory
-elementsd.rpcport=$RPC_PORT
-elementsd.rpcwallet=peerswap
-EOF
-
+  sudo cp /home/admin/brlnfullauto/local_apps/peerswap/peerswap.conf $PEERSWAP_CONF
   echo "Configuration file created at $PEERSWAP_CONF"
 }
 
