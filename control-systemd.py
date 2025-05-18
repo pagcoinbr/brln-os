@@ -16,8 +16,8 @@ APP_TO_SERVICE = {
     "lndg-controller": "lndg-controller.service",
     "lnd": "lnd.service",
     "bitcoind": "bitcoind.service",
-    "bos-telegram": "bos-telegram.service",
     "tor": "tor.service",
+    "elementsd": "elementsd.service",
 }
 
 # Função auxiliar para verificar o status do serviço

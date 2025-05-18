@@ -18,18 +18,6 @@ fi
 # Function to install PeerSwap
 install_peerswap() {
   echo "Installing PeerSwap..."
-  
-  # Check if Go is installed
-  if ! command -v go &> /dev/null; then
-    echo "Go is required but not installed."
-    read -p "Would you like to install Go now? (y/n): " install_go
-    if [[ "$install_go" == "y" ]]; then
-      install_golang
-    else
-      echo "Cannot proceed without Go. Exiting..."
-      exit 1
-    fi
-  fi
 
   # Create PeerSwap directories
   mkdir -p "$PEERSWAP_DIR"
