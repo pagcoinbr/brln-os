@@ -95,3 +95,5 @@ create_service_file() {
   echo "Service file created at $PSWEB_SERVICE"
 }
 
+install_psweb
+
