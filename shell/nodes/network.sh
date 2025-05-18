@@ -46,7 +46,6 @@ Install_go (){
   sudo tar -C /usr/local -xzf "$LOCAL_APPS/golang/go1.24.3.linux-amd64.tar.gz"
   export PATH=$PATH:/usr/local/go/bin
   sudo apt install make
-  mkdir -p ~/.peerswap
 }
 
 create_main_dir
