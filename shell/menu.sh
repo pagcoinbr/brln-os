@@ -299,10 +299,10 @@ menu3 () {
       echo -e "${CYAN}🚀 Instalando PeerSwapWeb...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        bash "$ADMAPPS_DIR/peerswapweb.sh"
+        bash "$ADMAPPS_DIR/psweb.sh"
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco... Seja paciente.${NC}"
-        bash "$ADMAPPS_DIR/peerswapweb.sh" >> /dev/null 2>&1 & spinner
+        bash "$ADMAPPS_DIR/psweb.sh" >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
