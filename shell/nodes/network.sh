@@ -43,21 +43,7 @@ install_nodejs() {
 }
 
 Install_go (){
-  # Extrair Go para o diretório correto
-  sudo tar -xzf "$LOCAL_APPS/golang/go1.24.3.linux-amd64.tar.gz" -C /usr/local
-  
-  # Configurar variáveis de ambiente do Go
-  echo 'export GOPATH=$HOME/go' >> ~/.bashrc
-  echo 'export GOROOT=/usr/local/go' >> ~/.bashrc
-  echo 'export PATH=$PATH:$GOROOT/bin:$GOPATH/bin' >> ~/.bashrc
-  
-  # Aplicar as mudanças ao ambiente atual
-  export GOPATH=$HOME/go
-  export GOROOT=/usr/local/go
-  export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-  
-  # Criar diretório GOPATH
-  mkdir -p $HOME/go
+  sudo snap install go --classic
   sudo apt install -y make
 }
 
