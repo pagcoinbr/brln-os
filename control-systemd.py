@@ -117,42 +117,6 @@ def pagar_invoice():
 
     result = subprocess.getoutput(f"lncli 'payinvoice {invoice}'")
     return jsonify({'pagamento': result})
-@app.route('/saldo/lightning')
-def saldo_lightning():
-    result = subprocess.getoutput("lncli 'walletbalance'")
-    return jsonify({'lightning_balance': result})
-
-
-@app.route('/saldo/onchain')
-def saldo_onchain():
-    result = subprocess.getoutput("bitcoin-cli getbalance")
-    return jsonify({'onchain_balance': result})
-
-
-@app.route('/saldo/liquid')
-def saldo_liquid():
-    result = subprocess.getoutput("elements-cli getbalance")
-    return jsonify({'liquid_balance': result})
-
-
-@app.route('/lightning/invoice', methods=['POST'])
-def criar_invoice():
-    valor = request.json.get("amount")
-    if not valor:
-        return jsonify({'error': 'amount não fornecido'}), 400
-
-    result = subprocess.getoutput(f"lncli 'addinvoice --amt={valor}'")
-    return jsonify({'invoice': result})
-
-
-@app.route('/lightning/pay', methods=['POST'])
-def pagar_invoice():
-    invoice = request.json.get("invoice")
-    if not invoice:
-        return jsonify({'error': 'invoice não fornecida'}), 400
-
-    result = subprocess.getoutput(f"lncli 'payinvoice {invoice}'")
-    return jsonify({'pagamento': result})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
