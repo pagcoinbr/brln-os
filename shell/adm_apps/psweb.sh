@@ -1,5 +1,5 @@
 #!/bin/bash
-source /home/admin/brlnfullauto/shell/.env.sh
+source /home/admin/brlnfullauto/shell/.env
 # BRLNFullauto: PeerSwap Web UI installation and management script
 #
 # This script installs and manages PeerSwap Web UI to provide a graphical

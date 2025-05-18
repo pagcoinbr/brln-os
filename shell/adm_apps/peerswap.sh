@@ -1,5 +1,5 @@
 #!/bin/bash
-
+source /home/admin/brlnfullauto/shell/.env
 # BRLNFullauto: PeerSwap installation and management script
 #
 # This script installs and manages PeerSwap to facilitate
