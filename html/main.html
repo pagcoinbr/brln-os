@@ -45,11 +45,11 @@
     <h1>⚙️ Painel de Configurações</h1>
 
     <div class="section">
-        <h2>📊 Status do Sistema</h2>
-        <div id="cpu" class="status">CPU: ...</div>
+        <h2>📊 Status do Sistema</h2>        <div id="cpu" class="status">CPU: ...</div>
         <div id="ram" class="status">RAM: ...</div>
         <div id="lnd" class="status">LND: ...</div>
         <div id="bitcoind" class="status">Bitcoind: ...</div>
+        <div id="elements" class="status">Elements: ...</div>
         <div id="tor" class="status">Tor: ...</div>
         <div id="blockchain" class="status">Blockchain: ...</div>
  
@@ -142,7 +142,14 @@
               <span class="slider"></span>
             </label>
           </div>
-            
+              <div class="service-row">
+            <label for="elementsd-button">Elements</label>
+            <label class="switch">
+              <input type="checkbox" id="elementsd-button" onchange="toggleService('elementsd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <div class="service-row">
             <label for="tor-button">Tor</label>
             <label class="switch">

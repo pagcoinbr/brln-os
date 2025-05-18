@@ -16,7 +16,9 @@ function atualizarStatus() {
               } else if (line.includes("LND:")) {
                   document.getElementById("lnd").innerText = line;
               } else if (line.includes("Bitcoind:")) {
-                  document.getElementById("bitcoind").innerText = line;
+                  document.getElementById("bitcoind").innerText = line;              
+              } else if (line.includes("Elements:")) {
+                  document.getElementById("elements").innerText = line;
               } else if (line.includes("Tor:")) {
                   document.getElementById("tor").innerText = line;
               } else if (line.includes("Blockchain:")) {
@@ -45,7 +47,7 @@ const appsPrincipais = [
 ];
 
 // Lista dos apps gerenciados no painel de serviços
-const appsServicos = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd", "bitcoind", "bos-telegram", "tor"];
+const appsServicos = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd", "bitcoind", "elementsd", "bos-telegram", "tor"];
 
 document.addEventListener('DOMContentLoaded', () => {
   // Aplica o tema salvo
