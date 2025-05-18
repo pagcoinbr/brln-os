@@ -66,4 +66,5 @@ configure_ufw
 echo -e "${YELLOW}🕒 Isso pode demorar um pouco...${NC}"
 echo -e "${YELLOW}Na pior das hipóteses, até 30 minutos...${NC}"
 install_tor
+install_go
 install_nodejs
