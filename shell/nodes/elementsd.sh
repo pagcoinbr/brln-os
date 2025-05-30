@@ -11,8 +11,8 @@ elementsd_install() {
           elements_arch="elements-$ELEMENTD_VERSION-aarch64-linux-gnu.tar.gz"
       fi
       tar -xvzf "$LOCAL_APPS/elementsd/$elements_arch"
-      sudo cp "/home/admin/elements-$ELEMENTD_VERSION/bin/elementsd" "$LOCAL_BIN"
-      sudo cp "/home/admin/elements-$ELEMENTD_VERSION/bin/elements-cli" "$LOCAL_BIN"
+      sudo cp "/home/admin/brlnfullauto/elements-$ELEMENTD_VERSION/bin/elementsd" "$LOCAL_BIN"
+      sudo cp "/home/admin/brlnfullauto/elements-$ELEMENTD_VERSION/bin/elements-cli" "$LOCAL_BIN"
       sudo mkdir -p "$ELEMENTS_DIR"
       sudo chown -R admin:admin "$ELEMENTS_DIR"
       sudo chmod -R 755 "$ELEMENTS_DIR"
