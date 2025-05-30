@@ -1,0 +1,86 @@
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos de configuração sensíveis
+conf_files/*.custom
+.env.local
+credentials.json
+*_secrets.txt
+
+# Arquivos de log
+logs/
+*.log
+npm-debug.log*
+
+# Diretórios Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm/
+
+# Diretórios Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Ambientes virtuais
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Arquivos temporários
+tmp/
+.tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# IDE e editores
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
+.komodotools/
+.eclipse/
+.settings/
+.project
+.classpath
+
+# Arquivos específicos do projeto
+lnd-data/
+bitcoin-data/
+macaroons/
+*.macaroon
+tls.*
+*.cert
+*.key
