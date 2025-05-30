@@ -47,6 +47,7 @@ install_peerswap() {
 
   echo "PeerSwap installation complete!"
   echo "Run 'peerswap.sh start' to start the daemon."
+  fi
 }
 
 # Function to create PeerSwap config file
@@ -59,7 +60,7 @@ create_config_file() {
 # Function to create PeerSwap systemd service file
 create_service_file() {
   echo "Creating PeerSwap service file..."
-  sudo cp /home/admin/brlnfullauto/local_apps/peerswap/peerswap.service /etc/systemd/system/
+  sudo cp /home/admin/brlnfullauto/services/peerswap.service /etc/systemd/system/
   sudo systemctl daemon-reload
   echo "Service file created at /etc/systemd/system/peerswap.service"
 }
