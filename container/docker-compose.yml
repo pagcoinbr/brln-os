@@ -143,14 +143,14 @@ services:
     networks:
       - grafana-net
     volumes:
-      - elements_data:/home/elements/.elements
-      - ./elements.conf:/home/elements/.elements/elements.conf
+      - elements_data:/home/.elements
+      - ./elements.conf:/home/.elements/elements.conf
     restart: unless-stopped
     depends_on:
       - tor
       - i2pd
     environment:
-      - ELEMENTS_DATA=/home/elements/.elements
+      - ELEMENTS_DATA=/home/.elements
 
   peerswap:
     build:

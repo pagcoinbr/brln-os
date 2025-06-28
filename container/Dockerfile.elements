@@ -20,8 +20,9 @@ RUN apt-get update && apt-get install -y \
 RUN groupadd -r -g 1001 elements && useradd elements -r -g 1001 -u 1001 -s /bin/bash && groupadd -r -g 1051 lnd-elements && usermod -a -G lnd-elements elements
 
 # Criar diretórios
-RUN mkdir -p /opt/elements ${ELEMENTS_DATA} \
-    && chown -R elements:elements /opt/elements ${ELEMENTS_DATA}
+RUN mkdir -p /opt/elements ${ELEMENTS_DATA} ${ELEMENTS_DATA}/liquidv1/wallets \
+    && chown -R elements:elements /opt/elements ${ELEMENTS_DATA} \
+    && chmod -R 755 ${ELEMENTS_DATA}
 
 # Copiar e extrair binários do Elements
 COPY elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz /tmp/

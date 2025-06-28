@@ -11,8 +11,7 @@ wait_for_service() {
 if [ "$1" = "elementsd" ]; then
     echo "Iniciando Elements daemon..."
     
-    # Garantir que o diretório de dados existe e tem as permissões corretas
-    mkdir -p "$ELEMENTS_DATA"    # Iniciar o elementsd
+    # Iniciar o elementsd
     exec /opt/elements/elementsd \
         -conf="$ELEMENTS_DATA/elements.conf" \
         -datadir="$ELEMENTS_DATA" \
