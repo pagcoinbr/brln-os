@@ -23,7 +23,9 @@ RUN useradd -m -s /bin/bash ${USER} && \
     usermod -aG sudo ${USER} && \
     echo "${USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     groupadd -f -g 1050 tor-access && \
-    usermod -a -G tor-access ${USER}
+    usermod -a -G tor-access ${USER} && \
+    groupadd -f -g 1051 lnd-elements && \
+    usermod -a -G lnd-elements ${USER}
 
 # Criar diretório de dados e diretório para binários
 RUN mkdir -p ${DATA_DIR} /opt/lnd ${HOME}/.lnd && \

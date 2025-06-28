@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 # Definir variáveis de ambiente
 ENV ELEMENTS_VERSION=23.2.7
 ENV ELEMENTS_USER=elements
-ENV ELEMENTS_DATA=/home/elements/.elements
+ENV ELEMENTS_DATA=/home/.elements
 ENV PATH=/opt/elements:$PATH
 
 # Instalar dependências
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar usuário elements
-RUN groupadd -r elements && useradd -r -g elements -s /bin/bash elements
+RUN groupadd -r -g 1001 elements && useradd elements -r -g 1001 -u 1001 -s /bin/bash && groupadd -r -g 1051 lnd-elements && usermod -a -G lnd-elements elements
 
 # Criar diretórios
 RUN mkdir -p /opt/elements ${ELEMENTS_DATA} \
