@@ -1,0 +1,54 @@
+# Dockerfile para Elements/Liquid - x86_64
+FROM ubuntu:22.04
+
+# Definir variáveis de ambiente
+ENV ELEMENTS_VERSION=23.2.7
+ENV ELEMENTS_USER=elements
+ENV ELEMENTS_DATA=/home/elements/.elements
+ENV PATH=/opt/elements:$PATH
+
+# Instalar dependências
+RUN apt-get update && apt-get install -y \
+    wget \
+    tar \
+    sudo \
+    gosu \
+    apt-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Criar usuário elements
+RUN groupadd -r elements && useradd -r -g elements -s /bin/bash elements
+
+# Criar diretórios
+RUN mkdir -p /opt/elements ${ELEMENTS_DATA} \
+    && chown -R elements:elements /opt/elements ${ELEMENTS_DATA}
+
+# Copiar e extrair binários do Elements
+COPY elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz /tmp/
+RUN tar -xvzf /tmp/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz -C /opt/elements/ \
+    && chmod +x /opt/elements/elements-${ELEMENTS_VERSION}/bin/elementsd /opt/elements/elements-${ELEMENTS_VERSION}/bin/elements-cli \
+    && ln -s /opt/elements/elements-${ELEMENTS_VERSION}/bin/elementsd /opt/elements/elementsd \
+    && ln -s /opt/elements/elements-${ELEMENTS_VERSION}/bin/elements-cli /opt/elements/elements-cli \
+    && rm -rf /tmp/elements-*
+
+# Copiar arquivo de configuração
+COPY elements.conf ${ELEMENTS_DATA}/
+RUN chown elements:elements ${ELEMENTS_DATA}/elements.conf
+
+# Script de entrada
+COPY elements.sh /opt/elements/
+RUN chmod +x /opt/elements/elements.sh \
+    && sed -i 's/\r$//' /opt/elements/elements.sh
+
+# Definir o diretório de trabalho
+WORKDIR ${ELEMENTS_DATA}
+
+# Expor portas
+EXPOSE 7041 18884
+
+# Definir usuário
+USER elements
+
+# Ponto de entrada
+ENTRYPOINT ["/opt/elements/elements.sh"]
+CMD ["elementsd"]
