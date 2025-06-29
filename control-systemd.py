@@ -9,6 +9,7 @@ CORS(app)  # <- liberação de CORS
 
 # Mapeamento de apps para serviços systemd
 APP_TO_SERVICE = {
+    "peerswap": "peerswapd.service",
     "lnbits": "lnbits.service",
     "thunderhub": "thunderhub.service",
     "simple": "simple-lnwallet.service",
@@ -71,7 +72,7 @@ def toggle_service():
         return jsonify({"success": True, "new_status": not is_active})
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "error": e.stderr}), 500
-    
+
 @app.route("/status_novidade")
 def status_novidade():
     flag_path = "/var/www/html/radio/update_available.flag"
