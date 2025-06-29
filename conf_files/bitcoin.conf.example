@@ -1,0 +1,9 @@
+# Bitcoin Configuration File Template
+# Copy this file and rename it to bitcoin.conf
+# Fill in your actual credentials
+
+bitcoind.rpchost=your.bitcoin.host:port
+bitcoind.rpcuser=your_rpc_user
+bitcoind.rpcpass=your_rpc_password
+bitcoind.zmqpubrawblock=tcp://your.bitcoin.host:zmq_block_port
+bitcoind.zmqpubrawtx=tcp://your.bitcoin.host:zmq_tx_port

@@ -84,3 +84,30 @@ macaroons/
 tls.*
 *.cert
 *.key
+
+# Arquivos de configuração com credenciais sensíveis
+# Evita publicação acidental de credenciais de RPC e senhas
+**/bitcoin.conf
+**/elements.conf
+**/lnd.conf
+**/peerswap.conf
+conf_files/bitcoin.conf
+conf_files/elements.conf
+conf_files/lnd.conf
+conf_files/peerswap.conf
+container/bitcoin.conf
+container/elements.conf
+container/lnd.conf
+container/peerswap.conf
+
+# Arquivos com credenciais específicas
+*rpcuser*
+*rpcpass*
+*rpcpassword*
+*mainchainrpc*
+*zmqpub*
+
+# Arquivos de configuração de produção
+*.prod.conf
+*production.conf
+*mainnet.conf

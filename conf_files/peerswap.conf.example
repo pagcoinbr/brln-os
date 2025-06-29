@@ -1,0 +1,14 @@
+# PeerSwap Configuration File Template
+# Copy this file and rename it to peerswap.conf
+# Fill in your actual credentials
+
+# disables BTC swaps
+bitcoinswaps=false
+lnd.tlscertpath=/data/lnd/tls.cert
+lnd.macaroonpath=/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon
+elementsd.rpcuser=your_elements_user
+elementsd.rpcpass=your_elements_password
+# the http:// is mandatory
+elementsd.rpchost=http://your_elements_host
+elementsd.rpcport=18884
+elementsd.rpcwallet=peerswap

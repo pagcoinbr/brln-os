@@ -1,0 +1,11 @@
+# Elements Configuration File Template
+# Copy this file and rename it to elements.conf
+# Fill in your actual credentials
+
+mainchainrpchost=your.mainchain.host
+mainchainrpcport=port
+mainchainrpcuser=your_mainchain_user
+mainchainrpcpassword=your_mainchain_password
+
+elementsd.rpcuser=your_elements_user
+elementsd.rpcpass=your_elements_password

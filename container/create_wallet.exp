@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+# Lê a senha do arquivo
+set password_file [open "password.txt" r]
+set password [string trim [read $password_file]]
+close $password_file
+
+# Configura timeout
+set timeout 30
+
+# Executa o comando lncli create
+spawn docker exec -it lnd /opt/lnd/lncli --tlscertpath=/home/lnd/.lnd/tls.cert.tmp create
+
+# Espera pelo prompt de senha
+expect "Input wallet password:"
+send "$password\r"
+
+# Confirma a senha
+expect "Confirm password:"
+send "$password\r"
+
+# Responde se quer usar seed existente (n = não)
+expect "Enter 'y' to use an existing cipher seed mnemonic, 'x' to use an extended master root key"
+expect "or 'n' to create a new seed (Enter y/x/n):"
+send "n\r"
+
+# Responde se quer passphrase adicional (apenas Enter = sem passphrase)
+expect "Input your passphrase if you wish to encrypt it (or press enter to proceed without a cipher seed passphrase):"
+send "\r"
+
+# Aguarda a criação da carteira e mostra a seed
+expect {
+    "Your cipher seed is:" {
+        # Captura e exibe a seed
+        expect -re {BEGIN LND CIPHER SEED.*END LND CIPHER SEED.*}
+        puts "\n=== SEED CAPTURADA ==="
+        puts $expect_out(0,string)
+        puts "=== FIM DA SEED ==="
+    }
+    "lnd successfully initialized!" {
+        puts "Carteira criada com sucesso!"
+    }
+    timeout {
+        puts "Timeout aguardando resposta"
+        exit 1
+    }
+}
+
+# Finaliza
+expect eof
