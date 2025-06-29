@@ -1,0 +1,13 @@
+[Unit]
+Description=Edita o elements.conf
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3737 -w nano /data/elements/elements.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

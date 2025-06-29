@@ -17,6 +17,8 @@ function atualizarStatus() {
                   document.getElementById("lnd").innerText = line;
               } else if (line.includes("Bitcoind:")) {
                   document.getElementById("bitcoind").innerText = line;
+              } else if (line.includes("Elementsd:")) {
+                  document.getElementById("elementsd").innerText = line;
               } else if (line.includes("Tor:")) {
                   document.getElementById("tor").innerText = line;
               } else if (line.includes("Blockchain:")) {
@@ -42,10 +44,11 @@ const appsPrincipais = [
   { id: 'thunderhub-btn', porta: 3000 },
   { id: 'lnbits-btn', porta: 5000 },
   { id: 'simple-btn', porta: 35671 },
+  { id: 'peerswap-btn', porta: 1984 },
 ];
 
 // Lista dos apps gerenciados no painel de serviços
-const appsServicos = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd", "bitcoind", "bos-telegram", "tor"];
+const appsServicos = ["peerswap", "lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd", "bitcoind", "elementsd", "bos-telegram", "tor"];
 
 document.addEventListener('DOMContentLoaded', () => {
   // Aplica o tema salvo
@@ -74,6 +77,7 @@ function verificarServicosPrincipais() {
     { id: 'thunderhub-btn', porta: 3000 },
     { id: 'lnbits-btn', porta: 5000 },
     { id: 'simple-btn', porta: 35671 },
+    { id: 'peerswap-btn', porta: 1984 },
   ];
 
   const ip = window.location.hostname;
@@ -122,6 +126,19 @@ function verificarServicosPrincipais() {
 
 // Atualiza status dos botões de serviços
 async function updateButtons() {
+  fetch('/cgi-bin/status.sh')
+    .then(res => res.text())
+    .then(text => {
+      console.log("STATUS.SH →", text);
+      text.split('\n').forEach(line => {
+        const l = line.trim();
+        if (l.startsWith("Elementsd:")) {
+          document.getElementById("elementsd").innerText = l;
+        }
+      });
+    })
+    .catch(err => console.error("Erro status.sh:", err));
+
   for (const appName of appsServicos) {
     const button = document.getElementById(`${appName}-button`);
     if (!button) continue;
@@ -158,6 +175,7 @@ async function toggleService(appName) {
 // Formata o nome dos apps bonitinho
 function formatAppName(appName) {
   switch (appName) {
+    case "peerswap": return "PeerSwap";
     case "lnbits": return "LNbits";
     case "thunderhub": return "Thunderhub";
     case "simple": return "Simple LNWallet";
