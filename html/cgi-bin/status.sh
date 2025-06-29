@@ -13,6 +13,7 @@ echo "CPU: $cpu_usage"
 echo "RAM: $ram_usage"
 echo "LND: $(check_service lnd)"
 echo "Bitcoind: $(check_service bitcoind)"
+echo "Elementsd: $(check_service elementsd)"
 echo "Tor: $(check_service tor)"
 
 # Verifica se bitcoind.rpchost está ativo ou comentado
