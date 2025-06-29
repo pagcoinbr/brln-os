@@ -18,6 +18,7 @@
     <button id="thunderhub-btn" class="botao" onclick="abrirApp(3000)">🌩️ Thunderhub</button>
     <button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">💰 LNBits</button>
     <button id="simple-btn" class="botao" onclick="abrirApp(35671)">📱 Simple LNWallet</button>
+    <button id="peerswap-btn" class="botao" onclick="abrirApp(1984)">💱 PeerSwap</button>
   </div>
   <div class="container">
   <div class="section"> 
@@ -47,6 +48,7 @@
         <div id="ram" class="status">RAM: ...</div>
         <div id="lnd" class="status">LND: ...</div>
         <div id="bitcoind" class="status">Bitcoind: ...</div>
+        <div id="elementsd" class="status">Elementsd: ...</div>
         <div id="tor" class="status">Tor: ...</div>
         <div id="blockchain" class="status">Blockchain: ...</div>
  
@@ -69,9 +71,10 @@
       <br>
       <button class="botao" onclick="abrirApp(3535)">⚡ Logs - LND</button>
       <button class="botao" onclick="abrirApp(3434)">🪙 Logs - Bitcoin</button>
-      <br>
+      <button class="botao" onclick="abrirApp(3838)">🌊 Logs - Elements</button>
       <button class="botao" onclick="abrirApp(3333)">✏️ Lnd.conf</button>
       <button class="botao" onclick="abrirApp(3636)">✏️ Bitcoin.conf</button>
+      <button class="botao" onclick="abrirApp(3737)">✏️ Elements.conf</button>
       <br><br>     
       <hr style="border: none; border-top: 1px solid #6e6e6e; margin: 10px 0; margin-top: 20px; margin-bottom: 20px;">
         <h3>Gerenciador de Serviços ⚡</h3>
@@ -85,9 +88,25 @@
           </div>
 
           <div class="service-row">
+            <label for="elementsd-button">Elementsd</label>
+            <label class="switch">
+              <input type="checkbox" id="elementsd-button" onchange="toggleService('elementsd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
             <label for="lnd-button">LND</label>
             <label class="switch">
               <input type="checkbox" id="lnd-button" onchange="toggleService('lnd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="peerswap-button">PeerSwap</label>
+            <label class="switch">
+              <input type="checkbox" id="peerswap-button" onchange="toggleService('peerswap')">
               <span class="slider"></span>
             </label>
           </div>
