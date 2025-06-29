@@ -1,0 +1,71 @@
+# Dockerfile para LND baseado no script BRLN
+FROM ubuntu:22.04
+
+# Variáveis de ambiente
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LND_VERSION=0.18.5
+ENV USER=lnd
+ENV HOME=/home/${USER}
+ENV DATA_DIR=/data/lnd
+ENV PATH=/opt/lnd:$PATH
+
+# Instalar dependências básicas
+RUN apt-get update && apt-get install -y \
+    curl \
+    tar \
+    sudo \
+    postgresql-client \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Criar usuário lnd
+RUN useradd -m -s /bin/bash ${USER} && \
+    usermod -aG sudo ${USER} && \
+    echo "${USER} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+    groupadd -f -g 1050 tor-access && \
+    usermod -a -G tor-access ${USER} && \
+    groupadd -f -g 1051 lnd-elements && \
+    usermod -a -G lnd-elements ${USER}
+
+# Criar diretório de dados e diretório para binários
+RUN mkdir -p ${DATA_DIR} /opt/lnd ${HOME}/.lnd && \
+    chown -R ${USER}:${USER} ${DATA_DIR} && \
+    chmod -R 755 ${DATA_DIR} && \
+    chown -R ${USER}:${USER} /opt/lnd && \
+    chown -R ${USER}:${USER} ${HOME}/.lnd
+
+# Copiar e extrair binários do LND
+COPY lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz /tmp/
+RUN tar -xzf /tmp/lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz -C /opt/lnd/ \
+    && chmod +x /opt/lnd/lnd-linux-amd64-v${LND_VERSION}-beta/lnd \
+    && chmod +x /opt/lnd/lnd-linux-amd64-v${LND_VERSION}-beta/lncli \
+    && ln -s /opt/lnd/lnd-linux-amd64-v${LND_VERSION}-beta/lnd /opt/lnd/lnd \
+    && ln -s /opt/lnd/lnd-linux-amd64-v${LND_VERSION}-beta/lncli /opt/lnd/lncli \
+    && rm -rf /tmp/lnd-linux-*
+
+# Copiar arquivos de configuração para o diretório HOME
+COPY lnd.conf ${HOME}/.lnd/lnd.conf
+COPY password.txt ${HOME}/.lnd/password.txt
+
+# Definir permissões corretas
+RUN chown -R ${USER}:${USER} ${HOME}/.lnd && \
+    chmod 640 ${HOME}/.lnd/lnd.conf && \
+    chmod 600 ${HOME}/.lnd/password.txt
+
+# Abordagem diferente - criar diretamente no HOME
+RUN mkdir -p ${HOME}/.lnd/data/chain/bitcoin/mainnet && \
+    chown -R ${USER}:${USER} ${HOME}/.lnd && \
+    chmod -R 755 ${HOME}/.lnd
+
+# Mudar para usuário lnd
+USER ${USER}
+WORKDIR ${HOME}
+
+# Expor portas
+EXPOSE 9735 10009 8080
+
+# Volumes
+VOLUME ["${DATA_DIR}"]
+
+# Comando padrão
+CMD ["/opt/lnd/lnd", "--configfile=/home/lnd/.lnd/lnd.conf"]

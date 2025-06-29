@@ -6,7 +6,7 @@ After=network.target
 User=admin
 WorkingDirectory=/home/admin
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/admin/brlnfullauto/brunel.sh
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/admin/brlnfullauto/run.sh
 Restart=always
 
 [Install]

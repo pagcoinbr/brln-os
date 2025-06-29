@@ -1,0 +1,63 @@
+# Dockerfile for PeerSwap
+FROM golang:1.23-bullseye AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    autoconf \
+    libtool \
+    pkg-config \
+    make \
+    git \
+    golang \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /tmp
+
+# Copy the peerswap tarball
+COPY peerswap-4.0rc1.tar.gz /tmp/
+
+# Extract and build PeerSwap
+RUN tar -xzf peerswap-4.0rc1.tar.gz && \
+    cd peerswap-4.0rc1 && \
+    make lnd-release && \
+    find /go -name "peerswapd" -exec cp {} /usr/local/bin/ \; && \
+    find /go -name "pscli" -exec cp {} /usr/local/bin/ \; && \
+    chmod +x /usr/local/bin/peerswapd /usr/local/bin/pscli
+
+# Final stage - minimal runtime image
+FROM debian:bullseye-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binaries from builder stage
+COPY --from=builder /usr/local/bin/peerswapd /usr/local/bin/
+COPY --from=builder /usr/local/bin/pscli /usr/local/bin/
+
+# Create peerswap user and directory
+RUN useradd -r -u 1000 -m -s /bin/bash peerswap && \
+    mkdir -p /home/peerswap/.peerswap && \
+    chown -R peerswap:peerswap /home/peerswap
+
+# Set working directory
+WORKDIR /home/peerswap
+
+# Switch to peerswap user
+USER peerswap
+
+# Create data directory
+VOLUME ["/home/peerswap/.peerswap"]
+
+# Expose any necessary ports (if peerswap has specific ports)
+# EXPOSE 42069
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD pscli getinfo || exit 1
+
+# Default command
+CMD ["peerswapd"]

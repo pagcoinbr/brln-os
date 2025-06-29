@@ -1,0 +1,61 @@
+# Dockerfile para i2pd Service
+FROM ubuntu:22.04
+
+# Variáveis de ambiente
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Instalar dependências básicas
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar i2pd
+RUN wget -q -O - https://repo.i2pd.xyz/.help/add_repo | bash -s - && \
+    apt-get update && apt-get install -y i2pd && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configurar i2pd
+RUN echo "# i2pd configuration" > /etc/i2pd/i2pd.conf && \
+    echo "log = stdout" >> /etc/i2pd/i2pd.conf && \
+    echo "loglevel = info" >> /etc/i2pd/i2pd.conf && \
+    echo "ipv4 = true" >> /etc/i2pd/i2pd.conf && \
+    echo "ipv6 = false" >> /etc/i2pd/i2pd.conf && \
+    echo "notransit = false" >> /etc/i2pd/i2pd.conf && \
+    echo "floodfill = false" >> /etc/i2pd/i2pd.conf && \
+    echo "ntcpproxy = false" >> /etc/i2pd/i2pd.conf && \
+    echo "" >> /etc/i2pd/i2pd.conf && \
+    echo "[http]" >> /etc/i2pd/i2pd.conf && \
+    echo "enabled = true" >> /etc/i2pd/i2pd.conf && \
+    echo "address = 0.0.0.0" >> /etc/i2pd/i2pd.conf && \
+    echo "port = 7070" >> /etc/i2pd/i2pd.conf && \
+    echo "" >> /etc/i2pd/i2pd.conf && \
+    echo "[httpproxy]" >> /etc/i2pd/i2pd.conf && \
+    echo "enabled = true" >> /etc/i2pd/i2pd.conf && \
+    echo "address = 0.0.0.0" >> /etc/i2pd/i2pd.conf && \
+    echo "port = 4444" >> /etc/i2pd/i2pd.conf && \
+    echo "" >> /etc/i2pd/i2pd.conf && \
+    echo "[socksproxy]" >> /etc/i2pd/i2pd.conf && \
+    echo "enabled = true" >> /etc/i2pd/i2pd.conf && \
+    echo "address = 0.0.0.0" >> /etc/i2pd/i2pd.conf && \
+    echo "port = 4447" >> /etc/i2pd/i2pd.conf && \
+    echo "" >> /etc/i2pd/i2pd.conf && \
+    echo "[sam]" >> /etc/i2pd/i2pd.conf && \
+    echo "enabled = true" >> /etc/i2pd/i2pd.conf && \
+    echo "address = 0.0.0.0" >> /etc/i2pd/i2pd.conf && \
+    echo "port = 7656" >> /etc/i2pd/i2pd.conf
+
+# Criar diretório de dados
+RUN mkdir -p /var/lib/i2pd && \
+    chown -R i2pd:i2pd /var/lib/i2pd && \
+    chown -R i2pd:i2pd /etc/i2pd
+
+# Expor portas
+EXPOSE 7070 4444 4447 7656
+
+# Executar como usuário i2pd
+USER i2pd
+
+# Comando para iniciar i2pd
+CMD ["i2pd", "--conf=/etc/i2pd/i2pd.conf"]
