@@ -12,6 +12,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+ELEMENTS_UID=1001
+LND_UID=1000
+
 # Função para logging
 log() {
     echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
@@ -40,21 +43,21 @@ log "=== Configurando diretórios e arquivos para Docker Compose ==="
 # Criar diretórios de dados principais
 log "Criando diretórios de dados principais..."
 sudo mkdir -p /data/{lnd,elements}
-sudo chown -R 1000:1000 /data/lnd
-sudo chown -R 1000:1000 /data/elements
+sudo chown -R $LND_UID:$LND_UID /data/lnd
+sudo chown -R $ELEMENTS_UID:$ELEMENTS_UID /data/elements
 sudo chmod -R 755 /data
 
 # Criar diretório específico para LND e subdiretórios
 log "Configurando estrutura do LND..."
 sudo mkdir -p /data/lnd/{data/chain/bitcoin/mainnet,logs/bitcoin/mainnet}
-sudo chown -R 1000:1000 /data/lnd
+sudo chown -R $LND_UID:$LND_UID /data/lnd
 sudo chmod -R 755 /data/lnd
 
 # Verificar e copiar arquivos de configuração do LND
 log "Configurando arquivos do LND..."
 if [[ -f "lnd/lnd.conf" ]]; then
     sudo cp lnd/lnd.conf /data/lnd/
-    sudo chown 1000:1000 /data/lnd/lnd.conf
+    sudo chown $LND_UID:$LND_UID /data/lnd/lnd.conf
     sudo chmod 644 /data/lnd/lnd.conf
     info "Arquivo lnd.conf copiado para /data/lnd/"
 else
@@ -63,7 +66,7 @@ fi
 
 if [[ -f "lnd/password.txt" ]]; then
     sudo cp lnd/password.txt /data/lnd/
-    sudo chown 1000:1000 /data/lnd/password.txt
+    sudo chown $LND_UID:$LND_UID /data/lnd/password.txt
     sudo chmod 600 /data/lnd/password.txt
     info "Arquivo password.txt copiado para /data/lnd/"
 else
@@ -73,14 +76,14 @@ fi
 # Configurar Elements
 log "Configurando estrutura do Elements..."
 sudo mkdir -p /data/elements/{blocks,chainstate,database,wallets,liquidv1}
-sudo chown -R 1000:1000 /data/elements
+sudo chown -R $ELEMENTS_UID:$ELEMENTS_UID /data/elements
 sudo chmod -R 755 /data/elements
 
 if [[ -f "elements/elements.conf" ]]; then
     # Para elements, vamos criar um link simbólico em vez de copiar
     if [[ ! -f "/data/elements/elements.conf" ]]; then
         sudo cp elements/elements.conf /data/elements/
-        sudo chown 1000:1000 /data/elements/elements.conf
+        sudo chown $ELEMENTS_UID:$ELEMENTS_UID /data/elements/elements.conf
         sudo chmod 644 /data/elements/elements.conf
         info "Arquivo elements.conf copiado para /data/elements/"
     fi
@@ -176,25 +179,25 @@ fi
 # Corrigir permissões existentes se os diretórios já existirem
 log "Corrigindo permissões existentes..."
 if [[ -d "/data/lnd" ]]; then
-    sudo chown -R 1000:1000 /data/lnd
+    sudo chown -R $LND_UID:$LND_UID /data/lnd
     sudo chmod -R 755 /data/lnd
     info "Permissões do LND corrigidas"
 fi
 
 if [[ -d "/data/elements" ]]; then
-    sudo chown -R 1000:1000 /data/elements
+    sudo chown -R $ELEMENTS_UID:$ELEMENTS_UID /data/elements
     sudo chmod -R 755 /data/elements
     info "Permissões do Elements corrigidas"
 fi
 
 if [[ -d "/data/.elements" ]]; then
-    sudo chown -R 1000:1000 /data/.elements
+    sudo chown -R $ELEMENTS_UID:$ELEMENTS_UID /data/.elements
     sudo chmod -R 755 /data/.elements
     info "Permissões do .elements corrigidas"
 fi
 
 if [[ -d "/data/liquidv1" ]]; then
-    sudo chown -R 1000:1000 /data/liquidv1
+    sudo chown -R $ELEMENTS_UID:$ELEMENTS_UID /data/liquidv1
     sudo chmod -R 755 /data/liquidv1
     info "Permissões do liquidv1 corrigidas"
 fi
