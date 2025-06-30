@@ -199,17 +199,22 @@ if [[ -d "/data/liquidv1" ]]; then
     info "Permissões do liquidv1 corrigidas"
 fi
 
+# Configurar sistema de logs
+log "Configurando sistema de logs..."
+if [[ -f "logs/install-log-manager.sh" ]]; then
+    cd logs
+    chmod +x install-log-manager.sh
+    sudo ./install-log-manager.sh
+    cd ..
+    info "Sistema de logs configurado e instalado"
+else
+    warning "Script install-log-manager.sh não encontrado em logs/"
+fi
+
 log "=== Configuração concluída ==="
 docker-compose down -v || true
 docker-compose build
 docker-compose up -d
-docker-compose logs -f | grep -E erro
+info "Containers iniciados. O sistema de logs está coletando informações em tempo real."
+info "Verifique os logs em: container/logs/"
 
-# Mostrar resumo
-echo ""
-info "=== RESUMO ==="
-info "Diretórios criados em /data:"
-ls -la /data/ 2>/dev/null || info "Diretório /data não acessível"
-echo ""
-info "Estrutura do LND:"
-ls -la /data/lnd/ 2>/dev/null || info "Diretório /data/lnd não acessível"
