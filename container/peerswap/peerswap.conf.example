@@ -11,3 +11,4 @@ elementsd.rpcport=7041
 elementsd.rpcwallet=peerswap
 elementsd.liquidswaps=true
 bitcoinswaps=false
+lnd.tlscertpath=/data/lnd/tls.cert

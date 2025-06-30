@@ -1,5 +1,3 @@
-# AlfredP2P API - Guia de Uso dos CLIs
-
 ## Introdução
 
 Este projeto utiliza dois nós importantes para operações com Bitcoin e Lightning Network:

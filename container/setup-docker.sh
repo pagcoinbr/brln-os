@@ -91,18 +91,6 @@ else
     warning "Arquivo elements/elements.conf não encontrado"
 fi
 
-# Criar diretórios para monitoramento se não existirem
-log "Verificando diretórios de monitoramento..."
-if [[ -d "monitoring" ]]; then
-    for dir in provisioning dashboards; do
-        if [[ -d "monitoring/$dir" ]]; then
-            info "Diretório monitoring/$dir já existe"
-        else
-            warning "Diretório monitoring/$dir não existe - pode ser necessário criar"
-        fi
-    done
-fi
-
 # Verificar se todos os arquivos de configuração necessários existem
 log "Verificando arquivos de configuração necessários..."
 
