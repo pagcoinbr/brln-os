@@ -10,7 +10,6 @@ credentials.json
 *_secrets.txt
 
 # Arquivos de log
-logs/
 *.log
 npm-debug.log*
 
