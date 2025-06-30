@@ -165,6 +165,7 @@ services:
     volumes:
       - peerswap_data:/home/peerswap/.peerswap
       - ./peerswap/peerswap.conf:/home/peerswap/.peerswap/peerswap.conf
+      - 
     restart: unless-stopped
     depends_on:
       - lnd
