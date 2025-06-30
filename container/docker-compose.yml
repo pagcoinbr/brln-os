@@ -4,8 +4,9 @@ services:
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./provisioning:/etc/grafana/provisioning
-      - ./dashboards:/etc/grafana/dashboards
+      # Remove these volumes if dashboards and provisioning directories don't exist
+      # - ./monitoring/provisioning:/etc/grafana/provisioning
+      # - ./monitoring/dashboards:/etc/grafana/dashboards
     ports:
       - 3010:3000
     networks:
@@ -19,7 +20,7 @@ services:
     container_name: prometheus
     volumes:
       - prometheus_data:/etc/prometheus
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090
     networks:
@@ -43,7 +44,7 @@ services:
     networks:
       - grafana-net
     volumes:
-      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
 
   promtail:
     image: grafana/promtail:latest
@@ -51,7 +52,7 @@ services:
     networks:
       - grafana-net
     volumes:
-      - ./promtail-config.yml:/etc/promtail/config.yml
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
 
   postgres:
     image: postgres:latest
@@ -80,7 +81,7 @@ services:
   tor:
     build:
       context: .
-      dockerfile: Dockerfile.tor
+      dockerfile: ./tor/Dockerfile.tor
     container_name: tor
     ports:
       - 9050:9050  # SOCKS proxy
@@ -95,7 +96,7 @@ services:
   i2pd:
     build:
       context: .
-      dockerfile: Dockerfile.i2pd
+      dockerfile: ./i2pd/Dockerfile.i2pd
     container_name: i2pd
     ports:
       - 7070:7070   # HTTP proxy
@@ -111,7 +112,7 @@ services:
   lnd:
     build:
       context: .
-      dockerfile: Dockerfile.lnd
+      dockerfile: ./lnd/Dockerfile.lnd
     container_name: lnd
     ports:
       - 9735:9735  # P2P port
@@ -120,9 +121,9 @@ services:
     networks:
       - grafana-net
     volumes:
-      - lnd_data:/data/lnd
-      - ./lnd.conf:/data/lnd/lnd.conf
-      - ./password.txt:/data/lnd/password.txt
+      - /data/lnd:/data/lnd
+      - ./lnd/lnd.conf:/data/lnd/lnd.conf
+      - ./lnd/password.txt:/data/lnd/password.txt
       - tor_var:/var/lib/tor:ro
     restart: unless-stopped
     depends_on:
@@ -135,7 +136,7 @@ services:
   elements:
     build:
       context: .
-      dockerfile: Dockerfile.elements
+      dockerfile: ./elements/Dockerfile.elements
     container_name: elements
     ports:
       - 7041:7041   # P2P port
@@ -143,8 +144,8 @@ services:
     networks:
       - grafana-net
     volumes:
-      - elements_data:/home/.elements
-      - ./elements.conf:/home/.elements/elements.conf
+      - /data/elements:/home/.elements
+      - ./elements/elements.conf:/home/.elements/elements.conf
     restart: unless-stopped
     depends_on:
       - tor
@@ -155,7 +156,7 @@ services:
   peerswap:
     build:
       context: .
-      dockerfile: Dockerfile.peerswap
+      dockerfile: ./peerswap/Dockerfile.peerswap
     container_name: peerswap
     ports:
       - 42069:42069  # PeerSwap port
@@ -163,7 +164,7 @@ services:
       - grafana-net
     volumes:
       - peerswap_data:/home/peerswap/.peerswap
-      - ./peerswap.conf:/home/peerswap/.peerswap/peerswap.conf
+      - ./peerswap/peerswap.conf:/home/peerswap/.peerswap/peerswap.conf
     restart: unless-stopped
     depends_on:
       - lnd

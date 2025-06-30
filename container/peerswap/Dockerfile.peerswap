@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /tmp
 
 # Copy the peerswap tarball
-COPY peerswap-4.0rc1.tar.gz /tmp/
+COPY peerswap/peerswap-4.0rc1.tar.gz /tmp/
 
 # Extract and build PeerSwap
 RUN tar -xzf peerswap-4.0rc1.tar.gz && \

@@ -25,7 +25,7 @@ RUN mkdir -p /opt/elements ${ELEMENTS_DATA} ${ELEMENTS_DATA}/liquidv1/wallets \
     && chmod -R 755 ${ELEMENTS_DATA}
 
 # Copiar e extrair binários do Elements
-COPY elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz /tmp/
+COPY elements/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz /tmp/
 RUN tar -xvzf /tmp/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz -C /opt/elements/ \
     && chmod +x /opt/elements/elements-${ELEMENTS_VERSION}/bin/elementsd /opt/elements/elements-${ELEMENTS_VERSION}/bin/elements-cli \
     && ln -s /opt/elements/elements-${ELEMENTS_VERSION}/bin/elementsd /opt/elements/elementsd \
@@ -33,11 +33,11 @@ RUN tar -xvzf /tmp/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz -C /opt/
     && rm -rf /tmp/elements-*
 
 # Copiar arquivo de configuração
-COPY elements.conf ${ELEMENTS_DATA}/
+COPY elements/elements.conf ${ELEMENTS_DATA}/
 RUN chown elements:elements ${ELEMENTS_DATA}/elements.conf
 
 # Script de entrada
-COPY elements.sh /opt/elements/
+COPY elements/elements.sh /opt/elements/
 RUN chmod +x /opt/elements/elements.sh \
     && sed -i 's/\r$//' /opt/elements/elements.sh
 
