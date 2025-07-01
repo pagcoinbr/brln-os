@@ -92,22 +92,6 @@ services:
       - tor_var:/var/lib/tor
     restart: unless-stopped
 
-  i2pd:
-    build:
-      context: .
-      dockerfile: ./i2pd/Dockerfile.i2pd
-    container_name: i2pd
-    ports:
-      - 7070:7070   # HTTP proxy
-      - 4444:4444   # HTTP proxy tunnel
-      - 4447:4447   # SOCKS proxy
-      - 7656:7656   # SAM bridge
-    networks:
-      - grafana-net
-    volumes:
-      - i2pd_data:/var/lib/i2pd
-    restart: unless-stopped
-
   lnd:
     build:
       context: .
@@ -129,7 +113,6 @@ services:
     depends_on:
       - postgres
       - tor
-      - i2pd
     environment:
       - LND_DATA=/data/lnd
 
@@ -149,7 +132,6 @@ services:
     restart: unless-stopped
     depends_on:
       - tor
-      - i2pd
     environment:
       - ELEMENTS_DATA=/home/.elements
 
@@ -184,7 +166,6 @@ volumes:
   lnd_data:
   elements_data:
   tor_data:
-  i2pd_data:
   tor_var:
   peerswap_data:
   lnd_tls_cert:

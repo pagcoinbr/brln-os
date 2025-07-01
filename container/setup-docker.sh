@@ -133,7 +133,6 @@ dockerfiles=(
     "elements/Dockerfile.elements"
     "peerswap/Dockerfile.peerswap"
     "tor/Dockerfile.tor"
-    "i2pd/Dockerfile.i2pd"
 )
 
 for dockerfile in "${dockerfiles[@]}"; do

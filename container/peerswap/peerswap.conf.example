@@ -4,8 +4,8 @@
 
 lnd.tlscertpath=/home/lnd/.lnd/tls.cert
 lnd.macaroonpath=/home/lnd/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
-elementsd.rpcuser=SEU_USER_RPC_ELEMENTS
-elementsd.rpcpass=SUA_SENHA_RPC_ELEMENTS
+elementsd.rpcuser=elementsuser
+elementsd.rpcpass=elementspassword123
 elementsd.rpchost=elements
 elementsd.rpcport=7041
 elementsd.rpcwallet=peerswap

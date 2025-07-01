@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 # Definir variáveis de ambiente
 ENV ELEMENTS_VERSION=23.2.7
 ENV ELEMENTS_USER=elements
-ENV ELEMENTS_DATA=/home/.elements
+ENV ELEMENTS_DATA=/home/elements/.elements
 ENV PATH=/opt/elements:$PATH
 
 # Instalar dependências
