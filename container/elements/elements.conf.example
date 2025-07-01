@@ -10,11 +10,11 @@ assetdir=ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2:USDT
 
 
 # # RPC local Elements
-# rpcuser=elementsuser
-# rpcpassword=elementspassword123
-# rpcport=7041
-# rpcallowip=0.0.0.0/0
-# rpcbind=0.0.0.0
+rpcuser=elementsuser
+rpcpassword=elementspassword123
+rpcport=7041
+rpcallowip=0.0.0.0/0
+rpcbind=0.0.0.0
 
 # RPC conexão remota com Bitcoin Core
 mainchainrpchost=bitcoin.br-ln.com

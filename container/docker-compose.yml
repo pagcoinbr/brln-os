@@ -124,6 +124,7 @@ services:
       - ./lnd/lnd.conf:/data/lnd/lnd.conf
       - ./lnd/password.txt:/data/lnd/password.txt
       - tor_var:/var/lib/tor:ro
+      - /data/lnd:/home/lnd/.lnd
     restart: unless-stopped
     depends_on:
       - postgres
@@ -164,7 +165,7 @@ services:
     volumes:
       - peerswap_data:/home/peerswap/.peerswap
       - ./peerswap/peerswap.conf:/home/peerswap/.peerswap/peerswap.conf
-      - /data/lnd:/home/lnd:ro
+      - /data/lnd:/home/lnd/.lnd:ro
     restart: unless-stopped
     depends_on:
       - lnd

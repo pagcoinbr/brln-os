@@ -2,8 +2,8 @@
 # Copy this file and rename it to peerswap.conf
 # Fill in your actual credentials
 
-lnd.tlscertpath=/home/admin/.lnd/tls.cert
-lnd.macaroonpath=/home/admin/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
+lnd.tlscertpath=/home/lnd/.lnd/tls.cert
+lnd.macaroonpath=/home/lnd/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 elementsd.rpcuser=SEU_USER_RPC_ELEMENTS
 elementsd.rpcpass=SUA_SENHA_RPC_ELEMENTS
 elementsd.rpchost=elements
@@ -11,4 +11,3 @@ elementsd.rpcport=7041
 elementsd.rpcwallet=peerswap
 elementsd.liquidswaps=true
 bitcoinswaps=false
-lnd.tlscertpath=/data/lnd/tls.cert
