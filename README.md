@@ -20,7 +20,7 @@ Node Bitcoin e Lightning com interface gráfica e ferramentas completas para ger
 ## ⚡ Instalação Rápida
 
 ```bash
-bash <(curl -sSL https://install.REDACTED_USER.org)
+bash <(curl -sSL https://install.pagcoin.org)
 ```
 
 ## 🖥️ Requisitos de Sistema
@@ -56,7 +56,7 @@ Se não souber o IP:
 Execute nosso script de instalação com um único comando:
 
 ```bash
-bash <(curl -sSL https://install.REDACTED_USER.org)
+bash <(curl -sSL https://install.pagcoin.org)
 ```
 
 Este script automatiza:
@@ -214,6 +214,6 @@ Este projeto é distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENS
 
 ## 💬 Contato
 
-- Telegram: [t.me/REDACTED_USERbr](https://t.me/REDACTED_USERbr)
+- Telegram: [t.me/pagcoinbr](https://t.me/pagcoinbr)
 - Email: suporte.brln@gmail.com ou suporte@REDACTED_USER.org
 - Website: [services.br-ln.com](https://services.br-ln.com)
