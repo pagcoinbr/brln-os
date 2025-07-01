@@ -39,7 +39,7 @@ COPY --from=builder /usr/local/bin/peerswapd /usr/local/bin/
 COPY --from=builder /usr/local/bin/pscli /usr/local/bin/
 
 # Create peerswap user and directory
-RUN useradd -r -u 1000 -m -s /bin/bash peerswap && \
+RUN groupadd -r -g 1052 peerswap && useradd -r -u 1000 -g 1052 -m -s /bin/bash peerswap && \
     mkdir -p /home/peerswap/.peerswap && \
     chown -R peerswap:peerswap /home/peerswap
 
