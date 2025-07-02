@@ -155,6 +155,30 @@ services:
     environment:
       - PEERSWAP_DATA=/home/peerswap/.peerswap
 
+  psweb:
+    build:
+      context: .
+      dockerfile: ./psweb/Dockerfile.psweb
+    container_name: psweb
+    ports:
+      - 1984:1984   # PeerSwap Web UI port
+    networks:
+      - grafana-net
+    volumes:
+      - psweb_data:/home/psweb/.peerswap
+      - ./psweb/pswebconfig.json.example:/home/psweb/.peerswap/pswebconfig.json:ro
+      - /data/lnd:/home/lnd/.lnd:ro
+      - peerswap_data:/home/peerswap/.peerswap:ro
+    restart: unless-stopped
+    depends_on:
+      - peerswap
+      - lnd
+      - elements
+    environment:
+      - PSWEB_PORT=1984
+      - PEERSWAP_HOST=peerswap:42069
+      - LND_HOST=lnd:10009
+
 networks:
   grafana-net:
     driver: bridge
@@ -168,5 +192,4 @@ volumes:
   tor_data:
   tor_var:
   peerswap_data:
-  lnd_tls_cert:
-  lnd_macaroon:
+  psweb_data:
