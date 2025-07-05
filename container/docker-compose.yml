@@ -106,17 +106,14 @@ services:
     networks:
       - grafana-net
     volumes:
-      - /data/lnd:/data/lnd
-      - ./lnd/lnd.conf:/data/lnd/lnd.conf
-      - ./lnd/password.txt:/data/lnd/password.txt
-      - tor_var:/var/lib/tor:ro
       - /data/lnd:/home/lnd/.lnd
+      - tor_var:/var/lib/tor:ro
     restart: unless-stopped
     depends_on:
       - postgres
       - tor
     environment:
-      - LND_DATA=/data/lnd
+      - LND_DATA=/home/lnd/.lnd
 
   elements:
     build:
@@ -234,7 +231,6 @@ volumes:
   grafana_data:
   prometheus_data:
   postgres_data:
-  lnd_data:
   elements_data:
   tor_data:
   tor_var:
