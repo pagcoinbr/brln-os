@@ -32,6 +32,10 @@ RUN tar -xvzf /tmp/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz -C /opt/
     && ln -s /opt/elements/elements-${ELEMENTS_VERSION}/bin/elements-cli /opt/elements/elements-cli \
     && rm -rf /tmp/elements-*
 
+# Copiar arquivo de configuração
+COPY elements.conf ${ELEMENTS_DATA}/
+RUN chown elements:elements ${ELEMENTS_DATA}/elements.conf
+
 # Script de entrada
 COPY elements/elements.sh /opt/elements/
 RUN chmod +x /opt/elements/elements.sh \
