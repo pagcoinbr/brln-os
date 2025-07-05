@@ -55,8 +55,8 @@ sudo chmod -R 755 /data/lnd
 
 # Verificar e copiar arquivos de configuração do LND
 log "Configurando arquivos do LND..."
-if [[ -f "lnd/lnd.conf" ]]; then
-    sudo cp lnd/lnd.conf /data/lnd/
+if [[ -f "/home/$USER/brlnfullauto/container/lnd/lnd.conf.example" ]]; then
+    sudo cp /home/$USER/brlnfullauto/container/lnd/lnd.conf.example /data/lnd/lnd.conf
     sudo chown $LND_UID:$LND_UID /data/lnd/lnd.conf
     sudo chmod 644 /data/lnd/lnd.conf
     info "Arquivo lnd.conf copiado para /data/lnd/"
@@ -81,8 +81,8 @@ sudo chmod -R 755 /data/elements
 
 if [[ -f "elements/elements.conf" ]]; then
     # Para elements, vamos criar um link simbólico em vez de copiar
-    if [[ ! -f "/data/elements/elements.conf" ]]; then
-        sudo cp elements/elements.conf /data/elements/
+    if [[ ! -f "/home/$USER/brlnfullauto/container/elements/elements.conf.example" ]]; then
+        sudo cp /home/$USER/brlnfullauto/container/elements/elements.conf.example /data/elements/elements.conf
         sudo chown $ELEMENTS_UID:$ELEMENTS_UID /data/elements/elements.conf
         sudo chmod 644 /data/elements/elements.conf
         info "Arquivo elements.conf copiado para /data/elements/"
