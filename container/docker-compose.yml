@@ -142,8 +142,7 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./.env:/app/.env
-      - /data/lnbits:/app/data/lnbits
+      - /data/lnbits:/app
     environment:
       - TZ=UTC
     logging:
