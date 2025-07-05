@@ -1,0 +1,39 @@
+{
+  "username": "lnd",
+  "uid": 1001,
+  "groupname": "lnd", 
+  "gid": 1001,
+  "description": "Lightning Network Daemon User",
+  "data_dir": "/data/lnd",
+  "dockerfile": "Dockerfile.lnd",
+  "config_files": [
+    "lnd.conf.example",
+    "password.txt",
+    "entrypoint.sh"
+  ],
+  "binaries": [
+    "lnd-linux-amd64-v0.18.5-beta.tar.gz"
+  ],
+  "ports": [
+    "9735:9735",
+    "10009:10009",
+    "8080:8080"
+  ],
+  "special_dirs": [
+    "logs",
+    "data", 
+    "wallets",
+    "tls"
+  ],
+  "environment": {
+    "LND_NETWORK": "mainnet",
+    "LND_CHAIN": "bitcoin",
+    "LND_BACKEND": "bitcoind"
+  },
+  "healthcheck": {
+    "test": ["CMD", "lncli", "getinfo"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}
