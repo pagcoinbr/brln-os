@@ -198,10 +198,18 @@ else
     warning "Script install-log-manager.sh não encontrado em logs/"
 fi
 
+# Apresentar menu de opções
+echo -e "${BLUE}=== Menu de Instalação ===${NC}"
+echo "Digite abaixo os serviços que deseja instalar:"
+echo "Opções disponíveis: lnd, lnbits, elements, peerswap, peerswapweb"
+echo "Separe-os usando espaços (ex: lnd elements peerswap)"
+read -p "Escolha: " SERVICES
+
 log "=== Configuração concluída ==="
 docker-compose down -v || true
-docker-compose build
-docker-compose up -d
+docker-compose build ${SERVICES}
+docker-compose up -d ${SERVICES}
 info "Containers iniciados. O sistema de logs está coletando informações em tempo real."
 info "Verifique os logs em: container/logs/"
+info "Serviços iniciados: ${SERVICES}"
 
