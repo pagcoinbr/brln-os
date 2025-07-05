@@ -81,8 +81,8 @@ sudo chmod -R 755 /data/elements
 
 if [[ -f "elements/elements.conf" ]]; then
     # Para elements, vamos criar um link simbólico em vez de copiar
-    if [[ ! -f "/home/$USER/brlnfullauto/container/elements/elements.conf.example" ]]; then
-        sudo cp /home/$USER/brlnfullauto/container/elements/elements.conf.example /data/elements/elements.conf
+    if [[ ! -f "/root/brlnfullauto/container/elements/elements.conf.example" ]]; then
+        sudo cp /root/brlnfullauto/container/elements/elements.conf.example /data/elements/elements.conf
         sudo chown $ELEMENTS_UID:$ELEMENTS_UID /data/elements/elements.conf
         sudo chmod 644 /data/elements/elements.conf
         info "Arquivo elements.conf copiado para /data/elements/"
