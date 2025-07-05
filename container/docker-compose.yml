@@ -150,6 +150,14 @@ services:
       - /data/lnd:/home/lnd/.lnd:ro
     environment:
       - TZ=UTC
+      - LNBITS_DATA_FOLDER=/data/lnbits
+      - LNBITS_RATE_LIMIT_NO=200
+      - LNBITS_RATE_LIMIT_PER=minute
+      - LNBITS_DATABASE_URL=sqlite:////data/lnbits/database.sqlite3
+      - LNBITS_SECRET_KEY=your-secret-key-here
+      - HOST=0.0.0.0
+      - PORT=5000
+      - DEBUG=false
     depends_on:
       - lnd
     logging:
