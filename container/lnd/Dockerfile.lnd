@@ -60,10 +60,7 @@ RUN tar -xzf /tmp/lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz -C ${LND_BIN_DATA}
 COPY lnd/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # Definir permissões corretas
-RUN chown -R ${USER}:${USER} ${HOME}/.lnd && \
-    chmod 640 ${HOME}/.lnd/lnd.conf && \
-    chmod 600 ${HOME}/.lnd/password.txt && \
-    chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Abordagem diferente - criar diretamente no HOME
 RUN mkdir -p ${HOME}/.lnd/data/chain/bitcoin/mainnet && \
