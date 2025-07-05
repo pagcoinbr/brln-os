@@ -35,8 +35,7 @@ RUN poetry install
 RUN mkdir -p /data/lnbits
 
 # Copia arquivos de configuração
-COPY lnbits/.env.example /app/lnbits/.env.example
-COPY lnbits/.env /app/lnbits/.env
+COPY lnbits/.env.example /app/lnbits/.env
 
 # Copia script de entrypoint
 COPY lnbits/entrypoint.sh /app/lnbits/entrypoint.sh
