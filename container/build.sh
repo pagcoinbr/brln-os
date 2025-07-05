@@ -33,13 +33,62 @@ if ! command -v cargo &> /dev/null; then
     log_info "Rust instalado com sucesso"
 fi
 
+# Verificar se rustup está disponível
+if ! command -v rustup &> /dev/null; then
+    log_warning "rustup não encontrado. Instalando..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source ~/.cargo/env
+    log_info "rustup instalado com sucesso"
+fi
+
 # Verificar versão do Rust
 RUST_VERSION=$(rustc --version | cut -d' ' -f2)
 log_info "Versão do Rust: $RUST_VERSION"
 
-# Atualizar Rust se necessário
-log_info "Atualizando Rust..."
-rustup update
+# Verificar se a versão é suficiente (precisamos 1.81+)
+REQUIRED_VERSION="1.81.0"
+if command -v rustc &> /dev/null; then
+    CURRENT_VERSION=$(rustc --version | cut -d' ' -f2)
+    
+    # Comparar versões (função simplificada)
+    version_compare() {
+        local version1=$1
+        local version2=$2
+        printf '%s\n%s\n' "$version1" "$version2" | sort -V | head -n1
+    }
+    
+    if [[ $(version_compare "$CURRENT_VERSION" "$REQUIRED_VERSION") != "$REQUIRED_VERSION" ]]; then
+        log_warning "Versão do Rust ($CURRENT_VERSION) é menor que a requerida ($REQUIRED_VERSION)"
+        log_info "Atualizando Rust para a versão mais recente..."
+        
+        # Atualizar rustup e Rust
+        rustup self update
+        rustup update stable
+        rustup default stable
+        
+        # Recarregar ambiente
+        source ~/.cargo/env
+        
+        NEW_VERSION=$(rustc --version | cut -d' ' -f2)
+        log_info "Rust atualizado para versão: $NEW_VERSION"
+        
+        # Verificar se ainda é insuficiente
+        if [[ $(version_compare "$NEW_VERSION" "$REQUIRED_VERSION") != "$REQUIRED_VERSION" ]]; then
+            log_error "Não foi possível atualizar para Rust $REQUIRED_VERSION+"
+            log_info "Tentando instalar a versão mais recente..."
+            rustup install stable
+            rustup default stable
+        fi
+    else
+        log_info "Versão do Rust é suficiente"
+        # Atualizar mesmo assim para ter a versão mais recente
+        log_info "Atualizando Rust..."
+        rustup update stable 2>/dev/null || log_warning "Falha ao atualizar Rust"
+    fi
+else
+    log_error "rustc não encontrado após instalação"
+    exit 1
+fi
 
 # Limpar builds anteriores
 log_info "Limpando builds anteriores..."
