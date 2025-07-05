@@ -460,6 +460,7 @@ main() {
         error "Falha na seleção de serviços"
         exit 1
     fi
+    docker-compose build
 }
 
 # Executar script principal
