@@ -463,5 +463,6 @@ main() {
 }
 
 # Executar script principal
+docker-compose down -v
 docker-compose build
 main "$@"
