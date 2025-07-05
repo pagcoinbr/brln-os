@@ -33,7 +33,6 @@ RUN tar -xvzf /tmp/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz -C /opt/
     && rm -rf /tmp/elements-*
 
 # Copiar arquivo de configuração
-COPY elements/elements.conf ${ELEMENTS_DATA}/
 RUN chown elements:elements ${ELEMENTS_DATA}/elements.conf
 
 # Script de entrada
