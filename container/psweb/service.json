@@ -1,0 +1,32 @@
+{
+  "username": "psweb",
+  "uid": 1006,
+  "groupname": "psweb", 
+  "gid": 1006,
+  "description": "PeerSwap Web Interface User",
+  "data_dir": "/data/psweb",
+  "dockerfile": "Dockerfile.psweb",
+  "config_files": [
+    "pswebconfig.json.example",
+    "pswebconfig.json"
+  ],
+  "binaries": [],
+  "ports": [
+    "1984:1984"
+  ],
+  "special_dirs": [
+    "config",
+    "logs"
+  ],
+  "environment": {
+    "PSWEB_PORT": "1984",
+    "PEERSWAP_HOST": "peerswap:42069",
+    "LND_HOST": "lnd:10009"
+  },
+  "healthcheck": {
+    "test": ["CMD", "curl", "-f", "http://localhost:1984"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}

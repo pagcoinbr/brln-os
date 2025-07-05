@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="imagens/logopreto.png" />
+  <link rel="stylesheet" href="css/main.css" />
+  <title>BRLN Open Bank</title>
+</head>
+<body>
+
+  <!-- Logo Centralizado -->
+  <img src="imagens/BRLNlogo.png" alt="BRLN Open Bank logo" />
+
+  <!-- Botões em container flexível -->
+  <div class="botoes">
+    <button id="lndg-btn" class="botao" onclick="abrirApp(8889)">🔄 LNDg</button>
+    <button id="thunderhub-btn" class="botao" onclick="abrirApp(3000)">🌩️ Thunderhub</button>
+    <button id="lnbits-btn" class="botao" onclick="abrirApp(5000)">💰 LNBits</button>
+    <button id="simple-btn" class="botao" onclick="abrirApp(35671)">📱 Simple LNWallet</button>
+    <button id="peerswap-btn" class="botao" onclick="abrirApp(1984)">💱 PeerSwap</button>
+  </div>
+  <div class="container">
+  <div class="section"> 
+  <h3>🛠️ Ferramentas Extras</h3>
+  <button class="toggle-btn" onclick="toggleExtras(this)" style="display: inline; margin: 0px;">🔽</button>
+  
+  <div id="extras" class="extras" style="display: none; margin-top: 10px;">
+    <a href="https://amboss.space" class="botao" target="_blank">🌐 AMBOSS</a>
+    <a href="https://lightningnetwork.plus/" class="botao" target="_blank">➕ Lightning Network +</a>
+    <a href="https://mempool.space" class="botao" target="_blank">🧱 Mempool</a>
+    <a href="https://unsafe.robosats.org/" class="botao" target="_blank">🤖 RoboSats DEX</a>
+    
+    <a href="https://tools.bitbo.io/fee-calculator/" class="botao" target="_blank">🔗 On-chain Fee Calculator</a>
+    <a href="https://bitcoin.clarkmoody.com/dashboard/" class="botao" target="_blank">📊 Bitcoin Dashboard</a>
+    <a href="https://bitcoinvisuals.com/lightning" class="botao" target="_blank">📈 Lightning Dashboard</a>
+    <button class="botao" onclick="alternarTema()">🌗 Alterar Tema</button>
+  </div>
+      <h3>🏆 Patrocinador Oficial</h3>
+        <a href="https://www.alfredp2p.io/pt/" class="botao piscando" target="_blank">🪙 Alfred P2P</a>
+      </div>
+  </div>
+
+  <div class="container">
+      
+    <h1>⚙️ Painel de Configurações</h1>
+
+    <div class="section">
+        <h2>📊 Status do Sistema</h2>        <div id="cpu" class="status">CPU: ...</div>
+        <div id="ram" class="status">RAM: ...</div>
+        <div id="lnd" class="status">LND: ...</div>
+        <div id="bitcoind" class="status">Bitcoind: ...</div>
+        <div id="elementsd" class="status">Elementsd: ...</div>
+        <div id="tor" class="status">Tor: ...</div>
+        <div id="blockchain" class="status">Blockchain: ...</div>
+ 
+    </div>
+    <div class="section"> 
+      <h2 style="margin-bottom: 40px">🖥️ Painel de Controle</h2>
+      <div class="ferramentas-extras"></div>
+      <button class="botao" onclick="
+      const largura = 900;
+      const altura = 600;
+      const esquerda = (screen.width - largura) / 2;
+      const topo = (screen.height - altura) / 2;
+      window.open(
+        `http://${window.location.hostname}:3131`,
+        '_blank',
+        `width=${largura},height=${altura},left=${esquerda},top=${topo},resizable=yes,scrollbars=yes`
+      );
+    ">⚡ BRLN Node Manager</button>   
+      <button class="botao" onclick="abrirApp(3232)">🖥️ Terminal Web</button>
+      <br>
+      <button class="botao" onclick="abrirApp(3535)">⚡ Logs - LND</button>
+      <button class="botao" onclick="abrirApp(3434)">🪙 Logs - Bitcoin</button>
+      <button class="botao" onclick="abrirApp(3838)">🌊 Logs - Elements</button>
+      <button class="botao" onclick="abrirApp(3333)">✏️ Lnd.conf</button>
+      <button class="botao" onclick="abrirApp(3636)">✏️ Bitcoin.conf</button>
+      <button class="botao" onclick="abrirApp(3737)">✏️ Elements.conf</button>
+      <br><br>     
+      <hr style="border: none; border-top: 1px solid #6e6e6e; margin: 10px 0; margin-top: 20px; margin-bottom: 20px;">
+        <h3>Gerenciador de Serviços ⚡</h3>
+        <div class="service-grid">
+          <div class="service-row">
+            <label for="bitcoind-button">Bitcoind</label>
+            <label class="switch">
+              <input type="checkbox" id="bitcoind-button" onchange="toggleService('bitcoind')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="elementsd-button">Elementsd</label>
+            <label class="switch">
+              <input type="checkbox" id="elementsd-button" onchange="toggleService('elementsd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="lnd-button">LND</label>
+            <label class="switch">
+              <input type="checkbox" id="lnd-button" onchange="toggleService('lnd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="peerswap-button">PeerSwap</label>
+            <label class="switch">
+              <input type="checkbox" id="peerswap-button" onchange="toggleService('peerswap')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="lnd-lndg-button">LNDg</label>
+            <label class="switch">
+              <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="lndg-controller-button">LNDg Backend</label>
+            <label class="switch">
+              <input type="checkbox" id="lndg-controller-button" onchange="toggleService('lndg-controller')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="thunderhub-button">Thunderhub</label>
+            <label class="switch">
+              <input type="checkbox" id="thunderhub-button" onchange="toggleService('thunderhub')">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div class="service-row">
+            <label for="lnbits-button">LNBits</label>
+            <label class="switch">
+              <input type="checkbox" id="lnbits-button" onchange="toggleService('lnbits')">
+              <span class="slider"></span>
+            </label>
+          </div>
+                        
+          <div class="service-row">
+            <label for="simple-button">Simple LNWallet</label>
+            <label class="switch">
+              <input type="checkbox" id="simple-button" onchange="toggleService('simple')">
+              <span class="slider"></span>
+            </label>
+          </div>
+            
+          <div class="service-row">
+            <label for="bos-telegram-button">BOS Telegram</label>
+            <label class="switch">
+              <input type="checkbox" id="bos-telegram-button" onchange="toggleService('bos-telegram')">
+              <span class="slider"></span>
+            </label>
+          </div>
+              <div class="service-row">
+            <label for="elementsd-button">Elements</label>
+            <label class="switch">
+              <input type="checkbox" id="elementsd-button" onchange="toggleService('elementsd')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="service-row">
+            <label for="tor-button">Tor</label>
+            <label class="switch">
+              <input type="checkbox" id="tor-button" onchange="toggleService('tor')">
+              <span class="slider"></span>
+            </label>
+          </div>    
+        </div>
+
+        <h2>🙏 Apoie Nosso Projeto</h2>
+        <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>
+    
+        <!-- QR Code clicável -->
+        <a href="lightning:brlnfullauto@wallet.br-ln.com" style="display: inline-block;">
+          <img src="imagens/donate.png" alt="QR Code para doação" style="max-width: 200px; width: 100%; height: auto; margin: 10px auto; cursor: pointer;">
+        </a>        
+    </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
+

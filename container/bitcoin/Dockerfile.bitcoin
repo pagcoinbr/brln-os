@@ -1,0 +1,86 @@
+FROM ubuntu:22.04
+
+# Definir argumentos de build
+ARG BTC_VERSION=28.1
+ARG ARCH=x86_64
+
+# Instalar dependências necessárias
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    tar \
+    python3 \
+    python3-pip \
+    gosu \
+    && rm -rf /var/lib/apt/lists/*
+
+# Criar usuário debian-tor com mesmo UID do container Tor
+RUN groupadd -f -g 101 debian-tor && \
+    useradd -u 101 -g 101 -M -s /bin/false debian-tor || true
+
+# Criar usuário bitcoin e adicionar aos grupos necessários
+RUN groupadd -r bitcoin --gid=1007 && \
+    groupadd -r tor-access --gid=1050 && \
+    useradd -r -g bitcoin --uid=1007 --home-dir=/home/bitcoin --shell=/bin/bash bitcoin && \
+    mkdir -p /home/bitcoin && \
+    chown -R bitcoin:bitcoin /home/bitcoin && \
+    usermod -a -G debian-tor,tor-access bitcoin
+
+# Criar diretório de dados
+RUN mkdir -p /data/bitcoin && \
+    chown -R bitcoin:bitcoin /data/bitcoin
+
+# Definir diretório de trabalho
+WORKDIR /tmp
+
+# Instalar repositório e i2pd
+RUN wget -q -O - https://repo.i2pd.xyz/.help/add_repo | bash -s - && \
+    apt-get update && \
+    apt-get install -y i2pd && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copiar o arquivo Bitcoin Core
+COPY bitcoin/bitcoin-${BTC_VERSION}-${ARCH}-linux-gnu.tar.gz .
+
+# Extrair e instalar Bitcoin Core
+RUN tar -xzf bitcoin-${BTC_VERSION}-${ARCH}-linux-gnu.tar.gz && \
+    cp bitcoin-${BTC_VERSION}/bin/bitcoin-cli /usr/local/bin/ && \
+    cp bitcoin-${BTC_VERSION}/bin/bitcoind /usr/local/bin/ && \
+    chmod +x /usr/local/bin/bitcoin* && \
+    rm -rf /tmp/bitcoin-*
+
+# Copiar script rpcauth.py
+COPY bitcoin/rpcauth.py /usr/local/bin/rpcauth.py
+RUN chmod +x /usr/local/bin/rpcauth.py
+
+# Configurar i2pd
+RUN mkdir -p /etc/i2pd /var/lib/i2pd /var/log/i2pd && \
+    chown -R bitcoin:bitcoin /var/lib/i2pd /var/log/i2pd /etc/i2pd
+
+# Copiar configuração do i2pd
+COPY bitcoin/i2pd.conf /etc/i2pd/i2pd.conf
+
+# Copiar script de inicialização
+COPY bitcoin/bitcoin.sh /usr/local/bin/bitcoin.sh
+RUN chmod +x /usr/local/bin/bitcoin.sh
+
+# Instalar netcat para verificação de portas
+RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
+# Criar link simbólico para compatibilidade
+RUN ln -s /data/bitcoin /home/bitcoin/.bitcoin
+
+# Copiar arquivo de configuração de exemplo
+COPY bitcoin/bitcoin.conf.example /data/bitcoin/bitcoin.conf.example
+
+# Expor portas
+EXPOSE 8332 8333 7656
+
+# Definir volumes
+VOLUME ["/data/bitcoin"]
+
+# Definir usuário padrão
+USER bitcoin
+
+# Comando para iniciar ambos os serviços
+ENTRYPOINT ["/usr/local/bin/bitcoin.sh"]

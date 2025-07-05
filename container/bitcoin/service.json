@@ -1,0 +1,34 @@
+{
+  "username": "bitcoin",
+  "uid": 1007,
+  "groupname": "bitcoin", 
+  "gid": 1007,
+  "description": "Bitcoin Core Daemon User",
+  "data_dir": "/data/bitcoin",
+  "dockerfile": "Dockerfile.bitcoin",
+  "config_files": [
+    "bitcoin.conf.example",
+    "bitcoin.conf"
+  ],
+  "binaries": [],
+  "ports": [
+    "8332:8332",
+    "8333:8333"
+  ],
+  "special_dirs": [
+    "blocks",
+    "chainstate",
+    "database",
+    "wallets"
+  ],
+  "environment": {
+    "BITCOIN_DATA": "/data/bitcoin",
+    "BITCOIN_NETWORK": "mainnet"
+  },
+  "healthcheck": {
+    "test": ["CMD", "bitcoin-cli", "getblockchaininfo"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}

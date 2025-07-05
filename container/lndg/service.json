@@ -1,28 +1,24 @@
 {
-  "name": "lndg",
-  "description": "LND Dashboard and Node Management Interface",
-  "version": "latest",
-  "ports": {
-    "web": {
-      "internal": 8889,
-      "external": 8889,
-      "description": "LNDG Web UI"
-    }
-  },
-  "volumes": {
-    "data": {
-      "host": "/data/lndg",
-      "container": "/app/data",
-      "permissions": "rw",
-      "description": "LNDG data directory"
-    },
-    "lnd": {
-      "host": "/data/lnd",
-      "container": "/root/.lnd",
-      "permissions": "ro",
-      "description": "LND data directory (read-only)"
-    }
-  },
+  "username": "lndg",
+  "uid": 1005,
+  "groupname": "lndg", 
+  "gid": 1005,
+  "description": "LNDG Management Dashboard User",
+  "data_dir": "/data/lndg",
+  "dockerfile": "Dockerfile.lndg",
+  "config_files": [
+    "settings.py",
+    "local_settings.py"
+  ],
+  "binaries": [],
+  "ports": [
+    "8889:8889"
+  ],
+  "special_dirs": [
+    "static",
+    "media",
+    "logs"
+  ],
   "environment": {
     "LND_HOST": "lnd:10009",
     "LND_NETWORK": "mainnet",
@@ -32,28 +28,10 @@
     "DB_PASSWORD": "postgres",
     "DB_NAME": "postgres"
   },
-  "dependencies": [
-    "lnd",
-    "postgres"
-  ],
-  "networks": [
-    "grafana-net"
-  ],
-  "restart_policy": "unless-stopped",
-  "security": {
-    "user": "lndg",
-    "uid": 1005,
-    "capabilities": []
-  },
   "healthcheck": {
-    "test": ["CMD", "curl", "-f", "http://localhost:8889/"],
+    "test": ["CMD", "curl", "-f", "http://localhost:8889"],
     "interval": "30s",
     "timeout": "10s",
-    "retries": 3,
-    "start_period": "60s"
-  },
-  "backup": {
-    "paths": ["/app/data"],
-    "schedule": "daily"
+    "retries": 3
   }
 }

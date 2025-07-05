@@ -1,16 +1,31 @@
 {
-    "name": "thunderhub",
-    "uid": 1006,
-    "username": "thunderhub",
-    "gid": 1006,
-    "groupname": "thunderhub",
-    "data_dir": "/data/thunderhub",
-    "config_files": [
-  "thunderhub.yaml.example"
-],
-    "special_dirs": ["data", "logs"],
-    "dockerfile": "Dockerfile.thunderhub",
-    "binaries": [],
-    "ports": [3000],
-    "description": "ThunderHub Lightning node manager"
+  "username": "thunderhub",
+  "uid": 1006,
+  "groupname": "thunderhub", 
+  "gid": 1006,
+  "description": "ThunderHub Lightning Node Manager",
+  "data_dir": "/data/thunderhub",
+  "dockerfile": "Dockerfile.thunderhub",
+  "config_files": [
+    "thunderhub.yaml.example",
+    "thunderhub.yaml"
+  ],
+  "binaries": [],
+  "ports": [
+    "3000:3000"
+  ],
+  "special_dirs": [
+    "data",
+    "logs"
+  ],
+  "environment": {
+    "THUNDERHUB_PORT": "3000",
+    "LND_HOST": "lnd:10009"
+  },
+  "healthcheck": {
+    "test": ["CMD", "curl", "-f", "http://localhost:3000"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
 }

@@ -1,0 +1,38 @@
+{
+  "username": "elements",
+  "uid": 1001,
+  "groupname": "elements", 
+  "gid": 1001,
+  "description": "Elements Core Daemon User",
+  "data_dir": "/data/elements",
+  "dockerfile": "Dockerfile.elements",
+  "config_files": [
+    "elements.conf.example",
+    "elements.conf",
+    "elements.sh"
+  ],
+  "binaries": [
+    "elements-23.2.7-x86_64-linux-gnu.tar.gz"
+  ],
+  "ports": [
+    "7041:7041",
+    "18884:18884"
+  ],
+  "special_dirs": [
+    "blocks",
+    "chainstate",
+    "database",
+    "wallets",
+    "liquidv1"
+  ],
+  "environment": {
+    "ELEMENTS_NETWORK": "liquidv1",
+    "ELEMENTS_DATA": "/home/.elements"
+  },
+  "healthcheck": {
+    "test": ["CMD", "elements-cli", "getblockchaininfo"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}

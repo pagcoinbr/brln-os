@@ -1,0 +1,32 @@
+{
+  "username": "grafana",
+  "uid": 472,
+  "groupname": "grafana", 
+  "gid": 472,
+  "description": "Grafana Monitoring Dashboard User",
+  "data_dir": "/data/grafana",
+  "dockerfile": "",
+  "config_files": [
+    "grafana.ini"
+  ],
+  "binaries": [],
+  "ports": [
+    "3010:3000"
+  ],
+  "special_dirs": [
+    "dashboards",
+    "provisioning",
+    "plugins",
+    "data"
+  ],
+  "environment": {
+    "GF_INSTALL_PLUGINS": "grafana-piechart-panel,grafana-clock-panel,grafana-simple-json-datasource",
+    "GF_SECURITY_ADMIN_PASSWORD": "admin"
+  },
+  "healthcheck": {
+    "test": ["CMD", "curl", "-f", "http://localhost:3000/api/health"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}

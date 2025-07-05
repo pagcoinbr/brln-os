@@ -1,0 +1,35 @@
+{
+  "username": "lnbits",
+  "uid": 1004,
+  "groupname": "lnbits", 
+  "gid": 1004,
+  "description": "LNBits Lightning Wallet User",
+  "data_dir": "/data/lnbits",
+  "dockerfile": "Dockerfile.lnbits",
+  "config_files": [
+    ".env",
+    "config.py"
+  ],
+  "binaries": [],
+  "ports": [
+    "5000:5000"
+  ],
+  "special_dirs": [
+    "wallets",
+    "extensions",
+    "uploads"
+  ],
+  "environment": {
+    "LNBITS_DATA_FOLDER": "/data/lnbits",
+    "LNBITS_DATABASE_URL": "sqlite:////data/lnbits/database.sqlite3",
+    "HOST": "0.0.0.0",
+    "PORT": "5000",
+    "DEBUG": "false"
+  },
+  "healthcheck": {
+    "test": ["CMD", "curl", "-f", "http://localhost:5000/api/v1/wallet"],
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}

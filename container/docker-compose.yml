@@ -94,6 +94,41 @@ services:
       - tor_var:/var/lib/tor
     restart: unless-stopped
 
+  bitcoin:
+    build:
+      context: .
+      dockerfile: ./bitcoin/Dockerfile.bitcoin
+      args:
+        BTC_VERSION: 28.1
+        ARCH: x86_64
+    container_name: bitcoin
+    ports:
+      - 8332:8332  # RPC port
+      - 8333:8333  # P2P port
+      - 28332:28332  # ZMQ rawblock
+      - 28333:28333  # ZMQ rawtx
+      - 28334:28334  # ZMQ hashtx
+      - 28335:28335  # ZMQ hashblock
+      # Note: I2P SAM port (7656) is internal only - no need to expose
+    networks:
+      - grafana-net
+    volumes:
+      - /data/bitcoin:/data/bitcoin
+      - tor_var:/var/lib/tor:ro
+      - ./bitcoin/bitcoin.conf.example:/data/bitcoin/bitcoin.conf.example:ro
+    restart: unless-stopped
+    depends_on:
+      - tor
+    environment:
+      - BITCOIN_DATA=/data/bitcoin
+      - BITCOIN_NETWORK=mainnet
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "-datadir=/data/bitcoin", "getblockchaininfo"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   lnd:
     build:
       context: .
@@ -113,6 +148,7 @@ services:
     depends_on:
       - postgres
       - tor
+      - bitcoin
     environment:
       - LND_DATA=/data/lnd
 
@@ -132,6 +168,7 @@ services:
     restart: unless-stopped
     depends_on:
       - tor
+      - bitcoin
     environment:
       - ELEMENTS_DATA=/home/.elements
 
@@ -243,10 +280,7 @@ volumes:
   grafana_data:
   prometheus_data:
   postgres_data:
-  lnd_data:
-  elements_data:
   tor_data:
   tor_var:
   peerswap_data:
   psweb_data:
-  lndg_data:
