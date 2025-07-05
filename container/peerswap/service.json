@@ -1,0 +1,16 @@
+{
+    "name": "peerswap",
+    "uid": 1004,
+    "username": "peerswap",
+    "gid": 1004,
+    "groupname": "peerswap",
+    "data_dir": "/data/peerswap",
+    "config_files": [
+  "peerswap.conf.example"
+],
+    "special_dirs": ["data", "logs"],
+    "dockerfile": "Dockerfile.peerswap",
+    "binaries": ["peerswap-4.0rc1.tar.gz"],
+    "ports": [42069],
+    "description": "PeerSwap for submarine swaps"
+}

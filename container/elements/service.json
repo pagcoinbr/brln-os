@@ -1,0 +1,16 @@
+{
+    "name": "elements",
+    "uid": 1002,
+    "username": "elements",
+    "gid": 1002,
+    "groupname": "elements",
+    "data_dir": "/data/elements",
+    "config_files": [
+  "elements.conf.example"
+],
+    "special_dirs": ["blocks", "chainstate", "database", "wallets", "liquidv1"],
+    "dockerfile": "Dockerfile.elements",
+    "binaries": ["elements-23.2.7-x86_64-linux-gnu.tar.gz"],
+    "ports": [7041, 18884],
+    "description": "Elements sidechain daemon"
+}

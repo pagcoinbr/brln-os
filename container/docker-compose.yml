@@ -136,15 +136,22 @@ services:
       - ELEMENTS_DATA=/home/.elements
 
   lnbits:
-    image: lnbits/lnbits
+    build:
+      context: .
+      dockerfile: ./lnbits/Dockerfile.lnbits
     container_name: lnbits
     restart: unless-stopped
     ports:
       - "5000:5000"
+    networks:
+      - grafana-net
     volumes:
-      - /data/lnbits:/app
+      - /data/lnbits:/data/lnbits
+      - /data/lnd:/home/lnd/.lnd:ro
     environment:
       - TZ=UTC
+    depends_on:
+      - lnd
     logging:
       driver: "json-file"
       options:

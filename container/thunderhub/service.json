@@ -1,0 +1,16 @@
+{
+    "name": "thunderhub",
+    "uid": 1006,
+    "username": "thunderhub",
+    "gid": 1006,
+    "groupname": "thunderhub",
+    "data_dir": "/data/thunderhub",
+    "config_files": [
+  "thunderhub.yaml.example"
+],
+    "special_dirs": ["data", "logs"],
+    "dockerfile": "Dockerfile.thunderhub",
+    "binaries": [],
+    "ports": [3000],
+    "description": "ThunderHub Lightning node manager"
+}

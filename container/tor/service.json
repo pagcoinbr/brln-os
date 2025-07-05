@@ -1,0 +1,16 @@
+{
+    "name": "tor",
+    "uid": 1007,
+    "username": "tor",
+    "gid": 1007,
+    "groupname": "tor",
+    "data_dir": "/data/tor",
+    "config_files": [
+  "torrc.example"
+],
+    "special_dirs": ["hidden_services", "logs"],
+    "dockerfile": "Dockerfile.tor",
+    "binaries": [],
+    "ports": [9050, 9051],
+    "description": "Tor proxy daemon"
+}

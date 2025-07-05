@@ -1,0 +1,76 @@
+FROM python:3.10-slim
+
+# Instala dependências do sistema
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libsecp256k1-dev \
+    libffi-dev \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instala Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+
+# Cria diretório de aplicação (não será montado como volume)
+RUN mkdir -p /app/lnbits
+WORKDIR /app/lnbits
+
+# Copia o arquivo tar.gz local do LNbits
+COPY lnbits/lnbits-1.1.0.tar.gz /tmp/lnbits-1.1.0.tar.gz
+
+# Extrai o LNbits do arquivo local no diretório da aplicação
+RUN tar -xzf /tmp/lnbits-1.1.0.tar.gz -C /app/lnbits --strip-components=1 && \
+    rm /tmp/lnbits-1.1.0.tar.gz
+
+# Configura Poetry para não criar ambiente virtual
+RUN poetry config virtualenvs.create false
+
+# Instala dependências do projeto
+RUN poetry install
+
+# Cria diretório para dados persistentes
+RUN mkdir -p /data/lnbits
+
+# Copia arquivos de configuração
+COPY lnbits/.env.example /app/lnbits/.env.example
+COPY lnbits/.env /app/lnbits/.env
+
+# Copia script de entrypoint
+COPY lnbits/entrypoint.sh /app/lnbits/entrypoint.sh
+
+# Define usuário não-root para segurança
+RUN useradd -m -u 1003 lnbits && \
+    chmod +x /app/lnbits/entrypoint.sh && \
+    chown -R lnbits:lnbits /app/lnbits && \
+    chown -R lnbits:lnbits /data/lnbits
+
+# Instalar Poetry para o usuário lnbits também
+USER lnbits
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/home/lnbits/.local/bin:$PATH"
+
+# Configurar Poetry para não criar ambiente virtual
+RUN poetry config virtualenvs.create false
+
+# Voltar para root temporariamente para ajustar permissões finais
+USER root
+RUN chown -R lnbits:lnbits /app/lnbits
+
+# Expõe a porta do LNbits
+EXPOSE 5000
+
+# Muda para o usuário lnbits definitivamente
+USER lnbits
+
+# Define o diretório de trabalho para o usuário (aplicação)
+WORKDIR /app/lnbits
+
+# Define variáveis de ambiente para o LNbits usar o diretório de dados persistente
+ENV LNBITS_DATA_FOLDER=/data/lnbits
+ENV PATH="/root/.local/bin:$PATH"
+
+# Define o entrypoint
+ENTRYPOINT ["/app/lnbits/entrypoint.sh"]
