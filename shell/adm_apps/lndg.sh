@@ -1,10 +1,12 @@
 #!/bin/bash
 source ~/brlnfullauto/shell/.env
 
-install_lndg () {
+install_lndg_native() {
   if [[ -d /home/admin/lndg ]]; then
     echo "LNDG já está instalado."
-  else
+    return
+  fi
+  
   sudo apt install -y python3-pip python3-venv
   sudo ufw allow from $subnet to any port 8889 proto tcp comment 'allow lndg from local network'
   cd
@@ -22,7 +24,74 @@ install_lndg () {
   sudo systemctl start lndg-controller.service
   sudo systemctl enable lndg.service
   sudo systemctl start lndg.service
+}
+
+install_lndg_docker() {
+  echo "Instalando LNDG via Docker..."
+  
+  # Cria diretórios necessários
+  sudo mkdir -p /data/lndg
+  sudo chown -R 1005:1005 /data/lndg
+  sudo chmod 755 /data/lndg
+  
+  # Configurar firewall
+  sudo ufw allow from $subnet to any port 8889 proto tcp comment 'allow lndg docker from local network'
+  
+  # Navegar para o diretório do container
+  cd ~/brlnfullauto/container
+  
+  # Construir a imagem
+  echo "Construindo imagem Docker do LNDG..."
+  docker build -f lndg/Dockerfile.lndg -t lndg:latest .
+  
+  # Iniciar o serviço via docker-compose
+  echo "Iniciando LNDG via Docker Compose..."
+  docker-compose up -d lndg
+  
+  echo "LNDG Docker instalado e iniciado com sucesso!"
+  echo "Acesse: http://localhost:8889"
+}
+
+check_docker_available() {
+  if command -v docker >/dev/null 2>&1 && command -v docker-compose >/dev/null 2>&1; then
+    return 0
+  else
+    return 1
   fi
+}
+
+install_lndg() {
+  echo "=== Instalação do LNDG ==="
+  echo "Escolha o método de instalação:"
+  echo "1) Instalação nativa (tradicional)"
+  echo "2) Instalação via Docker (recomendado)"
+  echo "3) Cancelar"
+  
+  read -p "Digite sua escolha [1-3]: " choice
+  
+  case $choice in
+    1)
+      echo "Instalando LNDG de forma nativa..."
+      install_lndg_native & spinner
+      ;;
+    2)
+      if check_docker_available; then
+        echo "Instalando LNDG via Docker..."
+        install_lndg_docker & spinner
+      else
+        echo "Docker não está disponível. Instalando de forma nativa..."
+        install_lndg_native & spinner
+      fi
+      ;;
+    3)
+      echo "Instalação cancelada."
+      return
+      ;;
+    *)
+      echo "Opção inválida. Instalando de forma nativa..."
+      install_lndg_native & spinner
+      ;;
+  esac
 }
 
 spinner() {

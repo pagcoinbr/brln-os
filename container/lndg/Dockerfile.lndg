@@ -1,0 +1,51 @@
+FROM python:3.10-slim
+
+# Instala dependências do sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Cria diretório de aplicação
+RUN mkdir -p /app/lndg
+WORKDIR /app/lndg
+
+# Clona o repositório LNDG
+RUN git clone https://github.com/cryptosharks131/lndg.git . && \
+    git checkout master
+
+# Instala dependências Python
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir whitenoise
+
+# Cria diretório para dados persistentes
+RUN mkdir -p /app/data
+
+# Cria usuário não-root para segurança
+RUN useradd -m -u 1005 lndg && \
+    chown -R lndg:lndg /app/lndg && \
+    chown -R lndg:lndg /app/data
+
+# Copia script de entrypoint
+COPY lndg/entrypoint.sh /app/lndg/entrypoint.sh
+RUN chmod +x /app/lndg/entrypoint.sh && \
+    chown lndg:lndg /app/lndg/entrypoint.sh
+
+# Expõe a porta do LNDG
+EXPOSE 8889
+
+# Muda para o usuário lndg
+USER lndg
+
+# Define o diretório de trabalho
+WORKDIR /app/lndg
+
+# Define variáveis de ambiente
+ENV PYTHONPATH=/app/lndg
+ENV DJANGO_SETTINGS_MODULE=lndg.settings
+
+# Define o entrypoint
+ENTRYPOINT ["/app/lndg/entrypoint.sh"]

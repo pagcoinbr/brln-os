@@ -170,16 +170,13 @@ services:
     volumes:
       - /data/lnd:/root/.lnd:ro
       - /data/lndg:/app/data:rw
-    command:
-      - sh
-      - -c
-      - python initialize.py -net 'mainnet' -rpc 'lnd:10009' -wn && python controller.py runserver 0.0.0.0:8889
     restart: unless-stopped
     depends_on:
       - lnd
       - postgres
     environment:
       - LND_HOST=lnd:10009
+      - LND_NETWORK=mainnet
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
