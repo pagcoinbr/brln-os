@@ -99,9 +99,6 @@ required_files=(
     "lnd/password.txt"
     "elements/elements.conf"
     "peerswap/peerswap.conf"
-    "monitoring/prometheus.yml"
-    "monitoring/loki-config.yml"
-    "monitoring/promtail-config.yml"
 )
 
 missing_files=()
