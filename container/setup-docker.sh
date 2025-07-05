@@ -55,23 +55,15 @@ sudo chmod -R 755 /data/lnd
 
 # Verificar e copiar arquivos de configuração do LND
 log "Configurando arquivos do LND..."
-if [[ -f "/root/brlnfullauto/container/lnd/lnd.conf.example" ]]; then
     sudo cp /root/brlnfullauto/container/lnd/lnd.conf.example /data/lnd/lnd.conf
     sudo chown $LND_UID:$LND_UID /data/lnd/lnd.conf
     sudo chmod 644 /data/lnd/lnd.conf
     info "Arquivo lnd.conf copiado para /data/lnd/"
-else
-    warning "Arquivo lnd/lnd.conf não encontrado"
-fi
 
-if [[ -f "lnd/password.txt" ]]; then
     sudo cp lnd/password.txt /data/lnd/
     sudo chown $LND_UID:$LND_UID /data/lnd/password.txt
     sudo chmod 600 /data/lnd/password.txt
     info "Arquivo password.txt copiado para /data/lnd/"
-else
-    warning "Arquivo lnd/password.txt não encontrado"
-fi
 
 # Configurar Elements
 log "Configurando estrutura do Elements..."
@@ -79,17 +71,11 @@ sudo mkdir -p /data/elements/{blocks,chainstate,database,wallets,liquidv1}
 sudo chown -R $ELEMENTS_UID:$ELEMENTS_UID /data/elements
 sudo chmod -R 755 /data/elements
 
-if [[ -f "elements/elements.conf" ]]; then
-    # Para elements, vamos criar um link simbólico em vez de copiar
-    if [[ ! -f "/root/brlnfullauto/container/elements/elements.conf.example" ]]; then
-        sudo cp /root/brlnfullauto/container/elements/elements.conf.example /data/elements/elements.conf
-        sudo chown $ELEMENTS_UID:$ELEMENTS_UID /data/elements/elements.conf
-        sudo chmod 644 /data/elements/elements.conf
-        info "Arquivo elements.conf copiado para /data/elements/"
-    fi
-else
-    warning "Arquivo elements/elements.conf não encontrado"
-fi
+# Para elements, vamos criar um link simbólico em vez de copiar
+sudo cp /root/brlnfullauto/container/elements/elements.conf.example /data/elements/elements.conf
+sudo chown $ELEMENTS_UID:$ELEMENTS_UID /data/elements/elements.conf
+sudo chmod 644 /data/elements/elements.conf
+info "Arquivo elements.conf copiado para /data/elements/"
 
 # Verificar se todos os arquivos de configuração necessários existem
 log "Verificando arquivos de configuração necessários..."
