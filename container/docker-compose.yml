@@ -106,6 +106,9 @@ services:
     networks:
       - grafana-net
     volumes:
+      - /data/lnd:/data/lnd
+      - ./lnd/lnd.conf:/data/lnd/lnd.conf
+      - ./lnd/password.txt:/data/lnd/password.txt
       - tor_var:/var/lib/tor:ro
       - /data/lnd:/home/lnd/.lnd
     restart: unless-stopped
