@@ -23,6 +23,9 @@ NC='\033[0m'
 # Arrays dinâmicos para todos os serviços
 declare -a ALL_SERVICES=()
 declare -A SERVICE_DATA
+declare -a DOCKER_COMPOSE_SERVICES=()
+declare -A SERVICE_DEPENDENCIES
+declare -A SERVICE_STATUS
 
 # Funções de logging
 log() { echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"; }
@@ -37,9 +40,48 @@ if [[ ! -f "docker-compose.yml" ]]; then
     exit 1
 fi
 
+# Função para descobrir serviços do docker-compose.yml
+discover_docker_compose_services() {
+    log "Analisando docker-compose.yml..."
+    
+    # Extrair nomes dos serviços do docker-compose.yml
+    local services=($(yq eval '.services | keys | .[]' docker-compose.yml 2>/dev/null || \
+                     grep -E "^  [a-zA-Z0-9_-]+:" docker-compose.yml | sed 's/://g' | awk '{print $1}'))
+    
+    for service in "${services[@]}"; do
+        DOCKER_COMPOSE_SERVICES+=("$service")
+        debug "Serviço encontrado no docker-compose.yml: $service"
+        
+        # Extrair dependências usando yq ou grep
+        local depends_on=()
+        if command -v yq &> /dev/null; then
+            depends_on=($(yq eval ".services.${service}.depends_on[]?" docker-compose.yml 2>/dev/null))
+        else
+            # Fallback usando grep se yq não estiver disponível
+            local dep_section=$(sed -n "/^  ${service}:/,/^  [a-zA-Z]/p" docker-compose.yml | grep -A10 "depends_on:" | grep -E "^\s*-\s*" | sed 's/.*- *//' | head -20)
+            if [[ -n "$dep_section" ]]; then
+                while IFS= read -r dep; do
+                    [[ -n "$dep" ]] && depends_on+=("$dep")
+                done <<< "$dep_section"
+            fi
+        fi
+        
+        # Armazenar dependências
+        if [[ ${#depends_on[@]} -gt 0 ]]; then
+            SERVICE_DEPENDENCIES["$service"]="${depends_on[*]}"
+            debug "Dependências para $service: ${depends_on[*]}"
+        fi
+    done
+    
+    info "Encontrados ${#DOCKER_COMPOSE_SERVICES[@]} serviços no docker-compose.yml: ${DOCKER_COMPOSE_SERVICES[*]}"
+}
+
 # Função para descobrir automaticamente todos os serviços
 discover_services() {
     log "Descobrindo serviços automaticamente..."
+    
+    # Primeiro descobrir serviços do docker-compose.yml
+    discover_docker_compose_services
     
     # Encontrar todos os arquivos service.json
     local service_files=(*/service.json)
@@ -51,18 +93,33 @@ discover_services() {
             
             # Validar se o JSON é válido
             if jq empty "$service_file" 2>/dev/null; then
-                ALL_SERVICES+=("$service_dir")
-                # Carregar dados do serviço na memória
-                SERVICE_DATA["$service_dir"]=$(cat "$service_file")
-                info "Serviço $service_dir adicionado à lista"
+                # Verificar se o serviço existe no docker-compose.yml
+                if [[ " ${DOCKER_COMPOSE_SERVICES[*]} " =~ " $service_dir " ]]; then
+                    ALL_SERVICES+=("$service_dir")
+                    # Carregar dados do serviço na memória
+                    SERVICE_DATA["$service_dir"]=$(cat "$service_file")
+                    info "Serviço $service_dir adicionado à lista"
+                else
+                    warning "Serviço $service_dir tem service.json mas não está no docker-compose.yml"
+                fi
             else
                 warning "Arquivo JSON inválido: $service_file"
             fi
         fi
     done
     
+    # Adicionar serviços do docker-compose.yml que não têm service.json
+    for service in "${DOCKER_COMPOSE_SERVICES[@]}"; do
+        if [[ ! " ${ALL_SERVICES[*]} " =~ " $service " ]]; then
+            ALL_SERVICES+=("$service")
+            # Criar dados básicos para serviços sem service.json
+            SERVICE_DATA["$service"]="{\"description\":\"Serviço do docker-compose.yml\",\"ports\":[]}"
+            warning "Serviço $service do docker-compose.yml não tem service.json - usando configuração básica"
+        fi
+    done
+    
     if [[ ${#ALL_SERVICES[@]} -eq 0 ]]; then
-        error "Nenhum serviço encontrado. Certifique-se de que existem arquivos service.json nos diretórios dos serviços"
+        error "Nenhum serviço encontrado. Certifique-se de que existem serviços no docker-compose.yml"
         exit 1
     fi
     
@@ -81,6 +138,44 @@ get_service_array() {
     local service=$1
     local property=$2
     echo "${SERVICE_DATA[$service]}" | jq -r ".$property[]? // empty"
+}
+
+# Função para resolver dependências de um serviço
+resolve_dependencies() {
+    local service="$1"
+    local -a resolved=()
+    local -a stack=("$service")
+    local -A visited=()
+    
+    while [[ ${#stack[@]} -gt 0 ]]; do
+        local current="${stack[-1]}"
+        unset 'stack[-1]'
+        
+        if [[ -n "${visited[$current]}" ]]; then
+            continue
+        fi
+        
+        visited["$current"]=1
+        resolved+=("$current")
+        
+        # Adicionar dependências à pilha
+        if [[ -n "${SERVICE_DEPENDENCIES[$current]}" ]]; then
+            local deps=(${SERVICE_DEPENDENCIES[$current]})
+            for dep in "${deps[@]}"; do
+                if [[ -z "${visited[$dep]}" ]]; then
+                    stack+=("$dep")
+                fi
+            done
+        fi
+    done
+    
+    # Inverter ordem para dependências primeiro
+    local -a final_order=()
+    for ((i=${#resolved[@]}-1; i>=0; i--)); do
+        final_order+=("${resolved[$i]}")
+    done
+    
+    echo "${final_order[@]}"
 }
 
 # Função para criar usuários e grupos usando dados dos serviços
@@ -307,25 +402,32 @@ setup_logging_system() {
 
 # Função para menu interativo de seleção de serviços
 show_service_menu() {
-    echo -e "${BLUE}=== Menu de Seleção de Serviços ===${NC}"
+    echo -e "${BLUE}=== Menu de Seleção de Serviços para Teste ===${NC}"
     echo -e "Serviços disponíveis:"
     
     for i in "${!ALL_SERVICES[@]}"; do
         local service="${ALL_SERVICES[$i]}"
         local description=$(get_service_property "$service" "description")
         local ports=$(echo "${SERVICE_DATA[$service]}" | jq -r '.ports[]?' | tr '\n' ',' | sed 's/,$//')
+        local deps=""
         
-        printf "  %-2d) %-15s - %s" "$((i+1))" "$service" "$description"
+        # Mostrar dependências se existirem
+        if [[ -n "${SERVICE_DEPENDENCIES[$service]}" ]]; then
+            deps=" [deps: ${SERVICE_DEPENDENCIES[$service]}]"
+        fi
+        
+        printf "  %-2d) %-15s - %s%s" "$((i+1))" "$service" "$description" "$deps"
         [[ -n "$ports" ]] && printf " (portas: %s)" "$ports"
         echo
     done
     
     echo ""
-    echo "Opções de seleção:"
+    echo -e "${CYAN}Opções de seleção:${NC}"
     echo "  - Digite números separados por espaços (ex: 1 3 5)"
     echo "  - Digite nomes separados por espaços (ex: lnd elements peerswap)" 
     echo "  - Digite 'all' para todos os serviços"
-    echo "  - Digite 'auto' para detecção automática baseada em arquivos existentes"
+    echo "  - Digite 'deps' + número/nome para incluir dependências (ex: deps 1, deps lnd)"
+    echo "  - Digite 'test' para modo de teste individual"
     echo ""
 }
 
@@ -346,6 +448,35 @@ process_service_selection() {
                     selected_services+=("$service")
                 fi
             done
+            ;;
+        "test")
+            # Modo de teste individual - menu interativo
+            show_test_menu
+            return $?
+            ;;
+        deps\ *)
+            # Modo com dependências - "deps 1" ou "deps lnd"
+            local target="${input#deps }"
+            local base_service=""
+            
+            if [[ "$target" =~ ^[0-9]+$ ]]; then
+                local index=$((target - 1))
+                if [[ $index -ge 0 && $index -lt ${#ALL_SERVICES[@]} ]]; then
+                    base_service="${ALL_SERVICES[$index]}"
+                fi
+            else
+                if [[ " ${ALL_SERVICES[*]} " =~ " $target " ]]; then
+                    base_service="$target"
+                fi
+            fi
+            
+            if [[ -n "$base_service" ]]; then
+                selected_services=($(resolve_dependencies "$base_service"))
+                info "Incluindo dependências para $base_service: ${selected_services[*]}"
+            else
+                error "Serviço não encontrado: $target"
+                return 1
+            fi
             ;;
         *)
             # Processar entrada (números ou nomes)
@@ -465,4 +596,5 @@ main() {
 # Executar script principal
 docker-compose down -v
 docker-compose build
+docker-compose up -d
 main "$@"
