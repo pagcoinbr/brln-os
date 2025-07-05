@@ -143,7 +143,7 @@ services:
       - "5000:5000"
     volumes:
       - ./.env:/app/.env
-      - ./data:/app/data
+      - /data/lnbits:/app/data/lnbits
     environment:
       - TZ=UTC
     logging:
