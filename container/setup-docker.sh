@@ -95,10 +95,10 @@ fi
 log "Verificando arquivos de configuração necessários..."
 
 required_files=(
+    "/root/brlnfullauto/container/lnd/lnd.conf"
+    "/root/brlnfullauto/container/lnd/password.txt"
     "/root/brlnfullauto/container/elements/elements.conf"
-    "/root/brlnfullauto/container/elements/pssword.txt"
-    "/root/brlnfullauto/container/elements/elements.conf"
-    "/root/brlnfullauto/container/elements/peerswap.conf"
+    "/root/brlnfullauto/container/peerswap/peerswap.conf"
 )
 
 missing_files=()
