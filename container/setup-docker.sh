@@ -1,6 +1,9 @@
 #!/bin/bash
 
-# Script para criar diretórios e arquivos necessários para o docker-compose
+# Script para criar diretórios e arquivos necessários para o docker-if [[ -f "elements/elements.conf" ]]; then
+    # Para elements, vamos criar um link simbólico em vez de copiar
+    if [[ ! -f "/root/brlnfullauto/container/elements/elements.conf.example" ]]; then
+        sudo cp /root/brlnfullauto/container/elements/elements.conf.example /data/elements/elements.confose
 # com as permissões corretas
 
 set -e
@@ -55,8 +58,8 @@ sudo chmod -R 755 /data/lnd
 
 # Verificar e copiar arquivos de configuração do LND
 log "Configurando arquivos do LND..."
-if [[ -f "/home/$USER/brlnfullauto/container/lnd/lnd.conf.example" ]]; then
-    sudo cp /home/$USER/brlnfullauto/container/lnd/lnd.conf.example /data/lnd/lnd.conf
+if [[ -f "/root/brlnfullauto/container/lnd/lnd.conf.example" ]]; then
+    sudo cp /root/brlnfullauto/container/lnd/lnd.conf.example /data/lnd/lnd.conf
     sudo chown $LND_UID:$LND_UID /data/lnd/lnd.conf
     sudo chmod 644 /data/lnd/lnd.conf
     info "Arquivo lnd.conf copiado para /data/lnd/"
