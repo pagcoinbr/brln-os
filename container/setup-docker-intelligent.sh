@@ -438,6 +438,7 @@ main() {
     verify_resources
     fix_existing_permissions
     setup_logging_system
+    docker-compose build
     
     # Menu de seleção
     show_service_menu
@@ -460,7 +461,6 @@ main() {
         error "Falha na seleção de serviços"
         exit 1
     fi
-    docker-compose build
 }
 
 # Executar script principal
