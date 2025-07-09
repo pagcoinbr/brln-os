@@ -117,7 +117,7 @@ container/
 
 ```bash
 # Clone o repositório
-git clone https://github.com/[usuario]/brlnfullauto.git
+git clone https://github.com/pagcoinbr/brlnfullauto.git
 cd brlnfullauto
 
 # Execute a instalação automática
@@ -142,7 +142,7 @@ Se preferir controle total sobre o processo:
 
 ```bash
 # Clone o repositório
-git clone https://github.com/[usuario]/brlnfullauto.git
+git clone https://github.com/pagcoinbr/brlnfullauto.git
 cd brlnfullauto/container
 
 # Configure permissões
