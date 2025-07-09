@@ -27,9 +27,7 @@ Este documento esclarece a função de cada script no projeto.
 
 ```bash
 cd container/
-./setup-docker-smartsystem.sh --interactive  # Modo interativo
-./setup-docker-smartsystem.sh --all         # Instalar tudo
-./setup-docker-smartsystem.sh --list        # Listar serviços
+./setup-docker-smartsystem.sh
 ```
 
 **O que faz**:

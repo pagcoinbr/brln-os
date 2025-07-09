@@ -7,21 +7,30 @@
   "data_dir": "/data/thunderhub",
   "dockerfile": "Dockerfile.thunderhub",
   "config_files": [
-    "thunderhub.yaml.example",
-    "thunderhub.yaml"
+    "thubConfig.yaml.example",
+    "thubConfig.yaml"
   ],
   "binaries": [],
   "ports": [
     "3000:3000"
   ],
+  "volumes": [
+    "thunderhub_data:/data/thunderhub",
+    "/data/lnd:/data/lnd:ro"
+  ],
   "special_dirs": [
     "data",
-    "logs"
+    "logs",
+    "config"
   ],
   "environment": {
     "THUNDERHUB_PORT": "3000",
-    "LND_HOST": "lnd:10009"
+    "LND_HOST": "lnd:10009",
+    "THUB_PASSWORD": "changeme123"
   },
+  "depends_on": [
+    "lnd"
+  ],
   "healthcheck": {
     "test": ["CMD", "curl", "-f", "http://localhost:3000"],
     "interval": "30s",

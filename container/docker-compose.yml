@@ -1,59 +1,59 @@
 services:
-  grafana:
-    image: grafana/grafana:9.5.2
-    container_name: grafana
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/provisioning:/etc/grafana/provisioning
-      - ./monitoring/dashboards:/etc/grafana/dashboards
-    ports:
-      - 3010:3000
-    networks:
-      - grafana-net
-    environment:
-      - GF_INSTALL_PLUGINS=grafana-piechart-panel 1.6.4,grafana-clock-panel 2.1.3,grafana-simple-json-datasource 1.4.2
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_PLUGIN_DOWNLOAD_TIMEOUT=300s
-    restart: unless-stopped
+  # grafana:
+  #   image: grafana/grafana:9.5.2
+  #   container_name: grafana
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./monitoring/provisioning:/etc/grafana/provisioning
+  #     - ./monitoring/dashboards:/etc/grafana/dashboards
+  #   ports:
+  #     - 3010:3000
+  #   networks:
+  #     - grafana-net
+  #   environment:
+  #     - GF_INSTALL_PLUGINS=grafana-piechart-panel 1.6.4,grafana-clock-panel 2.1.3,grafana-simple-json-datasource 1.4.2
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     - GF_PLUGIN_DOWNLOAD_TIMEOUT=300s
+  #   restart: unless-stopped
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - prometheus_data:/etc/prometheus
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - 9090:9090
-    networks:
-      - grafana-net
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - prometheus_data:/etc/prometheus
+  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - 9090:9090
+  #   networks:
+  #     - grafana-net
+  #   command:
+  #     - --config.file=/etc/prometheus/prometheus.yml
 
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: node-exporter
-    ports:
-      - 9100:9100
-    networks:
-        - grafana-net
+  # node-exporter:
+  #   image: prom/node-exporter:latest
+  #   container_name: node-exporter
+  #   ports:
+  #     - 9100:9100
+  #   networks:
+  #       - grafana-net
 
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    ports:
-      - 3100:3100
-    networks:
-      - grafana-net
-    volumes:
-      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
+  # loki:
+  #   image: grafana/loki:latest
+  #   container_name: loki
+  #   ports:
+  #     - 3100:3100
+  #   networks:
+  #     - grafana-net
+  #   volumes:
+  #     - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
 
-  promtail:
-    image: grafana/promtail:latest
-    container_name: promtail
-    networks:
-      - grafana-net
-    volumes:
-      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+  # promtail:
+  #   image: grafana/promtail:latest
+  #   container_name: promtail
+  #   networks:
+  #     - grafana-net
+  #   volumes:
+  #     - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
 
   postgres:
     image: postgres:latest
@@ -146,7 +146,6 @@ services:
       - /data/lnd:/home/lnd/.lnd
     restart: unless-stopped
     depends_on:
-      - postgres
       - tor
       - bitcoin
     environment:
@@ -273,6 +272,32 @@ services:
       - PEERSWAP_HOST=peerswap:42069
       - LND_HOST=lnd:10009
 
+  thunderhub:
+    build:
+      context: .
+      dockerfile: ./thunderhub/Dockerfile.thunderhub
+    container_name: thunderhub
+    ports:
+      - 3000:3000   # ThunderHub Web UI port
+    networks:
+      - grafana-net
+    volumes:
+      - thunderhub_data:/data/thunderhub
+      - /data/lnd:/data/lnd:ro  # Volume compartilhado com LND para certificados
+      - ./thunderhub/thubConfig.yaml.example:/data/thunderhub/config/thubConfig.yaml:ro
+      - ./thunderhub/.env.local.example:/home/thunderhub/thunderhub/.env.local:ro
+    restart: unless-stopped
+    depends_on:
+      - lnd
+    environment:
+      - THUNDERHUB_PORT=3000
+      - LND_HOST=lnd
+      - LND_PORT=10009
+      - LND_NETWORK=mainnet
+      - THUB_PASSWORD=${THUB_PASSWORD:-changeme123}
+      - NODE_ENV=production
+      - ACCOUNT_CONFIG_PATH=/data/thunderhub/config/thubConfig.yaml
+
 networks:
   grafana-net:
     driver: bridge
@@ -285,3 +310,4 @@ volumes:
   tor_var:
   peerswap_data:
   psweb_data:
+  thunderhub_data:

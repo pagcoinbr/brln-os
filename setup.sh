@@ -14,7 +14,7 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 spinner() {
-    local pid=$!
+    local pid=${1:-$!}
     local delay=0.2
     local max=${SPINNER_MAX:-20}
     local count=0
@@ -38,7 +38,7 @@ spinner() {
         sleep "$delay"
     done
 
-    wait "$pid"
+    wait "$pid" 2>/dev/null
     exit_code=$?
 
     tput cnorm
@@ -57,7 +57,26 @@ error() { echo -e "${RED}[ERROR] $1${NC}"; }
 warning() { echo -e "${YELLOW}[WARNING] $1${NC}"; }
 info() { echo -e "${BLUE}[INFO] $1${NC}"; }
 
+# Verificar se há containers ativos e parar se necessário
+if [[ $(docker ps -q | wc -l) -gt 0 ]]; then
+    warning "Existem containers Docker ativos. Parando todos os containers..."
+    echo "Este processo pode apagar os volumes de projetos em execução, tenha cuidado ao prosseguir."
+    read -p "Deseja continuar e parar todos os containers? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${RED}Operação cancelada pelo usuário.${NC}"
+        exit 1
+    else
+        log "Parando todos os containers e removendo volumes..."
+        cd container || exit 1
+        docker-compose down -v
+        cd - || exit 1
+        log "Todos os containers foram parados e volumes removidos."
+    fi
+fi
+
 # Banner
+clear
 echo -e "${CYAN}"
 cat << "EOF"
 ██████╗ ██████╗ ██╗     ███╗   ██╗    ███████╗██╗   ██╗██╗     ██╗         █████╗ ██╗   ██╗████████╗ ██████╗ 
@@ -189,9 +208,37 @@ warning "⚠️  Certifique-se de ter conexão estável com a internet"
 echo ""
 read -p "Deseja continuar? (y/N): " -n 1 -r
 echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Operação cancelada pelo usuário."
+    exit 0
+fi
+
 log "Executando configuração completa..."
-./setup-docker-smartsystem.sh
+echo ""
+read -p "Deseja exibir os logs em tempo real durante a configuração? (y/N): " -n 1 -r
+echo
+
+./setup-docker-smartsystem.sh > /tmp/setup.log 2>&1 &
+SETUP_PID=$!
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    log "Exibindo logs em tempo real..."
+    tail -f /tmp/setup.log --pid=$SETUP_PID
+    wait $SETUP_PID
+    SETUP_EXIT_CODE=$?
+else
+    log "Executando configuração em background..."
+    spinner $SETUP_PID
+    SETUP_EXIT_CODE=$?
+fi
+
+# Verificar se houve erro no processo
+if [[ $SETUP_EXIT_CODE -ne 0 ]]; then
+    error "Erro durante a configuração. Verifique o log em /tmp/setup.log"
+    echo ""
+    error "Últimas linhas do log:"
+    tail -20 /tmp/setup.log
+    exit 1
 fi
 
 # Verificar se a configuração foi bem-sucedida

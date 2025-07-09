@@ -6,11 +6,51 @@
 
 #set -e
 
+sudo -v
+
 # Verificar se jq está instalado (necessário para parsing JSON)
 if ! command -v jq &> /dev/null; then
     echo "Instalando jq para parsing JSON..."
     sudo apt-get update && sudo apt-get install -y jq
 fi
+
+spinner() {
+    local pid=$!
+    local delay=0.2
+    local max=${SPINNER_MAX:-20}
+    local count=0
+    local spinstr='|/-\\'
+    local j=0
+
+    tput civis
+
+    # Monitorar processo
+    while kill -0 "$pid" 2>/dev/null; do
+        local emoji=""
+        for ((i=0; i<=count; i++)); do
+            emoji+="⚡"
+        done
+
+        local spin_char="${spinstr:j:1}"
+        j=$(( (j + 1) % 4 ))
+        count=$(( (count + 1) % (max + 1) ))
+
+        printf "\r\033[KInstalando seu BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        sleep "$delay"
+    done
+
+    wait "$pid"
+    exit_code=$?
+
+    tput cnorm
+    if [[ $exit_code -eq 0 ]]; then
+        printf "\r\033[K${GREEN}✔️ Processo finalizado com sucesso!${NC}\n"
+    else
+        printf "\r\033[K${RED}❌ Processo finalizado com erro (código: $exit_code)${NC}\n"
+    fi
+
+    return $exit_code
+}
 
 # Cores para output
 RED='\033[0;31m'
@@ -443,97 +483,67 @@ show_service_menu() {
     
     echo ""
     echo -e "${CYAN}Opções de seleção:${NC}"
-    echo "  - Digite números separados por espaços (ex: 1 3 5)"
-    echo "  - Digite nomes separados por espaços (ex: lnd elements peerswap)" 
+    echo "  - Digite números ou nomes separados por espaços, dos serviços que seseja iniciar (ex: 1 3 5... ou lnd elements peerswap...)"
+    echo ""
+    echo "  OU"
+    echo ""
     echo "  - Digite 'all' para todos os serviços"
-    echo "  - Digite 'deps' + número/nome para incluir dependências (ex: deps 1, deps lnd)"
-    echo "  - Digite 'test' para modo de teste individual"
     echo ""
 }
 
 # Função para validar e processar seleção de serviços
 process_service_selection() {
-    local input="$1"
+    read -r -p "Selecione os serviços: " input_selection_services
+    local input=${input_selection_services}
     local selected_services=()
+    
+    # Verificar se input está vazio
+    if [[ -z "$input" ]]; then
+        error "Entrada vazia" >&2
+        return 1
+    fi
     
     case "$input" in
         "all")
             echo "all"
             return 0
             ;;
-        "auto")
-            # Selecionar serviços que têm Dockerfile e pelo menos um binário/config
-            for service in "${ALL_SERVICES[@]}"; do
-                local dockerfile=$(get_service_property "$service" "dockerfile")
-                if [[ -n "$dockerfile" && -f "$service/$dockerfile" ]]; then
-                    selected_services+=("$service")
-                fi
-            done
-            ;;
-        "test")
-            # Modo de teste individual - menu interativo
-            show_test_menu
-            return $?
-            ;;
-        deps\ *)
-            # Modo com dependências - "deps 1" ou "deps lnd"
-            local target="${input#deps }"
-            local base_service=""
-            
-            if [[ "$target" =~ ^[0-9]+$ ]]; then
-                local index=$((target - 1))
-                if [[ $index -ge 0 && $index -lt ${#ALL_SERVICES[@]} ]]; then
-                    base_service="${ALL_SERVICES[$index]}"
-                fi
-            else
-                if [[ " ${ALL_SERVICES[*]} " =~ " $target " ]]; then
-                    base_service="$target"
-                fi
-            fi
-            
-            if [[ -n "$base_service" ]]; then
-                selected_services=($(resolve_dependencies "$base_service"))
-                info "Incluindo dependências para $base_service: ${selected_services[*]}"
-            else
-                error "Serviço não encontrado: $target"
-                return 1
-            fi
-            ;;
         *)
             # Processar entrada (números ou nomes)
             IFS=' ' read -ra INPUT_ARRAY <<< "$input"
             for item in "${INPUT_ARRAY[@]}"; do
+                # Pular items vazios
+                [[ -z "$item" ]] && continue
+                
                 if [[ "$item" =~ ^[0-9]+$ ]]; then
                     # É um número
                     local index=$((item - 1))
                     if [[ $index -ge 0 && $index -lt ${#ALL_SERVICES[@]} ]]; then
                         selected_services+=("${ALL_SERVICES[$index]}")
                     else
-                        warning "Número inválido: $item"
+                        warning "Número inválido: $item" >&2
                     fi
                 else
                     # É um nome de serviço
                     if [[ " ${ALL_SERVICES[*]} " =~ " $item " ]]; then
                         selected_services+=("$item")
                     else
-                        warning "Serviço '$item' não encontrado"
+                        warning "Serviço '$item' não encontrado" >&2
                     fi
                 fi
             done
             ;;
     esac
     
-    # Para todos os outros casos (exceto "all"), remover duplicatas
-    if [[ "$input" != "all" ]]; then
-        local unique_services=($(printf "%s\n" "${selected_services[@]}" | sort -u))
-        
-        if [[ ${#unique_services[@]} -eq 0 ]]; then
-            error "Nenhum serviço válido selecionado"
-            return 1
-        fi
-        
-        echo "${unique_services[@]}"
+    # Remover duplicatas
+    local unique_services=($(printf "%s\n" "${selected_services[@]}" | sort -u))
+    
+    if [[ ${#unique_services[@]} -eq 0 ]]; then
+        error "Nenhum serviço válido selecionado" >&2
+        return 1
     fi
+    
+    echo "${unique_services[@]}"
 }
 
 # Função principal para executar docker-compose
@@ -588,29 +598,61 @@ main() {
     # Executar todas as configurações
     create_users_and_groups
     create_data_directories
-    setup_config_files
-    verify_resources
-    fix_existing_permissions
-    setup_logging_system
+    setup_config_files 
+    verify_resources 
+    fix_existing_permissions 
+    setup_logging_system 
     
     # Menu de seleção
     show_service_menu
-    read -p "Escolha os serviços: " selection
+    read -p "Escolha os serviços: " input_selection_services
     
-    local selected_services_result=$(process_service_selection "$selection")
-    if [[ "$selected_services_result" == "all" ]]; then
-        log "Iniciando todos os serviços..."
-        docker-compose build
-        docker-compose up -d
-    else
+    # Debug: mostrar o que foi capturado
+    debug "Entrada do usuário: '$input_selection_services'"
+    
+    # # Processar seleção com validação
+    # local selected_services_result
+    # selected_services_result=$(process_service_selection "$input_selection_services")
+    # local selection_exit_code=$?
+    
+    # # Verificar se houve erro na seleção
+    # if [[ $selection_exit_code -ne 0 ]]; then
+    #     error "Falha na seleção de serviços"
+    #     exit 1
+    # fi
+    
+    # if [[ "$selected_services_result" == "all" ]]; then
+    #     log "Iniciando todos os serviços..."
+    #     if ! docker-compose build; then
+    #         error "Falha no build de todos os serviços"
+    #         exit 1
+    #     fi
+    #     if ! docker-compose up -d; then
+    #         error "Falha ao iniciar todos os serviços"
+    #         exit 1
+    #     fi
+    # else
+    #     # Verificar se há serviços válidos
+    #     if [[ -z "$selected_services_result" ]]; then
+    #         error "Nenhum serviço foi selecionado"
+    #         exit 1
+    #     fi
+        
         # Converter resultado em array
         read -ra selected_services <<< "$selected_services_result"
         log "Iniciando serviços selecionados: ${selected_services[*]}"
-        docker-compose build "${selected_services[@]}"
-        docker-compose up -d "${selected_services[@]}"
-    fi
+        
+        if ! docker-compose build "${selected_services[@]}"; then
+            error "Falha no build dos serviços selecionados"
+            exit 1
+        fi
+        if ! docker-compose up -d "${selected_services[@]}"; then
+            error "Falha ao iniciar os serviços selecionados"
+            exit 1
+        fi
+    # fi
 }
 
 # Executar script principal
-docker-compose down -v
+sleep 10
 main "$@"
