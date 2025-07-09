@@ -215,6 +215,7 @@ services:
     volumes:
       - /data/lnd:/root/.lnd:ro
       - /data/lndg:/app/data:rw
+      - /data/lnd:/home/lnd/.lnd:ro
     restart: unless-stopped
     depends_on:
       - lnd

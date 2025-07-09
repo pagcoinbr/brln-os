@@ -7,26 +7,6 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
-# Aguarda o LND estar disponível
-wait_for_lnd() {
-    log "Aguardando LND estar disponível..."
-    while ! nc -z lnd 10009; do
-        log "LND não está disponível ainda, aguardando..."
-        sleep 5
-    done
-    log "LND está disponível!"
-}
-
-# Aguarda o PostgreSQL estar disponível
-wait_for_postgres() {
-    log "Aguardando PostgreSQL estar disponível..."
-    while ! nc -z postgres 5432; do
-        log "PostgreSQL não está disponível ainda, aguardando..."
-        sleep 5
-    done
-    log "PostgreSQL está disponível!"
-}
-
 # Configuração inicial
 setup_lndg() {
     log "Configurando LNDG..."
