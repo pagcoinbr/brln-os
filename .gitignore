@@ -91,6 +91,7 @@ tls.*
 **/elements.conf
 **/lnd.conf
 **/peerswap.conf
+**/*.conf
 conf_files/bitcoin.conf
 conf_files/elements.conf
 conf_files/lnd.conf
