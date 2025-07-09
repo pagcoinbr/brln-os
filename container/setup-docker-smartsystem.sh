@@ -4,7 +4,7 @@
 # Lê automaticamente configurações de cada serviço através de arquivos service.json
 # Usa arrays e laços de repetição para máxima eficiência
 
-#set -e
+# set -e
 
 sudo -v
 
@@ -255,8 +255,15 @@ create_users_and_groups() {
         
         # Criar grupo se não existir
         if ! getent group "$groupname" >/dev/null 2>&1; then
-            sudo groupadd -g "$gid" "$groupname"
-            info "Grupo $groupname criado com GID $gid"
+            # Verificar se o GID já está em uso por outro grupo
+            existing_group=$(getent group | awk -F: -v gid="$gid" '$3 == gid {print $1}')
+            if [[ -n "$existing_group" ]]; then
+                warning "GID $gid já está em uso pelo grupo $existing_group. Usando grupo existente."
+                groupname="$existing_group"
+            else
+                sudo groupadd -g "$gid" "$groupname"
+                info "Grupo $groupname criado com GID $gid"
+            fi
         else
             local current_gid=$(getent group "$groupname" | cut -d: -f3)
             if [[ "$current_gid" != "$gid" ]]; then
@@ -462,7 +469,6 @@ setup_logging_system() {
 
 # Função para menu interativo de seleção de serviços
 show_service_menu() {
-    echo -e "${BLUE}=== Menu de Seleção de Serviços para Teste ===${NC}"
     echo -e "Serviços disponíveis:"
     
     for i in "${!ALL_SERVICES[@]}"; do
@@ -480,70 +486,6 @@ show_service_menu() {
         [[ -n "$ports" ]] && printf " (portas: %s)" "$ports"
         echo
     done
-    
-    echo ""
-    echo -e "${CYAN}Opções de seleção:${NC}"
-    echo "  - Digite números ou nomes separados por espaços, dos serviços que seseja iniciar (ex: 1 3 5... ou lnd elements peerswap...)"
-    echo ""
-    echo "  OU"
-    echo ""
-    echo "  - Digite 'all' para todos os serviços"
-    echo ""
-}
-
-# Função para validar e processar seleção de serviços
-process_service_selection() {
-    read -r -p "Selecione os serviços: " input_selection_services
-    local input=${input_selection_services}
-    local selected_services=()
-    
-    # Verificar se input está vazio
-    if [[ -z "$input" ]]; then
-        error "Entrada vazia" >&2
-        return 1
-    fi
-    
-    case "$input" in
-        "all")
-            echo "all"
-            return 0
-            ;;
-        *)
-            # Processar entrada (números ou nomes)
-            IFS=' ' read -ra INPUT_ARRAY <<< "$input"
-            for item in "${INPUT_ARRAY[@]}"; do
-                # Pular items vazios
-                [[ -z "$item" ]] && continue
-                
-                if [[ "$item" =~ ^[0-9]+$ ]]; then
-                    # É um número
-                    local index=$((item - 1))
-                    if [[ $index -ge 0 && $index -lt ${#ALL_SERVICES[@]} ]]; then
-                        selected_services+=("${ALL_SERVICES[$index]}")
-                    else
-                        warning "Número inválido: $item" >&2
-                    fi
-                else
-                    # É um nome de serviço
-                    if [[ " ${ALL_SERVICES[*]} " =~ " $item " ]]; then
-                        selected_services+=("$item")
-                    else
-                        warning "Serviço '$item' não encontrado" >&2
-                    fi
-                fi
-            done
-            ;;
-    esac
-    
-    # Remover duplicatas
-    local unique_services=($(printf "%s\n" "${selected_services[@]}" | sort -u))
-    
-    if [[ ${#unique_services[@]} -eq 0 ]]; then
-        error "Nenhum serviço válido selecionado" >&2
-        return 1
-    fi
-    
-    echo "${unique_services[@]}"
 }
 
 # Função principal para executar docker-compose
@@ -602,57 +544,9 @@ main() {
     verify_resources 
     fix_existing_permissions 
     setup_logging_system 
-    
-    # Menu de seleção
-    show_service_menu
-    read -p "Escolha os serviços: " input_selection_services
-    
-    # Debug: mostrar o que foi capturado
-    debug "Entrada do usuário: '$input_selection_services'"
-    
-    # # Processar seleção com validação
-    # local selected_services_result
-    # selected_services_result=$(process_service_selection "$input_selection_services")
-    # local selection_exit_code=$?
-    
-    # # Verificar se houve erro na seleção
-    # if [[ $selection_exit_code -ne 0 ]]; then
-    #     error "Falha na seleção de serviços"
-    #     exit 1
-    # fi
-    
-    # if [[ "$selected_services_result" == "all" ]]; then
-    #     log "Iniciando todos os serviços..."
-    #     if ! docker-compose build; then
-    #         error "Falha no build de todos os serviços"
-    #         exit 1
-    #     fi
-    #     if ! docker-compose up -d; then
-    #         error "Falha ao iniciar todos os serviços"
-    #         exit 1
-    #     fi
-    # else
-    #     # Verificar se há serviços válidos
-    #     if [[ -z "$selected_services_result" ]]; then
-    #         error "Nenhum serviço foi selecionado"
-    #         exit 1
-    #     fi
-        
-        # Converter resultado em array
-        read -ra selected_services <<< "$selected_services_result"
-        log "Iniciando serviços selecionados: ${selected_services[*]}"
-        
-        if ! docker-compose build "${selected_services[@]}"; then
-            error "Falha no build dos serviços selecionados"
-            exit 1
-        fi
-        if ! docker-compose up -d "${selected_services[@]}"; then
-            error "Falha ao iniciar os serviços selecionados"
-            exit 1
-        fi
-    # fi
+    docker-compose build
+    docker-compose up -d
 }
 
 # Executar script principal
-sleep 10
 main "$@"

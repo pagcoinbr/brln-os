@@ -1,87 +1,65 @@
-# LNDG - LND Dashboard Docker Container
+# LNDg - Lightning Network Dashboard
 
-Este diretório contém os arquivos necessários para executar o LNDG (LND Dashboard) em um container Docker como parte do projeto BRLN Full Auto.
+LNDg é um dashboard web para monitoramento e gestão de nós Lightning Network (LND). Esta instalação utiliza Docker e está integrada ao projeto BRLN Full Auto.
 
-## Arquivos Incluídos
+## Instalação Simplificada
 
-- `Dockerfile.lndg` - Dockerfile para construir a imagem do LNDG
-- `entrypoint.sh` - Script de inicialização do container
-- `service.json` - Configuração de serviço para integração com o sistema
-- `lndg.conf.example` - Arquivo de configuração de exemplo
-- `README.md` - Este arquivo
+O LNDg está integrado ao docker-compose.yml principal do projeto e segue a abordagem recomendada pelo [repositório oficial](https://github.com/cryptosharks131/lndg).
 
-## Funcionalidades
+### Funcionalidades
 
 - Dashboard web para monitoramento do LND
 - Gestão de canais e peers
 - Estatísticas de roteamento
 - Análise de fees e liquidez
 - Interface web intuitiva
-- Integração com PostgreSQL para persistência de dados
+- Dados não persistem no host (executam apenas em containers)
 
 ## Configuração
 
-### Volumes Persistentes
+### Arquitetura Integrada
 
-- `/data/lndg` - Dados da aplicação LNDG
-- `/data/lnd` - Dados do LND (somente leitura)
+O LNDg está configurado no docker-compose.yml principal com:
+- **Porta**: 8889 (interface web)
+- **Rede**: mainnet (ajustável via variável de ambiente)
+- **RPC**: Conecta automaticamente ao container LND (lnd:10009)
 
-### Portas
+### Volumes
 
-- `8889` - Interface web do LNDG
-
-### Variáveis de Ambiente
-
-- `LND_HOST` - Endereço do LND (padrão: lnd:10009)
-- `LND_NETWORK` - Rede do LND (mainnet/testnet)
-- `DB_HOST` - Host do PostgreSQL
-- `DB_PORT` - Porta do PostgreSQL
-- `DB_USER` - Usuário do PostgreSQL
-- `DB_PASSWORD` - Senha do PostgreSQL
+- `/root/.lnd` - Acesso somente leitura aos dados do LND
+- `/app/data` - Dados temporários da aplicação (não persistem)
 
 ## Uso
 
-### Via Docker Compose
+### Inicialização
 
-O serviço está configurado no `docker-compose.yml` principal:
+Execute a partir do diretório principal do projeto:
 
 ```bash
 cd /home/admin/brlnfullauto/container
 docker-compose up -d lndg
 ```
 
-### Via Script Shell
+### Obter credenciais de acesso
 
-Use o script de instalação tradicional:
-
-```bash
-bash ~/brlnfullauto/shell/adm_apps/lndg.sh
-```
-
-### Construção Manual
+Após a inicialização, obtenha a senha do admin:
 
 ```bash
-cd /home/admin/brlnfullauto/container
-docker build -f lndg/Dockerfile.lndg -t lndg:latest .
+docker exec lndg cat /app/data/lndg-admin.txt
 ```
 
 ## Acesso
 
 Após a inicialização, acesse a interface web em:
-- URL: http://localhost:8889
-- Usuário: admin (configurado durante a inicialização)
+- **URL**: http://localhost:8889
+- **Usuário**: lndg-admin
+- **Senha**: Execute o comando acima para obter a senha
 
-## Dependências
+## Dependências Automáticas
 
-- LND em execução
-- PostgreSQL em execução
+- Container LND (conecta automaticamente)
 - Rede Docker: grafana-net
-
-## Segurança
-
-- Executa como usuário não-root (lndg:1005)
-- Acesso somente leitura aos dados do LND
-- Dados persistentes com permissões apropriadas
+- Não requer PostgreSQL (usa banco interno)
 
 ## Troubleshooting
 
@@ -100,6 +78,52 @@ docker-compose ps
 docker-compose restart lndg
 ```
 
-## Backup
+### Forçar reconstrução
+```bash
+docker-compose build --no-cache lndg
+docker-compose up -d lndg
+```
 
-Os dados importantes estão em `/data/lndg` e são automaticamente incluídos no backup diário do sistema.
+## Monitoramento da Instalação
+
+### Acompanhar logs durante a inicialização
+```bash
+# Logs em tempo real
+docker logs -f lndg
+
+# Verificar se a inicialização foi concluída
+docker logs lndg | grep -E "initialized|password|admin"
+```
+
+### Verificar conectividade com LND
+```bash
+# Verificar se LND está respondendo
+docker exec lndg python -c "import lndg; print('LND connection test')"
+```
+
+## Configuração da Rede
+
+Para alterar entre mainnet/testnet, edite a variável de ambiente no docker-compose.yml:
+
+```yaml
+environment:
+  - LND_NETWORK=testnet  # ou mainnet
+```
+
+E ajuste o comando de inicialização correspondente:
+```yaml
+command:
+  - sh
+  - -c
+  - python initialize.py -net 'testnet' -rpc 'lnd:10009' -wn && python controller.py runserver 0.0.0.0:8889
+```
+
+## Características da Instalação
+
+- **Instalação simplificada**: Segue as melhores práticas do repositório oficial
+- **Sem persistência de dados**: Os dados não são salvos no host (conforme solicitado)
+- **Integração automática**: Conecta automaticamente com LND e outros serviços
+- **Configuração mínima**: Funciona out-of-the-box sem configurações complexas
+- **Rede configurável**: Suporta mainnet/testnet via variáveis de ambiente
+
+> **Nota**: Esta configuração segue exatamente as instruções do site oficial do LNDg, integrando-se perfeitamente ao docker-compose.yml do projeto BRLN Full Auto. Os dados não persistem no host conforme solicitado, mantendo a instalação simples e clean.

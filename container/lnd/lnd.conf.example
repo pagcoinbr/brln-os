@@ -14,6 +14,11 @@ wallet-unlock-allow-create=true
 # Regenerar automaticamente o certificado quando estiver próximo do vencimento
 tlsautorefresh=true
 tlsextraip=127.0.0.1
+tlsextradomain=lnd
+
+# gRPC configurações
+rpclisten=0.0.0.0:10009
+restlisten=0.0.0.0:8080
 
 ## Configurações de canais
 # (Opcional) Tamanho mínimo do canal. Descomente e defina conforme desejar

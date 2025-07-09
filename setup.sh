@@ -5,6 +5,14 @@
 
 set -e
 
+# Solicitar autenticação sudo no início do script
+if ! sudo -v; then
+    echo -e "${RED}Falha na autenticação sudo. Saindo...${NC}"
+    exit 1
+fi
+# Manter a sessão sudo ativa durante a execução do script
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'

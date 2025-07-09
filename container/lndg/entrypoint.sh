@@ -1,72 +1,92 @@
 #!/bin/bash
 
+# Entrypoint script para LNDg
 set -e
+
+# Cores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
 # Função para logging
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
 
-# Configuração inicial
-setup_lndg() {
-    log "Configurando LNDG..."
+error() {
+    echo -e "${RED}[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+warning() {
+    echo -e "${YELLOW}[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+info() {
+    echo -e "${BLUE}[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+# Configurações
+LND_RPC_HOST=${LND_RPC_HOST:-lnd:10009}
+LND_NETWORK=${LND_NETWORK:-mainnet}
+MAX_RETRIES=30
+RETRY_INTERVAL=10
+
+log "=== Iniciando LNDg ==="
+log "LND RPC: $LND_RPC_HOST"
+log "Network: $LND_NETWORK"
+
+# Função para executar inicialização
+run_initialize() {
+    log "Executando inicialização do LNDg..."
     
-    # Aguarda serviços dependentes
-    wait_for_lnd
-    wait_for_postgres
+    # Mudar para o diretório do LNDg
+    cd /app/lndg
     
-    # Cria diretório de dados se não existir
-    mkdir -p /app/data
+    # Criar virtual environment se não existir
+    if [ ! -d ".venv" ]; then
+        log "Criando virtual environment..."
+        virtualenv -p python3 .venv
+    fi
     
-    # Verifica se já foi inicializado
-    if [ ! -f "/app/data/.initialized" ]; then
-        log "Primeira execução - inicializando LNDG..."
-        
-        # Executa inicialização com whitenoise
-        python initialize.py --whitenoise \
-            -net "${LND_NETWORK:-mainnet}" \
-            -rpc "${LND_HOST:-lnd:10009}" \
-            -db "${DB_HOST:-postgres}"
-        
-        # Marca como inicializado
-        touch /app/data/.initialized
-        log "LNDG inicializado com sucesso!"
+    # Instalar dependências no virtual environment
+    log "Instalando dependências..."
+    .venv/bin/pip install --upgrade pip
+    .venv/bin/pip install -r requirements.txt
+    .venv/bin/pip install whitenoise
+    
+    # Executar initialize.py usando o virtual environment
+    log "Executando initialize.py..."
+    if .venv/bin/python initialize.py -net "$LND_NETWORK" -rpc "$LND_RPC_HOST" -wn; then
+        log "Initialize.py executado com sucesso!"
     else
-        log "LNDG já foi inicializado anteriormente."
+        warning "Initialize.py falhou, mas continuando..."
     fi
+    
+    cd -
 }
 
-# Inicia o controlador em background
-start_controller() {
-    log "Iniciando controlador LNDG..."
-    python controller.py &
-    CONTROLLER_PID=$!
-    log "Controlador iniciado com PID: $CONTROLLER_PID"
-}
-
-# Inicia o servidor web
+# Função para iniciar o servidor
 start_server() {
-    log "Iniciando servidor web LNDG na porta 8889..."
-    exec python manage.py runserver 0.0.0.0:8889
+    log "Iniciando servidor web LNDg na porta 8889..."
+    cd /app/lndg
+    exec .venv/bin/python manage.py runserver 0.0.0.0:8889
 }
 
-# Função de cleanup
-cleanup() {
-    log "Recebido sinal de término, encerrando processos..."
-    if [ ! -z "$CONTROLLER_PID" ]; then
-        kill $CONTROLLER_PID 2>/dev/null || true
-    fi
-    exit 0
+# Execução principal
+main() {
+    
+    # Executar inicialização (não crítica)
+    run_initialize
+    
+    # Aguardar um pouco antes de iniciar o servidor
+    log "Aguardando 5 segundos antes de iniciar o servidor..."
+    sleep 5
+    
+    # Iniciar servidor
+    start_server
 }
 
-# Configura handler para sinais
-trap cleanup SIGTERM SIGINT
-
-# Executa configuração
-setup_lndg
-
-# Inicia controlador
-start_controller
-
-# Inicia servidor (processo principal)
-start_server
+# Executar função principal
+main "$@"

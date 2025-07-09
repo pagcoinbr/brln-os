@@ -1,20 +1,20 @@
 services:
-  # grafana:
-  #   image: grafana/grafana:9.5.2
-  #   container_name: grafana
-  #   volumes:
-  #     - grafana_data:/var/lib/grafana
-  #     - ./monitoring/provisioning:/etc/grafana/provisioning
-  #     - ./monitoring/dashboards:/etc/grafana/dashboards
-  #   ports:
-  #     - 3010:3000
-  #   networks:
-  #     - grafana-net
-  #   environment:
-  #     - GF_INSTALL_PLUGINS=grafana-piechart-panel 1.6.4,grafana-clock-panel 2.1.3,grafana-simple-json-datasource 1.4.2
-  #     - GF_SECURITY_ADMIN_PASSWORD=admin
-  #     - GF_PLUGIN_DOWNLOAD_TIMEOUT=300s
-  #   restart: unless-stopped
+  grafana:
+    image: grafana/grafana:9.5.2
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/provisioning:/etc/grafana/provisioning
+      - ./monitoring/dashboards:/etc/grafana/dashboards
+    ports:
+      - 3010:3000
+    networks:
+      - grafana-net
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel 1.6.4,grafana-clock-panel 2.1.3,grafana-simple-json-datasource 1.4.2
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PLUGIN_DOWNLOAD_TIMEOUT=300s
+    restart: unless-stopped
 
   # prometheus:
   #   image: prom/prometheus:latest
@@ -208,25 +208,18 @@ services:
       dockerfile: ./lndg/Dockerfile.lndg
     container_name: lndg
     ports:
-      - 8889:8889  # LNDG Web UI port
+      - 8889:8889   # LNDG Web UI port
     networks:
       - grafana-net
     volumes:
       - /data/lnd:/root/.lnd:ro
       - /data/lndg:/app/data:rw
-      - /data/lnd:/home/lnd/.lnd:ro
     restart: unless-stopped
     depends_on:
       - lnd
-      - postgres
     environment:
-      - LND_HOST=lnd:10009
+      - LND_RPC_HOST=lnd:10009
       - LND_NETWORK=mainnet
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=postgres
 
   peerswap:
     build:
@@ -311,3 +304,4 @@ volumes:
   peerswap_data:
   psweb_data:
   thunderhub_data:
+  lndg_data:

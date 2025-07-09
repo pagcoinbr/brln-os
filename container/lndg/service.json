@@ -1,37 +1,39 @@
 {
-  "username": "lndg",
-  "uid": 1005,
-  "groupname": "lndg", 
-  "gid": 1005,
-  "description": "LNDG Management Dashboard User",
-  "data_dir": "/data/lndg",
+  "name": "lndg",
+  "displayName": "LNDg Dashboard",
+  "description": "Lightning Network Dashboard for LND monitoring and management",
+  "category": "Lightning Network",
+  "version": "latest",
+  "dockerService": "lndg",
   "dockerfile": "Dockerfile.lndg",
-  "config_files": [
-    "settings.py",
-    "local_settings.py"
-  ],
-  "binaries": [],
   "ports": [
     "8889:8889"
   ],
-  "special_dirs": [
-    "static",
-    "media",
-    "logs"
-  ],
+  "dependencies": ["lnd"],
+  "volumes": {
+    "lnd_data": "/root/.lnd:ro",
+    "app_data": "/app/data:rw"
+  },
   "environment": {
-    "LND_HOST": "lnd:10009",
-    "LND_NETWORK": "mainnet",
-    "DB_HOST": "postgres",
-    "DB_PORT": "5432",
-    "DB_USER": "postgres",
-    "DB_PASSWORD": "postgres",
-    "DB_NAME": "postgres"
+    "LND_NETWORK": "mainnet"
   },
   "healthcheck": {
     "test": ["CMD", "curl", "-f", "http://localhost:8889"],
     "interval": "30s",
     "timeout": "10s",
     "retries": 3
-  }
+  },
+  "access": {
+    "url": "http://localhost:8889",
+    "username": "lndg-admin",
+    "password_command": "docker exec lndg cat /app/data/lndg-admin.txt"
+  },
+  "features": [
+    "Lightning Network Dashboard",
+    "Channel Management", 
+    "Routing Statistics",
+    "Fee Analysis",
+    "Node Monitoring"
+  ],
+  "repository": "https://github.com/cryptosharks131/lndg"
 }
