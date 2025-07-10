@@ -3,8 +3,13 @@
 # Script de configuração principal do BRLN Full Auto Container Stack
 # Este script simplifica o processo de instalação para usuários finais
 
+echo "Deseja exibir o filtro de falhas? (y/N)"
+read -r -p "Digite 'YES' para continuar: " SHOW_FILTER
+if [[ "$SHOW_FILTER" != "y" && "$SHOW_FILTER" != "Y" && "$SHOW_FILTER" != "yes" && "$SHOW_FILTER" != "YES" ]]; then
 set -e
-
+else
+    echo "Filtro de falhas desativado."
+fi
 # Solicitar autenticação sudo no início do script
 if ! sudo -v; then
     echo -e "${RED}Falha na autenticação sudo. Saindo...${NC}"
@@ -264,7 +269,23 @@ if command -v docker-compose &> /dev/null; then
 else
     docker compose ps
 fi
+cat << "EOF"
+██████╗ ██████╗ ██╗     ███╗   ██╗    ███████╗██╗   ██╗██╗     ██╗         █████╗ ██╗   ██╗████████╗ ██████╗ 
+██╔══██╗██╔══██╗██║     ████╗  ██║    ██╔════╝██║   ██║██║     ██║        ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗
+██████╔╝██████╔╝██║     ██╔██╗ ██║    █████╗  ██║   ██║██║     ██║        ███████║██║   ██║   ██║   ██║   ██║
+██╔══██╗██╔══██╗██║     ██║╚██╗██║    ██╔══╝  ██║   ██║██║     ██║        ██╔══██║██║   ██║   ██║   ██║   ██║
+██████╔╝██║  ██║███████╗██║ ╚████║    ██║     ╚██████╔╝███████╗███████╗   ██║  ██║╚██████╔╝   ██║   ╚██████╔╝
+╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝    ╚═╝      ╚═════╝ ╚══════╝╚══════╝   ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ 
+██╗     ██╗ ██████╗ ██╗  ██╗████████╗███╗   ██╗██╗███╗   ██╗ ██████╗     ███╗   ██╗ ██████╗ ██████╗ ███████╗
+██║     ██║██╔════╝ ██║  ██║╚══██╔══╝████╗  ██║██║████╗  ██║██╔════╝     ████╗  ██║██╔═══██╗██╔══██╗██╔════╝
+██║     ██║██║  ███╗███████║   ██║   ██╔██╗ ██║██║██╔██╗ ██║██║  ███╗    ██╔██╗ ██║██║   ██║██║  ██║█████╗  
+██║     ██║██║   ██║██╔══██║   ██║   ██║╚██╗██║██║██║╚██╗██║██║   ██║    ██║╚██╗██║██║   ██║██║  ██║██╔══╝  
+███████╗██║╚██████╔╝██║  ██║   ██║   ██║ ╚████║██║██║ ╚████║╚██████╔╝    ██║ ╚████║╚██████╔╝██████╔╝███████╗
+╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚══════╝ 
 
+                                                                                                                
+    🚀 Container Stack - Bitcoin, Lightning & Liquid Network
+EOF
 echo ""
 log "🎉 Configuração concluída!"
 echo ""
@@ -275,6 +296,7 @@ echo "  • LNbits: http://localhost:5000"
 echo "  • PeerSwap Web: http://localhost:1984"
 echo ""
 info "📋 Comandos úteis:"
+echo "  Estes comandos precisam ser executados no diretório 'container':"
 echo "  • Ver logs: docker-compose logs -f [serviço]"
 echo "  • Parar tudo: docker-compose down"
 echo "  • Reiniciar: docker-compose restart [serviço]"
@@ -283,4 +305,189 @@ echo ""
 warning "🔐 IMPORTANTE: Salve as seeds das carteiras que apareceram nos logs!"
 warning "🔐 Faça backup regular dos dados em /data/"
 echo ""
-log "Para mais informações, consulte o README.md"
+
+# Extrair senhas dos logs e gerar arquivo de documentação
+log "📄 Gerando arquivo de senhas e credenciais..."
+if [[ -f "../extract_passwords.sh" ]]; then
+    ../extract_passwords.sh
+    echo ""
+    
+    # Capturar a saída completa para o arquivo startup.md
+    {
+        echo "# � BRLN Full Auto Stack - Inicialização Completa"
+        echo ""
+        echo "**Data/Hora:** $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "**Sistema:** $(uname -a)"
+        echo ""
+        echo "## 🎉 Instalação Concluída com Sucesso!"
+        echo ""
+        echo "### 📱 Interfaces Web Disponíveis:"
+        echo "- **LNDG Dashboard:** http://localhost:8889"
+        echo "- **Thunderhub:** http://localhost:3000"
+        echo "- **LNbits:** http://localhost:5000"
+        echo "- **PeerSwap Web:** http://localhost:1984"
+        echo "- **Grafana:** http://localhost:3010"
+        echo ""
+        echo "### 📋 Comandos Úteis:"
+        echo "- Ver logs: \`docker-compose logs -f [serviço]\`"
+        echo "- Parar tudo: \`docker-compose down\`"
+        echo "- Reiniciar: \`docker-compose restart [serviço]\`"
+        echo "- Status: \`docker-compose ps\`"
+        echo ""
+        echo "---"
+        echo ""
+        
+        # Adicionar o conteúdo do arquivo de senhas
+        if [[ -f "../passwords.md" ]]; then
+            ../extract_passwords.sh --display-only
+        else
+            echo "❌ Arquivo de senhas não encontrado"
+        fi
+        
+        echo ""
+        echo "---"
+        echo ""
+        echo "## ⚠️ AVISOS IMPORTANTES"
+        echo ""
+        echo "🔐 **SALVE AS SEEDS** das carteiras que apareceram nos logs!"
+        echo "🔐 **FAÇA BACKUP REGULAR** dos dados em /data/"
+        echo "� **ALTERE AS SENHAS PADRÃO** antes de usar em produção!"
+        echo ""
+        echo "---"
+        echo "*Arquivo gerado automaticamente pelo setup.sh*"
+    } > ../startup.md
+    
+    # Exibir na tela também
+    echo ""
+    echo "=========================================="
+    echo "🎉 INSTALAÇÃO CONCLUÍDA COM SUCESSO!"
+    echo "=========================================="
+    echo ""
+    echo "📱 Interfaces web disponíveis:"
+    echo "  • LNDG Dashboard: http://localhost:8889"
+    echo "  • Thunderhub: http://localhost:3000"
+    echo "  • LNbits: http://localhost:5000"
+    echo "  • PeerSwap Web: http://localhost:1984"
+    echo "  • Grafana: http://localhost:3010"
+    echo ""
+    echo "📋 Comandos úteis (execute no diretório 'container'):"
+    echo "  • Ver logs: docker-compose logs -f [serviço]"
+    echo "  • Parar tudo: docker-compose down"
+    echo "  • Reiniciar: docker-compose restart [serviço]"
+    echo "  • Status: docker-compose ps"
+    echo ""
+    echo "=========================================="
+    echo "🔐 CREDENCIAIS E SENHAS ENCONTRADAS:"
+    echo "=========================================="
+    echo ""
+    
+    # Mostrar as senhas na tela
+    if [[ -f "../passwords.md" ]]; then
+        ../extract_passwords.sh --display-only
+    else
+        warning "Arquivo de senhas não encontrado"
+    fi
+    
+    echo ""
+    echo "=========================================="
+    echo ""
+    warning "🔐 IMPORTANTE: Salve as seeds das carteiras que apareceram nos logs!"
+    warning "🔐 Faça backup regular dos dados em /data/"
+    warning "🔒 Altere as senhas padrão antes de usar em produção!"
+    echo ""
+    info "📄 Informações completas salvas em: startup.md"
+    info "📋 Senhas documentadas em: passwords.md e passwords.txt"
+    echo ""
+    
+    # Exibir conteúdo do arquivo passwords.txt
+    if [[ -f "../passwords.txt" ]]; then
+        echo "=========================================="
+        echo "📄 CONTEÚDO DO ARQUIVO passwords.txt:"
+        echo "=========================================="
+        echo ""
+        cat /home/admin/brlnfullauto/passwords.txt
+        echo ""
+        echo "=========================================="
+        echo ""
+        
+        # Perguntar sobre autodestruição
+        warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos de senha"
+        echo ""
+        echo "Por segurança, você pode optar por:"
+        echo "1. 📁 Manter os arquivos salvos (passwords.md, passwords.txt, startup.md)"
+        echo "2. 🔥 Fazer autodestruição dos arquivos após esta visualização"
+        echo ""
+        echo "⚠️  ATENÇÃO: Se escolher autodestruição, você deve COPIAR E SALVAR"
+        echo "    as informações mostradas acima AGORA, pois elas serão apagadas!"
+        echo ""
+        
+        while true; do
+            read -p "Deseja fazer autodestruição dos arquivos de senha? (y/N): " -n 1 -r
+            echo
+            case $REPLY in
+                [Yy]* ) 
+                    echo ""
+                    warning "🔥 ÚLTIMA CHANCE: Os arquivos serão apagados em 10 segundos!"
+                    warning "📋 Certifique-se de que copiou todas as informações importantes!"
+                    echo ""
+                    echo "Arquivos que serão apagados:"
+                    echo "  • passwords.md"
+                    echo "  • passwords.txt"
+                    echo "  • startup.md"
+                    echo ""
+                    
+                    for i in {10..1}; do
+                        echo -ne "\rIniciando autodestruição em: ${i}s (Ctrl+C para cancelar)"
+                        sleep 1
+                    done
+                    echo ""
+                    echo ""
+                    
+                    log "🔥 Iniciando autodestruição dos arquivos de senha..."
+                    
+                    # Apagar arquivos
+                    if [[ -f "../passwords.md" ]]; then
+                        rm -f "../passwords.md"
+                        log "❌ passwords.md apagado"
+                    fi
+                    
+                    if [[ -f "../passwords.txt" ]]; then
+                        rm -f "../passwords.txt"
+                        log "❌ passwords.txt apagado"
+                    fi
+                    
+                    if [[ -f "../startup.md" ]]; then
+                        rm -f "../startup.md"
+                        log "❌ startup.md apagado"
+                    fi
+                    
+                    echo ""
+                    warning "🔥 Autodestruição concluída!"
+                    warning "📋 Certifique-se de que salvou todas as informações importantes!"
+                    echo ""
+                    break
+                    ;;
+                [Nn]* ) 
+                    log "📁 Arquivos de senha mantidos:"
+                    echo "  • passwords.md"
+                    echo "  • passwords.txt"
+                    echo "  • startup.md"
+                    echo ""
+                    info "💡 Dica: Faça backup destes arquivos em local seguro!"
+                    break
+                    ;;
+                * ) 
+                    echo "Por favor, responda y (sim) ou n (não)."
+                    ;;
+            esac
+        done
+    else
+        warning "❌ Arquivo passwords.txt não encontrado"
+    fi
+    
+else
+    warning "Script de extração de senhas não encontrado: ../extract_passwords.sh"
+fi
+
+echo ""
+log "Para mais informações, consulte o README.md e startup.md"

@@ -166,7 +166,46 @@ chmod +x setup-docker-smartsystem.sh
 | 42069 | PeerSwap | API PeerSwap | Interno |
 | 9050 | Tor SOCKS | Proxy Tor | localhost |
 
-## 🛠️ Configuração e Uso
+## � Scripts Auxiliares
+
+O projeto inclui vários scripts auxiliares para facilitar o uso e manutenção do sistema:
+
+### 🚀 Scripts Principais
+
+| Script | Descrição | Uso |
+|--------|-----------|-----|
+| `setup.sh` | Instalação automática completa | `./setup.sh` |
+| `extract_passwords.sh` | Extração de senhas dos logs | `./extract_passwords.sh` |
+| `monitor_seeds.sh` | Monitor de seeds em tempo real | `./monitor_seeds.sh [monitor\|extract]` |
+
+### 📄 Scripts de Extração de Credenciais
+
+#### extract_passwords.sh
+- **Função**: Extrai e documenta todas as senhas e credenciais
+- **Saída**: Gera `passwords.md` e `passwords.txt`
+- **Uso**: `./extract_passwords.sh [--display-only]`
+
+#### monitor_seeds.sh
+- **Função**: Monitora logs em tempo real para capturar seeds
+- **Modos**:
+  - `monitor`: Monitoramento em tempo real
+  - `extract`: Extração de logs existentes
+- **Saída**: Gera `seeds_backup.txt`
+
+### 🔧 Scripts de Configuração
+
+#### setup.sh
+- **Função**: Instalação automatizada completa
+- **Recursos**:
+  - Verificação de pré-requisitos
+  - Instalação de dependências
+  - Configuração de permissões
+  - Inicialização de todos os serviços
+  - Extração automática de credenciais
+
+Consulte as seções específicas deste README para detalhes sobre cada script.
+
+## �🛠️ Configuração e Uso
 
 ### 🔧 Configuração Inicial
 
@@ -388,6 +427,64 @@ docker-compose ps --filter "health=healthy"
 docker-compose logs --tail=100 | grep -i error
 ```
 
+### 🌱 Monitor de Seeds e Senhas
+
+O projeto inclui o script `monitor_seeds.sh` para capturar automaticamente seeds e senhas geradas durante a instalação:
+
+#### Monitoramento em Tempo Real (Recomendado)
+Use este modo **DURANTE** a instalação para capturar seeds conforme são geradas:
+
+```bash
+# Terminal 1 - Iniciar monitoramento
+./monitor_seeds.sh monitor
+# ou apenas
+./monitor_seeds.sh
+
+# Terminal 2 - Executar instalação
+./setup.sh
+```
+
+#### Extração de Seeds dos Logs Existentes
+Use este modo **APÓS** a instalação para tentar recuperar seeds dos logs:
+
+```bash
+# Extrair seeds dos logs existentes
+./monitor_seeds.sh extract
+```
+
+#### Ajuda e Instruções
+```bash
+# Mostrar ajuda completa
+./monitor_seeds.sh help
+```
+
+#### Arquivos Gerados
+- **`seeds_backup.txt`** - Backup das seeds encontradas
+- **`/tmp/seed_monitor.log`** - Log do monitoramento (modo monitor)
+
+#### Cenários de Uso
+
+**Cenário 1: Durante a Instalação** (Recomendado)
+```bash
+# Abrir dois terminais
+# Terminal 1:
+./monitor_seeds.sh monitor
+
+# Terminal 2:
+./setup.sh
+```
+
+**Cenário 2: Recuperação Após Instalação**
+```bash
+# Se você esqueceu de monitorar durante a instalação
+./monitor_seeds.sh extract
+```
+
+**⚠️ Importante**: 
+- O modo `monitor` fica executando até você pressionar Ctrl+C
+- É recomendado usar em terminal separado durante a instalação
+- As seeds são salvas automaticamente no arquivo `seeds_backup.txt`
+
 ## 🔒 Segurança e Backup
 
 ### 🛡️ Medidas de Segurança
@@ -410,7 +507,30 @@ docker-compose logs --tail=100 | grep -i error
 # Exemplo: abandon ability able about above absent absorb abstract...
 ```
 
-#### 2. Backup dos Canais Lightning
+#### 2. Extração Automática de Senhas e Seeds
+O sistema inclui um script para documentar automaticamente todas as senhas e seeds:
+
+```bash
+# Extrair todas as senhas dos logs
+./extract_passwords.sh
+
+# Apenas exibir senhas (sem gerar arquivos)
+./extract_passwords.sh --display-only
+```
+
+**Arquivos gerados:**
+- **`passwords.md`** - Documentação completa em Markdown
+- **`passwords.txt`** - Versão simplificada em texto
+- **`startup.md`** - Relatório completo da instalação
+
+**Funcionalidades:**
+- ✅ Extrai senhas padrão dos arquivos de configuração
+- ✅ Captura senhas geradas automaticamente dos logs
+- ✅ Remove códigos de escape ANSI das senhas
+- ✅ Documenta URLs de acesso e comandos úteis
+- ✅ Opção de autodestruição dos arquivos por segurança
+
+#### 3. Backup dos Canais Lightning
 ```bash
 # Exportar backup de todos os canais
 docker exec lnd lncli exportchanbackup --all
@@ -422,13 +542,13 @@ docker exec lnd lncli exportchanbackup --all --output_file=/tmp/channels.backup
 docker cp lnd:/tmp/channels.backup ./channels-backup-$(date +%Y%m%d).backup
 ```
 
-#### 3. Backup das Configurações
+#### 4. Backup das Configurações
 ```bash
 # Backup completo do diretório de configurações
 tar -czf backup-config-$(date +%Y%m%d).tar.gz container/
 ```
 
-#### 4. Backup das Carteiras
+#### 5. Backup das Carteiras
 ```bash
 # Backup da carteira Bitcoin
 docker exec bitcoin bitcoin-cli backupwallet /tmp/bitcoin-wallet.backup
