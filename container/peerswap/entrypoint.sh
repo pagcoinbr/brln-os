@@ -10,18 +10,42 @@ done
 
 echo "Elements daemon is ready!"
 
-# Verify that peerswap wallet is available
-echo "Verifying peerswap wallet availability..."
+# Check if peerswap wallet already exists
 WALLET_EXISTS=$(elements-cli -rpcconnect=elements -rpcport=7041 -rpcuser=elementsuser -rpcpassword=elementspassword123 listwallets | grep -c "peerswap" || true)
 
-if [ "$WALLET_EXISTS" -eq 0 ]; then
-    echo "ERRO: Carteira peerswap não encontrada!"
-    echo "A carteira deveria ter sido criada pelo Elements daemon."
-    echo "Verifique os logs do Elements para mais detalhes."
-    exit 1
-fi
+# Function to handle wallet creation/loading
+handle_peerswap_wallet() {
+    echo "Handling peerswap wallet setup..."
+    
+    # First, try to load the wallet if it exists
+    if elements-cli -rpcconnect=elements -rpcport=7041 -rpcuser=elementsuser -rpcpassword=elementspassword123 loadwallet "peerswap" 2>/dev/null; then
+        echo "Peerswap wallet loaded successfully!"
+        return 0
+    fi
+    
+    # If loading failed, try to create the wallet
+    echo "Attempting to create peerswap wallet..."
+    if elements-cli -rpcconnect=elements -rpcport=7041 -rpcuser=elementsuser -rpcpassword=elementspassword123 createwallet "peerswap" false false "" false false 2>/dev/null; then
+        echo "Peerswap wallet created successfully!"
+        return 0
+    else
+        echo "Wallet creation failed, checking if wallet directory exists..."
+        
+        # If creation failed due to existing directory, try to load it again
+        echo "Attempting to load existing wallet after creation failure..."
+        if elements-cli -rpcconnect=elements -rpcport=7041 -rpcuser=elementsuser -rpcpassword=elementspassword123 loadwallet "peerswap" 2>/dev/null; then
+            echo "Existing peerswap wallet loaded successfully!"
+            return 0
+        else
+            echo "ERROR: Could not create or load peerswap wallet"
+            echo "This might indicate a corrupted wallet. Please run the cleanup script."
+            exit 1
+        fi
+    fi
+}
 
-echo "Peerswap wallet is available!"
+# Handle wallet setup
+handle_peerswap_wallet
 
 # Start PeerSwap daemon
 echo "Starting PeerSwap daemon..."
