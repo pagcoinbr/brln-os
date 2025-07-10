@@ -112,3 +112,8 @@ container/peerswap.conf
 *.prod.conf
 *production.conf
 *mainnet.conf
+
+passwords.txt
+passwords.md
+password.md
+password.txt
