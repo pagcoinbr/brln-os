@@ -162,14 +162,14 @@ services:
     networks:
       - grafana-net
     volumes:
-      - /data/elements:/home/.elements
-      - ./elements/elements.conf:/home/.elements/elements.conf
+      - /data/elements:/home/elements/.elements
+      - ./elements/elements.conf:/home/elements/.elements/elements.conf
     restart: unless-stopped
     depends_on:
       - tor
       - bitcoin
     environment:
-      - ELEMENTS_DATA=/home/.elements
+      - ELEMENTS_DATA=/home/elements/.elements
 
   lnbits:
     build:

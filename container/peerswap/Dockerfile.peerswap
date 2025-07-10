@@ -29,14 +29,28 @@ RUN tar -xzf peerswap-4.0rc1.tar.gz && \
 # Final stage - minimal runtime image
 FROM debian:bullseye-slim
 
-# Install runtime dependencies
+# Install runtime dependencies including Elements CLI
 RUN apt-get update && apt-get install -y \
     ca-certificates \
+    wget \
+    tar \
     && rm -rf /var/lib/apt/lists/*
+
+# Download and install Elements CLI
+RUN cd /tmp && \
+    wget https://github.com/ElementsProject/elements/releases/download/elements-23.2.7/elements-23.2.7-x86_64-linux-gnu.tar.gz && \
+    tar -xzf elements-23.2.7-x86_64-linux-gnu.tar.gz && \
+    cp elements-23.2.7/bin/elements-cli /usr/local/bin/ && \
+    chmod +x /usr/local/bin/elements-cli && \
+    rm -rf /tmp/elements*
 
 # Copy binaries from builder stage
 COPY --from=builder /usr/local/bin/peerswapd /usr/local/bin/
 COPY --from=builder /usr/local/bin/pscli /usr/local/bin/
+
+# Copy entrypoint script
+COPY peerswap/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Create peerswap user and directory
 RUN groupadd -r -g 1052 peerswap && useradd -r -u 1000 -g 1052 -m -s /bin/bash peerswap && \
@@ -55,9 +69,10 @@ VOLUME ["/home/peerswap/.peerswap"]
 # Expose any necessary ports (if peerswap has specific ports)
 # EXPOSE 42069
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD pscli getinfo || exit 1
+# Health check - check both PeerSwap and Elements connectivity
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD pscli getinfo && elements-cli -rpcconnect=elements -rpcport=7041 -rpcuser=elementsuser -rpcpassword=elementspassword123 -rpcwallet=peerswap getwalletinfo || exit 1
 
-# Default command
-CMD ["peerswapd"]
+# Default command - use entrypoint script
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD []
