@@ -8,7 +8,7 @@ THUNDERHUB_DIR="/home/thunderhub/thunderhub"
 CONFIG_DIR="/data/thunderhub/config"
 LOG_DIR="/data/thunderhub/logs"
 ENV_FILE="${THUNDERHUB_DIR}/.env.local"
-CONFIG_FILE="${CONFIG_DIR}/thubConfig.yaml"
+CONFIG_FILE="${CONFIG_DIR}/thubConfig_runtime.yaml"
 LND_DIR="/data/lnd"
 
 # Cores para output
@@ -35,6 +35,12 @@ info() {
     echo -e "${BLUE}[INFO $(date '+%Y-%m-%d %H:%M:%S')] ThunderHub: $1${NC}"
 }
 
+# Função para gerar senha aleatória de 10 dígitos
+generate_random_password() {
+    local password=$(shuf -i 1000000000-9999999999 -n 1)
+    echo "$password"
+}
+
 # Função para configurar ThunderHub
 configure_thunderhub() {
     log "Configurando ThunderHub..."
@@ -47,7 +53,14 @@ configure_thunderhub() {
     LND_HOST="${LND_HOST:-lnd}"
     LND_PORT="${LND_PORT:-10009}"
     LND_NETWORK="${LND_NETWORK:-mainnet}"
-    THUB_PASSWORD="${THUB_PASSWORD:-changeme123}"
+    
+    # Gerar senha aleatória se não estiver definida
+    if [[ -z "${THUB_PASSWORD}" ]]; then
+        THUB_PASSWORD=$(generate_random_password)
+        echo -e "${RED}Senha gerada automaticamente: ${THUB_PASSWORD}${NC}"
+    else
+        log "Usando senha fornecida via variável de ambiente"
+    fi
     
     # Criar arquivo .env.local se não existir
     if [[ ! -f "${ENV_FILE}" ]]; then
@@ -61,7 +74,8 @@ EOF
     fi
     
     # Criar arquivo de configuração de contas
-    log "Criando configuração de contas..."
+    log "Criando configuração de contas runtime..."
+    
     cat > "${CONFIG_FILE}" <<EOF
 masterPassword: '${THUB_PASSWORD}'
 accounts:

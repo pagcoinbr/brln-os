@@ -60,7 +60,7 @@ Os logs do ThunderHub são salvos em `/data/thunderhub/logs/` no container.
 ## Configuração de Conta
 
 A configuração da conta é automaticamente criada no arquivo:
-`/data/thunderhub/config/thubConfig.yaml`
+`/data/thunderhub/config/thubConfig_runtime.yaml`
 
 Exemplo:
 ```yaml

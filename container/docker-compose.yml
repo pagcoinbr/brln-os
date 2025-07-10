@@ -250,7 +250,6 @@ services:
       - grafana-net
     volumes:
       - psweb_data:/home/psweb/.peerswap
-      - ./psweb/pswebconfig.json.example:/home/psweb/.peerswap/pswebconfig.json:ro
       - /data/lnd:/home/lnd/.lnd:ro
       - peerswap_data:/home/peerswap/.peerswap:ro
     restart: unless-stopped
@@ -275,8 +274,6 @@ services:
     volumes:
       - thunderhub_data:/data/thunderhub
       - /data/lnd:/data/lnd:ro  # Volume compartilhado com LND para certificados
-      - ./thunderhub/thubConfig.yaml.example:/data/thunderhub/config/thubConfig.yaml:ro
-      - ./thunderhub/.env.local.example:/home/thunderhub/thunderhub/.env.local:ro
     restart: unless-stopped
     depends_on:
       - lnd
@@ -285,9 +282,8 @@ services:
       - LND_HOST=lnd
       - LND_PORT=10009
       - LND_NETWORK=mainnet
-      - THUB_PASSWORD=${THUB_PASSWORD:-changeme123}
       - NODE_ENV=production
-      - ACCOUNT_CONFIG_PATH=/data/thunderhub/config/thubConfig.yaml
+      - ACCOUNT_CONFIG_PATH=/data/thunderhub/config/thubConfig_runtime.yaml
 
 networks:
   grafana-net:

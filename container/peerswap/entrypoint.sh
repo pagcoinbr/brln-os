@@ -49,4 +49,4 @@ handle_peerswap_wallet
 
 # Start PeerSwap daemon
 echo "Starting PeerSwap daemon..."
-exec peerswapd --config.file=/home/peerswap/.peerswap/peerswap.conf "$@"
+exec peerswapd --configfile=/home/peerswap/.peerswap/peerswap.conf "$@"

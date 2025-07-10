@@ -8,7 +8,7 @@
   "dockerfile": "Dockerfile.thunderhub",
   "config_files": [
     "thubConfig.yaml.example",
-    "thubConfig.yaml"
+    "thubConfig_runtime.yaml"
   ],
   "binaries": [],
   "ports": [
