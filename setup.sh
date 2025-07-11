@@ -243,28 +243,8 @@ echo ""
 read -p "Deseja exibir os logs em tempo real durante a configuração? y/N: " -n 1 -r
 echo
 
-./setup-docker-smartsystem.sh > /tmp/setup.log 2>&1 &
+./setup-docker-smartsystem.sh 
 SETUP_PID=$!
-
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    log "Exibindo logs em tempo real..."
-    tail -f /tmp/setup.log --pid=$SETUP_PID
-    wait $SETUP_PID
-    SETUP_EXIT_CODE=$?
-else
-    log "Executando configuração em background..."
-    spinner $SETUP_PID
-    SETUP_EXIT_CODE=$?
-fi
-
-# Verificar se houve erro no processo
-if [[ $SETUP_EXIT_CODE -ne 0 ]]; then
-    error "Erro durante a configuração. Verifique o log em /tmp/setup.log"
-    echo ""
-    error "Últimas linhas do log:"
-    tail -20 /tmp/setup.log
-    exit 1
-fi
 
 # Verificar se a configuração foi bem-sucedida
 clear
