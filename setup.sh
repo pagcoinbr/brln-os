@@ -10,6 +10,8 @@ fi
 # Manter a sessão sudo ativa durante a execução do script
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
+apt update & apt upgrade
+apt install docker-compose
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
