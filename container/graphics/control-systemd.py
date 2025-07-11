@@ -400,8 +400,9 @@ def monitor_system_status():
 def get_system_info():
     """Obtém informações do sistema via script status.sh"""
     try:
-        result = subprocess.run(['/home/admin/brlnfullauto/container/graphics/cgi-bin/status.sh'], 
-                               capture_output=True, text=True, timeout=10)
+        user = os.environ.get("USER", "admin")
+        script_path = f"/home/{user}/brlnfullauto/container/graphics/html/cgi-bin/status.sh"
+        result = subprocess.run([script_path], capture_output=True, text=True, timeout=10)
         if result.returncode == 0:
             lines = result.stdout.strip().split('\n')
             info = {}
@@ -522,5 +523,3 @@ if __name__ == '__main__':
     # Inicia o servidor Flask com SocketIO
     print("[Sistema] Iniciando servidor Flask com WebSockets na porta 5001")
     socketio.run(app, host='0.0.0.0', port=5001, debug=False)
-
-

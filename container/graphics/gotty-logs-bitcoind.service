@@ -1,0 +1,13 @@
+[Unit]
+Description=Terminal Web com logs do Bitcoind via GoTTY
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3434 -w journalctl -fu bitcoind
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
