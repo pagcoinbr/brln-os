@@ -10,8 +10,18 @@ fi
 # Manter a sessão sudo ativa durante a execução do script
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
-apt update & apt upgrade
-apt install docker-compose
+# Verificar e adicionar usuário ao grupo docker no início para evitar problemas de permissão
+if command -v docker &> /dev/null; then
+    if ! groups $USER | grep -q docker; then
+        echo "Adicionando usuário $USER ao grupo docker..."
+        sudo usermod -aG docker $USER
+        echo "Usuário adicionado ao grupo docker. Aplicando as mudanças de grupo..."
+        exec sg docker "$0 $*"
+    fi
+fi
+
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y docker-compose
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -52,13 +62,14 @@ spinner() {
     if [[ $exit_code -eq 0 ]]; then
         printf "\r\033[K${GREEN}✔️ Processo finalizado com sucesso!${NC}\n"
     else
-        printf "\r\033[K${RED}❌ Processo finalizado com erro (código: $exit_code)${NC}\n"
+        printf "\r\033[K${RED}❌ Processo finalizado com erro - código: $exit_code${NC}\n"
     fi
 
     return $exit_code
 }
 
 # Funções de logging
+clear
 log() { echo -e "${GREEN}[$(date '+%H:%M:%S')] $1${NC}"; }
 error() { echo -e "${RED}[ERROR] $1${NC}"; }
 warning() { echo -e "${YELLOW}[WARNING] $1${NC}"; }
@@ -68,7 +79,7 @@ info() { echo -e "${BLUE}[INFO] $1${NC}"; }
 if [[ $(docker ps -q | wc -l) -gt 0 ]]; then
     warning "Existem containers Docker ativos. Parando todos os containers..."
     echo "Este processo pode apagar os volumes de projetos em execução, tenha cuidado ao prosseguir."
-    read -p "Deseja continuar e parar todos os containers? (y/N): " -n 1 -r
+    read -p "Deseja continuar e parar todos os containers? y/N: " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${RED}Operação cancelada pelo usuário.${NC}"
@@ -142,7 +153,7 @@ if ! command -v docker &> /dev/null; then
     echo "  sudo usermod -aG docker \$USER"
     echo "  newgrp docker"
     echo ""
-    read -p "Deseja que eu instale o Docker automaticamente? (y/N): " -n 1 -r
+    read -p "Deseja que eu instale o Docker automaticamente? y/N: " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log "Instalando Docker..."
@@ -165,7 +176,7 @@ if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/
     echo "Para instalar o Docker Compose, execute:"
     echo "  sudo apt-get update && sudo apt-get install docker-compose-plugin"
     echo ""
-    read -p "Deseja que eu instale o Docker Compose automaticamente? (y/N): " -n 1 -r
+    read -p "Deseja que eu instale o Docker Compose automaticamente? y/N: " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log "Instalando Docker Compose..."
@@ -181,7 +192,7 @@ else
         log "Docker Compose encontrado: v$COMPOSE_VERSION ✓"
     else
         COMPOSE_VERSION=$(docker compose version --short)
-        log "Docker Compose (plugin) encontrado: v$COMPOSE_VERSION ✓"
+    log "Docker Compose plugin encontrado: v$COMPOSE_VERSION ✓"
     fi
 fi
 
@@ -194,7 +205,7 @@ if [[ $AVAILABLE_GB -lt 100 ]]; then
     warning "Espaço em disco baixo: ${AVAILABLE_GB}GB disponível"
     warning "Recomendado: pelo menos 100GB para blockchain completa"
     echo ""
-    read -p "Deseja continuar mesmo assim? (y/N): " -n 1 -r
+    read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         error "Operação cancelada pelo usuário"
@@ -220,7 +231,7 @@ warning "⚠️  IMPORTANTE: Este processo pode demorar 30-60 minutos"
 warning "⚠️  A sincronização inicial da blockchain pode levar várias horas"
 warning "⚠️  Certifique-se de ter conexão estável com a internet"
 echo ""
-read -p "Deseja continuar? (y/N): " -n 1 -r
+read -p "Deseja continuar? y/N: " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Operação cancelada pelo usuário."
@@ -229,7 +240,7 @@ fi
 
 log "Executando configuração completa..."
 echo ""
-read -p "Deseja exibir os logs em tempo real durante a configuração? (y/N): " -n 1 -r
+read -p "Deseja exibir os logs em tempo real durante a configuração? y/N: " -n 1 -r
 echo
 
 ./setup-docker-smartsystem.sh > /tmp/setup.log 2>&1 &
@@ -265,21 +276,48 @@ else
     docker compose ps
 fi
 
-warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS (SEED) DO LND"
-warning "Extraindo seed LND dos logs..."
-sleep 30 & spinner
+# Aguardar um pouco para os containers iniciarem completamente
+log "Aguardando containers iniciarem completamente..."
+sleep 10
 
-# Captura as linhas de início e fim do seed, o aviso e as palavras numeradas do LND
-docker logs lnd 2>/dev/null | head -200 | \
-    awk '
-        /!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!/ {print; next}
-        /-+BEGIN LND CIPHER SEED-+/ {in_seed=1; print; next}
-        /-+END LND CIPHER SEED-+/ {print; in_seed=0; next}
-        in_seed && /^[[:space:]]*[0-9]+\./ {print}
-    ' > ../seeds.txt
+# Tentar capturar a seed do LND
+warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS SEED DO LND"
+warning "Extraindo seed LND dos logs..."
+
+# Tentar capturar a seed múltiplas vezes se necessário
+MAX_ATTEMPTS=3
+attempt=1
+
+while [[ $attempt -le $MAX_ATTEMPTS ]]; do
+    log "Tentativa $attempt de $MAX_ATTEMPTS para capturar seed do LND..."
+    
+    # Captura as linhas de início e fim do seed, o aviso e as palavras numeradas do LND
+    docker logs lnd 2>/dev/null | head -200 | \
+        awk '
+            /!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!/ {print; next}
+            /-+BEGIN LND CIPHER SEED-+/ {in_seed=1; print; next}
+            /-+END LND CIPHER SEED-+/ {print; in_seed=0; next}
+            in_seed && /^[[:space:]]*[0-9]+\./ {print}
+        ' > ../seeds.txt
+
+    # Verificar se conseguiu capturar a seed
+    if [[ -s ../seeds.txt ]]; then
+        log "Seed do LND capturada com sucesso!"
+        break
+    else
+        warning "Não foi possível capturar a seed do LND na tentativa $attempt"
+        if [[ $attempt -lt $MAX_ATTEMPTS ]]; then
+            log "Aguardando 5 segundos antes da próxima tentativa..."
+            sleep 5
+        fi
+    fi
+    
+    ((attempt++))
+done
 
 echo ""
-echo "Anote agora as informações mostradas acima, caso você não o faça, elas não serão exibidas novamente no futuro!"
+warning "Anote agora as informações mostradas acima, caso você não o faça, elas não serão exibidas novamente no futuro!"
+
 # Exibir conteúdo do arquivo de seeds se existir
 if [[ -f "../seeds.txt" && -s "../seeds.txt" ]]; then
     echo "=========================================="
@@ -296,7 +334,7 @@ if [[ -f "../seeds.txt" && -s "../seeds.txt" ]]; then
     echo ""
     
     while true; do
-        read -p "Você já anotou a seed em local seguro? (y/N): " -n 1 -r
+        read -p "Você já anotou a seed em local seguro? y/N: " -n 1 -r
         echo
         case $REPLY in
             [Yy]* ) 
@@ -314,27 +352,40 @@ if [[ -f "../seeds.txt" && -s "../seeds.txt" ]]; then
                 echo ""
                 ;;
             * ) 
-                echo "Por favor, responda y \(sim\) ou n \(não\)."
+                echo "Por favor, responda y sim ou n não."
                 ;;
         esac
     done
 else
-    warning "⚠️ Nenhuma seed foi capturada no arquivo seeds.txt"
-    warning "   Verifique os logs dos containers para seeds manuais"
+    warning "⚠️ Nenhuma seed foi capturada no arquivo seeds.txt após $MAX_ATTEMPTS tentativas"
+    warning "   Possíveis causas:"
+    warning "   - Container LND ainda não iniciou completamente"
+    warning "   - LND já foi inicializado anteriormente"
+    warning "   - Erro nos logs do container"
+    echo ""
+    info "💡 Para verificar manualmente:"
+    echo "   docker logs lnd | grep -A 30 'CIPHER SEED'"
+    echo ""
+    read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        error "Operação cancelada pelo usuário"
+        exit 1
+    fi
 fi
 
 # Perguntar sobre autodestruição
 warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos de senha"
 echo ""
 echo "Por segurança, você pode optar por:"
-echo "1. 📁 Manter o arquivo salvo \(seeds.txt\)"
+echo "1. 📁 Manter o arquivo salvo seeds.txt"
 echo "2. 🔥 Fazer autodestruição do arquivo"
 echo ""
-echo "⚠️  ATENÇÃO: Se escolher autodestruição, você já anotado frase de 24 palavras \(seed\) do LND ou você não poderá recuperar seus bitcoins!"
+echo "⚠️  ATENÇÃO: Se escolher autodestruição, você já anotado frase de 24 palavras seed do LND ou você não poderá recuperar seus bitcoins!"
 echo ""
 
 while true; do
-    read -p "Deseja fazer autodestruição dos arquivos de seeds? (y/N): " -n 1 -r
+    read -p "Deseja fazer autodestruição dos arquivos de seeds? y/N: " -n 1 -r
     echo
     case $REPLY in
         [Yy]* ) 
@@ -347,7 +398,7 @@ while true; do
             echo ""
             
             for i in {10..1}; do
-                echo -ne "\rIniciando autodestruição em: ${i}s \(Ctrl+C para cancelar\)"
+                echo -ne "\rIniciando autodestruição em: ${i}s - Ctrl+C para cancelar"
                 sleep 1
             done
             echo ""
@@ -379,29 +430,12 @@ while true; do
             break
             ;;
         * ) 
-            echo "Por favor, responda y \(sim\) ou n \(não\)."
+            echo "Por favor, responda y sim ou n não."
             ;;
     esac
 done
-
+fi
 clear
-echo ""
-log "🎉 Configuração concluída!"
-echo ""
-info "📱 Interfaces web disponíveis:"
-echo "  • LNDG Dashboard: http://localhost:8889"
-echo "  • Thunderhub: http://localhost:3000"
-echo "  • LNbits: http://localhost:5000"
-echo "  • PeerSwap Web: http://localhost:1984"
-echo ""
-info "📋 Comandos úteis:"
-echo "  Estes comandos precisam ser executados no diretório 'container':"
-echo "  • Ver logs: docker logs [serviço] -f"
-echo "  • Reiniciar: docker restart [serviço]"
-echo "  • Status: docker ps"
-echo ""
-warning "🔒 Altere as senhas padrão antes de usar em produção!"
-
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 log "🖥️ Instalando Interface Gráfica Web..."
@@ -421,7 +455,11 @@ install_web_interface() {
     
     # Instalar Flask-SocketIO em ambiente virtual
     log "🐍 Configurando ambiente Python..."
-    cd container/graphics
+    
+    # Get current absolute path before changing directories
+    GRAPHICS_PATH="$(pwd)/graphics"
+    
+    cd graphics
     
     if [ ! -d "venv" ]; then
         python3 -m venv venv > /dev/null 2>&1 &
@@ -450,6 +488,20 @@ install_web_interface() {
     # Criar serviço systemd para Flask
     log "⚙️ Criando serviço Flask..."
     
+    # Create a dedicated directory for the Flask service that www-data can access
+    sudo mkdir -p /opt/brln-flask
+    sudo cp $GRAPHICS_PATH/control-systemd.py /opt/brln-flask/
+    
+    # Fix the Flask-SocketIO Werkzeug production issue
+    sudo sed -i 's/socketio.run(app, host='\''0.0.0.0'\'', port=5001, debug=False)/socketio.run(app, host='\''0.0.0.0'\'', port=5001, debug=False, allow_unsafe_werkzeug=True)/' /opt/brln-flask/control-systemd.py
+    
+    # Create a new virtual environment in /opt/brln-flask instead of copying
+    sudo python3 -m venv /opt/brln-flask/venv
+    sudo /opt/brln-flask/venv/bin/pip install flask flask-cors flask-socketio
+    
+    # Set ownership after creating everything
+    sudo chown -R www-data:www-data /opt/brln-flask
+    
     sudo tee /etc/systemd/system/brln-flask.service > /dev/null << EOF
 [Unit]
 Description=BRLN Flask API Server
@@ -460,9 +512,9 @@ Requires=docker.service
 Type=simple
 User=www-data
 Group=www-data
-WorkingDirectory=/home/admin/brlnfullauto/container/graphics
-Environment=PATH=/home/admin/brlnfullauto/container/graphics/venv/bin
-ExecStart=/home/admin/brlnfullauto/container/graphics/venv/bin/python control-systemd.py
+WorkingDirectory=/opt/brln-flask
+Environment=PATH=/opt/brln-flask/venv/bin
+ExecStart=/opt/brln-flask/venv/bin/python control-systemd.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -472,9 +524,7 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
     
-    # Ajustar permissões
-    sudo chown www-data:www-data /home/admin/brlnfullauto/container/graphics/control-systemd.py
-    sudo chmod +x /home/admin/brlnfullauto/container/graphics/control-systemd.py
+    # Ajustar permissões - já foi feito durante a cópia para /opt/brln-flask
     
     # Permitir www-data executar docker
     sudo usermod -a -G docker www-data > /dev/null 2>&1
@@ -516,10 +566,10 @@ if [ "$APACHE_STATUS" = "active" ] && [ "$FLASK_STATUS" = "active" ]; then
     echo "  • Status Containers: http://$LOCAL_IP:5001/containers/status"
     echo ""
     info "💡 Funcionalidades da interface:"
-    echo "  • ⚡ Controle de containers em tempo real (WebSockets)"
+    echo "  • ⚡ Controle de containers em tempo real WebSockets"
     echo "  • 💰 Visualização de saldos Lightning/Bitcoin/Liquid"
     echo "  • 📊 Monitoramento de sistema e logs"
-    echo "  • 🔄 Ferramentas Lightning (criar/pagar invoices)"
+    echo "  • 🔄 Ferramentas Lightning criar/pagar invoices"
     echo "  • 🐳 Status detalhado dos containers Docker"
     echo ""
 else
@@ -533,13 +583,29 @@ else
     fi
     echo ""
     info "🔧 Para verificar o status completo:"
-    echo "  cd container/graphics && ./check_services.sh"
+    echo "  cd graphics && ./check_services.sh"
 fi
 
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 log "🎯 Instalação Completa!"
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+echo ""
+log "🎉 Configuração concluída!"
+echo ""
+info "📱 Interfaces web disponíveis:"
+echo "  • LNDG Dashboard: http://localhost:8889"
+echo "  • Thunderhub: http://localhost:3000"
+echo "  • LNbits: http://localhost:5000"
+echo "  • PeerSwap Web: http://localhost:1984"
+echo ""
+info "📋 Comandos úteis:"
+echo "  Estes comandos precisam ser executados no diretório 'container':"
+echo "  • Ver logs: docker logs [serviço] -f"
+echo "  • Reiniciar: docker restart [serviço]"
+echo "  • Status: docker ps"
+echo ""
+warning "🔒 Altere as senhas padrão antes de usar em produção!"
 echo -e "${CYAN}"
 cat << "EOF"
 ██████╗ ██████╗ ██╗     ███╗   ██╗    ███████╗██╗   ██╗██╗     ██╗         █████╗ ██╗   ██╗████████╗ ██████╗ 

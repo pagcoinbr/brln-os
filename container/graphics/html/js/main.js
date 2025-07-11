@@ -10,7 +10,7 @@ const maxReconnectAttempts = 5;
 
 // Função para inicializar WebSocket
 function initializeWebSocket() {
-  const wsURL = `http://${window.location.hostname}:5001`;
+  const wsURL = `http://${window.location.hostname}:80`;
   
   try {
     // Carrega a biblioteca Socket.IO dinamicamente se não estiver disponível
@@ -213,41 +213,45 @@ function atualizarStatus() {
     return;
   }
   
-  // Fallback para HTTP quando WebSocket não está disponível
-  fetch('/cgi-bin/status.sh')
-      .then(res => {
-          if (!res.ok) {
-              throw new Error('Erro ao obter status do sistema.');
-          }
-          return res.text();
-      })
-      .then(text => {
-          const lines = text.split('\n');
-          for (const line of lines) {
-              if (line.includes("CPU:")) {
-                  document.getElementById("cpu").innerText = line;
-              } else if (line.includes("RAM:")) {
-                  document.getElementById("ram").innerText = line;
-              } else if (line.includes("LND:")) {
-                  document.getElementById("lnd").innerText = line;
-              } else if (line.includes("Bitcoind:")) {
-                  document.getElementById("bitcoind").innerText = line;
-              } else if (line.includes("Elementsd:")) {
-                  document.getElementById("elementsd").innerText = line;
-              } else if (line.includes("Tor:")) {
-                  document.getElementById("tor").innerText = line;
-              } else if (line.includes("Blockchain:")) {
-                  document.getElementById("blockchain").innerText = line;
+  // Fallback para HTTP via Flask backend (não mais CGI)
+  fetch(`${flaskBaseURL}/system-status`)
+      .then(res => safeJsonResponse(res))
+      .then(data => {
+          // Atualiza elementos de status do sistema
+          Object.entries(data).forEach(([key, value]) => {
+              const element = document.getElementById(key.toLowerCase());
+              if (element) {
+                  element.innerText = `${key.toUpperCase()}: ${value}`;
               }
-          }
+          });
       })
       .catch(error => {
-          console.error("Erro ao atualizar status:", error);
+          console.error("Erro ao atualizar status do sistema:", error);
       });
 }
 
-// Base URL do Flask
-const flaskBaseURL = `http://${window.location.hostname}:5001`;
+// Base URL do Flask - now served through nginx proxy
+const flaskBaseURL = '/api';
+
+// Helper function for safe JSON parsing
+async function safeJsonResponse(response) {
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  
+  const text = await response.text();
+  
+  // Check if response looks like HTML (common error page)
+  if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+    throw new Error(`Server returned HTML instead of JSON. Possible server error.`);
+  }
+  
+  try {
+    return JSON.parse(text);
+  } catch (jsonError) {
+    throw new Error(`Invalid JSON response: ${text.substring(0, 200)}...`);
+  }
+}
 
 // Lista dos apps que aparecem no menu principal
 const appsPrincipais = [
@@ -357,19 +361,8 @@ async function updateButtons() {
   }
 
   // Fallback HTTP quando WebSocket não está disponível
-  try {
-    const statusResponse = await fetch('/cgi-bin/status.sh');
-    const text = await statusResponse.text();
-    console.log("STATUS.SH →", text);
-    text.split('\n').forEach(line => {
-      const l = line.trim();
-      if (l.startsWith("Elementsd:")) {
-        document.getElementById("elementsd").innerText = l;
-      }
-    });
-  } catch (err) {
-    console.error("Erro status.sh:", err);
-  }
+  // Remove a chamada para o CGI status.sh que não existe mais
+  console.log("Atualizando status via Flask backend...");
 
   // Atualiza status dos serviços via HTTP
   for (const appName of appsServicos) {
@@ -377,7 +370,7 @@ async function updateButtons() {
     if (!button) continue;
     try {
       const response = await fetch(`${flaskBaseURL}/service-status?app=${appName}`);
-      const data = await response.json();
+      const data = await safeJsonResponse(response);
 
       button.checked = data.active;
       button.dataset.action = data.active ? "stop" : "start";
@@ -393,7 +386,8 @@ async function toggleService(appName) {
     const response = await fetch(`${flaskBaseURL}/toggle-service?app=${appName}`, {
       method: 'POST'
     });
-    const data = await response.json();
+    
+    const data = await safeJsonResponse(response);
     
     if (data.success) {
       // Se WebSocket não estiver conectado, atualiza manualmente
@@ -406,7 +400,7 @@ async function toggleService(appName) {
     }
   } catch (error) {
     console.error(error);
-    alert('Erro ao enviar ação');
+    alert('Erro ao enviar ação: ' + error.message);
   }
 }
 
@@ -470,7 +464,18 @@ async function atualizarSaldo(tipo) {
   // Fallback para HTTP
   try {
     const response = await fetch(`${flaskBaseURL}/saldo/${tipo}`);
-    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      throw new Error(`Resposta inválida: ${text}`);
+    }
     
     if (data.error) {
       element.textContent = `Erro: ${data.error}`;
@@ -481,7 +486,7 @@ async function atualizarSaldo(tipo) {
       element.className = "balance-value";
     }
   } catch (error) {
-    element.textContent = `Erro de conexão`;
+    element.textContent = `Erro: ${error.message}`;
     element.className = "balance-value status-error";
     console.error(`Erro ao buscar saldo ${tipo}:`, error);
   }
@@ -522,7 +527,17 @@ async function criarInvoice() {
       body: JSON.stringify({ amount: parseInt(amount) })
     });
     
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      throw new Error(`Resposta inválida: ${text}`);
+    }
     
     if (data.error) {
       resultElement.textContent = `Erro: ${data.error}`;
@@ -535,7 +550,7 @@ async function criarInvoice() {
       document.getElementById('invoice-amount').value = '';
     }
   } catch (error) {
-    resultElement.textContent = `Erro de conexão: ${error.message}`;
+    resultElement.textContent = `Erro: ${error.message}`;
     resultElement.className = "result-area status-error";
   }
 }
@@ -563,7 +578,17 @@ async function pagarInvoice() {
       body: JSON.stringify({ invoice: invoice })
     });
     
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      throw new Error(`Resposta inválida: ${text}`);
+    }
     
     if (data.error) {
       resultElement.textContent = `Erro: ${data.error}`;
@@ -579,7 +604,7 @@ async function pagarInvoice() {
       setTimeout(() => atualizarSaldo('lightning'), 2000);
     }
   } catch (error) {
-    resultElement.textContent = `Erro de conexão: ${error.message}`;
+    resultElement.textContent = `Erro: ${error.message}`;
     resultElement.className = "result-area status-error";
   }
 }
@@ -602,7 +627,18 @@ async function visualizarLogs() {
   
   try {
     const response = await fetch(`${flaskBaseURL}/containers/logs/${containerName}?lines=${lines}`);
-    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      throw new Error(`Resposta inválida: ${text}`);
+    }
     
     if (data.success) {
       logsDisplay.textContent = data.logs || "Nenhum log encontrado";
@@ -610,7 +646,7 @@ async function visualizarLogs() {
       logsDisplay.textContent = `Erro: ${data.error}`;
     }
   } catch (error) {
-    logsDisplay.textContent = `Erro ao carregar logs: ${error.message}`;
+    logsDisplay.textContent = `Erro: ${error.message}`;
   }
 }
 
@@ -642,11 +678,22 @@ async function loadContainerStatusHTTP() {
   
   try {
     const response = await fetch(`${flaskBaseURL}/containers/status`);
-    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (jsonError) {
+      throw new Error(`Resposta inválida: ${text}`);
+    }
     
     updateDetailedContainerStatus(data);
   } catch (error) {
-    grid.innerHTML = `<div>Erro ao carregar status: ${error.message}</div>`;
+    grid.innerHTML = `<div>Erro: ${error.message}</div>`;
   }
 }
 

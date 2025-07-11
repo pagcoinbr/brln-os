@@ -1,5 +1,4 @@
 #!/bin/bash
-source ~/brlnfullauto/shell/.env
 
 terminal_web() {
   if [[ ! -f /usr/local/bin/gotty ]]; then

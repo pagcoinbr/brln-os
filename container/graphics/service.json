@@ -1,0 +1,23 @@
+{
+  "name": "graphics-interface",
+  "description": "Web interface for Bitcoin Lightning Node management",
+  "version": "1.0.0",
+  "image": "graphics-interface:latest",
+  "ports": {
+    "80": "Web interface",
+    "5001": "API and WebSocket server"
+  },
+  "volumes": {
+    "/var/run/docker.sock": "/var/run/docker.sock",
+    "/usr/bin/systemctl": "/usr/bin/systemctl",
+    "/run/systemd": "/run/systemd"
+  },
+  "environment": {
+    "NODE_ENV": "production"
+  },
+  "dependencies": [
+    "docker",
+    "systemd"
+  ],
+  "network": "host"
+}
