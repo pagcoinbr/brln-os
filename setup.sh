@@ -1,15 +1,7 @@
 #!/bin/bash
 
 # Script de configuração principal do BRLN Full Auto Container Stack
-# Este script simplifica o processo de instalação para usuários finais
-
-echo "Deseja exibir o filtro de falhas? (y/N)"
-read -r -p "Digite 'YES' para continuar: " SHOW_FILTER
-if [[ "$SHOW_FILTER" != "y" && "$SHOW_FILTER" != "Y" && "$SHOW_FILTER" != "yes" && "$SHOW_FILTER" != "YES" ]]; then
-set -e
-else
-    echo "Filtro de falhas desativado."
-fi
+# Este script simplifica o processo de instalação para usuários finaisS
 # Solicitar autenticação sudo no início do script
 if ! sudo -v; then
     echo -e "${RED}Falha na autenticação sudo. Saindo...${NC}"
@@ -47,7 +39,7 @@ spinner() {
         j=$(( (j + 1) % 4 ))
         count=$(( (count + 1) % (max + 1) ))
 
-        printf "\r\033[KInstalando seu BRLN bolt...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
+        printf "\r\033[KAguarde...${YELLOW}%s${NC} ${CYAN}[%s]${NC}" "$emoji" "$spin_char"
         sleep "$delay"
     done
 
@@ -262,6 +254,7 @@ if [[ $SETUP_EXIT_CODE -ne 0 ]]; then
 fi
 
 # Verificar se a configuração foi bem-sucedida
+clear
 echo ""
 log "Verificando status dos serviços..."
 if command -v docker-compose &> /dev/null; then
@@ -269,6 +262,283 @@ if command -v docker-compose &> /dev/null; then
 else
     docker compose ps
 fi
+
+warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS (SEED) DO LND"
+warning "Extraindo seed LND dos logs..."
+sleep 30 & spinner
+
+# Captura as linhas de início e fim do seed, o aviso e as palavras numeradas do LND
+docker logs lnd 2>/dev/null | head -200 | \
+    awk '
+        /!!!YOU MUST WRITE DOWN THIS SEED TO BE ABLE TO RESTORE THE WALLET!!!/ {print; next}
+        /-+BEGIN LND CIPHER SEED-+/ {in_seed=1; print; next}
+        /-+END LND CIPHER SEED-+/ {print; in_seed=0; next}
+        in_seed && /^[[:space:]]*[0-9]+\./ {print}
+    ' > ../seeds.txt
+
+echo ""
+echo "Anote agora as informações mostradas acima, caso você não o faça, elas não serão exibidas novamente no futuro!"
+# Exibir conteúdo do arquivo de seeds se existir
+if [[ -f "../seeds.txt" && -s "../seeds.txt" ]]; then
+    echo "=========================================="
+    echo "📜 SEED PHRASE DE RECUPERAÇÃO:"
+    echo "=========================================="
+    echo ""
+    warning "🚨 ATENÇÃO CRÍTICA: ANOTE ESTAS PALAVRAS AGORA!"
+    warning "🔐 Sem essas palavras você PERDERÁ ACESSO aos seus bitcoins!"
+    warning "📝 Escreva as 24 palavras em PAPEL e guarde em local SEGURO!"
+    echo ""
+    cat ../seeds.txt
+    echo ""
+    echo "=========================================="
+    echo ""
+    
+    while true; do
+        read -p "Você já anotou a seed em local seguro? (y/N): " -n 1 -r
+        echo
+        case $REPLY in
+            [Yy]* ) 
+                log "✅ Seed confirmada como anotada em local seguro"
+                echo ""
+                break
+                ;;
+            [Nn]* ) 
+                echo ""
+                error "❌ PARE AGORA! Não continue sem anotar a seed!"
+                warning "🚨 ANOTE AS 24 PALAVRAS ACIMA EM PAPEL ANTES DE CONTINUAR!"
+                echo ""
+                echo "Pressione qualquer tecla quando tiver anotado..."
+                read -n 1 -s
+                echo ""
+                ;;
+            * ) 
+                echo "Por favor, responda y \(sim\) ou n \(não\)."
+                ;;
+        esac
+    done
+else
+    warning "⚠️ Nenhuma seed foi capturada no arquivo seeds.txt"
+    warning "   Verifique os logs dos containers para seeds manuais"
+fi
+
+# Perguntar sobre autodestruição
+warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos de senha"
+echo ""
+echo "Por segurança, você pode optar por:"
+echo "1. 📁 Manter o arquivo salvo \(seeds.txt\)"
+echo "2. 🔥 Fazer autodestruição do arquivo"
+echo ""
+echo "⚠️  ATENÇÃO: Se escolher autodestruição, você já anotado frase de 24 palavras \(seed\) do LND ou você não poderá recuperar seus bitcoins!"
+echo ""
+
+while true; do
+    read -p "Deseja fazer autodestruição dos arquivos de seeds? (y/N): " -n 1 -r
+    echo
+    case $REPLY in
+        [Yy]* ) 
+            echo ""
+            warning "🔥 ÚLTIMA CHANCE: Os arquivos serão apagados em 10 segundos!"
+            warning "📋 Certifique-se de que copiou todas as informações importantes!"
+            echo ""
+            echo "Arquivos que serão apagados:"
+            echo "  • seeds.txt"
+            echo ""
+            
+            for i in {10..1}; do
+                echo -ne "\rIniciando autodestruição em: ${i}s \(Ctrl+C para cancelar\)"
+                sleep 1
+            done
+            echo ""
+            echo ""
+            
+            log "🔥 Iniciando autodestruição dos arquivos de seed..."
+            
+            # Apagar arquivos
+            
+            if [[ -f "../seeds.txt" ]]; then
+                rm -f "../seeds.txt"
+                log "❌ seeds.txt apagado"
+            fi
+            
+            echo ""
+            warning "🔥 Autodestruição concluída!"
+            warning "📋 Certifique-se de que salvou todas as informações importantes!"
+            echo ""
+            break
+            ;;
+        [Nn]* ) 
+            log "📁 Arquivos de senha mantidos:"
+            echo "  • passwords.md"
+            echo "  • passwords.txt"
+            echo "  • seeds.txt"
+            echo "  • startup.md"
+            echo ""
+            info "💡 Dica: Faça backup destes arquivos em local seguro!"
+            break
+            ;;
+        * ) 
+            echo "Por favor, responda y \(sim\) ou n \(não\)."
+            ;;
+    esac
+done
+
+clear
+echo ""
+log "🎉 Configuração concluída!"
+echo ""
+info "📱 Interfaces web disponíveis:"
+echo "  • LNDG Dashboard: http://localhost:8889"
+echo "  • Thunderhub: http://localhost:3000"
+echo "  • LNbits: http://localhost:5000"
+echo "  • PeerSwap Web: http://localhost:1984"
+echo ""
+info "📋 Comandos úteis:"
+echo "  Estes comandos precisam ser executados no diretório 'container':"
+echo "  • Ver logs: docker logs [serviço] -f"
+echo "  • Reiniciar: docker restart [serviço]"
+echo "  • Status: docker ps"
+echo ""
+warning "🔒 Altere as senhas padrão antes de usar em produção!"
+
+echo ""
+echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+log "🖥️ Instalando Interface Gráfica Web..."
+echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+echo ""
+
+# Instalar interface gráfica web
+install_web_interface() {
+    log "📦 Instalando Apache e dependências..."
+    
+    # Instalar Apache e Python
+    sudo apt update > /dev/null 2>&1 &
+    spinner $!
+    
+    sudo apt install -y apache2 python3-pip python3-venv > /dev/null 2>&1 &
+    spinner $!
+    
+    # Instalar Flask-SocketIO em ambiente virtual
+    log "🐍 Configurando ambiente Python..."
+    cd container/graphics
+    
+    if [ ! -d "venv" ]; then
+        python3 -m venv venv > /dev/null 2>&1 &
+        spinner $!
+    fi
+    
+    source venv/bin/activate
+    pip install flask flask-cors flask-socketio > /dev/null 2>&1 &
+    spinner $!
+    deactivate
+    
+    # Configurar Apache
+    log "🌐 Configurando Apache..."
+    
+    # Copiar arquivos da interface
+    sudo cp -r html/* /var/www/html/ > /dev/null 2>&1
+    sudo chown -R www-data:www-data /var/www/html/ > /dev/null 2>&1
+    
+    # Configurar CGI
+    sudo a2enmod cgi > /dev/null 2>&1
+    sudo mkdir -p /var/www/html/cgi-bin > /dev/null 2>&1
+    sudo cp cgi-bin/* /var/www/html/cgi-bin/ > /dev/null 2>&1
+    sudo chmod +x /var/www/html/cgi-bin/* > /dev/null 2>&1
+    sudo chown -R www-data:www-data /var/www/html/cgi-bin/ > /dev/null 2>&1
+    
+    # Criar serviço systemd para Flask
+    log "⚙️ Criando serviço Flask..."
+    
+    sudo tee /etc/systemd/system/brln-flask.service > /dev/null << EOF
+[Unit]
+Description=BRLN Flask API Server
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/home/admin/brlnfullauto/container/graphics
+Environment=PATH=/home/admin/brlnfullauto/container/graphics/venv/bin
+ExecStart=/home/admin/brlnfullauto/container/graphics/venv/bin/python control-systemd.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Ajustar permissões
+    sudo chown www-data:www-data /home/admin/brlnfullauto/container/graphics/control-systemd.py
+    sudo chmod +x /home/admin/brlnfullauto/container/graphics/control-systemd.py
+    
+    # Permitir www-data executar docker
+    sudo usermod -a -G docker www-data > /dev/null 2>&1
+    
+    # Recarregar systemd e iniciar serviços
+    sudo systemctl daemon-reload > /dev/null 2>&1
+    sudo systemctl enable apache2 > /dev/null 2>&1
+    sudo systemctl enable brln-flask > /dev/null 2>&1
+    sudo systemctl restart apache2 > /dev/null 2>&1 &
+    spinner $!
+    sudo systemctl start brln-flask > /dev/null 2>&1 &
+    spinner $!
+    
+    cd - > /dev/null
+}
+
+# Executar instalação da interface
+install_web_interface
+
+# Verificar se os serviços estão funcionando
+log "🔍 Verificando serviços da interface..."
+
+sleep 3
+
+APACHE_STATUS=$(systemctl is-active apache2)
+FLASK_STATUS=$(systemctl is-active brln-flask)
+
+if [ "$APACHE_STATUS" = "active" ] && [ "$FLASK_STATUS" = "active" ]; then
+    echo ""
+    echo -e "${GREEN}✅ Interface gráfica instalada com sucesso!${NC}"
+    echo ""
+    info "🌐 Acesse a interface em:"
+    LOCAL_IP=$(hostname -I | awk '{print $1}')
+    echo "  • Interface Principal: http://$LOCAL_IP"
+    echo "  • Interface Principal: http://localhost"
+    echo ""
+    info "🔧 APIs disponíveis:"
+    echo "  • Flask API: http://$LOCAL_IP:5001"
+    echo "  • Status Containers: http://$LOCAL_IP:5001/containers/status"
+    echo ""
+    info "💡 Funcionalidades da interface:"
+    echo "  • ⚡ Controle de containers em tempo real (WebSockets)"
+    echo "  • 💰 Visualização de saldos Lightning/Bitcoin/Liquid"
+    echo "  • 📊 Monitoramento de sistema e logs"
+    echo "  • 🔄 Ferramentas Lightning (criar/pagar invoices)"
+    echo "  • 🐳 Status detalhado dos containers Docker"
+    echo ""
+else
+    echo ""
+    warning "⚠️ Alguns serviços da interface não iniciaram corretamente"
+    if [ "$APACHE_STATUS" != "active" ]; then
+        echo "  • Apache: $APACHE_STATUS"
+    fi
+    if [ "$FLASK_STATUS" != "active" ]; then
+        echo "  • Flask API: $FLASK_STATUS"
+    fi
+    echo ""
+    info "🔧 Para verificar o status completo:"
+    echo "  cd container/graphics && ./check_services.sh"
+fi
+
+echo ""
+echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+log "🎯 Instalação Completa!"
+echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "${CYAN}"
 cat << "EOF"
 ██████╗ ██████╗ ██╗     ███╗   ██╗    ███████╗██╗   ██╗██╗     ██╗         █████╗ ██╗   ██╗████████╗ ██████╗ 
 ██╔══██╗██╔══██╗██║     ████╗  ██║    ██╔════╝██║   ██║██║     ██║        ██╔══██╗██║   ██║╚══██╔══╝██╔═══██╗
@@ -286,208 +556,4 @@ cat << "EOF"
                                                                                                                 
     🚀 Container Stack - Bitcoin, Lightning & Liquid Network
 EOF
-echo ""
-log "🎉 Configuração concluída!"
-echo ""
-info "📱 Interfaces web disponíveis:"
-echo "  • LNDG Dashboard: http://localhost:8889"
-echo "  • Thunderhub: http://localhost:3000"
-echo "  • LNbits: http://localhost:5000"
-echo "  • PeerSwap Web: http://localhost:1984"
-echo ""
-info "📋 Comandos úteis:"
-echo "  Estes comandos precisam ser executados no diretório 'container':"
-echo "  • Ver logs: docker-compose logs -f [serviço]"
-echo "  • Parar tudo: docker-compose down"
-echo "  • Reiniciar: docker-compose restart [serviço]"
-echo "  • Status: docker-compose ps"
-echo ""
-warning "🔐 IMPORTANTE: Salve as seeds das carteiras que apareceram nos logs!"
-warning "🔐 Faça backup regular dos dados em /data/"
-echo ""
-
-# Extrair senhas dos logs e gerar arquivo de documentação
-log "📄 Gerando arquivo de senhas e credenciais..."
-if [[ -f "../extract_passwords.sh" ]]; then
-    ../extract_passwords.sh
-    echo ""
-    
-    # Capturar a saída completa para o arquivo startup.md
-    {
-        echo "# � BRLN Full Auto Stack - Inicialização Completa"
-        echo ""
-        echo "**Data/Hora:** $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "**Sistema:** $(uname -a)"
-        echo ""
-        echo "## 🎉 Instalação Concluída com Sucesso!"
-        echo ""
-        echo "### 📱 Interfaces Web Disponíveis:"
-        echo "- **LNDG Dashboard:** http://localhost:8889"
-        echo "- **Thunderhub:** http://localhost:3000"
-        echo "- **LNbits:** http://localhost:5000"
-        echo "- **PeerSwap Web:** http://localhost:1984"
-        echo "- **Grafana:** http://localhost:3010"
-        echo ""
-        echo "### 📋 Comandos Úteis:"
-        echo "- Ver logs: \`docker-compose logs -f [serviço]\`"
-        echo "- Parar tudo: \`docker-compose down\`"
-        echo "- Reiniciar: \`docker-compose restart [serviço]\`"
-        echo "- Status: \`docker-compose ps\`"
-        echo ""
-        echo "---"
-        echo ""
-        
-        # Adicionar o conteúdo do arquivo de senhas
-        if [[ -f "../passwords.md" ]]; then
-            ../extract_passwords.sh --display-only
-        else
-            echo "❌ Arquivo de senhas não encontrado"
-        fi
-        
-        echo ""
-        echo "---"
-        echo ""
-        echo "## ⚠️ AVISOS IMPORTANTES"
-        echo ""
-        echo "🔐 **SALVE AS SEEDS** das carteiras que apareceram nos logs!"
-        echo "🔐 **FAÇA BACKUP REGULAR** dos dados em /data/"
-        echo "� **ALTERE AS SENHAS PADRÃO** antes de usar em produção!"
-        echo ""
-        echo "---"
-        echo "*Arquivo gerado automaticamente pelo setup.sh*"
-    } > ../startup.md
-    
-    # Exibir na tela também
-    echo ""
-    echo "=========================================="
-    echo "🎉 INSTALAÇÃO CONCLUÍDA COM SUCESSO!"
-    echo "=========================================="
-    echo ""
-    echo "📱 Interfaces web disponíveis:"
-    echo "  • LNDG Dashboard: http://localhost:8889"
-    echo "  • Thunderhub: http://localhost:3000"
-    echo "  • LNbits: http://localhost:5000"
-    echo "  • PeerSwap Web: http://localhost:1984"
-    echo "  • Grafana: http://localhost:3010"
-    echo ""
-    echo "📋 Comandos úteis (execute no diretório 'container'):"
-    echo "  • Ver logs: docker-compose logs -f [serviço]"
-    echo "  • Parar tudo: docker-compose down"
-    echo "  • Reiniciar: docker-compose restart [serviço]"
-    echo "  • Status: docker-compose ps"
-    echo ""
-    echo "=========================================="
-    echo "🔐 CREDENCIAIS E SENHAS ENCONTRADAS:"
-    echo "=========================================="
-    echo ""
-    
-    # Mostrar as senhas na tela
-    if [[ -f "../passwords.md" ]]; then
-        ../extract_passwords.sh --display-only
-    else
-        warning "Arquivo de senhas não encontrado"
-    fi
-    
-    echo ""
-    echo "=========================================="
-    echo ""
-    warning "🔐 IMPORTANTE: Salve as seeds das carteiras que apareceram nos logs!"
-    warning "🔐 Faça backup regular dos dados em /data/"
-    warning "🔒 Altere as senhas padrão antes de usar em produção!"
-    echo ""
-    info "📄 Informações completas salvas em: startup.md"
-    info "📋 Senhas documentadas em: passwords.md e passwords.txt"
-    echo ""
-    
-    # Exibir conteúdo do arquivo passwords.txt
-    if [[ -f "../passwords.txt" ]]; then
-        echo "=========================================="
-        echo "📄 CONTEÚDO DO ARQUIVO passwords.txt:"
-        echo "=========================================="
-        echo ""
-        cat /home/admin/brlnfullauto/passwords.txt
-        echo ""
-        echo "=========================================="
-        echo ""
-        
-        # Perguntar sobre autodestruição
-        warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos de senha"
-        echo ""
-        echo "Por segurança, você pode optar por:"
-        echo "1. 📁 Manter os arquivos salvos (passwords.md, passwords.txt, startup.md)"
-        echo "2. 🔥 Fazer autodestruição dos arquivos após esta visualização"
-        echo ""
-        echo "⚠️  ATENÇÃO: Se escolher autodestruição, você deve COPIAR E SALVAR"
-        echo "    as informações mostradas acima AGORA, pois elas serão apagadas!"
-        echo ""
-        
-        while true; do
-            read -p "Deseja fazer autodestruição dos arquivos de senha? (y/N): " -n 1 -r
-            echo
-            case $REPLY in
-                [Yy]* ) 
-                    echo ""
-                    warning "🔥 ÚLTIMA CHANCE: Os arquivos serão apagados em 10 segundos!"
-                    warning "📋 Certifique-se de que copiou todas as informações importantes!"
-                    echo ""
-                    echo "Arquivos que serão apagados:"
-                    echo "  • passwords.md"
-                    echo "  • passwords.txt"
-                    echo "  • startup.md"
-                    echo ""
-                    
-                    for i in {10..1}; do
-                        echo -ne "\rIniciando autodestruição em: ${i}s (Ctrl+C para cancelar)"
-                        sleep 1
-                    done
-                    echo ""
-                    echo ""
-                    
-                    log "🔥 Iniciando autodestruição dos arquivos de senha..."
-                    
-                    # Apagar arquivos
-                    if [[ -f "../passwords.md" ]]; then
-                        rm -f "../passwords.md"
-                        log "❌ passwords.md apagado"
-                    fi
-                    
-                    if [[ -f "../passwords.txt" ]]; then
-                        rm -f "../passwords.txt"
-                        log "❌ passwords.txt apagado"
-                    fi
-                    
-                    if [[ -f "../startup.md" ]]; then
-                        rm -f "../startup.md"
-                        log "❌ startup.md apagado"
-                    fi
-                    
-                    echo ""
-                    warning "🔥 Autodestruição concluída!"
-                    warning "📋 Certifique-se de que salvou todas as informações importantes!"
-                    echo ""
-                    break
-                    ;;
-                [Nn]* ) 
-                    log "📁 Arquivos de senha mantidos:"
-                    echo "  • passwords.md"
-                    echo "  • passwords.txt"
-                    echo "  • startup.md"
-                    echo ""
-                    info "💡 Dica: Faça backup destes arquivos em local seguro!"
-                    break
-                    ;;
-                * ) 
-                    echo "Por favor, responda y (sim) ou n (não)."
-                    ;;
-            esac
-        done
-    else
-        warning "❌ Arquivo passwords.txt não encontrado"
-    fi
-    
-else
-    warning "Script de extração de senhas não encontrado: ../extract_passwords.sh"
-fi
-
-echo ""
-log "Para mais informações, consulte o README.md e startup.md"
+echo -e "${NC}"

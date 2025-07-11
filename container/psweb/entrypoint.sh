@@ -17,5 +17,5 @@ done
 
 echo "TLS certificate found, starting psweb..."
 
-# Start psweb
-exec psweb --datadir /home/psweb/.peerswap
+# Start psweb with datadir pointing to the peerswap data directory
+exec psweb -datadir /home/peerswap/.peerswap

@@ -4,8 +4,6 @@
 # Lê automaticamente configurações de cada serviço através de arquivos service.json
 # Usa arrays e laços de repetição para máxima eficiência
 
-# set -e
-
 sudo -v
 
 # Verificar se jq está instalado (necessário para parsing JSON)

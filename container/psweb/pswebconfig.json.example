@@ -5,6 +5,7 @@
   "TlsCertPath": "/home/lnd/.lnd/tls.cert",
   "MacaroonPath": "/home/lnd/.lnd/data/chain/bitcoin/mainnet/admin.macaroon",
   "PeerSwapHost": "peerswap:42069",
+  "PeerSwapDataDir": "/home/peerswap/.peerswap",
   "ElementsHost": "elements:18884",
   "ElementsUser": "elementsuser",
   "ElementsPassword": "elementspassword123",

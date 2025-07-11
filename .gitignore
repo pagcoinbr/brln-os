@@ -113,7 +113,13 @@ container/peerswap.conf
 *production.conf
 *mainnet.conf
 
+# Arquivos com senhas e dados sensíveis
 passwords.txt
 passwords.md
-password.md
-password.txt
+seeds.txt
+seeds_backup.txt
+**/passwords.txt
+
+# Arquivos de ambiente e configuração
+.env
+**/.env

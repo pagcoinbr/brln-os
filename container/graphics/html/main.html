@@ -176,6 +176,87 @@
             </label>
           </div>    
         </div>
+          <h3>💰 Saldos das Carteiras</h3>
+          <div class="balance-grid">
+            <div class="balance-item">
+              <div class="balance-label">⚡ Lightning</div>
+              <div id="lightning-balance" class="balance-value">Carregando...</div>
+              <button class="botao-pequeno" onclick="atualizarSaldo('lightning')">🔄</button>
+            </div>
+            <div class="balance-item">
+              <div class="balance-label">🪙 Bitcoin On-chain</div>
+              <div id="onchain-balance" class="balance-value">Carregando...</div>
+              <button class="botao-pequeno" onclick="atualizarSaldo('onchain')">🔄</button>
+            </div>
+            <div class="balance-item">
+              <div class="balance-label">🌊 Liquid</div>
+              <div id="liquid-balance" class="balance-value">Carregando...</div>
+              <button class="botao-pequeno" onclick="atualizarSaldo('liquid')">🔄</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nova seção: Lightning Network Tools -->
+        <div class="section">
+          <h3>⚡ Ferramentas Lightning</h3>
+          <div class="lightning-tools">
+            <div class="tool-group">
+              <h4>📄 Criar Invoice</h4>
+              <div class="input-group">
+                <input type="number" id="invoice-amount" placeholder="Valor em sats" class="input-field">
+                <button class="botao-pequeno" onclick="criarInvoice()">Gerar</button>
+              </div>
+              <div id="invoice-result" class="result-area"></div>
+            </div>
+            
+            <div class="tool-group">
+              <h4>💸 Pagar Invoice</h4>
+              <div class="input-group">
+                <textarea id="payment-invoice" placeholder="Cole aqui o invoice Lightning" class="input-field textarea-field"></textarea>
+                <button class="botao-pequeno" onclick="pagarInvoice()">Pagar</button>
+              </div>
+              <div id="payment-result" class="result-area"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nova seção: Logs dos Containers -->
+        <div class="section">
+          <h3>📋 Logs dos Containers</h3>
+          <button class="toggle-btn" onclick="toggleLogs(this)" style="display: inline; margin: 0px;">🔽</button>
+          
+          <div id="logs-section" class="logs-container" style="display: none; margin-top: 10px;">
+            <div class="logs-controls">
+              <select id="container-select" class="select-field">
+                <option value="">Selecione um container</option>
+                <option value="bitcoin">Bitcoin</option>
+                <option value="lnd">LND</option>
+                <option value="elements">Elements</option>
+                <option value="tor">Tor</option>
+                <option value="lnbits">LNBits</option>
+                <option value="thunderhub">Thunderhub</option>
+                <option value="lndg">LNDg</option>
+                <option value="peerswap">PeerSwap</option>
+              </select>
+              <input type="number" id="lines-input" value="50" min="10" max="1000" class="input-field small-input">
+              <button class="botao-pequeno" onclick="visualizarLogs()">Ver Logs</button>
+            </div>
+            <div id="logs-display" class="logs-display"></div>
+          </div>
+        </div>
+
+        <!-- Nova seção: Status Geral dos Containers -->
+        <div class="section">
+          <h3>🐳 Status Detalhado dos Containers</h3>
+          <button class="toggle-btn" onclick="toggleContainerStatus(this)" style="display: inline; margin: 0px;">🔽</button>
+          
+          <div id="container-status-section" class="container-status" style="display: none; margin-top: 10px;">
+            <button class="botao-pequeno" onclick="atualizarStatusContainers()">🔄 Atualizar</button>
+            <div id="containers-grid" class="containers-grid">
+              <!-- Status dos containers será carregado aqui -->
+            </div>
+          </div>
+        </div>
 
         <h2>🙏 Apoie Nosso Projeto</h2>
         <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>
@@ -186,6 +267,7 @@
         </a>        
     </div>
 
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

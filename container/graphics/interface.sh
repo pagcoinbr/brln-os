@@ -85,6 +85,12 @@ apache_install() {
   sudo cp -r "$HTML_SRC/radio" "$WWW_HTML/"
   sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
 
+  # Copia o sistema de controle Flask atualizado
+  echo "🐍 Copiando sistema de controle Flask..."
+  sudo cp "$REPO_DIR/container/graphics/control-systemd.py" "$WWW_HTML/"
+  sudo chown www-data:www-data "$WWW_HTML/control-systemd.py"
+  sudo chmod +x "$WWW_HTML/control-systemd.py"
+
   # Corrigir permissões de execução
   sudo chmod +x "$CGI_DST"/*.sh
   for script in "$CGI_DST"/*.sh; do
@@ -135,12 +141,16 @@ EOF
   echo "⚡ Ativando ambiente virtual..."
   source "$FLASKVENV_DIR/bin/activate"
 
-  # Instala Flask e Flask-CORS
-  pip install flask flask-cors >> /dev/null 2>&1 & spinner
+  # Instala Flask, Flask-CORS e Flask-SocketIO para WebSockets
+  echo "📦 Instalando dependências Python..."
+  pip install flask flask-cors flask-socketio >> /dev/null 2>&1 & spinner
 
   # 📝 Criação segura do arquivo usando here-document
   sudo tee "$SUDOERS_TMP" > /dev/null <<EOF
-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service, /usr/bin/systemctl start bitcoind.service, /usr/bin/systemctl stop bitcoind.service, /usr/bin/systemctl start bos-telegram.service, /usr/bin/systemctl stop bos-telegram.service, /usr/bin/systemctl start tor.service, /usr/bin/systemctl stop tor.service
+admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service, /usr/bin/systemctl start bitcoind.service, /usr/bin/systemctl stop bitcoind.service, /usr/bin/systemctl start bos-telegram.service, /usr/bin/systemctl stop bos-telegram.service, /usr/bin/systemctl start tor.service, /usr/bin/systemctl stop tor.service, /usr/bin/docker, /usr/bin/docker-compose
+admin ALL=(ALL) NOPASSWD: /usr/bin/python3 /var/www/html/control-systemd.py
+www-data ALL=(ALL) NOPASSWD: /usr/bin/docker, /usr/bin/docker-compose
+www-data ALL=(ALL) NOPASSWD: /usr/bin/python3 /var/www/html/control-systemd.py
 EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
@@ -153,6 +163,47 @@ EOF
   fi
   sudo systemctl restart apache2
   sudo apt install -y python3-flask >> /dev/null 2>&1 & spinner
+  
+  # Configurar e iniciar o serviço Flask
+  echo "🚀 Configurando serviço Flask..."
+  setup_flask_service
+}
+
+setup_flask_service() {
+  # Criar arquivo de serviço systemd para o Flask
+  sudo tee /etc/systemd/system/brln-flask.service > /dev/null <<EOF
+[Unit]
+Description=BRLN Flask Control Service
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/var/www/html
+Environment="PATH=$FLASKVENV_DIR/bin"
+ExecStart=$FLASKVENV_DIR/bin/python3 /var/www/html/control-systemd.py
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Habilitar e iniciar o serviço
+  sudo systemctl daemon-reload
+  sudo systemctl enable brln-flask.service
+  sudo systemctl start brln-flask.service
+  
+  # Abrir porta 5001 para o Flask
+  if ! sudo ufw status | grep -q "5001/tcp"; then
+    sudo ufw allow from $subnet to any port 5001 proto tcp comment 'BRLN Flask Control API'
+  fi
+  
+  echo "✅ Serviço Flask configurado e iniciado na porta 5001"
 }
 
 gotty_install () {
@@ -280,9 +331,17 @@ opening () {
   echo -e "${GREEN}🚀 Rodar o próprio node é só o primeiro passo rumo à liberdade financeira.${NC}"
   echo -e "${GREEN}🌐 Junte-se aos que realmente entendem soberania: 👉${BLUE} https://br-ln.com${NC}"
   echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
-  echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
   echo
-  echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
+  echo -e "${GREEN}📊 Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
+  echo -e "${RED} 🌐 Interface Web: http://$(hostname -I | awk '{print $1}') ${NC}"
+  echo -e "${RED} 🐍 API Flask: http://$(hostname -I | awk '{print $1}'):5001 ${NC}"
+  echo
+  echo -e "${CYAN}🔧 Serviços disponíveis:${NC}"
+  echo -e "${GREEN} • Interface Web Principal (Apache)${NC}"
+  echo -e "${GREEN} • API de Controle Flask com WebSockets${NC}"
+  echo -e "${GREEN} • Gerenciamento de Containers Docker${NC}"
+  echo -e "${GREEN} • Monitoramento em Tempo Real${NC}"
+  echo -e "${GREEN} • Ferramentas Lightning Network${NC}"
   echo
   echo -e "${RED} Ou escaneie o QR Code abaixo para conectar sua tailnet: ${NC}"
   echo
@@ -291,6 +350,7 @@ opening () {
   echo
   echo -e "${GREEN} Em seguida escolha ${YELLOW}\"Configurações\"${NC}${GREEN} e depois ${YELLOW}\"Iniciar BrlnFullAuto\" ${NC}"
   echo
+  echo -e "${YELLOW}💡 Dica: Use Ctrl+C para parar este script e 'sudo systemctl status brln-flask' para verificar o status do Flask${NC}"
   echo
 }
 

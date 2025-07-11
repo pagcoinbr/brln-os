@@ -269,31 +269,239 @@ pre {
 }
 
 /* ------------------------------
-   Animação de Piscar (Se necessário)
+   Novos Estilos para Funcionalidades Adicionais
 ------------------------------ */
 
-@keyframes piscar {
-  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
-  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
+/* Grid de Saldos */
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
 }
 
-.piscando {
-  animation: piscar 2s infinite ease-in-out;
+.balance-item {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ------------------------------
-   Responsividade
------------------------------- */
+.balance-label {
+  font-weight: bold;
+  font-size: 16px;
+  color: #b8a4d4;
+}
 
+.balance-value {
+  font-size: 18px;
+  font-weight: bold;
+  word-break: break-all;
+  text-align: center;
+}
+
+/* Ferramentas Lightning */
+.lightning-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.tool-group {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.tool-group h4 {
+  margin: 0 0 15px 0;
+  color: #b8a4d4;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.input-field, .select-field {
+  padding: 10px;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-size: 14px;
+}
+
+.textarea-field {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.small-input {
+  width: 80px;
+}
+
+.result-area {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  min-height: 40px;
+  font-family: monospace;
+  font-size: 12px;
+  word-break: break-all;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* Botões pequenos */
+.botao-pequeno {
+  padding: 8px 15px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  border: none;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out;
+  min-height: auto;
+  width: auto;
+  max-width: none;
+}
+
+/* Estilos dos botões pequenos por tema */
+body.dark-theme .botao-pequeno {
+  background: linear-gradient(45deg, #1f0f79, #4d00ff);
+  color: #fff;
+  box-shadow: 0 0 5px #00ffff44, 0 0 10px #4d00ff44;
+}
+
+body.light-theme .botao-pequeno {
+  background: linear-gradient(45deg, #5d96ff);
+  color: #000000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+body.dark-theme .botao-pequeno:hover {
+  background: #ffdd00;
+  color: #000;
+  box-shadow: 0 0 15px #ffdd00;
+}
+
+body.light-theme .botao-pequeno:hover {
+  background: #32c5ff;
+  color: #000;
+  box-shadow: 0 0 15px #32c5ff;
+}
+
+/* Logs */
+.logs-container {
+  margin-top: 15px;
+}
+
+.logs-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.logs-display {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  padding: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Status dos Containers */
+.container-status {
+  margin-top: 15px;
+}
+
+.containers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.container-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+}
+
+.container-name {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.container-status-text {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.status-running {
+  color: #4CAF50;
+}
+
+.status-stopped {
+  color: #f44336;
+}
+
+.status-error {
+  color: #ff9800;
+}
+
+/* Campos de entrada no tema claro */
+body.light-theme .input-field, 
+body.light-theme .select-field {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #ccc;
+  color: #000;
+}
+
+body.light-theme .result-area,
+body.light-theme .logs-display {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+/* Responsividade para as novas seções */
 @media (max-width: 600px) {
-  #botoes {
+  .balance-grid {
     grid-template-columns: 1fr;
   }
-  #ferramentas-extras .botao, #ferramentas-extras a.botao {
-    flex: 1 1 100%;
+  
+  .lightning-tools {
+    grid-template-columns: 1fr;
   }
-  .botao, a.botao {
-    font-size: 16px;
-    padding: 12px 20px;
+  
+  .containers-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .logs-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .input-group {
+    flex-direction: column;
   }
 }

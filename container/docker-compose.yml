@@ -162,7 +162,6 @@ services:
       - grafana-net
     volumes:
       - /data/elements:/home/elements/.elements
-      - ./elements/elements.conf:/home/elements/.elements/elements.conf
     restart: unless-stopped
     depends_on:
       - tor
@@ -251,7 +250,7 @@ services:
     volumes:
       - psweb_data:/home/psweb/.peerswap
       - /data/lnd:/home/lnd/.lnd:ro
-      - peerswap_data:/home/peerswap/.peerswap:ro
+      - peerswap_data:/home/peerswap/.peerswap
     restart: unless-stopped
     depends_on:
       - peerswap
