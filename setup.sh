@@ -434,7 +434,6 @@ while true; do
             ;;
     esac
 done
-fi
 clear
 echo ""
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
