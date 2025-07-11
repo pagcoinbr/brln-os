@@ -41,7 +41,7 @@ COPY lnbits/.env.example /app/lnbits/.env
 COPY lnbits/entrypoint.sh /app/lnbits/entrypoint.sh
 
 # Define usuário não-root para segurança
-RUN useradd -m -u 1003 lnbits && \
+RUN useradd -m -u 1004 lnbits && \
     chmod +x /app/lnbits/entrypoint.sh && \
     chown -R lnbits:lnbits /app/lnbits && \
     chown -R lnbits:lnbits /data/lnbits
