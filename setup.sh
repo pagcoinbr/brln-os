@@ -10,6 +10,9 @@ fi
 # Manter a sessão sudo ativa durante a execução do script
 while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y docker-compose
+
 # Verificar e adicionar usuário ao grupo docker no início para evitar problemas de permissão
 if command -v docker &> /dev/null; then
     if ! groups $USER | grep -q docker; then
@@ -20,8 +23,6 @@ if command -v docker &> /dev/null; then
     fi
 fi
 
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y docker-compose
 # Cores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
