@@ -1,103 +1,279 @@
-# BR⚡LN Full Auto Container Stack
+# ⚡ BRLN-OS
 
-> **Sistema de containerização completo para Bitcoin, Lightning Network e Liquid Network**
+<div align="center">
 
-## 🚀 Introdução
+![BRLN-OS Logo](https://img.shields.io/badge/BRLN--OS-Lightning%20Node-orange?style=for-the-badge&logo=bitcoin&logoColor=white)
 
-O **BRLN Full Auto Container Stack** é uma solução completa em Docker que orquestra múltiplos serviços Bitcoin e Lightning Network de forma automatizada e integrada. O projeto inclui:
+**Sistema operacional containerizado completo para Bitcoin, Lightning Network e Liquid Network**
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://docker.com)
+[![Lightning](https://img.shields.io/badge/lightning-network-yellow.svg)](https://lightning.network)
+[![Bitcoin](https://img.shields.io/badge/bitcoin-core-orange.svg)](https://bitcoincore.org)
+
+</div>
+
+---
+
+## 🚀 Instalação Rápida
+
+Execute este comando simples para instalar o BRLN-OS em seu sistema:
+
+```bash
+curl -fsSL https://pagcoin.org/install.sh | sh
+```
+
+**É isso!** O BRLN-OS será instalado automaticamente com todos os componentes necessários.
+
+---
+
+## 📖 Sobre o Projeto
+
+O **BRLN-OS** é uma distribuição containerizada que transforma qualquer sistema Linux em um poderoso nó Bitcoin e Lightning Network. Baseado em Docker, oferece uma solução completa e automatizada para executar:
 
 ### 🏗️ Componentes Principais
 
-#### 1. Bitcoin Core
-- Node completo Bitcoin para validação e broadcast de transações
-- Sincronização completa da blockchain
-- Interface RPC para integração com outros serviços
+#### ⚡ **Lightning Network**
+- **LND**: Daemon Lightning Network para pagamentos instantâneos
+- **LNbits**: Sistema bancário Lightning completo
+- **Thunderhub**: Interface web moderna para gerenciamento
+- **LNDG**: Dashboard avançado com estatísticas detalhadas
 
-#### 2. Elements Node (Liquid Network)
-O **Elements** é uma implementação do protocolo Liquid Network, uma sidechain do Bitcoin que oferece:
-- **Transações mais rápidas**: Confirmações em ~1 minuto
-- **Transações confidenciais**: Valores e tipos de ativos são privados
-- **Múltiplos ativos**: Suporte para diversos tokens além do L-BTC (DePix, USDT)
-- **Federação**: Controlada por uma federação de exchanges e instituições
+#### ₿ **Bitcoin & Liquid**
+- **Bitcoin Core**: Nó completo Bitcoin com sincronização total
+- **Elements**: Suporte completo ao Liquid Network (sidechain)
+- **Electrum Server**: Servidor Electrum para carteiras leves
 
-#### 3. Lightning Network Daemon (LND)
-O **LND** é uma implementação do Lightning Network que permite:
-- **Pagamentos instantâneos**: Transações off-chain quase instantâneas
-- **Micropagamentos**: Taxas muito baixas para pequenos valores
-- **Escalabilidade**: Reduz a carga na blockchain principal
-- **Canais de pagamento**: Conexões diretas entre nós para transferências
+#### 🔄 **Ferramentas Avançadas**
+- **PeerSwap**: Swaps automáticos entre Bitcoin e Liquid
+- **Balance of Satoshis**: Ferramentas profissionais para nós Lightning
+- **Tor**: Integração completa para privacidade
+- **Monitoring**: Prometheus, Grafana e Loki para observabilidade
 
-#### 4. Aplicações de Gerenciamento
-- **LNbits**: Sistema bancário Lightning Network
-- **Thunderhub**: Interface completa para gerenciamento do LND
-- **LNDG**: Dashboard e estatísticas avançadas
-- **PeerSwap**: Swaps entre Bitcoin on-chain e Liquid
-- **Balance of Satoshis**: Ferramentas avançadas para nós Lightning
+### ✨ **Principais Características**
 
-## 📁 Estrutura do Projeto
+- **🎯 Instalação em um comando**: `curl -fsSL https://pagcoin.org/install.sh | sh`
+- **🔒 Segurança total**: Isolamento por containers e integração Tor
+- **📊 Monitoramento completo**: Dashboards e métricas em tempo real
+- **🔧 Configuração automática**: Zero configuração manual necessária
+- **🌐 Interface web**: Acesso via navegador a todos os serviços
+- **📱 Mobile ready**: Interfaces otimizadas para dispositivos móveis
+- **🔄 Auto-updates**: Atualizações automáticas dos componentes
+
+---
+
+## 🛠️ Instalação Manual
+
+Se preferir instalar manualmente ou quiser mais controle sobre o processo:
+
+### Pré-requisitos
+
+- **Sistema**: Linux (Ubuntu 20.04+ recomendado)
+- **RAM**: Mínimo 4GB (8GB+ recomendado)
+- **Armazenamento**: 1TB+ (SSD recomendado para Bitcoin Core)
+- **Docker**: Será instalado automaticamente se não presente
+
+### Processo Manual
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/pagcoinbr/brln-os.git
+cd brln-os
+
+# 2. Execute o script de configuração
+./setup.sh
+```
+
+---
+
+## � Estrutura do Projeto
 
 ```
-container/
-├── docker-compose.yml           # Orquestração principal dos serviços
-├── setup-docker-smartsystem.sh  # Configuração inicial do sistema
-├── service.json.example         # Template de configuração de serviços
+brln-os/
+├── 📄 install.sh                 # Script de instalação rápida
+├── ⚙️  setup.sh                  # Configuração principal do sistema
 │
-├── bitcoin/                     # Bitcoin Core
-│   ├── Dockerfile.bitcoin
-│   ├── bitcoin.conf
-│   ├── bitcoin.sh
-│   └── service.json
-│
-├── elements/                    # Elements (Liquid Network)
-│   ├── Dockerfile.elements
-│   ├── elements.conf
-│   ├── elements.sh
-│   └── service.json
-│
-├── lnd/                        # Lightning Network Daemon
-│   ├── Dockerfile.lnd
-│   ├── entrypoint.sh
-│   ├── lnd.conf
-│   ├── password.txt
-│   └── service.json
-│
-├── lnbits/                     # Sistema bancário LN
-│   ├── Dockerfile.lnbits
-│   ├── entrypoint.sh
-│   └── service.json
-│
-├── lndg/                       # Dashboard LND
-│   ├── Dockerfile.lndg
-│   ├── entrypoint.sh
-│   └── service.json
-│
-├── thunderhub/                 # Interface web LND
-│   ├── service.json
-│   └── thunderhub.sh
-│
-├── peerswap/                   # Swaps BTC/Liquid
-│   ├── Dockerfile.peerswap
-│   ├── peerswap.conf
-│   └── service.json
-│
-├── psweb/                      # Interface web PeerSwap
-│   ├── Dockerfile.psweb
-│   ├── entrypoint.sh
-│   └── service.json
-│
-├── tor/                        # Proxy Tor
-│   ├── Dockerfile.tor
-│   └── service.json
-│
-├── monitoring/                 # Monitoramento
-│   ├── prometheus.yml
-│   ├── loki-config.yml
-│   └── dashboards/
-│
-└── logs/                       # Gestão de logs
-    ├── docker-log-manager.sh
-    └── install-log-manager.sh
+└── container/                    # Stack de containers
+    ├── 🐳 docker-compose.yml     # Orquestração dos serviços
+    │
+    ├── ₿ bitcoin/                # Bitcoin Core
+    ├── ⚡ lnd/                   # Lightning Network Daemon  
+    ├── 🔷 elements/              # Liquid Network (Elements)
+    ├── 💰 lnbits/                # Sistema bancário Lightning
+    ├── 🌩️  thunderhub/           # Interface web LND
+    ├── 📊 lndg/                  # Dashboard Lightning
+    ├── 🔄 peerswap/              # Swaps BTC/Liquid
+    ├── 🌐 psweb/                 # Interface PeerSwap
+    ├── 🧅 tor/                   # Proxy Tor
+    ├── 📈 monitoring/            # Prometheus & Grafana
+    └── 🎨 graphics/              # Interface gráfica web
 ```
+
+---
+
+## 🌐 Acesso aos Serviços
+
+Após a instalação, os serviços estarão disponíveis através das seguintes URLs:
+
+| Serviço | URL | Descrição |
+|---------|-----|-----------|
+| 🎨 **Interface Principal** | `http://localhost:8080` | Dashboard principal do sistema |
+| ⚡ **Thunderhub** | `http://localhost:3000` | Gerenciamento avançado LND |
+| 💰 **LNbits** | `http://localhost:5000` | Sistema bancário Lightning |
+| 📊 **LNDG** | `http://localhost:8889` | Dashboard e estatísticas LND |
+| 🔄 **PeerSwap Web** | `http://localhost:8081` | Interface PeerSwap |
+| 📈 **Grafana** | `http://localhost:3030` | Monitoramento e métricas |
+| 📋 **Logs** | `http://localhost:8888` | Visualização de logs |
+
+---
+
+## 🔧 Configuração
+
+### Configuração Automática
+
+O BRLN-OS configura automaticamente:
+- ✅ Endereços Tor para todos os serviços
+- ✅ Conexões seguras entre componentes  
+- ✅ Carteiras e senhas do Lightning
+- ✅ Configurações otimizadas do Bitcoin Core
+- ✅ Integração completa Bitcoin ↔ Lightning ↔ Liquid
+
+### Personalização
+
+Para personalizar configurações específicas, edite os arquivos em:
+- `container/bitcoin/bitcoin.conf` - Configurações Bitcoin Core
+- `container/lnd/lnd.conf` - Configurações Lightning Network
+- `container/elements/elements.conf` - Configurações Liquid Network
+
+---
+
+## 🚀 Uso
+
+### Primeiros Passos
+
+1. **Aguarde a sincronização**: Bitcoin Core levará algumas horas para sincronizar
+2. **Acesse a interface**: Abra `http://localhost:8080` no navegador
+3. **Configure sua carteira Lightning**: Use o Thunderhub para criar canais
+4. **Comece a usar**: Faça pagamentos Lightning instantâneos!
+
+### Comandos Úteis
+
+```bash
+# Ver status dos containers
+docker-compose ps
+
+# Ver logs de um serviço específico
+docker-compose logs -f bitcoin
+
+# Parar todos os serviços
+docker-compose down
+
+# Reiniciar um serviço específico
+docker-compose restart lnd
+
+# Backup da carteira Lightning
+docker-compose exec lnd lncli exportchanbackup
+```
+
+---
+
+## 📱 Recursos Mobile
+
+O BRLN-OS inclui interfaces otimizadas para dispositivos móveis:
+
+- **📱 LNbits Mobile**: App web progressivo para pagamentos Lightning
+- **📊 Dashboard Mobile**: Interface responsiva para monitoramento
+- **🔗 Conexão remota**: Acesse seu nó de qualquer lugar via Tor
+
+---
+
+## 🔒 Segurança
+
+### Características de Segurança
+
+- **🧅 Tor integrado**: Todos os serviços disponíveis via Tor hidden services
+- **🐳 Isolamento**: Cada componente roda em container isolado
+- **🔐 Criptografia**: Comunicação criptografada entre serviços
+- **🔑 Gerenciamento de chaves**: Armazenamento seguro de chaves privadas
+
+### Boas Práticas
+
+- 💾 **Faça backup regular** da carteira Lightning
+- 🔄 **Mantenha o sistema atualizado** executando `./setup.sh` periodicamente
+- 🛡️ **Use firewall** para limitar acesso externo se necessário
+- 📱 **Monitore o sistema** através dos dashboards disponíveis
+
+---
+
+## 🆘 Suporte e Comunidade
+
+### Documentação
+- 📖 [Wiki completo](https://github.com/pagcoinbr/brln-os/wiki)
+- 📋 [FAQ - Perguntas frequentes](https://github.com/pagcoinbr/brln-os/wiki/FAQ)
+- 🎥 [Tutoriais em vídeo](https://youtube.com/@pagcoin)
+
+### Comunidade
+- 💬 [Telegram](https://t.me/pagcoin)
+- 🐦 [Twitter](https://twitter.com/pagcoin)
+- 🌐 [Site oficial](https://pagcoin.org)
+
+### Problemas e Bugs
+- 🐛 [Reportar bug](https://github.com/pagcoinbr/brln-os/issues)
+- 💡 [Sugerir feature](https://github.com/pagcoinbr/brln-os/discussions)
+- 🔍 [Buscar soluções](https://github.com/pagcoinbr/brln-os/issues?q=is%3Aissue)
+
+---
+
+## 🤝 Contribuindo
+
+Adoramos contribuições! Veja como você pode ajudar:
+
+1. **🍴 Fork** o repositório
+2. **🌿 Crie** uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. **💾 Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. **📤 Push** para a branch (`git push origin feature/AmazingFeature`)
+5. **🔄 Abra** um Pull Request
+
+### Desenvolvimento
+
+Para desenvolvimento local:
+
+```bash
+# Clone o repositório
+git clone https://github.com/pagcoinbr/brln-os.git
+cd brln-os
+
+# Instale dependências de desenvolvimento
+./dev-setup.sh
+
+# Execute em modo desenvolvimento
+./setup.sh --dev
+```
+
+---
+
+## 📝 Licença
+
+Este projeto está licenciado sob a [Licença MIT](LICENSE) - veja o arquivo LICENSE para detalhes.
+
+---
+
+## 🙏 Agradecimentos
+
+- **Bitcoin Core Team** - Pela base sólida do Bitcoin
+- **Lightning Labs** - Pelo LND e inovações Lightning
+- **Blockstream** - Pelo Elements e Liquid Network
+- **Comunidade Bitcoin Brasil** - Pelo suporte e feedback contínuo
+
+---
+
+<div align="center">
+
+**Feito com ⚡ e ❤️ pela comunidade Bitcoin Brasil**
+
+[Website](https://pagcoin.org) • [Twitter](https://twitter.com/pagcoin) • [Telegram](https://t.me/pagcoin)
+
+</div>
 
 ## ⚡ Início Rápido
 

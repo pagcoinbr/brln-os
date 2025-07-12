@@ -28,7 +28,14 @@ spinner() {
             i=$((i + 1))
         done
 
-        local spin_char="${spinstr:j:1}"
+        # POSIX-compliant way to get character at position j
+        local spin_char
+        case $j in
+            0) spin_char='|' ;;
+            1) spin_char='/' ;;
+            2) spin_char='-' ;;
+            3) spin_char='\' ;;
+        esac
         j=$(( (j + 1) % 4 ))
         count=$(( (count + 1) % (max + 1) ))
 
@@ -40,7 +47,7 @@ spinner() {
     exit_code=$?
 
     tput cnorm
-    if [[ $exit_code -eq 0 ]]; then
+    if [ $exit_code -eq 0 ]; then
         printf "\r\033[K${GREEN}✔️ Processo finalizado com sucesso!${NC}\n"
     else
         printf "\r\033[K${RED}❌ Processo finalizado com erro - código: $exit_code${NC}\n"
