@@ -73,6 +73,277 @@ error() { echo -e "${RED}[ERROR] $1${NC}"; }
 warning() { echo -e "${YELLOW}[WARNING] $1${NC}"; }
 info() { echo -e "${BLUE}[INFO] $1${NC}"; }
 
+# Função para configurar senha do Thunderhub
+configure_thunderhub_password() {
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    log "🔐 Configuração da Senha do Thunderhub"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    info "Configure uma senha personalizada para o Thunderhub Lightning Dashboard:"
+    echo ""
+    echo "• A senha será usada para acessar o Thunderhub na interface web"
+    echo "• Por padrão, a senha é 'changeme123'"
+    echo "• Recomendamos usar uma senha forte e única"
+    echo ""
+    
+    while true; do
+        read -p "Deseja definir uma senha personalizada para o Thunderhub? (y/N): " -n 1 -r
+        echo
+        case $REPLY in
+            [Yy]* )
+                echo ""
+                while true; do
+                    read -p "🔐 Digite a nova senha para o Thunderhub: " thunderhub_password
+                    if [[ -n "$thunderhub_password" && ${#thunderhub_password} -ge 8 ]]; then
+                        echo ""
+                        read -p "🔐 Confirme a senha: " thunderhub_password_confirm
+                        if [[ "$thunderhub_password" == "$thunderhub_password_confirm" ]]; then
+                            log "✅ Senha do Thunderhub definida com sucesso!"
+                            configure_thunderhub_yaml "$thunderhub_password"
+                            break 2
+                        else
+                            error "❌ As senhas não coincidem! Tente novamente."
+                            echo ""
+                        fi
+                    else
+                        error "❌ A senha deve ter pelo menos 8 caracteres!"
+                        echo ""
+                    fi
+                done
+                ;;
+            [Nn]* | "" )
+                log "🔐 Usando senha padrão do Thunderhub (changeme123)"
+                warning "⚠️  Recomendamos alterar a senha padrão antes de usar em produção!"
+                # Ainda assim, criar o arquivo de configuração padrão se não existir
+                if [[ ! -f "container/thunderhub/thubConfig.yaml" ]]; then
+                    if [[ -f "container/thunderhub/thubConfig.yaml.example" ]]; then
+                        cp "container/thunderhub/thubConfig.yaml.example" "container/thunderhub/thubConfig.yaml"
+                        log "📝 Arquivo thubConfig.yaml criado com configuração padrão"
+                    fi
+                fi
+                break
+                ;;
+            * )
+                echo "Por favor, responda y (sim) ou n (não)."
+                ;;
+        esac
+    done
+    echo ""
+}
+
+# Função para configurar blockchain remota ou local
+configure_blockchain_source() {
+    echo ""
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    log "🔗 Configuração da Fonte Blockchain"
+    echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    info "Escolha a fonte da blockchain que deseja usar:"
+    echo ""
+    echo "1. 🏠 Blockchain Local (Padrão)"
+    echo "   • Sincronização completa da blockchain Bitcoin"
+    echo "   • Maior privacidade e controle total"
+    echo "   • Requer mais tempo e espaço em disco"
+    echo ""
+    echo "2. ☁️  Blockchain Remota BRLN Club"
+    echo "   • Conecta ao node Bitcoin da BRLN Club"
+    echo "   • Sincronização mais rápida"
+    echo "   • Requer credenciais da BRLN Club"
+    echo ""
+    
+    while true; do
+        read -p "Deseja usar a blockchain remota da BRLN Club? (y/N): " -n 1 -r
+        echo
+        case $REPLY in
+            [Yy]* )
+                log "📡 Configurando conexão com blockchain remota BRLN Club..."
+                configure_remote_blockchain
+                break
+                ;;
+            [Nn]* | "" )
+                log "🏠 Usando blockchain local (configuração padrão)"
+                info "A sincronização da blockchain Bitcoin será realizada localmente."
+                warning "⚠️  Isso pode levar várias horas para sincronizar completamente."
+                break
+                ;;
+            * )
+                echo "Por favor, responda y (sim) ou n (não)."
+                ;;
+        esac
+    done
+    
+    # Configurar senha do Thunderhub independente da escolha da blockchain
+    configure_thunderhub_password
+    echo ""
+}
+
+# Função para configurar blockchain remota
+configure_remote_blockchain() {
+    echo ""
+    log "🔑 Configuração das credenciais BRLN Club"
+    echo ""
+    
+    # Solicitar credenciais
+    echo "Digite as credenciais fornecidas pela BRLN Club:"
+    echo ""
+    
+    while true; do
+        read -p "👤 Usuário RPC: " brln_rpc_user
+        if [[ -n "$brln_rpc_user" ]]; then
+            break
+        else
+            error "Usuário não pode estar vazio!"
+        fi
+    done
+    
+    while true; do
+        read -p "🔐 Senha RPC: " brln_rpc_pass
+        echo
+        if [[ -n "$brln_rpc_pass" ]]; then
+            break
+        else
+            error "Senha não pode estar vazia!"
+        fi
+    done
+    
+    echo ""
+    log "✅ Credenciais capturadas com sucesso!"
+    
+    # Configurar arquivos
+    configure_bitcoin_conf
+    configure_elements_conf "$brln_rpc_user" "$brln_rpc_pass"
+    configure_lnd_conf "$brln_rpc_user" "$brln_rpc_pass"
+    
+    log "🎯 Configuração remota concluída!"
+    echo ""
+    info "Os arquivos foram configurados para usar a blockchain remota da BRLN Club."
+    warning "⚠️  Certifique-se de que as credenciais estão corretas antes de iniciar os containers."
+    echo ""
+}
+
+# Função para configurar elements.conf
+configure_elements_conf() {
+    local user="$1"
+    local pass="$2"
+    local elements_conf="container/elements/elements.conf"
+    
+    log "📝 Configurando elements.conf..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$elements_conf" ]]; then
+        # Copiar do exemplo se não existir
+        if [[ -f "container/elements/elements.conf.example" ]]; then
+            cp "container/elements/elements.conf.example" "$elements_conf"
+            log "Arquivo elements.conf criado a partir do exemplo"
+        else
+            error "Arquivo elements.conf.example não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Atualizar credenciais no elements.conf
+    sed -i "s/mainchainrpcuser=<brln_rpc_user>/mainchainrpcuser=$user/g" "$elements_conf"
+    sed -i "s/mainchainrpcpassword=<brln_rpc_pass>/mainchainrpcpassword=$pass/g" "$elements_conf"
+    
+    log "✅ elements.conf configurado com sucesso!"
+}
+
+configure_bitcoin_conf() {
+    local user="$1"
+    local pass="$2"
+    local bitcoin_conf="container/bitcoin/bitcoin.conf"
+    
+    log "📝 Configurando bitcoin.conf..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$bitcoin_conf" ]]; then
+        # Copiar do exemplo se não existir
+        if [[ -f "container/bitcoin/bitcoin.conf.example" ]]; then
+            cp "container/bitcoin/bitcoin.conf.example" "$bitcoin_conf"
+            log "Arquivo bitcoin.conf criado a partir do exemplo"
+        else
+            error "Arquivo bitcoin.conf.example não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Gerar rpcauth usando rpcauth.py
+    cd container/bitcoin
+    rpcauth_output=$(python3 rpcauth.py brlnbitcoin)
+    cd - > /dev/null
+    
+    # Extrair rpcauth line do output
+    rpcauth_line=$(echo "$rpcauth_output" | grep "^rpcauth=")
+    
+    # Atualizar credenciais no bitcoin.conf
+    sed -i "s/^rpcauth=.*/$rpcauth_line/g" "$bitcoin_conf"
+    
+    log "✅ bitcoin.conf configurado com sucesso!"
+}
+
+# Função para configurar lnd.conf
+configure_lnd_conf() {
+    local user="$1"
+    local pass="$2"
+    local lnd_conf="container/lnd/lnd.conf"
+    
+    log "📝 Configurando lnd.conf..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$lnd_conf" ]]; then
+        # Copiar do exemplo remoto se não existir
+        if [[ -f "container/lnd/lnd.conf.example.remote" ]]; then
+            cp "container/lnd/lnd.conf.example.remote" "$lnd_conf"
+            log "Arquivo lnd.conf criado a partir do exemplo remoto"
+        else
+            error "Arquivo lnd.conf.example.remote não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Atualizar credenciais no lnd.conf
+    sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
+    sed -i "s/bitcoind.rpcpass=<brln_rpc_user>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
+    
+    log "✅ lnd.conf configurado com sucesso!"
+}
+
+# Função para configurar thubConfig.yaml
+configure_thunderhub_yaml() {
+    local password="$1"
+    local thunderhub_config="container/thunderhub/thubConfig.yaml"
+    
+    log "📝 Configurando thubConfig.yaml..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$thunderhub_config" ]]; then
+        # Copiar do exemplo se não existir
+        if [[ -f "container/thunderhub/thubConfig.yaml.example" ]]; then
+            cp "container/thunderhub/thubConfig.yaml.example" "$thunderhub_config"
+            log "Arquivo thubConfig.yaml criado a partir do exemplo"
+        else
+            error "Arquivo thubConfig.yaml.example não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Atualizar senha no thubConfig.yaml
+    sed -i "s/masterPassword: 'changeme123'/masterPassword: '$password'/g" "$thunderhub_config"
+    sed -i "s/password: 'changeme123'/password: '$password'/g" "$thunderhub_config"
+    
+    # Também atualizar a variável de ambiente no service.json
+    local service_json="container/thunderhub/service.json"
+    if [[ -f "$service_json" ]]; then
+        sed -i "s/\"THUB_PASSWORD\": \"changeme123\"/\"THUB_PASSWORD\": \"$password\"/g" "$service_json"
+        log "✅ service.json atualizado com nova senha"
+    fi
+    
+    log "✅ thubConfig.yaml configurado com sucesso!"
+}
+
 # Verificar se há containers ativos e parar se necessário
 if [[ $(docker ps -q | wc -l) -gt 0 ]]; then
     warning "Existem containers Docker ativos. Parando todos os containers..."
@@ -101,20 +372,16 @@ cat << "EOF"
 ██╔══██╗██╔══██╗██║     ██║╚██╗██║    ██╔══╝  ██║   ██║██║     ██║        ██╔══██║██║   ██║   ██║   ██║   ██║
 ██████╔╝██║  ██║███████╗██║ ╚████║    ██║     ╚██████╔╝███████╗███████╗   ██║  ██║╚██████╔╝   ██║   ╚██████╔╝
 ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝    ╚═╝      ╚═════╝ ╚══════╝╚══════╝   ╚═╝  ╚═╝ ╚═════╝    ╚═╝    ╚═════╝ 
-██╗     ██╗ ██████╗ ██╗  ██╗████████╗███╗   ██╗██╗███╗   ██╗ ██████╗     ███╗   ██╗ ██████╗ ██████╗ ███████╗
-██║     ██║██╔════╝ ██║  ██║╚══██╔══╝████╗  ██║██║████╗  ██║██╔════╝     ████╗  ██║██╔═══██╗██╔══██╗██╔════╝
-██║     ██║██║  ███╗███████║   ██║   ██╔██╗ ██║██║██╔██╗ ██║██║  ███╗    ██╔██╗ ██║██║   ██║██║  ██║█████╗  
-██║     ██║██║   ██║██╔══██║   ██║   ██║╚██╗██║██║██║╚██╗██║██║   ██║    ██║╚██╗██║██║   ██║██║  ██║██╔══╝  
-███████╗██║╚██████╔╝██║  ██║   ██║   ██║ ╚████║██║██║ ╚████║╚██████╔╝    ██║ ╚████║╚██████╔╝██████╔╝███████╗
-╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚══════╝ 
-
                                                                                                                 
-    🚀 BRLN Container Stack - Bitcoin, Lightning & Liquid Network
+    🚀 BRLN - OS - Bitcoin, Lightning & Liquid Network
 EOF
 echo -e "${NC}"
 
 echo ""
 log "Iniciando configuração do BRLN-OS Container Stack..."
+
+# Configurar fonte da blockchain (local ou remota)
+configure_blockchain_source
 
 # Verificar se estamos no diretório correto
 if [[ ! -d "container" ]]; then
@@ -201,7 +468,7 @@ AVAILABLE_GB=$((AVAILABLE_SPACE / 1024 / 1024))
 
 if [[ $AVAILABLE_GB -lt 100 ]]; then
     warning "Espaço em disco baixo: ${AVAILABLE_GB}GB disponível"
-    warning "Recomendado: pelo menos 100GB para blockchain completa"
+    warning "Recomendado: pelo menos 1000GB para blockchain completa"
     echo ""
     read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
     echo
@@ -228,8 +495,6 @@ echo ""
 warning "⚠️  IMPORTANTE: Este processo pode demorar 30-60 minutos"
 warning "⚠️  A sincronização inicial da blockchain pode levar várias horas"
 warning "⚠️  Certifique-se de ter conexão estável com a internet"
-echo ""
-read -p "Deseja continuar? y/N: " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Operação cancelada pelo usuário."
@@ -240,9 +505,15 @@ log "Executando configuração completa..."
 echo ""
 read -p "Deseja exibir os logs em tempo real durante a configuração? y/N: " -n 1 -r
 echo
-
-./setup-docker-smartsystem.sh 
-SETUP_PID=$!
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Exibindo logs em tempo real..."
+    ./setup-docker-smartsystem.sh 
+    SETUP_PID=$!
+else
+    echo "Executando configuração em segundo plano..."
+    ./setup-docker-smartsystem.sh > /dev/null 2>&1 & spinner $!
+    SETUP_PID=$!
+fi
 
 # Verificar se a configuração foi bem-sucedida
 clear
@@ -292,6 +563,14 @@ while [[ $attempt -le $MAX_ATTEMPTS ]]; do
     
     ((attempt++))
 done
+
+echo "capturando as senhas do lndg e do thunderhub..."
+sleep 10 & spinner $!
+docker logs lndg 2>/dev/null | grep "FIRST TIME LOGIN PASSWORD" | awk -F': ' '{print $2}' > ../passwords.txt
+
+echo ""
+echo "Senha do LNDG: $(cat ../passwords.txt | grep -oP 'FIRST TIME LOGIN PASSWORD: \K.*')"
+echo ""
 
 echo ""
 warning "Anote agora as informações mostradas acima, caso você não o faça, elas não serão exibidas novamente no futuro!"
@@ -579,7 +858,7 @@ cat << "EOF"
 ╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝╚═╝  ╚═══╝ ╚═════╝     ╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚══════╝ 
 
                                                                                                                 
-    🚀 Container Stack - Bitcoin, Lightning & Liquid Network
+    🚀 BRLN - OS - Bitcoin, Lightning & Liquid Network
 EOF
 echo -e "${NC}"
 echo ""
@@ -602,3 +881,9 @@ echo "  • Reiniciar: docker restart [serviço]"
 echo "  • Status: docker ps"
 echo ""
 warning "🔒 Altere as senhas padrão antes de usar em produção!"
+echo ""
+info "🔑 Senhas configuradas:"
+echo "  • LNbits: Acesse http://localhost:5000 e crie o super usuário agora"
+echo "  • Thunderhub: Configurada durante o setup (verifique container/thunderhub/thubConfig.yaml)"
+echo "  • RPC Bitcoin: Gerada no container/bitcoin/bitcoin.conf pelo rpcauth.py"
+echo "  • RPC Elements: Definida no container/elements/elements.conf"
