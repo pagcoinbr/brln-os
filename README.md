@@ -147,15 +147,6 @@ Para personalizar configurações específicas, edite os arquivos em:
 
 ---
 
-## 🚀 Uso
-
-### Primeiros Passos
-
-1. **Aguarde a sincronização**: Bitcoin Core levará algumas horas para sincronizar
-2. **Acesse a interface**: Abra `http://localhost:8080` no navegador
-3. **Configure sua carteira Lightning**: Use o Thunderhub para criar canais
-4. **Comece a usar**: Faça pagamentos Lightning instantâneos!
-
 ### Comandos Úteis
 
 ```bash
@@ -203,219 +194,6 @@ O BRLN-OS inclui interfaces otimizadas para dispositivos móveis:
 - 🛡️ **Use firewall** para limitar acesso externo se necessário
 - 📱 **Monitore o sistema** através dos dashboards disponíveis
 
----
-
-## 🆘 Suporte e Comunidade
-
-- 🎥 [Tutoriais em vídeo](https://www.youtube.com/@brlightningclub)
-
-### Comunidade
-- 💬 [Telegram](https://t.me/pagcoinbr)
-- 🐦 [Twitter](https://twitter.com/pagcoinbr)
-- ✉️ [Suporte por Email](mailto:suporte@pagcoin.org) — Entre em contato diretamente para dúvidas ou suporte!
-
-### Problemas e Bugs
-- 🐛 [Reportar bug](https://github.com/pagcoinbr/brln-os/issues)
-- 💡 [Sugerir feature](https://github.com/pagcoinbr/brln-os/discussions)
-- 🔍 [Buscar soluções](https://github.com/pagcoinbr/brln-os/issues?q=is%3Aissue)
-
----
-
-## 🤝 Contribuindo
-
-Adoramos contribuições! Veja como você pode ajudar:
-
-1. **🍴 Fork** o repositório
-2. **🌿 Crie** uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. **💾 Commit** suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. **📤 Push** para a branch (`git push origin feature/AmazingFeature`)
-5. **🔄 Abra** um Pull Request
-
-### Desenvolvimento
-
-Para desenvolvimento local:
-
-```bash
-# Clone o repositório
-git clone https://github.com/pagcoinbr/brln-os.git
-cd brln-os
-
-# Instale dependências de desenvolvimento
-./dev-setup.sh
-
-# Execute em modo desenvolvimento
-./setup.sh --dev
-```
-
----
-
-## 📝 Licença
-
-Este projeto está licenciado sob a [Licença MIT](LICENSE) - veja o arquivo LICENSE para detalhes.
-
----
-
-## 🙏 Agradecimentos
-
-- **Bitcoin Core Team** - Pela base sólida do Bitcoin
-- **Lightning Labs** - Pelo LND e inovações Lightning
-- **Blockstream** - Pelo Elements e Liquid Network
-- **Comunidade Bitcoin Brasil** - Pelo suporte e feedback contínuo
-
----
-
-<div align="center">
-
-**Feito com ⚡ e ❤️ pela comunidade BRLN**
-
-</div>
-
-## ⚡ Início Rápido
-
-### Pré-requisitos do Sistema
-
-- **Hardware mínimo recomendado**:
-  - 4 CPU cores
-  - 8 GB RAM
-  - Mais de 1Tb de armazenamento SSD (para blockchain completa)
-  - Conexão estável com a internet
-- **Software**:
-  - Docker Engine 20.10+
-  - Docker Compose v2.0+
-  - Sistema operacional Linux (Ubuntu 24.04+ recomendado)
-
-### � Instalação Simplificada (Recomendado)
-
-```bash
-# Clone o repositório
-git clone https://github.com/pagcoinbr/brlnfullauto.git
-cd brlnfullauto
-
-# Execute a instalação automática
-./setup.sh
-```
-
-**Ou use o comando alternativo:**
-```bash
-./install
-```
-
-O script de instalação irá:
-- ✅ Verificar pré-requisitos (Docker, Docker Compose)
-- ✅ Instalar dependências automaticamente se necessário
-- ✅ Configurar permissões dos scripts
-- ✅ Oferecer opções de instalação (completa ou personalizada)
-- ✅ Iniciar todos os serviços do stack
-
-### 🛠️ Instalação Manual (Avançado)
-
-Se preferir controle total sobre o processo:
-
-```bash
-# Clone o repositório
-git clone https://github.com/pagcoinbr/brlnfullauto.git
-cd brlnfullauto/container
-
-# Configure permissões
-chmod +x setup-docker-smartsystem.sh
-
-# Execute configuração interativa
-./setup-docker-smartsystem.sh
-```
-
-### 📊 Portas e Serviços Disponíveis
-
-| Porta | Serviço | Descrição | Acesso |
-|-------|---------|-----------|--------|
-| 8080 | Bitcoin RPC | API Bitcoin Core | Interno |
-| 18884 | Elements RPC | API Elements Core | Interno |
-| 10009 | LND gRPC | API Lightning Network | Interno |
-| 8889 | LNDG | Dashboard estatísticas LND | http://localhost:8889 |
-| 3000 | Thunderhub | Interface completa LND | http://localhost:3000 |
-| 5000 | LNbits | Sistema bancário LN | http://localhost:5000 |
-| 1984 | PeerSwap Web | Interface PeerSwap | http://localhost:1984 |
-| 42069 | PeerSwap | API PeerSwap | Interno |
-| 9050 | Tor SOCKS | Proxy Tor | localhost |
-
-## � Scripts Auxiliares
-
-O projeto inclui vários scripts auxiliares para facilitar o uso e manutenção do sistema:
-
-### 🚀 Scripts Principais
-
-| Script | Descrição | Uso |
-|--------|-----------|-----|
-| `setup.sh` | Instalação automática completa | `./setup.sh` |
-| `extract_passwords.sh` | Extração de senhas dos logs | `./extract_passwords.sh` |
-| `monitor_seeds.sh` | Monitor de seeds em tempo real | `./monitor_seeds.sh [monitor\|extract]` |
-
-### 📄 Scripts de Extração de Credenciais
-
-#### extract_passwords.sh
-- **Função**: Extrai e documenta todas as senhas e credenciais
-- **Saída**: Gera `passwords.md` e `passwords.txt`
-- **Uso**: `./extract_passwords.sh [--display-only]`
-
-#### monitor_seeds.sh
-- **Função**: Monitora logs em tempo real para capturar seeds
-- **Modos**:
-  - `monitor`: Monitoramento em tempo real
-  - `extract`: Extração de logs existentes
-- **Saída**: Gera `seeds_backup.txt`
-
-### 🔧 Scripts de Configuração
-
-#### setup.sh
-- **Função**: Instalação automatizada completa
-- **Recursos**:
-  - Verificação de pré-requisitos
-  - Instalação de dependências
-  - Configuração de permissões
-  - Inicialização de todos os serviços
-  - Extração automática de credenciais
-
-Consulte as seções específicas deste README para detalhes sobre cada script.
-
-## �🛠️ Configuração e Uso
-
-### 🔧 Configuração Inicial
-
-#### 1. Configuração do Bitcoin Core
-```bash
-# Verificar sincronização
-docker exec bitcoin bitcoin-cli getblockchaininfo
-
-# Gerar carteira (se necessário)
-docker exec bitcoin bitcoin-cli createwallet "wallet"
-```
-
-#### 2. Configuração do Elements (Liquid)
-```bash
-# Verificar informações da rede Liquid
-docker exec elements elements-cli getblockchaininfo
-
-# Verificar assets disponíveis
-docker exec elements elements-cli listissuances
-```
-
-#### 3. Configuração do LND
-
-O LND está configurado para **criação automática** da carteira na primeira execução:
-
-```bash
-# Verificar logs da inicialização
-docker logs -f lnd
-
-# Verificar informações do nó
-docker exec lnd lncli getinfo
-
-# Verificar saldo da carteira
-docker exec lnd lncli walletbalance
-```
-
-**⚠️ IMPORTANTE**: Durante a primeira execução, o LND gerará uma seed de 24 palavras que será exibida nos logs. **SALVE ESSA SEED** imediatamente em local seguro!
-
-### 📱 Interfaces Web
 
 Após a inicialização completa, você pode acessar:
 
@@ -598,64 +376,6 @@ docker-compose ps --filter "health=healthy"
 docker-compose logs --tail=100 | grep -i error
 ```
 
-### 🌱 Monitor de Seeds e Senhas
-
-O projeto inclui o script `monitor_seeds.sh` para capturar automaticamente seeds e senhas geradas durante a instalação:
-
-#### Monitoramento em Tempo Real (Recomendado)
-Use este modo **DURANTE** a instalação para capturar seeds conforme são geradas:
-
-```bash
-# Terminal 1 - Iniciar monitoramento
-./monitor_seeds.sh monitor
-# ou apenas
-./monitor_seeds.sh
-
-# Terminal 2 - Executar instalação
-./setup.sh
-```
-
-#### Extração de Seeds dos Logs Existentes
-Use este modo **APÓS** a instalação para tentar recuperar seeds dos logs:
-
-```bash
-# Extrair seeds dos logs existentes
-./monitor_seeds.sh extract
-```
-
-#### Ajuda e Instruções
-```bash
-# Mostrar ajuda completa
-./monitor_seeds.sh help
-```
-
-#### Arquivos Gerados
-- **`seeds_backup.txt`** - Backup das seeds encontradas
-- **`/tmp/seed_monitor.log`** - Log do monitoramento (modo monitor)
-
-#### Cenários de Uso
-
-**Cenário 1: Durante a Instalação** (Recomendado)
-```bash
-# Abrir dois terminais
-# Terminal 1:
-./monitor_seeds.sh monitor
-
-# Terminal 2:
-./setup.sh
-```
-
-**Cenário 2: Recuperação Após Instalação**
-```bash
-# Se você esqueceu de monitorar durante a instalação
-./monitor_seeds.sh extract
-```
-
-**⚠️ Importante**: 
-- O modo `monitor` fica executando até você pressionar Ctrl+C
-- É recomendado usar em terminal separado durante a instalação
-- As seeds são salvas automaticamente no arquivo `seeds_backup.txt`
-
 ## 🔒 Segurança e Backup
 
 ### 🛡️ Medidas de Segurança
@@ -677,29 +397,6 @@ Use este modo **APÓS** a instalação para tentar recuperar seeds dos logs:
 # 24 palavras em inglês separadas por espaços
 # Exemplo: abandon ability able about above absent absorb abstract...
 ```
-
-#### 2. Extração Automática de Senhas e Seeds
-O sistema inclui um script para documentar automaticamente todas as senhas e seeds:
-
-```bash
-# Extrair todas as senhas dos logs
-./extract_passwords.sh
-
-# Apenas exibir senhas (sem gerar arquivos)
-./extract_passwords.sh --display-only
-```
-
-**Arquivos gerados:**
-- **`passwords.md`** - Documentação completa em Markdown
-- **`passwords.txt`** - Versão simplificada em texto
-- **`startup.md`** - Relatório completo da instalação
-
-**Funcionalidades:**
-- ✅ Extrai senhas padrão dos arquivos de configuração
-- ✅ Captura senhas geradas automaticamente dos logs
-- ✅ Remove códigos de escape ANSI das senhas
-- ✅ Documenta URLs de acesso e comandos úteis
-- ✅ Opção de autodestruição dos arquivos por segurança
 
 #### 3. Backup dos Canais Lightning
 ```bash
@@ -750,16 +447,6 @@ tar -czf "$BACKUP_DIR/config-backup.tar.gz" container/
 echo "Backup realizado em: $BACKUP_DIR"
 ```
 
-#### Monitoramento de Segurança
-```bash
-# Verificar logs de autenticação
-docker-compose logs | grep -i "auth\|login\|fail"
-
-# Verificar conexões ativas
-docker exec lnd lncli listpeers
-docker exec lnd lncli listchannels
-```
-
 ## 🛠️ Manutenção e Troubleshooting
 
 ### Problemas Comuns
@@ -788,26 +475,42 @@ docker exec elements elements-cli getblockchaininfo
 docker exec lnd lncli getinfo
 ```
 
-#### 3. Problemas de conectividade
-```bash
-# Testar conectividade de rede
-docker exec lnd lncli describegraph | jq '.nodes | length'
+<div align="center">
 
-# Verificar peers conectados
-docker exec lnd lncli listpeers
-```
+**Feito com ⚡ e ❤️ pela comunidade BRLN**
 
-### Atualizações
-```bash
-# Atualizar imagens
-docker-compose pull
+</div>
 
-# Recrear containers com novas versões
-docker-compose up -d --force-recreate
+---
+## 🆘 Suporte e Comunidade
 
-# Limpeza de imagens antigas
-docker system prune -a
-```
+- 🎥 [Tutoriais em vídeo](https://www.youtube.com/@brlightningclub)
+
+### Comunidade
+- 💬 [Telegram](https://t.me/pagcoinbr)
+- 🐦 [Twitter](https://twitter.com/pagcoinbr)
+- ✉️ [Suporte por Email](mailto:suporte@pagcoin.org) — Entre em contato diretamente para dúvidas ou suporte!
+
+### Problemas e Bugs
+- 🐛 [Reportar bug](https://github.com/pagcoinbr/brln-os/issues)
+- 💡 [Sugerir feature](https://github.com/pagcoinbr/brln-os/discussions)
+- 🔍 [Buscar soluções](https://github.com/pagcoinbr/brln-os/issues?q=is%3Aissue)
+---
+
+## 📝 Licença
+
+Este projeto está licenciado sob a [Licença MIT](LICENSE) - veja o arquivo LICENSE para detalhes.
+
+---
+
+## 🙏 Agradecimentos
+
+- **Bitcoin Core Team** - Pela base sólida do Bitcoin
+- **Lightning Labs** - Pelo LND e inovações Lightning
+- **Blockstream** - Pelo Elements e Liquid Network
+- **Comunidade BRLN** - Pelo suporte e feedback contínuo
+
+---
 
 ## 📚 Referências e Documentação
 
@@ -818,13 +521,6 @@ docker system prune -a
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [PeerSwap Documentation](https://github.com/ElementsProject/peerswap)
 
-## 🤝 Contribuindo
-
-Consulte o arquivo [CONTRIBUTING.md](./CONTRIBUTING.md) para diretrizes sobre:
-- Como contribuir com o projeto
-- Estrutura de desenvolvimento
-- Padrões de código
-- Processo de submissão de pull requests
 
 ## 📄 Licença
 
