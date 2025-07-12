@@ -86,7 +86,7 @@ cd brln-os
 
 ---
 
-## � Estrutura do Projeto
+## 🏗️ Estrutura do Projeto
 
 ```
 brln-os/
@@ -210,7 +210,7 @@ Após a inicialização completa, você pode acessar:
    - Sistema bancário Lightning Network
    - Criação de carteiras e aplicações
 
-4. **PeerSwap Web** (http://localhost:1984)
+4. **PeerSwap Web** (http://localhost:8081)
    - Interface para swaps entre Bitcoin e Liquid
    - Gerenciamento de liquidez entre redes
 
@@ -398,7 +398,7 @@ docker-compose logs --tail=100 | grep -i error
 # Exemplo: abandon ability able about above absent absorb abstract...
 ```
 
-#### 3. Backup dos Canais Lightning
+#### 2. Backup dos Canais Lightning
 ```bash
 # Exportar backup de todos os canais
 docker exec lnd lncli exportchanbackup --all
@@ -410,13 +410,13 @@ docker exec lnd lncli exportchanbackup --all --output_file=/tmp/channels.backup
 docker cp lnd:/tmp/channels.backup ./channels-backup-$(date +%Y%m%d).backup
 ```
 
-#### 4. Backup das Configurações
+#### 3. Backup das Configurações
 ```bash
 # Backup completo do diretório de configurações
 tar -czf backup-config-$(date +%Y%m%d).tar.gz container/
 ```
 
-#### 5. Backup das Carteiras
+#### 4. Backup das Carteiras
 ```bash
 # Backup da carteira Bitcoin
 docker exec bitcoin bitcoin-cli backupwallet /tmp/bitcoin-wallet.backup
@@ -520,11 +520,6 @@ Este projeto está licenciado sob a [Licença MIT](LICENSE) - veja o arquivo LIC
 - [Lightning Network Specifications](https://github.com/lightning/bolts)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [PeerSwap Documentation](https://github.com/ElementsProject/peerswap)
-
-
-## 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT. Veja o arquivo [LICENSE](./LICENSE) para detalhes.
 
 ---
 
