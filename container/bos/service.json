@@ -1,0 +1,32 @@
+{
+  "name": "Balance of Satoshis (BOS)",
+  "description": "Balance of Satoshis - Ferramenta de gerenciamento e análise para Lightning Network",
+  "port": 3001,
+  "internalPort": 3001,
+  "protocol": "http",
+  "category": "lightning",
+  "dependencies": ["lnd"],
+  "environment": {
+    "BOS_MODE": "interactive",
+    "NODE_ALIAS": "BRLN-Node",
+    "BOS_TELEGRAM_TOKEN": "",
+    "LND_DIR": "/data/lnd"
+  },
+  "volumes": [
+    "/data/bos:/data/bos",
+    "/data/lnd:/data/lnd:ro"
+  ],
+  "commands": {
+    "balance": "bos balance --node=BRLN-Node",
+    "info": "bos info --node=BRLN-Node",
+    "forwards": "bos forwards --node=BRLN-Node",
+    "peers": "bos peers --node=BRLN-Node",
+    "telegram": "bos telegram --use-small-units --connect [TOKEN] --node=BRLN-Node"
+  },
+  "healthcheck": {
+    "command": "bos balance --node=BRLN-Node",
+    "interval": "30s",
+    "timeout": "10s",
+    "retries": 3
+  }
+}

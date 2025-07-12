@@ -284,6 +284,30 @@ services:
       - NODE_ENV=production
       - ACCOUNT_CONFIG_PATH=/data/thunderhub/config/thubConfig_runtime.yaml
 
+  bos:
+    build:
+      context: .
+      dockerfile: ./bos/Dockerfile.bos
+    container_name: bos
+    ports:
+      - 3001:3001   # BOS Web Interface (se necessário)
+    networks:
+      - grafana-net
+    volumes:
+      - bos_data:/data/bos
+      - /data/lnd:/data/lnd:ro  # Volume compartilhado com LND para certificados
+    restart: unless-stopped
+    depends_on:
+      - lnd
+    environment:
+      - BOS_MODE=interactive  # Modes: interactive, telegram, daemon
+      - NODE_ALIAS=BRLN-Node
+      - BOS_TELEGRAM_TOKEN=  # Adicione seu token do Telegram aqui
+      - LND_DIR=/data/lnd
+      - BOS_DEFAULT_LND_PATH=/data/lnd
+    stdin_open: true
+    tty: true
+
 networks:
   grafana-net:
     driver: bridge
@@ -298,3 +322,4 @@ volumes:
   psweb_data:
   thunderhub_data:
   lndg_data:
+  bos_data:

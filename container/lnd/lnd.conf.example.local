@@ -103,8 +103,8 @@ bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
 bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 ## ATENCAO: Para bitcoin Externo como o da BRLN Comente as quatro linhas acima e descomente as 5 abaixo.
 #bitcoind.rpchost=bitcoin.br-ln.com:8085
-#bitcoind.rpcuser=<seu_user_rpc>
-#bitcoind.rpcpass=<sua_senha_rpc>
+#bitcoind.rpcuser=<brln_rpc_user>
+#bitcoind.rpcpass=<brln_rpc_user>
 #bitcoind.zmqpubrawblock=tcp://bitcoin.br-ln.com:28332
 #bitcoind.zmqpubrawtx=tcp://bitcoin.br-ln.com:28333
 

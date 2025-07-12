@@ -19,8 +19,8 @@ rpcbind=0.0.0.0
 # RPC conexão remota com Bitcoin Core
 mainchainrpchost=bitcoin.br-ln.com
 mainchainrpcport=8085
-mainchainrpcuser=
-mainchainrpcpassword=
+mainchainrpcuser=<brln_rpc_user>
+mainchainrpcpassword=<brln_rpc_pass>
 
 fallbackfee=0.00001
 

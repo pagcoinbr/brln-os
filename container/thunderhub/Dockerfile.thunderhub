@@ -49,6 +49,9 @@ RUN mkdir -p ${DATA_DIR}/config && \
 COPY --chown=${USER}:${USER} ./thunderhub/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+#copia o thubConfig
+COPY --chown=${USER}:${USER} ./thunderhub/thubConfig.yaml.example thunderhub/thubConfig.yaml
+
 # Expor porta
 EXPOSE ${THUNDERHUB_PORT}
 
