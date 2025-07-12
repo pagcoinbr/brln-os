@@ -207,15 +207,12 @@ O BRLN-OS inclui interfaces otimizadas para dispositivos móveis:
 
 ## 🆘 Suporte e Comunidade
 
-### Documentação
-- 📖 [Wiki completo](https://github.com/pagcoinbr/brln-os/wiki)
-- 📋 [FAQ - Perguntas frequentes](https://github.com/pagcoinbr/brln-os/wiki/FAQ)
-- 🎥 [Tutoriais em vídeo](https://youtube.com/@pagcoin)
+- 🎥 [Tutoriais em vídeo](https://www.youtube.com/@brlightningclub)
 
 ### Comunidade
-- 💬 [Telegram](https://t.me/pagcoin)
-- 🐦 [Twitter](https://twitter.com/pagcoin)
-- 🌐 [Site oficial](https://pagcoin.org)
+- 💬 [Telegram](https://t.me/pagcoinbr)
+- 🐦 [Twitter](https://twitter.com/pagcoinbr)
+- ✉️ [Suporte por Email](mailto:suporte@pagcoin.org) — Entre em contato diretamente para dúvidas ou suporte!
 
 ### Problemas e Bugs
 - 🐛 [Reportar bug](https://github.com/pagcoinbr/brln-os/issues)
@@ -269,9 +266,7 @@ Este projeto está licenciado sob a [Licença MIT](LICENSE) - veja o arquivo LIC
 
 <div align="center">
 
-**Feito com ⚡ e ❤️ pela comunidade Bitcoin Brasil**
-
-[Website](https://pagcoin.org) • [Twitter](https://twitter.com/pagcoin) • [Telegram](https://t.me/pagcoin)
+**Feito com ⚡ e ❤️ pela comunidade BRLN**
 
 </div>
 
