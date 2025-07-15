@@ -508,14 +508,6 @@ echo ""
 warning "⚠️  IMPORTANTE: Este processo pode demorar 30-60 minutos"
 warning "⚠️  A sincronização inicial da blockchain pode levar várias horas"
 warning "⚠️  Certifique-se de ter conexão estável com a internet"
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Operação cancelada pelo usuário."
-    exit 0
-fi
-
-log "Executando configuração completa..."
-echo ""
 read -p "Deseja exibir os logs em tempo real durante a configuração? y/N: " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -555,7 +547,7 @@ warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 P
 warning "Extraindo seed LND dos logs..."
 
 # Tentar capturar a seed múltiplas vezes se necessário
-MAX_ATTEMPTS=3
+MAX_ATTEMPTS=1
 attempt=1
 
 while [[ $attempt -le $MAX_ATTEMPTS ]]; do
@@ -713,156 +705,6 @@ while true; do
     esac
 done
 clear
-echo ""
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
-log "🖥️ Instalando Interface Gráfica Web..."
-echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-# Instalar interface gráfica web
-install_web_interface() {
-    log "📦 Instalando Apache e dependências..."
-    
-    # Instalar Apache e Python
-    sudo apt update > /dev/null 2>&1 &
-    spinner $!
-    
-    sudo apt install -y apache2 python3-pip python3-venv > /dev/null 2>&1 &
-    spinner $!
-    
-    # Instalar Flask-SocketIO em ambiente virtual
-    log "🐍 Configurando ambiente Python..."
-    
-    # Get current absolute path before changing directories
-    GRAPHICS_PATH="$(pwd)/graphics"
-    
-    cd graphics
-    
-    if [ ! -d "venv" ]; then
-        python3 -m venv venv > /dev/null 2>&1 &
-        spinner $!
-    fi
-    
-    source venv/bin/activate
-    pip install flask flask-cors flask-socketio > /dev/null 2>&1 &
-    spinner $!
-    deactivate
-    
-    # Configurar Apache
-    log "🌐 Configurando Apache..."
-    
-    # Copiar arquivos da interface
-    sudo cp -r html/* /var/www/html/ > /dev/null 2>&1
-    sudo chown -R www-data:www-data /var/www/html/ > /dev/null 2>&1
-    
-    # Configurar CGI
-    sudo a2enmod cgi > /dev/null 2>&1
-    sudo mkdir -p /var/www/html/cgi-bin > /dev/null 2>&1
-    sudo cp cgi-bin/* /var/www/html/cgi-bin/ > /dev/null 2>&1
-    sudo chmod +x /var/www/html/cgi-bin/* > /dev/null 2>&1
-    sudo chown -R www-data:www-data /var/www/html/cgi-bin/ > /dev/null 2>&1
-    
-    # Criar serviço systemd para Flask
-    log "⚙️ Criando serviço Flask..."
-    
-    # Create a dedicated directory for the Flask service that www-data can access
-    sudo mkdir -p /opt/brln-flask
-    sudo cp $GRAPHICS_PATH/control-systemd.py /opt/brln-flask/
-    
-    # Fix the Flask-SocketIO Werkzeug production issue
-    sudo sed -i 's/socketio.run(app, host='\''0.0.0.0'\'', port=5001, debug=False)/socketio.run(app, host='\''0.0.0.0'\'', port=5001, debug=False, allow_unsafe_werkzeug=True)/' /opt/brln-flask/control-systemd.py
-    
-    # Create a new virtual environment in /opt/brln-flask instead of copying
-    sudo python3 -m venv /opt/brln-flask/venv
-    sudo /opt/brln-flask/venv/bin/pip install flask flask-cors flask-socketio
-    
-    # Set ownership after creating everything
-    sudo chown -R www-data:www-data /opt/brln-flask
-    
-    sudo tee /etc/systemd/system/brln-flask.service > /dev/null << EOF
-[Unit]
-Description=BRLN Flask API Server
-After=network.target docker.service
-Requires=docker.service
-
-[Service]
-Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/opt/brln-flask
-Environment=PATH=/opt/brln-flask/venv/bin
-ExecStart=/opt/brln-flask/venv/bin/python control-systemd.py
-Restart=always
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-    # Ajustar permissões - já foi feito durante a cópia para /opt/brln-flask
-    
-    # Permitir www-data executar docker
-    sudo usermod -a -G docker www-data > /dev/null 2>&1
-    
-    # Recarregar systemd e iniciar serviços
-    sudo systemctl daemon-reload > /dev/null 2>&1
-    sudo systemctl enable apache2 > /dev/null 2>&1
-    sudo systemctl enable brln-flask > /dev/null 2>&1
-    sudo systemctl restart apache2 > /dev/null 2>&1 &
-    spinner $!
-    sudo systemctl start brln-flask > /dev/null 2>&1 &
-    spinner $!
-    
-    cd - > /dev/null
-}
-
-# Executar instalação da interface
-install_web_interface
-
-# Verificar se os serviços estão funcionando
-log "🔍 Verificando serviços da interface..."
-
-sleep 3
-
-APACHE_STATUS=$(systemctl is-active apache2)
-FLASK_STATUS=$(systemctl is-active brln-flask)
-
-if [ "$APACHE_STATUS" = "active" ] && [ "$FLASK_STATUS" = "active" ]; then
-    echo ""
-    echo -e "${GREEN}✅ Interface gráfica instalada com sucesso!${NC}"
-    echo ""
-    info "🌐 Acesse a interface em:"
-    LOCAL_IP=$(hostname -I | awk '{print $1}')
-    echo "  • Interface Principal: http://$LOCAL_IP"
-    echo "  • Interface Principal: http://localhost"
-    echo ""
-    info "🔧 APIs disponíveis:"
-    echo "  • Flask API: http://$LOCAL_IP:5001"
-    echo "  • Status Containers: http://$LOCAL_IP:5001/containers/status"
-    echo ""
-    info "💡 Funcionalidades da interface:"
-    echo "  • ⚡ Controle de containers em tempo real WebSockets"
-    echo "  • 💰 Visualização de saldos Lightning/Bitcoin/Liquid"
-    echo "  • 📊 Monitoramento de sistema e logs"
-    echo "  • 🔄 Ferramentas Lightning criar/pagar invoices"
-    echo "  • 🐳 Status detalhado dos containers Docker"
-    echo ""
-else
-    echo ""
-    warning "⚠️ Alguns serviços da interface não iniciaram corretamente"
-    if [ "$APACHE_STATUS" != "active" ]; then
-        echo "  • Apache: $APACHE_STATUS"
-    fi
-    if [ "$FLASK_STATUS" != "active" ]; then
-        echo "  • Flask API: $FLASK_STATUS"
-    fi
-    echo ""
-    info "🔧 Para verificar o status completo:"
-    echo "  cd graphics && ./check_services.sh"
-fi
-
 echo -e "${CYAN}"
 echo "$BRLN_ASCII_FULL"
 echo -e "${GREEN}"

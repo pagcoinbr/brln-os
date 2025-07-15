@@ -124,3 +124,4 @@ seeds_backup.txt
 # Arquivos de ambiente e configuração
 .env
 **/.env
+container/thunderhub/thubConfig.yaml
