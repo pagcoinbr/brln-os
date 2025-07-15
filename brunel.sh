@@ -5,13 +5,13 @@ TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE
 LND_VERSION=0.18.5
 BTC_VERSION=28.1
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-REPO_DIR="/home/admin/brlnfullauto"
+REPO_DIR="/home/$USER/brlnfullauto"
 HTML_SRC="$REPO_DIR/html"
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-SERVICES_DIR="/home/admin/brlnfullauto/services"
-POETRY_BIN="/home/admin/.local/bin/poetry"
-FLASKVENV_DIR="/home/admin/envflask"
+SERVICES_DIR="/home/$USER/brlnfullauto/services"
+POETRY_BIN="/home/$USER/.local/bin/poetry"
+FLASKVENV_DIR="/home/$USER/envflask"
 atual_user=$(whoami)
 branch=main
 git_user=pagcoinbr
@@ -92,7 +92,7 @@ EOF
   if ! sudo ufw status | grep -q "80/tcp"; then
     sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network'
   fi
-  sudo usermod -aG admin www-data
+  sudo usermod -aG $USER www-data
   # Garante que o pacote python3-venv esteja instalado
   if ! dpkg -l | grep -q python3-venv; then
     sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
@@ -101,7 +101,7 @@ EOF
   fi
 
   # Define o diretório do ambiente virtual
-  FLASKVENV_DIR="/home/admin/envflask"
+  FLASKVENV_DIR="/home/$USER/envflask"
 
   # Cria o ambiente virtual apenas se ainda não existir
   if [ ! -d "$FLASKVENV_DIR" ]; then
@@ -118,11 +118,11 @@ EOF
   pip install flask flask-cors >> /dev/null 2>&1 & spinner
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
-  SUDOERS_TMP="/etc/sudoers.d/admin-services"
+  SUDOERS_TMP="/etc/sudoers.d/$USER-services"
 
   # 📝 Criação segura do arquivo usando here-document
   sudo tee "$SUDOERS_TMP" > /dev/null <<EOF
-admin ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service, /usr/bin/systemctl start bitcoind.service, /usr/bin/systemctl stop bitcoind.service, /usr/bin/systemctl start bos-telegram.service, /usr/bin/systemctl stop bos-telegram.service, /usr/bin/systemctl start tor.service, /usr/bin/systemctl stop tor.service
+$USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service, /usr/bin/systemctl start bitcoind.service, /usr/bin/systemctl stop bitcoind.service, /usr/bin/systemctl start bos-telegram.service, /usr/bin/systemctl stop bos-telegram.service, /usr/bin/systemctl start tor.service, /usr/bin/systemctl stop tor.service
 EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
@@ -139,14 +139,14 @@ EOF
 
 gotty_do () {
   echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-  LOCAL_APPS="/home/admin/brlnfullauto/local_apps"
+  LOCAL_APPS="/home/$USER/brlnfullauto/local_apps"
   if [[ $arch == "x86_64" ]]; then
-    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/admin >> /dev/null 2>&1
+    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/$USER >> /dev/null 2>&1
   else
-    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /home/admin >> /dev/null 2>&1
+    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /home/$USER >> /dev/null 2>&1
   fi
   # Move e torna executável
-  sudo mv /home/admin/gotty /usr/local/bin/gotty
+  sudo mv /home/$USER/gotty /usr/local/bin/gotty
   sudo chmod +x /usr/local/bin/gotty
 }
 
@@ -173,7 +173,7 @@ COMMENTS=("allow BRLNfullauto on port 3131 from local network"
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
   sudo rm -f /etc/systemd/system/$service.service
-  sudo cp /home/admin/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
+  sudo cp /home/$USER/brlnfullauto/services/$service.service /etc/systemd/system/$service.service
 done
 
 # Reload systemd and enable/start services
@@ -196,9 +196,9 @@ done
 gui_update() {
   update_and_upgrade
   gotty_install
-  sudo chown -R admin:admin /var/www/html/radio
+  sudo chown -R $USER:$USER /var/www/html/radio
   sudo chmod +x /var/www/html/radio/radio-update.sh
-  sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
+  sudo chmod +x /home/$USER/brlnfullauto/html/radio/radio-update.sh
   menu
 }
 
@@ -209,24 +209,24 @@ terminal_web() {
     update_and_upgrade
     radio_update
     gotty_install
-    sudo chown -R admin:admin /var/www/html/radio
+    sudo chown -R $USER:$USER /var/www/html/radio
     sudo chmod +x /var/www/html/radio/radio-update.sh
-    sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
+    sudo chmod +x /home/$USER/brlnfullauto/html/radio/radio-update.sh
     tailscale_vpn
     opening
     exit 0
   else
-    if [[ $atual_user == "admin" ]]; then
+    if [[ $atual_user == "$USER" ]]; then
       menu
       exit 0
     else
-      echo -e "${RED} Você não está logado como admin! ${NC}"
-      echo -e "${RED} Logando como admin e executando o script... ${NC}"
+      echo -e "${RED} Você não está logado como $USER! ${NC}"
+      echo -e "${RED} Logando como $USER e executando o script... ${NC}"
       if [[ ! -f /usr/local/bin/gotty ]]; then
         update_and_upgrade
         gotty_install
       fi
-      sudo -u admin bash "$INSTALL_DIR/brunel.sh"
+      sudo -u $USER bash "$INSTALL_DIR/brunel.sh"
       exit 0
     fi
   fi
@@ -234,7 +234,7 @@ terminal_web() {
 
 create_main_dir() {
   sudo mkdir /data
-  sudo chown admin:admin /data
+  sudo chown $USER:$USER /data
 }
 
 configure_ufw() {
@@ -304,13 +304,13 @@ postgres_db () {
   # Mostra clusters ativos
   pg_lsclusters
 
-  # Cria a role admin com senha padrão (admin)
-  sudo -u postgres psql -c "CREATE ROLE admin WITH LOGIN CREATEDB PASSWORD 'admin';" || true
+  # Cria a role com o nome do usuário atual e senha padrão (admin)
+  sudo -u postgres psql -c "CREATE ROLE $USER WITH LOGIN CREATEDB PASSWORD 'admin';" || true
 
-  # Cria banco de dados lndb com owner admin
-  sudo -u postgres createdb -O admin lndb
+  # Cria banco de dados lndb com owner sendo o usuário atual
+  sudo -u postgres createdb -O $USER lndb
 
-  echo -e "${GREEN}🎉 PostgreSQL está pronto para uso com o banco 'lndb' e o usuário 'admin'.${NC}"
+  echo -e "${GREEN}🎉 PostgreSQL está pronto para uso com o banco 'lndb' e o usuário '$USER'.${NC}"
 }
 
 
@@ -338,7 +338,7 @@ download_lnd() {
 }
 
 configure_lnd() {
-  local file_path="/home/admin/brlnfullauto/conf_files/lnd.conf"
+  local file_path="/home/$USER/brlnfullauto/conf_files/lnd.conf"
   echo -e "${GREEN}################################################################${NC}"
   echo -e "${GREEN} A seguir você será solicitado a adicionar suas credenciais do ${NC}"
   echo -e "${GREEN} bitcoind.rpcuser e bitcoind.rpcpass, caso você seja membro da BRLN.${NC}"
@@ -383,7 +383,7 @@ configure_lnd() {
 db.backend=postgres
 
 [postgres]
-db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
+db.postgres.dsn=postgresql://$USER:admin@127.0.0.1:5432/lndb?sslmode=disable
 db.postgres.timeout=0
 EOF
 )
@@ -408,21 +408,21 @@ EOF
 
 $lnd_db"
 
-  sudo usermod -aG debian-tor admin
+  sudo usermod -aG debian-tor $USER
   sudo chmod 640 /run/tor/control.authcookie
   sudo chmod 750 /run/tor
-  sudo usermod -a -G debian-tor admin
+  sudo usermod -a -G debian-tor $USER
   sudo mkdir -p /data/lnd
-  sudo chown -R admin:admin /data/lnd
-  if [[ ! -L /home/admin/.lnd ]]; then
-    ln -s /data/lnd /home/admin/.lnd
+  sudo chown -R $USER:$USER /data/lnd
+  if [[ ! -L /home/$USER/.lnd ]]; then
+    ln -s /data/lnd /home/$USER/.lnd
   fi
     sudo chmod -R g+X /data/lnd
     sudo chmod 640 /run/tor/control.authcookie
     sudo chmod 750 /run/tor
     sudo cp $SERVICES_DIR/lnd.service /etc/systemd/system/lnd.service
     sudo cp $file_path /data/lnd/lnd.conf
-    sudo chown admin:admin /data/lnd/lnd.conf
+    sudo chown $USER:$USER /data/lnd/lnd.conf
     sudo chmod 640 /data/lnd/lnd.conf
   if [[ $use_brlnd == "y" ]]; then
     create_wallet
@@ -456,8 +456,8 @@ $lnd_db"
 } 
 
 create_wallet () {
-  if [[ ! -L /home/admin/.lnd ]]; then
-    ln -s /data/lnd /home/admin/.lnd
+  if [[ ! -L /home/$USER/.lnd ]]; then
+    ln -s /data/lnd /home/$USER/.lnd
   fi
   sudo chmod -R g+X /data/lnd
   sudo chmod 640 /run/tor/control.authcookie
@@ -475,9 +475,9 @@ create_wallet () {
     create_wallet
   fi
   echo "$password" | sudo tee /data/lnd/password.txt > /dev/null
-  sudo chown admin:admin /data/lnd/password.txt
+  sudo chown $USER:$USER /data/lnd/password.txt
   sudo chmod 600 /data/lnd/password.txt
-  sudo chown admin:admin /data/lnd
+  sudo chown $USER:$USER /data/lnd
   sudo chmod 740 /data/lnd/lnd.conf
   sudo systemctl daemon-reload
   sudo systemctl enable lnd >> /dev/null 2>&1
@@ -487,7 +487,7 @@ create_wallet () {
 }
 
 install_bitcoind() {
-  local file_path="/home/admin/brlnfullauto/conf_files/bitcoin.conf"
+  local file_path="/home/$USER/brlnfullauto/conf_files/bitcoin.conf"
   set -e
   if [[ $arch == "x86_64" ]]; then
     arch_btc="x86_64"
@@ -507,14 +507,14 @@ install_bitcoind() {
   tar -xzvf bitcoin-$BTC_VERSION-$arch_btc-linux-gnu.tar.gz
   sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$BTC_VERSION/bin/bitcoin-cli bitcoin-$BTC_VERSION/bin/bitcoind
   sudo mkdir -p /data/bitcoin
-  sudo chown admin:admin /data/bitcoin
-  ln -s /data/bitcoin /home/admin/.bitcoin
+  sudo chown $USER:$USER /data/bitcoin
+  ln -s /data/bitcoin /home/$USER/.bitcoin
   sudo cp $file_path /data/bitcoin/bitcoin.conf
-  sudo chown admin:admin /data/bitcoin/bitcoin.conf
+  sudo chown $USER:$USER /data/bitcoin/bitcoin.conf
   sudo chmod 640 /data/bitcoin/bitcoin.conf
-  cd /home/admin/.bitcoin
+  cd /home/$USER/.bitcoin
   wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
-  sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
+  sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/$USER/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/$USER/brlnfullauto/conf_files/bitcoin.conf
   sudo cp $SERVICES_DIR/bitcoind.service /etc/systemd/system/bitcoind.service
   sudo systemctl enable bitcoind
   sudo systemctl start bitcoind
@@ -543,120 +543,24 @@ install_bos() {
   cd ~
   npm i -g balanceofsatoshis
   sudo bash -c 'echo "127.0.0.1" >> /etc/hosts'
-  sudo chown -R admin:admin /data/lnd
+  sudo chown -R $USER:$USER /data/lnd
   sudo chmod -R 755 /data/lnd
   export BOS_DEFAULT_LND_PATH=/data/lnd
   mkdir -p ~/.bos/$alias
   base64 -w0 /data/lnd/tls.cert > /data/lnd/tls.cert.base64
-  base64 -w0 /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon > /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64
+  base64 -w0 /data/lnd/data/chain/bitcoin/mainnet/$USER.macaroon > /data/lnd/data/chain/bitcoin/mainnet/$USER.macaroon.base64
   cert_base64=$(cat /data/lnd/tls.cert.base64)
-  macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64)
+  macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/mainnet/$USER.macaroon.base64)
   bash -c "cat <<EOF > ~/.bos/$alias/credentials.json
 {
   "cert": "$cert_base64",
   "macaroon": "$macaroon_base64",
-  "socket": "localhost:10009"
+  "socket": "lnd:10009"
 }
 EOF"
   sudo cp $SERVICES_DIR/bos-telegram.service /etc/systemd/system/bos-telegram.service
   sudo systemctl daemon-reload
   fi
-}
-
-install_thunderhub() {
-  if [[ -d ~/thunderhub ]]; then
-    echo "ThunderHub já está instalado."
-  else
-  node -v
-  npm -v
-  sudo apt update && sudo apt full-upgrade -y
-  cd
-  curl https://github.com/apotdevin.gpg | gpg --import
-  git clone --branch v$VERSION_THUB https://github.com/apotdevin/thunderhub.git && cd thunderhub
-  git verify-commit v$VERSION_THUB
-  npm install
-  npm run build
-  sudo ufw allow from $subnet to any port 3000 proto tcp comment 'allow ThunderHub SSL from local network'
-  cp /home/admin/thunderhub/.env /home/admin/thunderhub/.env.local
-  sed -i '51s|.*|ACCOUNT_CONFIG_PATH="/home/admin/thunderhub/thubConfig.yaml"|' /home/admin/thunderhub/.env.local
-  bash -c "cat <<EOF > thubConfig.yaml
-masterPassword: '$thub_senha'
-accounts:
-  - name: 'BRLNBolt'
-    serverUrl: '127.0.0.1:10009'
-    macaroonPath: '/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon'
-    certificatePath: '/data/lnd/tls.cert'
-    password: '$thub_senha'
-EOF"
-  sudo cp $SERVICES_DIR/thunderhub.service /etc/systemd/system/thunderhub.service
-  sudo systemctl start thunderhub.service
-  sudo systemctl enable thunderhub.service
-  fi
-}
-
-install_lndg () {
-  if [[ -d /home/admin/lndg ]]; then
-    echo "LNDG já está instalado."
-  else
-  sudo apt install -y python3-pip python3-venv
-  sudo ufw allow from $subnet to any port 8889 proto tcp comment 'allow lndg from local network'
-  cd
-  git clone https://github.com/cryptosharks131/lndg.git
-  cd lndg
-  sudo apt install -y virtualenv
-  virtualenv -p python3 .venv
-  .venv/bin/pip install -r requirements.txt
-  .venv/bin/pip install whitenoise
-  .venv/bin/python3 initialize.py --whitenoise
-  sudo cp $SERVICES_DIR/lndg.service /etc/systemd/system/lndg.service
-  sudo cp $SERVICES_DIR/lndg-controller.service /etc/systemd/system/lndg-controller.service
-  sudo systemctl daemon-reload
-  sudo systemctl enable lndg-controller.service
-  sudo systemctl start lndg-controller.service
-  sudo systemctl enable lndg.service
-  sudo systemctl start lndg.service
-  fi
-}
-
-lnbits_install() {
-  # Atualiza e instala dependências básicas
-  sudo apt install -y pkg-config libsecp256k1-dev libffi-dev build-essential python3-dev git curl
-
-  # Instala Poetry (não precisa ativar venv manual)
-  curl -sSL https://install.python-poetry.org | python3 -
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "/home/admin/.bashrc"
-  export PATH="$HOME/.local/bin:$PATH"
-
-  # Verifica versão do Poetry
-  "$POETRY_BIN" self update || true
-  "$POETRY_BIN" --version
-
-  # Clona o repositório LNbits
-  git clone https://github.com/lnbits/lnbits.git "/home/admin/lnbits"
-  sudo chown -R admin:admin "/home/admin/lnbits"
-
-  # Entra no diretório e instala dependências com Poetry
-  cd "/home/admin/lnbits"
-  git checkout  v0.12.12
-  "$POETRY_BIN" install
-
-  # Copia o arquivo .env e ajusta a variável LNBITS_ADMIN_UI
-  cp .env.example .env
-  sed -i 's/LNBITS_ADMIN_UI=.*/LNBITS_ADMIN_UI=true/' .env
-
-  # Configurações do lnbits no ufw
-  sudo ufw allow from $subnet to any port 5000 proto tcp comment 'allow LNbits from local network'
-
-  # Configura systemd
-  sudo cp $SERVICES_DIR/lnbits.service /etc/systemd/system/lnbits.service
-
-  # Ativa e inicia o serviço
-  sudo systemctl daemon-reload
-  sudo systemctl enable lnbits.service
-  sudo systemctl start lnbits.service
-
-  echo "✅ LNbits instalado e rodando como serviço systemd!"
-  sudo rm -rf /home/admin/lnd-install
 }
 
 tailscale_vpn() {
@@ -804,149 +708,6 @@ toggle_off () {
     fi
 }
 
-lnd_update () {
-  cd /tmp
-LND_VERSION=$(curl -s https://api.github.com/repos/lightningnetwork/lnd/releases/latest | grep -oP '"tag_name": "\Kv[0-9]+\.[0-9]+\.[0-9]+(?=-beta)')
-echo "$LND_VERSION"
-{
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/lnd-linux-amd64-$LND_VERSION-beta.tar.gz
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-$LND_VERSION-beta.txt.ots
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-$LND_VERSION-beta.txt
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-roasbeef-$LND_VERSION-beta.sig.ots
-    wget -q https://github.com/lightningnetwork/lnd/releases/download/$LND_VERSION-beta/manifest-roasbeef-$LND_VERSION-beta.sig
-    sha256sum --check manifest-$LND_VERSION-beta.txt --ignore-missing
-    curl -s https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
-    gpg --verify manifest-roasbeef-$LND_VERSION-beta.sig manifest-$LND_VERSION-beta.txt
-    tar -xzf lnd-linux-amd64-$LND_VERSION-beta.tar.gz
-    sudo install -m 0755 -o root -g root -t /usr/local/bin lnd-linux-amd64-$LND_VERSION-beta/lnd lnd-linux-amd64-$LND_VERSION-beta/lncli
-    sudo rm -r lnd-linux-amd64-$LND_VERSION-beta lnd-linux-amd64-$LND_VERSION-beta.tar.gz manifest-roasbeef-$LND_VERSION-beta.sig manifest-roasbeef-v$LND_VERSION-beta.sig.ots manifest-v$LND_VERSION-beta.txt manifest-v$LND_VERSION-beta.txt.ots
-    sudo systemctl restart lnd
-    cd
-} &> /dev/null &
-  echo "Atualizando LND... Por favor, aguarde."
-  wait
-  echo "LND atualizado!"
-}
-
-bitcoin_update () {
-  cd /tmp
-VERSION=$(curl -s https://bitcoincore.org/en/download/ | grep -oP 'bitcoin-core-\K[0-9]+\.[0-9]+' | head -n1)
-echo "$VERSION"
-{
-  wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-  wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS
-  wget https://bitcoincore.org/bin/bitcoin-core-$VERSION/SHA256SUMS.asc
-  sha256sum --ignore-missing --check SHA256SUMS
-  curl -s "https://api.github.com/repositories/355107265/contents/builder-keys" | grep download_url | grep -oE "https://[a-zA-Z0-9./-]+" | while read url; do curl -s "$url" | gpg --import; done
-  gpg --verify SHA256SUMS.asc
-  tar -xvf bitcoin-$VERSION-x86_64-linux-gnu.tar.gz
-  sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-$VERSION/bin/bitcoin-cli bitcoin-$VERSION/bin/bitcoind
-  bitcoind --version
-  sudo rm -r bitcoin-$VERSION bitcoin-$VERSION-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc
-    sudo systemctl restart bitcoind
-    cd
-} &> /dev/null &
-  echo "Atualizando Bitcon Core... Por favor, aguarde."
-  wait
-  echo "Bitcoin Core atualizado!"
-}
-
-thunderhub_update () {
-  echo "🔍 Buscando a versão mais recente do Thunderhub..."
-  LATEST_VERSION=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | grep tag_name | cut -d '"' -f 4)
-  if [ -z "$LATEST_VERSION" ]; then
-    echo "❌ Não foi possível obter a última versão. Abortando..."
-    return 1
-  fi
-  echo "📦 Última versão encontrada: $LATEST_VERSION"
-  read -p "Deseja continuar com a atualização para a versão $LATEST_VERSION? (y/n): " CONFIRMA
-  if [[ "$CONFIRMA" != "n" ]]; then
-    echo "❌ Atualização cancelada."
-    return 1
-  fi
-  echo "⏳ Atualizando Thunderhub para a versão $LATEST_VERSION..."
-  sudo systemctl stop thunderhub
-  cd ~/thunderhub || { echo "❌ Diretório ~/thunderhub não encontrado!"; return 1; }
-  git fetch --all
-  git checkout tags/"$LATEST_VERSION" -b update-"$LATEST_VERSION"
-  npm install
-  npm run build
-  sudo systemctl start thunderhub
-  echo "✅ Thunderhub atualizado para a versão $LATEST_VERSION!"
-  head -n 3 package.json | grep version
-}
-
-lndg_update () {
-  echo "🔍 Iniciando atualização do LNDg..."
-  cd /home/admin/lndg || { echo "❌ Diretório /home/admin/lndg não encontrado!"; return 1; }
-  echo "🛑 Parando serviços do LNDg..."
-  sudo systemctl stop lndg.service
-  sudo systemctl stop lndg-controller.service
-  echo "💾 Salvando alterações locais (git stash)..."
-  git stash
-  echo "🔄 Atualizando repositório via git pull..."
-  git pull origin master
-  echo "⚙️ Aplicando migrações..."
-  .venv/bin/python manage.py migrate
-  echo "🔄 Recarregando systemd e iniciando serviços..."
-  sudo systemctl daemon-reload
-  sudo systemctl start lndg.service
-  sudo systemctl start lndg-controller.service
-  echo "✅ LNDg atualizado com sucesso!"
-  git log -1 --pretty=format:"📝 Último commit: %h - %s (%cd)" --date=short
-}
-
-
-lnbits_update () {
-  echo "🔍 Iniciando atualização do LNbits..."
-  cd /home/admin/lnbits || { echo "❌ Diretório /home/admin/lnbits não encontrado!"; return 1; }
-  echo "🛑 Parando serviço do LNbits..."
-  sudo systemctl stop lnbits
-  echo "💾 Salvando alterações locais (git stash)..."
-  git stash
-  echo "🔄 Atualizando repositório LNbits..."
-  git pull origin main
-  echo "📦 Atualizando Poetry e dependências..."
-  poetry self update
-  poetry install --only main
-  echo "🔄 Recarregando systemd e iniciando serviço..."
-  sudo systemctl daemon-reload
-  sudo systemctl start lnbits
-  echo "✅ LNbits atualizado com sucesso!"
-  git log -1 --pretty=format:"📝 Último commit: %h - %s (%cd)" --date=short
-}
-
-
-thunderhub_uninstall () {
-  sudo systemctl stop thunderhub
-  sudo systemctl disable thunderhub
-  sudo rm -rf /home/admin/thunderhub
-  sudo rm -rf /etc/systemd/system/thunderhub.service
-  sudo rm -rf /etc/nginx/sites-available/thunderhub-reverse-proxy.conf
-  echo "Thunderhub desinstalado!"
-}
-
-lndg_unninstall () {
-  sudo systemctl stop lndg.service
-  sudo systemctl disable lndg.service
-  sudo systemctl stop lndg-controller.service
-  sudo systemctl disable lndg-controller.service
-  sudo rm -rf /home/admin/lndg
-  sudo rm -rf /etc/systemd/system/lndg.service
-  sudo rm -rf /etc/systemd/system/lndg-controller.service
-  sudo rm -rf /etc/nginx/sites-available/lndg-reverse-proxy.conf
-  echo "LNDg desinstalado!"
-}
-
-lnbits_unninstall () {
-  sudo systemctl stop lnbits
-  sudo systemctl disable lnbits
-  sudo rm -rf /home/admin/lnbits
-  sudo rm -rf /etc/systemd/system/lnbits.service
-  sudo rm -rf /etc/nginx/sites-available/lnbits-reverse-proxy.conf
-  echo "LNbits desinstalado!"
-}
-
 pacotes_do_sistema () {
   sudo apt update && sudo apt upgrade -y
   sudo systemctl reload tor
@@ -1004,58 +765,6 @@ menu_manutencao() {
       echo "Opção inválida!"
       ;;
   esac
-}
-
-manutencao_script () {
-  # Executa o script de manutenção
-  lnd --version
-  bitcoin-cli --version
-  menu_manutencao
-}	
-
-get_simple_wallet () {
-  cd ~
-  arch=$(uname -m)
-  if [[ $arch == "x86_64" ]]; then
-    echo "Arquitetura x86_64 detectada."
-    simple_arch="simple-lnwallet"
-  else
-    echo "Arquitetura ARM64 detectada."
-    simple_arch="simple-lnwallet-rpi"
-  fi
-  if [[ -f /home/admin/$simple_arch ]]; then
-    rm -rf /home/admin/$simple_arch
-  fi
-  cp /home/admin/brlnfullauto/local_apps/simple-lnwallet/$simple_arch /home/admin/
-  if [[ -f /home/admin/simple-lnwallet-rpi ]]; then
-  mv /home/admin/$simple_arch /home/admin/simple-lnwallet
-  fi
-  chmod +x /home/admin/$simple_arch
-  sudo apt install xxd -y
-}
-
-simple_lnwallet () {
-  get_simple_wallet
-  sudo rm -f /etc/systemd/system/simple-lnwallet.service
-  sudo cp ~/brlnfullauto/services/simple-lnwallet.service /etc/systemd/system/simple-lnwallet.service
-  sleep 1
-  sudo systemctl daemon-reload
-  sleep 1
-  sudo systemctl enable simple-lnwallet
-  sudo systemctl start simple-lnwallet
-  sudo ufw allow from $subnet to any port 35671 proto tcp comment 'allow Simple LNWallet from local network'
-  echo
-  echo -e "${YELLOW}📝 Copie o conteúdo do arquivo macaroon.hex e cole no campo macaroon:${NC}"
-  xxd -p ~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon | tr -d '\n' > ~/brlnfullauto/macaroon.hex
-  cat ~/brlnfullauto/macaroon.hex
-  echo
-  echo
-  echo
-  echo -e "${YELLOW}📝 Copie o conteúdo do arquivo tls.hex e cole no campo tls:${NC}" 
-  xxd -p ~/.lnd/tls.cert | tr -d '\n' | tee ~/brlnfullauto/tls.hex
-  cat ~/brlnfullauto/tls.hex
-  echo
-  echo
 }
 
 config_bos_telegram () {
