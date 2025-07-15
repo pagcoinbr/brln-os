@@ -213,7 +213,6 @@ configure_remote_blockchain() {
     log "✅ Credenciais capturadas com sucesso!"
     
     # Configurar arquivos
-    configure_bitcoin_conf
     configure_elements_conf "$brln_rpc_user" "$brln_rpc_pass"
     configure_lnd_conf "$brln_rpc_user" "$brln_rpc_pass"
     
@@ -254,24 +253,32 @@ configure_elements_conf() {
 configure_bitcoin_conf() {
     local user="$1"
     local pass="$2"
-    local bitcoin_conf="container/bitcoin/bitcoin.conf"
+    local bitcoin_conf="bitcoin/bitcoin.conf.example"
     
     log "📝 Configurando bitcoin.conf..."
+    echo "Você deseja conectar mainnet ou testnet com o bitcoin core?"
+    read -p "Digite 'mainnet' ou 'testnet': " network_choice
     
-    # Verificar se o arquivo existe
-    if [[ ! -f "$bitcoin_conf" ]]; then
-        # Copiar do exemplo se não existir
-        if [[ -f "container/bitcoin/bitcoin.conf.example" ]]; then
-            cp "container/bitcoin/bitcoin.conf.example" "$bitcoin_conf"
-            log "Arquivo bitcoin.conf criado a partir do exemplo"
-        else
-            error "Arquivo bitcoin.conf.example não encontrado!"
-            return 1
-        fi
+    # Determinar qual arquivo exemplo usar baseado na escolha da rede
+    local example_file
+    if [[ "$network_choice" == "testnet" ]]; then
+        example_file="bitcoin/bitcoin.conf.testnet.example"
+    else
+        example_file="bitcoin/bitcoin.conf.mainnet.example"
     fi
     
+    # Verificar se o arquivo exemplo existe
+    if [[ ! -f "$example_file" ]]; then
+        error "Arquivo exemplo não encontrado: $example_file"
+        return 1
+    fi
+    
+    # Copiar o arquivo exemplo apropriado para bitcoin.conf
+    cp "$example_file" "$bitcoin_conf"
+    log "Arquivo bitcoin.conf criado a partir de $example_file"
+    
     # Gerar rpcauth usando rpcauth.py
-    cd container/bitcoin
+    cd bitcoin
     rpcauth_output=$(python3 rpcauth.py brlnbitcoin)
     cd - > /dev/null
     
@@ -502,7 +509,7 @@ fi
 
 # Entrar no diretório container
 cd container
-
+configure_bitcoin_conf
 log "Iniciando configuração completa..."
 echo ""
 warning "⚠️  IMPORTANTE: Este processo pode demorar 30-60 minutos"
@@ -529,7 +536,7 @@ echo -e "${NC}"
 fi
 
 # Verificar se a configuração foi bem-sucedida
-clear
+#clear
 echo ""
 log "Verificando status dos serviços..."
 if command -v docker-compose &> /dev/null; then

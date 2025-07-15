@@ -28,23 +28,8 @@ wait_for_service() {
     echo "✗ $service não ficou disponível após $max_attempts tentativas"
     return 1
 }
-
-# Função para verificar se um arquivo de configuração existe
-check_config_file() {
-    local config_file=$1
-    if [ ! -f "$config_file" ]; then
-        echo "✗ Arquivo de configuração não encontrado: $config_file"
-        return 1
-    fi
-    echo "✓ Arquivo de configuração encontrado: $config_file"
-    return 0
-}
-
-# Verificar arquivos de configuração
-check_config_file "/data/bitcoin/bitcoin.conf" || {
-    echo "Copiando configuração de exemplo..."
-    cp /data/bitcoin/bitcoin.conf.example /data/bitcoin/bitcoin.conf
-}
+echo "Copiando configuração de exemplo..."
+cp /data/bitcoin/bitcoin.conf.example /data/bitcoin/bitcoin.conf
 
 # Iniciar i2pd como processo em background
 echo "Iniciando i2pd..."
