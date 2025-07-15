@@ -2,7 +2,6 @@
 .DS_Store
 Thumbs.db
 desktop.ini
-.xxt
 
 # Arquivos de configuração sensíveis
 conf_files/*.custom

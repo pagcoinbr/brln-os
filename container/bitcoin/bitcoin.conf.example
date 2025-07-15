@@ -38,8 +38,6 @@ listen=1
 ## P2P bind
 bind=0.0.0.0
 
-## Proxify clearnet outbound connections using Tor SOCKS5 proxy
-proxy=tor:9050
 
 ## Force all outbound connections through proxy (except onion and i2p)
 onlynet=ipv4
