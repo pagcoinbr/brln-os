@@ -5,6 +5,9 @@
 server=1
 txindex=1
 
+# Prune - Limit disk usage to 100GB (102400 MB)
+prune=102400
+
 # Network configuration - Testnet
 # Enable testnet (Bitcoin test network)
 testnet=1
