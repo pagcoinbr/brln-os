@@ -17,12 +17,8 @@
 
 ## 🚀 Instalação Rápida
 
-Execute este comando simples para instalar o BRLN-OS v1.0 (estável) em seu sistema:
-```bash
-curl -fsSL https://install.pagcoin.org | sh
-```
+Execute este comando simples para instalar o BRLN-OS em seu sistema:
 
-Para baixar a versão *alfa* teste, utilize:
 ```bash
 curl -fsSL https://pagcoin.org/install.sh | sh
 ```
