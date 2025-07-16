@@ -87,8 +87,8 @@ postgres_db () {
   # Mostra clusters ativos
   pg_lsclusters
 
-  # Cria a role com o nome do usuário atual e senha padrão (admin)
-  sudo -u postgres psql -c "CREATE ROLE $USER WITH LOGIN CREATEDB PASSWORD 'admin';" || true
+  # Cria a role com o nome do usuário atual e senha padrão
+  sudo -u postgres psql -c "CREATE ROLE $USER WITH LOGIN CREATEDB PASSWORD '$USER';" || true
 
   # Cria banco de dados lndb com owner sendo o usuário atual
   sudo -u postgres createdb -O $USER lndb
@@ -123,7 +123,7 @@ read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
 db.backend=postgres
 
 [postgres]
-db.postgres.dsn=postgresql://$USER:admin@127.0.0.1:5432/lndb?sslmode=disable
+db.postgres.dsn=postgresql://$USER:$USER@127.0.0.1:5432/lndb?sslmode=disable
 db.postgres.timeout=0
 EOF
 )
@@ -226,9 +226,9 @@ toggle_bitcoin () {
 
 toggle_on () {
   local FILES_TO_DELETE=(
-    "/home/admin/.lnd/tls.cert"
-    "/home/admin/.lnd/tls.key"
-    "/home/admin/.lnd/v3_onion_private_key"
+    "/data/lnd/tls.cert"
+    "/data/lnd/tls.key"
+    "/data/lnd/v3_onion_private_key"
   )
 
   # Função interna para comentar linhas
@@ -254,9 +254,9 @@ toggle_on () {
 
 toggle_off () {
   local FILES_TO_DELETE=(
-    "/home/admin/.lnd/tls.cert"
-    "/home/admin/.lnd/tls.key"
-    "/home/admin/.lnd/v3_onion_private_key"
+    "/data/lnd/tls.cert"
+    "/data/lnd/tls.key"
+    "/data/lnd/v3_onion_private_key"
   )
 
   # Função interna para descomentar linhas
@@ -319,9 +319,9 @@ config_bos_telegram () {
 
   # 📝 Adiciona ou substitui ExecStart com o Connection Code
   if grep -q '^ExecStart=' "$SERVICE_FILE"; then
-    sudo sed -i "s|^ExecStart=.*|ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
+    sudo sed -i "s|^ExecStart=.*|ExecStart=/home/$USER/.npm-global/bin/bos telegram --use-small-units --connect $connection_code|g" "$SERVICE_FILE"
   else
-    sudo sed -i "/^\[Service\]/a ExecStart=/home/admin/.npm-global/bin/bos telegram --use-small-units --connect $connection_code" "$SERVICE_FILE"
+    sudo sed -i "/^\[Service\]/a ExecStart=/home/$USER/.npm-global/bin/bos telegram --use-small-units --connect $connection_code" "$SERVICE_FILE"
   fi
 
   echo "✅ Connection Code inserido com sucesso no serviço bos-telegram."
@@ -497,21 +497,21 @@ menu() {
       app="BRLN-OS"
       sudo -v
       echo -e "${CYAN}🚀 Instalando BRLN-OS...${NC}"
-      echo -e "${YELLOW}Digite a senha do usuário admin caso solicitado.${NC}" 
+      echo -e "${YELLOW}Digite a senha do usuário $USER caso solicitado.${NC}" 
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
         bash "$REPO_DIR/setup.sh" 
         cd "$REPO_DIR/container"
-        docker-compose build
-        docker-compose up -d
+        sudo docker-compose build
+        sudo docker-compose up -d
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
         bash "$REPO_DIR/setup.sh"
         cd "$REPO_DIR/container"
-        docker-compose build >> /dev/null 2>&1 & spinner
-        docker-compose up -d >> /dev/null 2>&1 & spinner
+        sudo docker-compose build >> /dev/null 2>&1 & spinner
+        sudo docker-compose up -d >> /dev/null 2>&1 & spinner
         pid=$!
         if declare -f spinner > /dev/null; then
           spinner $pid
@@ -536,13 +536,13 @@ menu() {
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         cd "$REPO_DIR/container"
-        docker-compose build $app
-        docker-compose up -d $app
+        sudo docker-compose build $app
+        sudo docker-compose up -d $app
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
         cd "$REPO_DIR/container"
-        docker-compose build $app >> /dev/null 2>&1 & spinner
-        docker-compose up -d $app >> /dev/null 2>&1 & spinner
+        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
+        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -560,13 +560,13 @@ menu() {
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
         cd "$REPO_DIR/container"
-        docker-compose build $app
-        docker-compose up -d $app
+        sudo docker-compose build $app
+        sudo docker-compose up -d $app
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
         cd "$REPO_DIR/container"
-        docker-compose build $app >> /dev/null 2>&1 & spinner
-        docker-compose up -d $app >> /dev/null 2>&1 & spinner
+        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
+        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -586,10 +586,12 @@ menu() {
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       app="Thunderhub"
       if [[ "$verbose_mode" == "y" ]]; then
-        install_thunderhub
+        docker-compose build $app
+        docker-compose up -d $app
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde, isso poderá demorar 10min ou mais. Seja paciente...${NC}"
-        install_thunderhub >> /dev/null 2>&1 & spinner
+        docker-compose build $app >> /dev/null 2>&1 & spinner
+        docker-compose up -d $app >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -604,14 +606,10 @@ menu() {
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        docker-compose build $app
-        docker-compose up -d $app >> /dev/null
+        install_bos
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco...${NC}  "
-        cd "$REPO_DIR/container"
-        docker-compose build $app >> /dev/null 2>&1 & spinner
-        docker-compose up -d $app >> /dev/null 2>&1 & spinner
+        install_bos >> /dev/null 2>&1 & spinner
         clear
       else
         echo "Opção inválida."
@@ -640,7 +638,7 @@ menu() {
       fi
       echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
       echo
-      cat ~/lndg/data/lndg-admin.txt
+      cat /data/lndg/data/lndg-admin.txt
       echo
       echo
       echo -e "${YELLOW}📝 Você deve mudar essa senha ao final da instalação."

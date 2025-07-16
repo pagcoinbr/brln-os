@@ -54,7 +54,7 @@ torcontrol=tor:9051
 i2psam=127.0.0.1:7656
 
 # RPC Authentication
-rpcauth=brlnbitcoin:73c3cfdd89562ade047a5c2d63da4ff0$126adae2fae6f427e8a533c19d0af1682c9f08db5f5196e36a8ce43f2cac19c7
+rpcauth=brlnbitcoin:6f9356c45aa2dcb093ba03a657b6ff2c$4fa579b52fafb0c5c4bb35642feaa0bad7dcc0744e04b24ac64ce3ed2249b0c9
 
 # Initial block download optimizations
 # For testnet, we can use less cache since the blockchain is smaller

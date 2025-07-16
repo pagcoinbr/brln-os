@@ -15,7 +15,7 @@ sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd $USER
 # Clone repository if it doesn't exist
 if [[ ! -d "$INSTALL_DIR" ]]; then
   echo -e "${BLUE}Clonando repositório BRLN-OS...${NC}"
-  if sudo -u admin bash git clone https://github.com/pagcoinbr/brln-os.git /home/$USER/brln-os 2>&1; then
+  if sudo -u $USER bash git clone https://github.com/pagcoinbr/brln-os.git /home/$USER/brln-os 2>&1; then
     echo -e "${GREEN}Repositório clonado com sucesso.${NC}"
   else
     echo -e "${RED}Erro ao clonar o repositório BRLN-OS.${NC}"
@@ -86,7 +86,6 @@ opening () {
 terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
-    # Baixa o binário como admin
     update_and_upgrade
     radio_update
     gotty_install
@@ -193,7 +192,7 @@ EOF
 
   # Instala Flask e Flask-CORS
   pip install flask flask-cors >> /dev/null 2>&1 & spinner
-  sudo -u admin bash setup_lnd_client.sh 
+  sudo -u $USER bash setup_lnd_client.sh 
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
   SUDOERS_TMP="/etc/sudoers.d/$USER-services"

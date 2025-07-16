@@ -633,24 +633,6 @@ if [[ -f "../seeds.txt" && -s "../seeds.txt" ]]; then
                 ;;
         esac
     done
-else
-    warning "⚠️ Nenhuma seed foi capturada no arquivo seeds.txt após $MAX_ATTEMPTS tentativas"
-    warning "   Possíveis causas:"
-    warning "   - Container LND ainda não iniciou completamente"
-    warning "   - LND já foi inicializado anteriormente"
-    warning "   - Erro nos logs do container"
-    echo ""
-    info "💡 Para verificar manualmente:"
-    echo "   docker logs lnd | grep -A 30 'CIPHER SEED'"
-    echo ""
-    read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        error "Operação cancelada pelo usuário"
-        exit 1
-    fi
-fi
-
 # Perguntar sobre autodestruição
 warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos de senha"
 echo ""
@@ -711,6 +693,24 @@ while true; do
             ;;
     esac
 done
+else
+    warning "⚠️ Nenhuma seed foi capturada no arquivo seeds.txt após $MAX_ATTEMPTS tentativas"
+    warning "   Possíveis causas:"
+    warning "   - Container LND ainda não iniciou completamente"
+    warning "   - LND já foi inicializado anteriormente"
+    warning "   - Erro nos logs do container"
+    echo ""
+    info "💡 Para verificar manualmente:"
+    echo "   docker logs lnd | grep -A 30 'CIPHER SEED'"
+    echo ""
+    read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        error "Operação cancelada pelo usuário"
+        exit 1
+    fi
+fi
+
 clear
 echo -e "${CYAN}"
 echo "$BRLN_ASCII_FULL"
