@@ -480,8 +480,8 @@ menu() {
   echo
   echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core"
   echo -e "   ${GREEN}3${NC}- Instalar LND & Criar Carteira"
-  echo -e "   ${GREEN}4${NC}- Instalar Simple LNWallet - By JVX (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Thunderhub & Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}4${NC}- Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar LNbits"
   echo -e "   ${GREEN}8${NC}- Mais opções"
@@ -501,18 +501,20 @@ menu() {
       read -p "Deseja exibir logs? (y/n): " verbose_mode
       sudo apt autoremove -y
       if [[ "$verbose_mode" == "y" ]]; then
-        bash "$REPO_DIR/setup.sh" 
         cd "$REPO_DIR/container"
+        bash "setup.sh"
         sudo docker-compose build
         sudo docker-compose up -d
+        cd
       elif [[ "$verbose_mode" == "n" ]]; then
         echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
         echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
-        bash "$REPO_DIR/setup.sh"
         cd "$REPO_DIR/container"
+        bash "setup.sh"
         sudo docker-compose build >> /dev/null 2>&1 & spinner
         sudo docker-compose up -d >> /dev/null 2>&1 & spinner
         pid=$!
+        cd
         if declare -f spinner > /dev/null; then
           spinner $pid
         else
@@ -524,7 +526,7 @@ menu() {
         echo "Opção inválida."
       fi      
       wait
-      echo -e "\033[43m\033[30m ✅ Instalação do BRLN-OS de rede concluída! \033[0m"
+      echo -e "\033[43m\033[30m ✅ Instalação do BRLN-OS concluída! \033[0m"
       menu      
       ;;
 

@@ -10,7 +10,7 @@ NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/$USER/brln-os"
 
-sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd $USER
+sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd,docker $USER
 
 # Clone repository if it doesn't exist
 if [[ ! -d "$INSTALL_DIR" ]]; then
