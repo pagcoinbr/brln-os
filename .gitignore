@@ -45,6 +45,7 @@ htmlcov/
 .tox/
 .nox/
 .hypothesis/
+.lnd_client_env
 
 # Ambientes virtuais
 data
