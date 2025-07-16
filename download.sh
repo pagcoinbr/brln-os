@@ -56,8 +56,8 @@ spinner() {
     return $exit_code
 }
 
-(wget https://github.com/pagcoinbr/brln-os/archive/refs/tags/2.0-alfa-rc1.tar.gz && tar -xzf 2.0-alfa-rc1.tar.gz) > /dev/null 2>&1 & spinner $!
+(git clone https://github.com/pagcoinbr/brln-os.git > /dev/null 2>&1 & spinner $!
 
-cd brln-os-2.0-alfa-rc1 || { echo "Diretório brln-os-2.0-alfa-rc1 não encontrado"; exit 1; }
+cd brln-os || { echo "Diretório brln-os-2.0-alfa-rc1 não encontrado"; exit 1; }
 
-./setup.sh
+./setup.sh || { echo "Erro ao executar setup.sh"; exit 1; }

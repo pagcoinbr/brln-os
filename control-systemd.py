@@ -15,18 +15,21 @@ APP_TO_SERVICE = {
     "gotty-logs-lnd": "gotty-logs-lnd.service",
 }
 
-# Função auxiliar para verificar o status do serviço
+# Função auxiliar para verificar o status do serviço usando docker ps
 def get_service_status(service_name):
     try:
+        # Remove a extensão .service do nome para usar como nome do container
+        container_name = service_name.replace('.service', '')
+        
         result = subprocess.run(
-            ['/usr/bin/systemctl', 'is-active', service_name],
+            ['docker', 'ps', '--filter', f'name={container_name}', '--format', '{{.Names}}'],
             capture_output=True,
             text=True
         )
-        status = result.stdout.strip().lower()
-
-        # Vamos considerar apenas "active" como verdadeiro
-        if status == "active":
+        
+        # Se o container aparecer na lista do docker ps, está ativo
+        output = result.stdout.strip()
+        if output and container_name in output:
             return True
         else:
             return False
@@ -52,17 +55,27 @@ def toggle_service():
         return jsonify({"error": "App inválido ou não informado"}), 400
 
     service_name = APP_TO_SERVICE[app_name]
+    container_name = service_name.replace('.service', '')
     is_active = get_service_status(service_name)
 
-    action = "stop" if is_active else "start"
-
     try:
-        subprocess.run(
-            ['/usr/bin/sudo', '/usr/bin/systemctl', action, service_name],
-            check=True,
-            capture_output=True,
-            text=True
-        )
+        if is_active:
+            # Parar o container
+            subprocess.run(
+                ['docker', 'stop', container_name],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+        else:
+            # Iniciar o container
+            subprocess.run(
+                ['docker', 'start', container_name],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+        
         return jsonify({"success": True, "new_status": not is_active})
     except subprocess.CalledProcessError as e:
         return jsonify({"success": False, "error": e.stderr}), 500
@@ -75,6 +88,89 @@ def status_novidade():
             timestamp = f.read().strip()
         return jsonify({"novidade": True, "timestamp": timestamp})
     return jsonify({"novidade": False})
+
+@app.route('/wallet-balances')
+def wallet_balances():
+    """Endpoint para obter saldos das carteiras LND e Elements"""
+    try:
+        # Verificar se o cliente existe
+        client_path = os.path.join(os.path.dirname(__file__), 'lnd_balance_client_v2.py')
+        if not os.path.exists(client_path):
+            return jsonify({"success": False, "error": "Cliente LND não encontrado"}), 404
+        
+        # Executar o cliente Python para obter saldos
+        result = subprocess.run(
+            ['python3', client_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=os.path.dirname(__file__)
+        )
+        
+        if result.returncode == 0:
+            # Parse da saída para extrair informações relevantes
+            output_lines = result.stdout.strip().split('\n')
+            
+            # Extrair informações básicas (implementação simplificada)
+            data = {
+                "success": True,
+                "timestamp": subprocess.run(['date', '+%Y-%m-%d %H:%M:%S'], 
+                                          capture_output=True, text=True).stdout.strip(),
+                "raw_output": result.stdout,
+                "connections": {
+                    "lnd": "✅ Conectado" in result.stdout,
+                    "elements": "✅ Conectado" in result.stdout and "Elements" in result.stdout
+                }
+            }
+            
+            return jsonify(data)
+        else:
+            return jsonify({
+                "success": False, 
+                "error": result.stderr or "Erro ao executar cliente",
+                "returncode": result.returncode
+            }), 500
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({"success": False, "error": "Timeout ao executar cliente"}), 408
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/wallet-balances-json')
+def wallet_balances_json():
+    """Endpoint para obter saldos em formato JSON estruturado"""
+    try:
+        client_path = os.path.join(os.path.dirname(__file__), 'lnd_balance_client_v2.py')
+        if not os.path.exists(client_path):
+            return jsonify({"success": False, "error": "Cliente LND não encontrado"}), 404
+        
+        # Executar cliente com flag --json (a ser implementada)
+        result = subprocess.run(
+            ['python3', client_path],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=os.path.dirname(__file__)
+        )
+        
+        if result.returncode == 0:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "output": result.stdout,
+                    "timestamp": subprocess.run(['date', '+%Y-%m-%d %H:%M:%S'], 
+                                              capture_output=True, text=True).stdout.strip()
+                }
+            })
+        else:
+            return jsonify({
+                "success": False, 
+                "error": result.stderr,
+                "returncode": result.returncode
+            }), 500
+            
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)

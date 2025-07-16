@@ -15,8 +15,10 @@ sleep 1
 
 brln_check () {
   if [[ -d "$INSTALL_DIR" ]]; then
-  sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-  exit 0
+    sudo bash -u admin "$INSTALL_DIR/download.sh"
+    sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
+    exit 0
+  fi
 }
 
 dir_check () {
@@ -61,16 +63,19 @@ else
   fi
 fi
   sudo groupadd admin >> /dev/null 2>&1
+  sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
 # Garante que o usuário 'admin' existe
 if id "admin" &>/dev/null; then
+  sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   sudo passwd admin
-  dir_check
   brln_check
+  dir_check
   exit 0
 else
   sudo adduser --gecos "" --ingroup admin admin
-  dir_check
+  sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
   brln_check
+  dir_check
   exit 0
 fi
 }

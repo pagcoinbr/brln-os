@@ -41,11 +41,11 @@ const appsPrincipais = [
   { id: 'lndg-btn', porta: 8889 },
   { id: 'thunderhub-btn', porta: 3000 },
   { id: 'lnbits-btn', porta: 5000 },
-  { id: 'simple-btn', porta: 35671 },
+  { id: 'peerswap-btn', porta: 1984 },
 ];
 
 // Lista dos apps gerenciados no painel de serviços
-const appsServicos = ["lnbits", "thunderhub", "simple", "lndg", "lndg-controller", "lnd", "bitcoind", "bos-telegram", "tor"];
+const appsServicos = ["lnbits", "thunderhub", "lndg", "lnd", "bitcoind", "bos-telegram", "tor"];
 
 document.addEventListener('DOMContentLoaded', () => {
   // Aplica o tema salvo
@@ -55,11 +55,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Atualiza status dos botões
   updateButtons();
 
+  // Atualiza saldos das carteiras
+  updateWalletBalances();
+
   // Verifica o status dos apps principais (de navegação)
   setTimeout(verificarServicosPrincipais, 50000);
 
   // Atualiza status dos botões de serviços a cada 5 segundos
   setInterval(updateButtons, 50000);
+
+  // Atualiza saldos das carteiras a cada 5 minutos (300000ms)
+  setInterval(updateWalletBalances, 300000);
 });
 
 // Função para abrir apps principais
@@ -73,11 +79,11 @@ function verificarServicosPrincipais() {
     { id: 'lndg-btn', porta: 8889 },
     { id: 'thunderhub-btn', porta: 3000 },
     { id: 'lnbits-btn', porta: 5000 },
-    { id: 'simple-btn', porta: 35671 },
+    { id: 'simple-btn', porta: 1984 },
   ];
 
   const ip = window.location.hostname;
-  const timeout = 5000;
+  const timeout = 51000;
 
   apps.forEach(app => {
     const botao = document.getElementById(app.id);
@@ -112,7 +118,7 @@ function verificarServicosPrincipais() {
           }
         })
         .catch(() => {
-          setTimeout(checkService, 2000);
+          setTimeout(checkService, 51000);
         });
     };
 
@@ -155,14 +161,13 @@ async function toggleService(appName) {
   }
 }
 
-// Formata o nome dos apps bonitinho
+// Formata o nome dos apps
 function formatAppName(appName) {
   switch (appName) {
     case "lnbits": return "LNbits";
     case "thunderhub": return "Thunderhub";
     case "simple": return "Simple LNWallet";
     case "lndg": return "LNDG";
-    case "lndg-controller": return "LNDG Controller";
     case "lnd": return "LND";
     default: return appName;
   }
@@ -190,4 +195,146 @@ function toggleExtras(button) {
   const isHidden = extras.style.display === "none";
   extras.style.display = isHidden ? "block" : "none";
   button.classList.toggle("rotate", isHidden);
+}
+
+// Função para atualizar saldos das carteiras
+async function updateWalletBalances() {
+  const lightningElement = document.getElementById('lightning-balance');
+  const bitcoinElement = document.getElementById('bitcoin-balance');
+  const liquidElement = document.getElementById('liquid-balance');
+  const statusElement = document.getElementById('wallet-status');
+
+  // Definir status de carregamento
+  lightningElement.textContent = '⚡ Lightning: 🔄 Verificando...';
+  bitcoinElement.textContent = '₿ Bitcoin On-Chain: 🔄 Verificando...';
+  liquidElement.textContent = '🌊 Liquid/Elements: 🔄 Verificando...';
+  statusElement.textContent = '🔄 Atualizando saldos...';
+
+  try {
+    const response = await fetch(`${flaskBaseURL}/wallet-balances`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Parse da saída do cliente Python
+      const output = data.raw_output || '';
+      const timestamp = data.timestamp || new Date().toLocaleString('pt-BR');
+      
+      // Extrair saldos da saída usando regex
+      const lightningBalance = extractLightningBalance(output);
+      const bitcoinBalance = extractBitcoinBalance(output);
+      const liquidBalance = extractLiquidBalance(output);
+      
+      // Atualizar elementos DOM
+      lightningElement.textContent = `⚡ Lightning: ${lightningBalance}`;
+      bitcoinElement.textContent = `₿ Bitcoin On-Chain: ${bitcoinBalance}`;
+      liquidElement.textContent = `🌊 Liquid/Elements: ${liquidBalance}`;
+      
+      // Status das conexões
+      const lndStatus = data.connections?.lnd ? '✅' : '❌';
+      const elementsStatus = data.connections?.elements ? '✅' : '❌';
+      statusElement.textContent = `🔄 Última atualização: ${timestamp} | LND: ${lndStatus} | Elements: ${elementsStatus}`;
+      
+    } else {
+      throw new Error(data.error || 'Erro desconhecido');
+    }
+
+  } catch (error) {
+    console.error('Erro ao obter saldos:', error);
+    
+    lightningElement.textContent = '⚡ Lightning: ❌ Erro';
+    bitcoinElement.textContent = '₿ Bitcoin On-Chain: ❌ Erro';
+    liquidElement.textContent = '🌊 Liquid/Elements: ❌ Erro';
+    statusElement.textContent = `❌ Erro: ${error.message}`;
+  }
+}
+
+// Função para extrair saldo Lightning da saída
+function extractLightningBalance(output) {
+  try {
+    // Procura por "Saldo Local:" seguido do valor
+    const localMatch = output.match(/Saldo Local:\s*([0-9.,]+\s*BTC[^)]*\([^)]+\))/);
+    if (localMatch) {
+      return localMatch[1].trim();
+    }
+    
+    // Fallback: procura por qualquer padrão de BTC
+    const btcMatch = output.match(/([0-9.]+\s*BTC[^)]*\([^)]+\))/);
+    if (btcMatch) {
+      return btcMatch[1].trim();
+    }
+    
+    return 'Não disponível';
+  } catch (e) {
+    return 'Erro na leitura';
+  }
+}
+
+// Função para extrair saldo Bitcoin on-chain da saída
+function extractBitcoinBalance(output) {
+  try {
+    // Procura por "Total:" na seção Bitcoin on-chain
+    const totalMatch = output.match(/Total:\s*([0-9.,]+\s*BTC[^)]*\([^)]+\))/);
+    if (totalMatch) {
+      return totalMatch[1].trim();
+    }
+    
+    // Fallback: procura por "Confirmado:"
+    const confirmedMatch = output.match(/Confirmado:\s*([0-9.,]+\s*BTC[^)]*\([^)]+\))/);
+    if (confirmedMatch) {
+      return confirmedMatch[1].trim();
+    }
+    
+    return 'Não disponível';
+  } catch (e) {
+    return 'Erro na leitura';
+  }
+}
+
+// Função para extrair saldo Liquid/Elements da saída
+function extractLiquidBalance(output) {
+  try {
+    // Procura por valores L-BTC ou outros assets
+    const liquidMatch = output.match(/Confirmado:\s*([^\\n]+L-BTC[^\\n]*)/);
+    if (liquidMatch) {
+      return liquidMatch[1].trim();
+    }
+    
+    // Fallback: procura na seção Elements
+    const elementsSection = output.match(/LIQUID \(ELEMENTS\)(.*?)(?=\n\n|Status das Conexões|$)/s);
+    if (elementsSection) {
+      const balanceMatch = elementsSection[1].match(/Confirmado:\s*([^\\n]+)/);
+      if (balanceMatch) {
+        return balanceMatch[1].trim();
+      }
+    }
+    
+    return 'Não disponível';
+  } catch (e) {
+    return 'Erro na leitura';
+  }
+}
+
+// Função para formatar valores para exibição mais compacta
+function formatBalanceForDisplay(balanceText) {
+  if (!balanceText || balanceText === 'Não disponível') {
+    return balanceText;
+  }
+  
+  try {
+    // Remove texto extra e mantém apenas o essencial
+    return balanceText.replace(/\s+/g, ' ').trim();
+  } catch (e) {
+    return balanceText;
+  }
 }

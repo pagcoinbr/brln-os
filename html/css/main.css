@@ -257,6 +257,45 @@ body.light-theme .botao:hover, body.light-theme a.botao:hover {
   margin: 10px 0;
 }
 
+/* Estilos específicos para saldos das carteiras */
+.wallet-balance {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.wallet-balance:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.wallet-status {
+  font-size: 14px;
+  font-style: italic;
+  color: #aaa;
+  margin-top: 15px;
+}
+
+/* Tema claro - ajustes para wallet */
+body.light-theme .wallet-balance {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
+body.light-theme .wallet-balance:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .wallet-status {
+  color: #666;
+}
+
 pre {
   background-color: #111;
   color: #0f0;

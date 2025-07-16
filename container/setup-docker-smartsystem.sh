@@ -542,8 +542,6 @@ main() {
     verify_resources 
     fix_existing_permissions 
     setup_logging_system 
-    docker-compose build
-    docker-compose up -d
 }
 
 # Executar script principal
