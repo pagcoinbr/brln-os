@@ -26,7 +26,7 @@
   "environment": {
     "THUNDERHUB_PORT": "3000",
     "LND_HOST": "lnd:10009",
-    "THUB_PASSWORD": "changeme123"
+    "THUB_PASSWORD": "36523152"
   },
   "depends_on": [
     "lnd"
