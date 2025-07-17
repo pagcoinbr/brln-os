@@ -5,8 +5,64 @@ source "$(dirname "$0")/scripts/basic.sh"
 basics
 
 INSTALL_DIR="/home/$USER/brln-os"
+
+# Função para aguardar liberação do lock do apt
+wait_for_apt_lock() {
+    local max_wait=300  # 5 minutos máximo
+    local waited=0
+    
+    while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+        if [ $waited -ge $max_wait ]; then
+            error "Timeout aguardando liberação do lock do apt (${max_wait}s)"
+            error "Forçando limpeza dos locks..."
+            
+            # Terminar processos apt/dpkg travados
+            sudo pkill -f "apt|dpkg" 2>/dev/null || true
+            sleep 2
+            
+            # Remover locks
+            sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock
+            
+            # Reconfigurar dpkg
+            sudo dpkg --configure -a
+            break
+        fi
+        
+        log "Aguardando liberação do lock do apt... (${waited}s/${max_wait}s)"
+        sleep 5
+        waited=$((waited + 5))
+    done
+}
+
+# Função para executar comandos apt com retry
+safe_apt() {
+    local max_retries=3
+    local retry=0
+    
+    while [ $retry -lt $max_retries ]; do
+        wait_for_apt_lock
+        
+        if sudo "$@"; then
+            return 0
+        else
+            retry=$((retry + 1))
+            if [ $retry -lt $max_retries ]; then
+                warning "Comando falhou, tentando novamente... (tentativa $retry/$max_retries)"
+                sleep 10
+            fi
+        fi
+    done
+    
+    error "Comando falhou após $max_retries tentativas: $*"
+    return 1
+}
+
 log "Iniciando a Instalação do BRLN-OS..."
-(sudo apt update && sudo apt upgrade -y && sudo apt install -y docker-compose) # > /dev/null 2>&1 & spinner $!
+log "Atualizando repositórios e instalando dependências..."
+
+safe_apt apt update
+safe_apt apt upgrade -y
+safe_apt apt install -y docker-compose
 
 # Verificar e adicionar usuário ao grupo docker no início para evitar problemas de permissão
 if command -v docker &> /dev/null; then
@@ -24,7 +80,7 @@ if [[ ! -d "container" ]]; then
     error "Execute este script no diretório raiz do projeto brlnfullauto"
     echo ""
     echo "Exemplo:"
-    echo "  git clone https://github.com/pagcoinbr/brlnfullauto.git"
+    echo "  git clone https://github.com/pagcoinbr/brln-os.git"
     echo "  cd brlnfullauto"
     echo "  ./setup.sh"
     exit 1
@@ -143,9 +199,9 @@ fi
 sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd,docker $USER
 
 # Clone repository if it doesn't exist
-if [[ ! -d "$INSTALL_DIR" ]]; then
+if [[ ! -d "/root/brln-os" ]]; then
   echo -e "${BLUE}Clonando repositório BRLN-OS...${NC}"
-  if sudo -u $USER bash git clone https://github.com/pagcoinbr/brln-os.git /home/$USER/brln-os 2>&1; then
+  if sudo git clone https://github.com/pagcoinbr/brln-os.git /$USER/brln-os 2>&1; then
     echo -e "${GREEN}Repositório clonado com sucesso.${NC}"
   else
     echo -e "${RED}Erro ao clonar o repositório BRLN-OS.${NC}"
@@ -156,7 +212,7 @@ fi
 tailscale_vpn() {
   echo -e "${CYAN}🌐 Instalando Tailscale VPN...${NC}"
   curl -fsSL https://tailscale.com/install.sh | sh > /dev/null 2>&1
-  sudo apt install qrencode -y > /dev/null 2>&1
+  safe_apt apt install -y qrencode
 
   LOGFILE="/tmp/tailscale_up.log"
   QRFILE="/tmp/tailscale_qr.log"
@@ -270,10 +326,6 @@ update_and_upgrade() {
   sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
   echo "Reiniciando o serviço Apache..."
   sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
-
-  # Executa o git dentro do diretório, sem precisar dar cd
-  git -C "$REPO_DIR" stash || true
-  git -C "$REPO_DIR" pull origin "$branch"
 
   sudo rm -rf "$WWW_HTML"/*.html
   sudo rm -rf "$WWW_HTML/css"
@@ -419,6 +471,7 @@ for service in "${SERVICES[@]}"; do
 done
 sudo bash "$INSTALL_DIR/scripts/generate-services.sh"
 }
+terminal_web
 
 bash "$INSTALL_DIR/brunel.sh"
 exit 0
