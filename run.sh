@@ -321,11 +321,11 @@ update_and_upgrade() {
   app="Interface Gráfica"
   echo "Instalando Apache..."
   sudo -v
-  sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
+  sudo apt install apache2 -y # >> /dev/null 2>&1 & spinner
   echo "Habilitando módulos do Apache..."
-  sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
+  sudo a2enmod cgid dir # >> /dev/null 2>&1 & spinner
   echo "Reiniciando o serviço Apache..."
-  sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
+  sudo systemctl restart apache2 # >> /dev/null 2>&1 & spinner
 
   sudo rm -rf "$WWW_HTML"/*.html
   sudo rm -rf "$WWW_HTML/css"
