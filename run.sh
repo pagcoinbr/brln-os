@@ -1,14 +1,144 @@
 #!/bin/bash
-# Cores
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-MAGENTA='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m' # Sem cor
+
+# Source das funções básicas
+source "$(dirname "$0")/scripts/basic.sh"
+basics
 
 INSTALL_DIR="/home/$USER/brln-os"
+log "Iniciando a Instalação do BRLN-OS..."
+(sudo apt update && sudo apt upgrade -y && sudo apt install -y docker-compose) # > /dev/null 2>&1 & spinner $!
+
+# Verificar e adicionar usuário ao grupo docker no início para evitar problemas de permissão
+if command -v docker &> /dev/null; then
+    if ! groups $USER | grep -q docker; then
+        log "Adicionando usuário $USER ao grupo docker..."
+        sudo usermod -aG docker $USER
+        log "Usuário adicionado ao grupo docker. Aplicando as mudanças de grupo..."
+        exec sg docker "$0 $*"
+    fi
+fi
+
+# Verificar se estamos no diretório correto
+if [[ ! -d "container" ]]; then
+    error "Diretório 'container' não encontrado!"
+    error "Execute este script no diretório raiz do projeto brlnfullauto"
+    echo ""
+    echo "Exemplo:"
+    echo "  git clone https://github.com/pagcoinbr/brlnfullauto.git"
+    echo "  cd brlnfullauto"
+    echo "  ./setup.sh"
+    exit 1
+fi
+
+# Verificar se o script principal existe
+if [[ ! -f "container/setup-docker-smartsystem.sh" ]]; then
+    error "Script setup-docker-smartsystem.sh não encontrado em container/"
+    exit 1
+fi
+
+# Verificar pré-requisitos
+log "Verificando pré-requisitos do sistema..."
+
+# Verificar se é Linux
+if [[ "$OSTYPE" != "linux-gnu"* ]]; then
+    warning "Este script foi otimizado para Linux. Pode não funcionar corretamente em outros sistemas."
+fi
+
+# Verificar Docker
+if ! command -v docker &> /dev/null; then
+    warning "Docker não encontrado!"
+    echo ""
+    echo "Para instalar o Docker, execute:"
+    echo "  curl -fsSL https://get.docker.com | sh"
+    echo "  sudo usermod -aG docker \$USER"
+    echo "  newgrp docker"
+    echo ""
+    read -p "Deseja que eu instale o Docker automaticamente? y/N: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log "Instalando Docker..."
+        curl -fsSL https://get.docker.com | sh
+        sudo usermod -aG docker $USER
+        log "Docker instalado! Você pode precisar fazer logout/login para usar sem sudo"
+    else
+        error "Docker é obrigatório. Instale-o antes de continuar."
+        exit 1
+    fi
+else
+    DOCKER_VERSION=$(docker --version | cut -d' ' -f3 | cut -d',' -f1)
+    log "Docker encontrado: v$DOCKER_VERSION ✓"
+fi
+
+# Verificar Docker Compose
+if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    warning "Docker Compose não encontrado!"
+    echo ""
+    echo "Para instalar o Docker Compose, execute:"
+    echo "  sudo apt-get update && sudo apt-get install docker-compose-plugin"
+    echo ""
+    read -p "Deseja que eu instale o Docker Compose automaticamente? y/N: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log "Instalando Docker Compose..."
+        sudo apt-get update && sudo apt-get install -y docker-compose-plugin
+        log "Docker Compose instalado! ✓"
+    else
+        error "Docker Compose é obrigatório. Instale-o antes de continuar."
+        exit 1
+    fi
+else
+    if command -v docker-compose &> /dev/null; then
+        COMPOSE_VERSION=$(docker-compose --version | cut -d' ' -f3 | cut -d',' -f1)
+        log "Docker Compose encontrado: v$COMPOSE_VERSION ✓"
+    else
+        COMPOSE_VERSION=$(docker compose version --short)
+    log "Docker Compose plugin encontrado: v$COMPOSE_VERSION ✓"
+    fi
+fi
+
+# Verificar espaço em disco
+log "Verificando espaço em disco..."
+AVAILABLE_SPACE=$(df . | tail -1 | awk '{print $4}')
+AVAILABLE_GB=$((AVAILABLE_SPACE / 1024 / 1024))
+
+if [[ $AVAILABLE_GB -lt 100 ]]; then
+    warning "Espaço em disco baixo: ${AVAILABLE_GB}GB disponível"
+    warning "Recomendado: pelo menos 1000GB para blockchain completa"
+    echo ""
+    read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        error "Operação cancelada pelo usuário"
+        exit 1
+    fi
+else
+    log "Espaço em disco suficiente: ${AVAILABLE_GB}GB ✓"
+fi
+
+# Verificar permissões nos scripts
+log "Configurando permissões dos scripts..."
+chmod +x container/setup-docker-smartsystem.sh
+if [[ -f "container/build.sh" ]]; then
+    chmod +x container/build.sh
+fi
+
+# Verificar se há containers ativos e parar se necessário
+if [[ $(docker ps -q | wc -l) -gt 0 ]]; then
+    warning "Existem containers Docker ativos. Parando todos os containers..."
+    echo "Este processo pode apagar os volumes de projetos em execução, tenha cuidado ao prosseguir."
+    read -p "Deseja continuar e parar todos os containers? y/N: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo -e "${RED}Operação cancelada pelo usuário.${NC}"
+        exit 1
+    else
+        log "Parando todos os containers e removendo volumes..."
+        cd container || exit 1
+        docker-compose down -v
+        cd - || exit 1
+        log "Todos os containers foram parados e volumes removidos."
+    fi
+fi
 
 sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd,docker $USER
 
@@ -21,12 +151,6 @@ if [[ ! -d "$INSTALL_DIR" ]]; then
     echo -e "${RED}Erro ao clonar o repositório BRLN-OS.${NC}"
     exit 1
   fi
-fi
-
-# Ensure the brunel.sh script exists
-if [[ ! -f "$INSTALL_DIR/brunel.sh" ]]; then
-  echo -e "${RED}Erro: arquivo brunel.sh não encontrado em $INSTALL_DIR${NC}"
-  exit 1
 fi
 
 tailscale_vpn() {
@@ -62,6 +186,7 @@ tailscale_vpn() {
 
 opening () {
   clear
+  
   echo
   echo -e "${GREEN}✅ Interface gráfica instalada com sucesso! 🎉${NC}"
   echo -e "${GREEN}⚡️ Pronto! Seu node está no ar, seguro e soberano... ou quase. 😏${NC}"
@@ -71,6 +196,41 @@ opening () {
   echo -e "${GREEN}🔥 Na BR⚡LN a gente não confia... a gente verifica, roda, automatiza e ensina!${NC}"
   echo -e "${GREEN} Acesse seu ${YELLOW}Node Lightning${NC}${GREEN} pelo navegador em:${NC}"
   echo
+  clear
+  echo -e "${CYAN}"
+  echo "$BRLN_ASCII_FULL"
+  echo -e "${GREEN}"
+  echo "$BRLN_OS_ASCII"
+  echo -e "${YELLOW}"
+  echo "$LIGHTNING_BOLT"
+  echo -e "${NC}"
+  echo ""
+  echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+  log "🎯 Instalação Completa!"
+  echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
+  echo ""
+  log "🎉 Configuração concluída!"
+  echo ""
+  info "📱 Interfaces web disponíveis:"
+  echo "  • LNDG Dashboard: http://localhost:8889"
+  echo "  • Thunderhub: http://localhost:3000"
+  echo "  • LNbits: http://localhost:5000"
+  echo "  • PeerSwap Web: http://localhost:1984"
+  echo ""
+  info "📋 Comandos úteis:"
+  echo "  Estes comandos precisam ser executados no diretório 'container':"
+  echo "  • Ver logs: docker logs [serviço] -f"
+  echo "  • Reiniciar: docker restart [serviço]"
+  echo "  • Status: docker ps"
+  echo ""
+  warning "🔒 Altere as senhas padrão antes de usar em produção!"
+  echo ""
+  info "🔑 Senhas configuradas:"
+  echo "  • LNbits: Acesse http://localhost:5000 e crie o super usuário agora"
+  echo "  • Thunderhub: Configurada durante o setup (verifique container/thunderhub/thubConfig.yaml)"
+  echo "  • RPC Bitcoin: Gerada no container/bitcoin/bitcoin.conf pelo rpcauth.py"
+  echo "  • RPC Elements: Definida no container/elements/elements.conf"
+  echo ""
   echo -e "${RED} http://$(hostname -I | awk '{print $1}') ${NC}"
   echo
   echo -e "${RED} Ou escaneie o QR Code abaixo para conectar sua tailnet: ${NC}"
@@ -171,7 +331,7 @@ EOF
   sudo usermod -aG $USER www-data
   # Garante que o pacote python3-venv esteja instalado
   if ! dpkg -l | grep -q python3-venv; then
-    sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
+    sudo apt install python3-venv -y # >> /dev/null 2>&1 & spinner
   else
     echo "✅ python3-venv já está instalado."
   fi
@@ -181,7 +341,7 @@ EOF
 
   # Cria o ambiente virtual apenas se ainda não existir
   if [ ! -d "$FLASKVENV_DIR" ]; then
-    python3 -m venv "$FLASKVENV_DIR" >> /dev/null 2>&1 & spinner
+    python3 -m venv "$FLASKVENV_DIR" # >> /dev/null 2>&1 & spinner
   else
     echo "✅ Ambiente virtual já existe em $FLASKVENV_DIR."
   fi
@@ -191,7 +351,7 @@ EOF
   source "$FLASKVENV_DIR/bin/activate"
 
   # Instala Flask e Flask-CORS
-  pip install flask flask-cors >> /dev/null 2>&1 & spinner
+  pip install flask flask-cors # >> /dev/null 2>&1 & spinner
   sudo -u $USER bash setup_lnd_client.sh 
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
@@ -199,7 +359,7 @@ EOF
 
   # 📝 Criação segura do arquivo usando here-document
   sudo tee "$SUDOERS_TMP" > /dev/null <<EOF
-$USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl start lnbits.service, /usr/bin/systemctl stop lnbits.service, /usr/bin/systemctl start thunderhub.service, /usr/bin/systemctl stop thunderhub.service, /usr/bin/systemctl start lnd.service, /usr/bin/systemctl stop lnd.service, /usr/bin/systemctl start lndg-controller.service, /usr/bin/systemctl stop lndg-controller.service, /usr/bin/systemctl start lndg.service, /usr/bin/systemctl stop lndg.service, /usr/bin/systemctl start simple-lnwallet.service, /usr/bin/systemctl stop simple-lnwallet.service, /usr/bin/systemctl start bitcoind.service, /usr/bin/systemctl stop bitcoind.service, /usr/bin/systemctl start bos-telegram.service, /usr/bin/systemctl stop bos-telegram.service, /usr/bin/systemctl start tor.service, /usr/bin/systemctl stop tor.service
+$USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl start control-systemd.service, /usr/bin/systemctl stop control-systemd.service, /usr/bin/systemctl start command-center.service, /usr/bin/systemctl stop command-center.service, /usr/bin/systemctl start gotty-fullauto.service, /usr/bin/systemctl stop gotty-fullauto.service
 EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
@@ -211,7 +371,7 @@ EOF
     exit 1
   fi
   sudo systemctl restart apache2
-  sudo apt install -y python3-flask >> /dev/null 2>&1 & spinner
+  sudo apt install -y python3-flask # >> /dev/null 2>&1 & spinner
 }
 
 gotty_do () {
@@ -237,14 +397,10 @@ else
 fi
 
 # Define arrays for services and ports
-SERVICES=("gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "control-systemd")
-PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "5001")
+SERVICES=("gotty-fullauto" "gotty-logs-lnd" "gotty-logs-elements" "gotty-logs-bitcoind" "control-systemd")
+PORTS=("3131" "3232" "5001")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
   "allow cli on port 3232 from local network" 
-  "allow bitcoinlogs on port 3434 from local network" 
-  "allow lndlogs on port 3535 from local network"
-  "allow btc-editor on port 3636 from local network"
-  "allow lnd-editor on port 3333 from local network"
   "allow control-systemd on port 5001 from local network")
 
 # Remove and copy service files
@@ -257,17 +413,11 @@ done
 sudo systemctl daemon-reload
 for service in "${SERVICES[@]}"; do
   if ! sudo systemctl is-enabled --quiet $service.service; then
-    sudo systemctl enable $service.service >> /dev/null 2>&1
-    sudo systemctl restart $service.service >> /dev/null 2>&1 & spinner
+    sudo systemctl enable $service.service # >> /dev/null 2>&1
+    sudo systemctl restart $service.service # >> /dev/null 2>&1 & spinner
   fi
 done
-
-# Configure UFW rules for ports
-for i in "${!PORTS[@]}"; do
-  if ! sudo ufw status | grep -q "${PORTS[i]}/tcp"; then
-    sudo ufw allow from $subnet to any port ${PORTS[i]} proto tcp comment "${COMMENTS[i]}" >> /dev/null 2>&1
-  fi
-done
+sudo bash "$INSTALL_DIR/scripts/generate-services.sh"
 }
 
 bash "$INSTALL_DIR/brunel.sh"

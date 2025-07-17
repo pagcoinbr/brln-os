@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Source das funções básicas
+source "$(dirname "$0")/scripts/basic.sh"
+basics
+
 SCRIPT_VERSION=v2.0-alfa
 TOR_LINIK=https://deb.torproject.org/torproject.org
 TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc
@@ -15,14 +20,7 @@ FLASKVENV_DIR="/home/$USER/envflask"
 atual_user=$(whoami)
 branch="main"
 
-# Cores
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[1;34m'
-MAGENTA='\033[1;35m'
-CYAN='\033[1;36m'
-NC='\033[0m' # Sem cor
+log "Iniciando configuração do BRLN-OS Container Stack..."
 
 gui_update() {
   update_and_upgrade
@@ -48,7 +46,7 @@ configure_ufw() {
 postgres_db () {
   cd "$(dirname "$0")" || cd ~
 
-  echo -e "${GREEN}⏳ Iniciando instalação do PostgreSQL...${NC}"
+  log "⏳ Iniciando instalação do PostgreSQL..."
 
   # Importa a chave do repositório oficial
   sudo install -d /usr/share/postgresql-common/pgdg
@@ -60,7 +58,7 @@ postgres_db () {
   # Atualiza os pacotes e instala o PostgreSQL
   sudo apt update && sudo apt install -y postgresql postgresql-contrib
 
-  echo -e "${GREEN}✅ PostgreSQL instalado com sucesso!${NC}"
+  log "✅ PostgreSQL instalado com sucesso!"
   sleep 2
 
   # Cria o diretório de dados customizado
@@ -68,7 +66,7 @@ postgres_db () {
   sudo chown -R postgres:postgres /data/postgresdb
   sudo chmod -R 700 /data/postgresdb
 
-  echo -e "${GREEN}📁 Diretório /data/postgresdb/17 preparado.${NC}"
+  log "📁 Diretório /data/postgresdb/17 preparado."
   sleep 1
 
   # Inicializa o cluster no novo local
@@ -77,7 +75,7 @@ postgres_db () {
   # Redireciona o PostgreSQL para o novo diretório
   sudo sed -i "42s|.*|data_directory = '/data/postgresdb/17'|" /etc/postgresql/17/main/postgresql.conf
 
-  echo -e "${YELLOW}🔁 Redirecionando data_directory para /data/postgresdb/17${NC}"
+  warning "🔁 Redirecionando data_directory para /data/postgresdb/17"
 
   # Reinicia serviços e recarrega systemd
   sudo systemctl daemon-reexec
@@ -93,7 +91,7 @@ postgres_db () {
   # Cria banco de dados lndb com owner sendo o usuário atual
   sudo -u postgres createdb -O $USER lndb
 
-  echo -e "${GREEN}🎉 PostgreSQL está pronto para uso com o banco 'lndb' e o usuário '$USER'.${NC}"
+  log "🎉 PostgreSQL está pronto para uso com o banco 'lndb' e o usuário '$USER'."
 }
 
 
@@ -104,16 +102,16 @@ local alias_line="alias=$alias BR⚡️LN"
 sudo sed -i "s|^alias=.*|$alias_line|" "$file_path"
 read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
-    echo -e "${GREEN}Você escolheu usar o Postgres!${NC}"
+    log "Você escolheu usar o Postgres!"
     read -p "Você deseja exibir os logs da instalação? (y/n): " show_logs
     if [[ $show_logs == "y" ]]; then
-      echo -e "${GREEN}Exibindo logs da instalação do Postgres...${NC}"
+      log "Exibindo logs da instalação do Postgres..."
       postgres_db
     elif [[ $show_logs == "n" ]]; then
-      echo -e "${RED}Você escolheu não exibir os logs da instalação do Postgres!${NC}"
+      warning "Você escolheu não exibir os logs da instalação do Postgres!"
       postgres_db >> /dev/null 2>&1 & spinner
     else
-      echo -e "${RED}Opção inválida. Por favor, escolha 'y' ou 'n'.${NC}"
+      error "Opção inválida. Por favor, escolha 'y' ou 'n'."
       exit 1
     fi
     psql -V
@@ -128,7 +126,7 @@ db.postgres.timeout=0
 EOF
 )
   elif [[ $db_choice == "bbolt" ]]; then
-    echo -e "${RED}Você escolheu usar o Bbolt!${NC}"
+    warning "Você escolheu usar o Bbolt!"
     lnd_db=$(cat <<EOF
 [bolt]
 ## Database
@@ -140,7 +138,7 @@ db.bolt.auto-compact=true
 EOF
 )
   else
-    echo -e "${RED}Opção inválida. Por favor, escolha 'sqlite' ou 'bbolt'.${NC}"
+    error "Opção inválida. Por favor, escolha 'sqlite' ou 'bbolt'."
     exit 1
   fi
   # Inserir a configuração no arquivo lnd.conf na linha 100
@@ -151,7 +149,7 @@ $lnd_db"
 
 install_nodejs() {
   if [[ -d ~/.npm-global ]]; then
-    echo "Node.js já está instalado."
+    info "Node.js já está instalado."
   else
     curl -sL https://deb.nodesource.com/setup_21.x | sudo -E bash -
     sudo apt-get install nodejs -y
@@ -160,7 +158,7 @@ install_nodejs() {
 
 install_bos() {
   if [[ -d ~/.npm-global ]]; then
-    echo "Balance of Satoshis já está instalado."
+    info "Balance of Satoshis já está instalado."
   else
     mkdir -p ~/.npm-global
     npm config set prefix ~/.npm-global
@@ -193,21 +191,21 @@ EOF"
 toggle_bitcoin () {
     # Exibir o menu para o usuário
     while true; do
-        echo "Escolha uma opção:"
-        echo "1) Trocar para o Bitcoin Core local"
-        echo "2) Trocar para o node Bitcoin remoto"
-        echo "3) Sair"
+        info "Escolha uma opção:"
+        info "1) Trocar para o Bitcoin Core local"
+        info "2) Trocar para o node Bitcoin remoto"
+        info "3) Sair"
         read -p "Digite sua escolha: " choice
 
         case $choice in
             1)
-                echo "Trocando para o Bitcoin Core local..."
+                log "Trocando para o Bitcoin Core local..."
                 toggle_on
                 wait
-                echo "Trocado para o Bitcoin Core local."
+                log "Trocado para o Bitcoin Core local."
                 ;;
             2)
-                echo "Trocando para o node Bitcoin remoto..."
+                log "Trocando para o node Bitcoin remoto..."
                 toggle_off
                 wait 
                 echo "Trocado para o node Bitcoin remoto."
@@ -463,28 +461,31 @@ spinner() {
 }
 
 menu() {
+  cd "$REPO_DIR/container"
+  sudo -v
   echo
   echo -e "${CYAN}🌟 Bem-vindo à instalação de node Lightning personalizado da BRLN! 🌟${NC}"
   echo
-  echo -e "${YELLOW}⚡ Este Sript Instalará um Node Lightning Standalone${NC}"
-  echo -e "  ${GREEN}🛠️ Bem Vindo ao Seu Novo Banco, Ele é BRASILEIRO. ${NC}"
+  echo -e "${CYAN}"
+  echo "$BRLN_ASCII_FULL"
+  echo -e "${GREEN}"
+  echo "$BRLN_OS_ASCII"
+  echo -e "${YELLOW}"
+  echo "$LIGHTNING_BOLT"
+  echo -e "${NC}"
   echo
   echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"
   echo -e "${YELLOW} Sua arquitetura é:${RED} $arch${NC}"
   echo
   echo -e "${YELLOW}📝 Escolha uma opção:${NC}"
   echo
-  echo -e "   ${GREEN}1${NC}- Instalação completa do BRLN-OS"
-  echo
-  echo -e "${YELLOW} Instalação Avançada:${NC}"
-  echo
-  echo -e "   ${GREEN}2${NC}- Instalar Bitcoin Core"
-  echo -e "   ${GREEN}3${NC}- Instalar LND & Criar Carteira"
-  echo -e "   ${GREEN}4${NC}- Thunderhub (Exige LND)"
-  echo -e "   ${GREEN}5${NC}- Instalar Balance of Satoshis (Exige LND)"
-  echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
-  echo -e "   ${GREEN}7${NC}- Instalar LNbits"
-  echo -e "   ${GREEN}8${NC}- Mais opções"
+  echo -e "   ${GREEN}1${NC}- Instalar Bitcoin + LND & Criar Carteira"
+  echo -e "   ${GREEN}2${NC}- Instalar Elements (Liquid Network Node)"
+  echo -e "   ${GREEN}3${NC}- Thunderhub (Exige LND)"
+  echo -e "   ${GREEN}4${NC}- Instalar Balance of Satoshis (Exige LND)"
+  echo -e "   ${GREEN}5${NC}- Instalar Lndg (Exige LND)"
+  echo -e "   ${GREEN}6${NC}- Instalar LNbits"
+  echo -e "   ${GREEN}7${NC}- Mais opções"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
@@ -494,112 +495,24 @@ menu() {
 
   case $option in
     1)
-      app="BRLN-OS"
-      sudo -v
-      echo -e "${CYAN}🚀 Instalando BRLN-OS...${NC}"
-      echo -e "${YELLOW}Digite a senha do usuário $USER caso solicitado.${NC}" 
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      sudo apt autoremove -y
-      if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        bash "setup.sh"
-        sudo docker-compose build
-        sudo docker-compose up -d
-        cd
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW}Aguarde p.f. A instalação está sendo executada em segundo plano...${NC}"
-        echo -e "${YELLOW}🕒 ATENÇÃO: Esta etapa pode demorar 10 - 30min. Seja paciente.${NC}"
-        cd "$REPO_DIR/container"
-        bash "setup.sh"
-        sudo docker-compose build >> /dev/null 2>&1 & spinner
-        sudo docker-compose up -d >> /dev/null 2>&1 & spinner
-        pid=$!
-        cd
-        if declare -f spinner > /dev/null; then
-          spinner $pid
-        else
-          echo -e "${RED}Erro: Função 'spinner' não encontrada.${NC}"
-          wait $pid
-        fi
-        clear
-      else
-        echo "Opção inválida."
-      fi      
-      wait
-      echo -e "\033[43m\033[30m ✅ Instalação do BRLN-OS concluída! \033[0m"
-      menu      
-      ;;
-
-    2)
-      app="bitcoin"
-      sudo -v
-      echo -e "${YELLOW} instalando o bitcoind...${NC}"
-      read -p "Escolha sua senha do Bitcoin Core: " "rpcpsswd"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app
-        sudo docker-compose up -d $app
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
-        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      echo -e "\033[43m\033[30m ✅ Sua instalação do bitcoin core foi bem sucedida! \033[0m"
+      app="lnd"
+      echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      sudo bash "$REPO_DIR/scripts/install-$app.sh"
+      echo -e "\033[43m\033[30m ✅ Sua instalação do $app foi bem sucedida! \033[0m"
       menu
       ;;
-    3)
-      app="lnd"
-      sudo -v
-      echo -e "${CYAN}🚀 Iniciando a instalação do LND...${NC}"
-      read -p "Digite o nome do seu Nó (NÃO USE ESPAÇO!): " "alias"
-      echo -e "${YELLOW} instalando o lnd...${NC}"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app
-        sudo docker-compose up -d $app
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde p.f.${NC}"
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
-        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      configure_lnd
-      echo -e "\033[43m\033[30m ✅ Sua instalação do LND foi bem sucedida! \033[0m"
+    2)
+      app="elements"
+      echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      sudo bash "$REPO_DIR/scripts/install-$app.sh"
+      echo -e "\033[43m\033[30m ✅ $app instalado com sucesso \033[0m"
       menu
       ;;
     4)
       app="thunderhub"
-      echo -e "\033[43m\033[30m ✅ Balance of Satoshis instalado com sucesso! \033[0m"
-      echo
-      echo -e "${YELLOW}🕒 Iniciando a instalação do Thunderhub...${NC}"
-      read -p "Digite a senha para ThunderHub: " thub_senha
-      echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      app="Thunderhub"
-      if [[ "$verbose_mode" == "y" ]]; then
-        docker-compose build $app
-        docker-compose up -d $app
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde, isso poderá demorar 10min ou mais. Seja paciente...${NC}"
-        docker-compose build $app >> /dev/null 2>&1 & spinner
-        docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      echo -e "\033[43m\033[30m ✅ ThunderHub instalado com sucesso! \033[0m"
+      echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      sudo bash "$REPO_DIR/scripts/install-$app.sh"
+      echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
     5)
@@ -621,52 +534,16 @@ menu() {
       ;;
     6)
       app="lndg"
-      sudo -v
-      echo -e "${CYAN}🚀 Instalando LNDG...${NC}"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        docker-compose build $app
-        docker-compose up -d $app
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco...${NC}"
-        cd "$REPO_DIR/container"
-        docker-compose build $app >> /dev/null 2>&1 & spinner
-        docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        clear
-      else
-        echo "Opção inválida. Usando o modo padrão."
-        menu
-      fi
-      echo -e "${YELLOW}📝 Para acessar o LNDG, use a seguinte senha:${NC}"
-      echo
-      cat /data/lndg/data/lndg-admin.txt
-      echo
-      echo
-      echo -e "${YELLOW}📝 Você deve mudar essa senha ao final da instalação."
-      echo -e "\033[43m\033[30m ✅ LNDG instalado com sucesso! \033[0m"
+      echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      sudo bash "$REPO_DIR/scripts/install-$app.sh"
+      echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
     7)
       app="lnbits"
-      sudo -v
-      echo -e "${CYAN}🚀 Instalando LNbits...${NC}"
-      read -p "Deseja exigir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        docker-compose build $app
-        docker-compose up -d $app
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco... Seja paciente.${NC}"
-        cd "$REPO_DIR/container"
-        docker-compose build $app >> /dev/null 2>&1 & spinner
-        docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
-      echo -e "\033[43m\033[30m ✅ LNbits instalado com sucesso! \033[0m"
+      echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      sudo bash "$REPO_DIR/scripts/install-$app.sh"
+      echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
     8)

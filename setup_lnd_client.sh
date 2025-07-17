@@ -2,67 +2,71 @@
 # Setup script para cliente Python gRPC do LND
 # Baseado no tutorial oficial do LND
 
+# Source das funções básicas
+source "$(dirname "$0")/scripts/basic.sh"
+basics
+
 set -e
 
-echo "🔧 Configurando ambiente Python para cliente LND gRPC..."
+log "🔧 Configurando ambiente Python para cliente LND gRPC..."
 
 # Criar diretório para o ambiente virtual se não existir
 VENV_DIR="./lnd_client_env"
 
 # Verificar se o Python 3 está instalado
 if ! command -v python3 &> /dev/null; then
-    echo "❌ Python 3 não está instalado. Instale o Python 3 primeiro."
+    error "❌ Python 3 não está instalado. Instale o Python 3 primeiro."
     exit 1
 fi
 
 # Verificar se o pip está instalado
 if ! command -v pip3 &> /dev/null; then
-    echo "❌ pip3 não está instalado. Instale o pip primeiro."
+    error "❌ pip3 não está instalado. Instale o pip primeiro."
     exit 1
 fi
 
 # 1. Criar ambiente virtual
-echo "📦 Criando ambiente virtual..."
+log "📦 Criando ambiente virtual..."
 if [ ! -d "$VENV_DIR" ]; then
     python3 -m venv $VENV_DIR
-    echo "✅ Ambiente virtual criado em $VENV_DIR"
+    log "✅ Ambiente virtual criado em $VENV_DIR"
 else
-    echo "ℹ️  Ambiente virtual já existe em $VENV_DIR"
+    info "ℹ️  Ambiente virtual já existe em $VENV_DIR"
 fi
 
 # 2. Ativar ambiente virtual
-echo "🔌 Ativando ambiente virtual..."
+log "🔌 Ativando ambiente virtual..."
 source $VENV_DIR/bin/activate
 
 # 3. Atualizar pip
-echo "⬆️  Atualizando pip..."
+log "⬆️  Atualizando pip..."
 pip install --upgrade pip
 
 # 4. Instalar dependências
-echo "📥 Instalando dependências Python..."
+log "📥 Instalando dependências Python..."
 pip install grpcio-tools requests
 
 # 5. Baixar arquivo proto do LND
-echo "📡 Baixando lightning.proto do repositório oficial do LND..."
+log "📡 Baixando lightning.proto do repositório oficial do LND..."
 if [ ! -f "lightning.proto" ]; then
     curl -o lightning.proto -s https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/lightning.proto
-    echo "✅ lightning.proto baixado"
+    log "✅ lightning.proto baixado"
 else
-    echo "ℹ️  lightning.proto já existe"
+    info "ℹ️  lightning.proto já existe"
 fi
 
 # 6. Compilar arquivo proto
-echo "🔨 Compilando arquivo proto..."
+log "🔨 Compilando arquivo proto..."
 python -m grpc_tools.protoc --proto_path=. --python_out=. --grpc_python_out=. lightning.proto
 
 # Verificar se os arquivos foram gerados
 if [ -f "lightning_pb2.py" ] && [ -f "lightning_pb2_grpc.py" ]; then
-    echo "✅ Arquivos proto compilados com sucesso:"
-    echo "   - lightning_pb2.py"
-    echo "   - lightning_pb2_grpc.py"
-    echo "   - lightning_pb2.pyi"
+    log "✅ Arquivos proto compilados com sucesso:"
+    info "   - lightning_pb2.py"
+    info "   - lightning_pb2_grpc.py"
+    info "   - lightning_pb2.pyi"
 else
-    echo "❌ Erro ao compilar arquivos proto"
+    error "❌ Erro ao compilar arquivos proto"
     exit 1
 fi
 

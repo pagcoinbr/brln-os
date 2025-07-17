@@ -20,7 +20,7 @@
 Execute este comando simples para instalar o BRLN-OS em seu sistema:
 
 ```bash
-curl -fsSL https://pagcoin.org/install.sh | sh
+Em manutenção
 ```
 
 **É isso!** O BRLN-OS será instalado automaticamente com todos os componentes necessários.

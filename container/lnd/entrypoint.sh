@@ -3,6 +3,15 @@
 # Script de entrypoint para LND com criação automática de carteira
 set -e
 
+# Source das funções básicas
+source "/opt/lnd/scripts/basic.sh" 2>/dev/null || {
+    # Fallback se o basic.sh não estiver disponível no container
+    log() { echo -e "\033[0;32m[$(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
+    error() { echo -e "\033[0;31m[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
+    warning() { echo -e "\033[1;33m[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
+    info() { echo -e "\033[0;34m[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
+}
+
 # Configurações
 LND_DIR="/home/lnd/.lnd"
 PASSWORD_FILE="$LND_DIR/password.txt"
@@ -12,22 +21,6 @@ LOG_FILE="/tmp/lnd-entrypoint.log"
 TLS_CERT_PATH=""  # Será definido dinamicamente
 LND_BIN_DATA="/opt/lnd"
 LND_DATA="/data/lnd"
-
-# Cores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-# Função para logging
-log() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"
-}
-
-error() {
-    echo -e "${RED}[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"
-}
 
 warning() {
     echo -e "${YELLOW}[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"
