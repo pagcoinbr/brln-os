@@ -39,6 +39,7 @@ gui_update() {
 create_main_dir() {
   sudo mkdir /data
   sudo chown $USER:$USER /data
+  cp -r "/root/brln-os/scripts/.env.example" "/root/brln-os/scripts/.env"
 }
 
 configure_ufw() {
