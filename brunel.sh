@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source das funções básicas
-source "$(dirname "$0")/scripts/basic.sh"
+source "$(dirname "$0")/scripts/.env"
 basics
 
 SCRIPT_VERSION=v2.0-alfa
@@ -10,11 +10,16 @@ TOR_GPGLINK=https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE
 LND_VERSION=0.18.5
 BTC_VERSION=28.1
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-REPO_DIR="/home/$USER/brln-os"
+# Set REPO_DIR based on whether we're running as root or not
+if [[ "$EUID" -eq 0 ]]; then
+    REPO_DIR="/root/brln-os"
+else
+    REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 HTML_SRC="$REPO_DIR/html"
 CGI_DST="/usr/lib/cgi-bin"
 WWW_HTML="/var/www/html"
-SERVICES_DIR="/home/$USER/brln-os/services"
+SERVICES_DIR="$REPO_DIR/services"
 POETRY_BIN="/home/$USER/.local/bin/poetry"
 FLASKVENV_DIR="/home/$USER/envflask"
 atual_user=$(whoami)
@@ -27,7 +32,7 @@ gui_update() {
   gotty_install
   sudo chown -R $USER:$USER /var/www/html/radio
   sudo chmod +x /var/www/html/radio/radio-update.sh
-  sudo chmod +x /home/$USER/brln-os/html/radio/radio-update.sh
+  sudo chmod +x $REPO_DIR/html/radio/radio-update.sh
   menu
 }
 
@@ -387,7 +392,7 @@ submenu_opcoes() {
 
 radio_update () {
   # Caminho do script que deve rodar a cada hora
-  SCRIPT="/home/$USER/brln-os/html/radio/radio-update.sh"
+  SCRIPT="$REPO_DIR/html/radio/radio-update.sh"
 
   # Linha que será adicionada ao crontab
   CRON_LINE="0 * * * * $SCRIPT >> /var/log/update_radio.log 2>&1"

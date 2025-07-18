@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source das funções básicas
-source "$(dirname "$0")/basic.sh"
+source "$(dirname "$0")/.env"
 basics
 
       info "🚀 Instalando LNDG..."

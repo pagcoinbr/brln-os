@@ -3,7 +3,7 @@
 # Baseado no tutorial oficial do LND
 
 # Source das funções básicas
-source "$(dirname "$0")/scripts/basic.sh"
+source "$(dirname "$0")/scripts/.env"
 basics
 
 set -e

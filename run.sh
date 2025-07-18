@@ -7,11 +7,11 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
-# Define o diretório de instalação como /root
-INSTALL_DIR="/root/brln-os"
+# Define o diretório de instalação dinamicamente
+INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source das funções básicas
-source "$INSTALL_DIR/scripts/basic.sh"
+source "$INSTALL_DIR/scripts/.env"
 basics
 
 # Função para aguardar liberação do lock do apt
@@ -415,6 +415,7 @@ EOF
 gotty_do () {
   echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
   LOCAL_APPS="$INSTALL_DIR/local_apps"
+  arch=$(uname -m)
   if [[ $arch == "x86_64" ]]; then
     sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /root >> /dev/null 2>&1
   else
@@ -437,11 +438,11 @@ fi
 # Define arrays for services and ports
 SERVICES=("gotty-fullauto" "command-center" "control-systemd")
 
-sudo bash "$INSTALL_DIR/scripts/generate-services.sh"
+sudo bash "$INSTALL_DIR/scripts/generate-services.sh" root "$INSTALL_DIR"
 
 # Install and enable the generated services
 echo "Installing systemd services..."
-sudo cp /root/brln-os/services/*.service /etc/systemd/system/
+sudo cp $INSTALL_DIR/services/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
 # Enable and start services

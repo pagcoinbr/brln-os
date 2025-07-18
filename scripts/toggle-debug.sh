@@ -86,17 +86,17 @@ CONFIG_FILE="$SCRIPT_DIR/.debug_mode"
 if [[ -f "$CONFIG_FILE" ]]; then
     echo -e "\033[0;36m[DEBUG MODE]\033[0m Executando com logs visíveis..."
     export DEBUG_MODE=true
-    # Substitui temporariamente basic.sh por basic-debug.sh
-    if [[ -f "$SCRIPT_DIR/basic-debug.sh" ]]; then
-        mv "$SCRIPT_DIR/basic.sh" "$SCRIPT_DIR/basic-original.sh" 2>/dev/null || true
-        cp "$SCRIPT_DIR/basic-debug.sh" "$SCRIPT_DIR/basic.sh"
+    # Substitui temporariamente .env por .env-debug
+    if [[ -f "$SCRIPT_DIR/.env-debug" ]]; then
+        mv "$SCRIPT_DIR/.env" "$SCRIPT_DIR/.env-original" 2>/dev/null || true
+        cp "$SCRIPT_DIR/.env-debug" "$SCRIPT_DIR/.env"
     fi
 else
     echo -e "\033[0;33m[NORMAL MODE]\033[0m Executando com spinners..."
     export DEBUG_MODE=false
-    # Restaura basic.sh original se existir
-    if [[ -f "$SCRIPT_DIR/basic-original.sh" ]]; then
-        mv "$SCRIPT_DIR/basic-original.sh" "$SCRIPT_DIR/basic.sh"
+    # Restaura .env original se existir
+    if [[ -f "$SCRIPT_DIR/.env-original" ]]; then
+        mv "$SCRIPT_DIR/.env-original" "$SCRIPT_DIR/.env"
     fi
 fi
 

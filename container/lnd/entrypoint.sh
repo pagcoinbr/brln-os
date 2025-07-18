@@ -4,8 +4,8 @@
 set -e
 
 # Source das funções básicas
-source "/opt/lnd/scripts/basic.sh" 2>/dev/null || {
-    # Fallback se o basic.sh não estiver disponível no container
+source "/opt/lnd/scripts/.env" 2>/dev/null || {
+    # Fallback se o .env não estiver disponível no container
     log() { echo -e "\033[0;32m[$(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
     error() { echo -e "\033[0;31m[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
     warning() { echo -e "\033[1;33m[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
