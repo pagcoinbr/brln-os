@@ -1,11 +1,16 @@
 #!/bin/bash
 
-# Script para gerar os arquivos de serviço do systemd com usuário personalizável
+# Script para gerar os a[Service]
+User=$TARGET_USER
+WorkingDirectory=/root
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /root/brln-os/brunel.sh
+Restart=alwayss de serviço do systemd com usuário personalizável
 # Uso: ./generate-services.sh [usuário]
 
 # Define o usuário (usa o parâmetro ou o usuário atual)
 TARGET_USER=${1:-$USER}
-SERVICES_DIR="/home/$TARGET_USER/brln-os/services"
+SERVICES_DIR="/root/brln-os/services"
 
 # Cria o diretório de serviços se não existir
 mkdir -p "$SERVICES_DIR"
@@ -20,9 +25,9 @@ After=network.target
 
 [Service]
 User=$TARGET_USER
-WorkingDirectory=/home/$TARGET_USER/
-Environment="PATH=/home/$TARGET_USER/envflask/bin"
-ExecStart=/home/$TARGET_USER/envflask/bin/python3 /home/$TARGET_USER/brlnfullauto/control-systemd.py
+WorkingDirectory=/root/
+Environment="PATH=/root/envflask/bin"
+ExecStart=/root/envflask/bin/python3 /root/brln-os/control-systemd.py
 Restart=always
 
 [Install]
@@ -37,9 +42,9 @@ After=network.target
 
 [Service]
 User=$TARGET_USER
-WorkingDirectory=/home/$TARGET_USER
+WorkingDirectory=/root
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3434 -w bash /home/$TARGET_USER/brlnfullauto/brunel.sh
+ExecStart=/usr/local/bin/gotty -p 3434 -w bash /root/brln-os/brunel.sh
 Restart=always
 
 [Install]
@@ -56,7 +61,7 @@ After=network.target
 User=$TARGET_USER
 WorkingDirectory=/home/$TARGET_USER
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/$TARGET_USER/brlnfullauto/brunel.sh
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/$TARGET_USER/brln-os/brunel.sh
 Restart=always
 
 [Install]
@@ -70,6 +75,6 @@ echo "  - command-center.service"
 echo "  - gotty-fullauto.service"
 echo ""
 echo "Para instalar os serviços no systemd, execute:"
-echo "  sudo cp $SERVICES_DIR/*.service /etc/systemd/system/"
+echo "  sudo cp /root/brln-os/services/*.service /etc/systemd/system/"
 echo "  sudo systemctl daemon-reload"
 echo "  sudo systemctl enable control-systemd command-center gotty-fullauto"
