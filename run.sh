@@ -1,5 +1,6 @@
 #!/bin/bash
-
+sudo cp -r /root/brln-os/scripts/.env.example /root/brln-os/scripts/.env
+source /root/brln-os/scripts/.env
 # Força execução como root
 if [[ "$EUID" -ne 0 ]]; then
     echo "Este script deve ser executado como root."
@@ -11,7 +12,6 @@ fi
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source das funções básicas
-source "$INSTALL_DIR/scripts/.env"
 basics
 
 # Função para aguardar liberação do lock do apt
