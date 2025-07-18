@@ -61,7 +61,7 @@ After=network.target
 User=$TARGET_USER
 WorkingDirectory=/home/$TARGET_USER
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/$TARGET_USER/brln-os/brunel.sh
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /root/brln-os/brunel.sh
 Restart=always
 
 [Install]
