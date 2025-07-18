@@ -106,10 +106,6 @@ create_wallet_auto() {
     
     # Aguardar LND estar pronto para aceitar comandos
     while [[ $attempt -lt $max_attempts ]]; do
-        # Verificar se a porta está respondendo primeiro
-        if nc -z localhost 10009 2>/dev/null; then
-            log "LND está respondendo na porta 10009!"
-            
             # Procurar pelo arquivo de certificado TLS
             local tls_cert_path=""
             if [[ -f "$LND_DIR/tls.cert" ]]; then
@@ -123,7 +119,6 @@ create_wallet_auto() {
                 TLS_CERT_PATH="$tls_cert_path"
                 break
             fi
-        fi
         
         log "Aguardando LND estar pronto... (tentativa $((attempt + 1))/$max_attempts)"
         sleep 3  # Aumentado para 3 segundos
