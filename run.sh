@@ -1,10 +1,29 @@
 #!/bin/bash
 
-# Source das funções básicas
-source "$(dirname "$0")/scripts/basic.sh"
-basics
+# Força execução como root
+if [[ "$EUID" -ne 0 ]]; then
+    echo "Este script deve ser executado como root."
+    echo "Execute: sudo $0"
+    exit 1
+fi
 
-INSTALL_DIR="/home/$USER/brln-os"
+# Define o diretório de instalação como /root
+INSTALL_DIR="/root/brln-os"
+
+# Clone repository if it doesn't exist
+if [[ ! -d "$INSTALL_DIR" ]]; then
+  echo "Clonando repositório BRLN-OS..."
+  if git clone https://github.com/pagcoinbr/brln-os.git "$INSTALL_DIR" 2>&1; then
+    echo "Repositório clonado com sucesso."
+  else
+    echo "Erro ao clonar o repositório BRLN-OS."
+    exit 1
+  fi
+fi
+
+# Source das funções básicas
+source "$INSTALL_DIR/scripts/basic.sh"
+basics
 
 # Função para aguardar liberação do lock do apt
 wait_for_apt_lock() {
@@ -17,14 +36,14 @@ wait_for_apt_lock() {
             error "Forçando limpeza dos locks..."
             
             # Terminar processos apt/dpkg travados
-            sudo pkill -f "apt|dpkg" 2>/dev/null || true
+            pkill -f "apt|dpkg" 2>/dev/null || true
             sleep 2
             
             # Remover locks
-            sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock
+            rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock
             
             # Reconfigurar dpkg
-            sudo dpkg --configure -a
+            dpkg --configure -a
             break
         fi
         
@@ -42,7 +61,7 @@ safe_apt() {
     while [ $retry -lt $max_retries ]; do
         wait_for_apt_lock
         
-        if sudo "$@"; then
+        if "$@"; then
             return 0
         else
             retry=$((retry + 1))
@@ -64,13 +83,13 @@ safe_apt apt update
 safe_apt apt upgrade -y
 safe_apt apt install -y docker-compose
 
-# Verificar e adicionar usuário ao grupo docker no início para evitar problemas de permissão
+# Verificar e adicionar usuário original ao grupo docker
+ORIGINAL_USER="${SUDO_USER:-$USER}"
 if command -v docker &> /dev/null; then
-    if ! groups $USER | grep -q docker; then
-        log "Adicionando usuário $USER ao grupo docker..."
-        sudo usermod -aG docker $USER
-        log "Usuário adicionado ao grupo docker. Aplicando as mudanças de grupo..."
-        exec sg docker "$0 $*"
+    if ! groups $ORIGINAL_USER | grep -q docker; then
+        log "Adicionando usuário $ORIGINAL_USER ao grupo docker..."
+        usermod -aG docker $ORIGINAL_USER
+        log "Usuário adicionado ao grupo docker. Você precisará fazer logout/login para aplicar as mudanças."
     fi
 fi
 
@@ -114,7 +133,7 @@ if ! command -v docker &> /dev/null; then
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log "Instalando Docker..."
         curl -fsSL https://get.docker.com | sh
-        sudo usermod -aG docker $USER
+        usermod -aG docker $ORIGINAL_USER
         log "Docker instalado! Você pode precisar fazer logout/login para usar sem sudo"
     else
         error "Docker é obrigatório. Instale-o antes de continuar."
@@ -196,18 +215,7 @@ if [[ $(docker ps -q | wc -l) -gt 0 ]]; then
     fi
 fi
 
-sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd,docker $USER
-
-# Clone repository if it doesn't exist
-if [[ ! -d "/root/brln-os" ]]; then
-  echo -e "${BLUE}Clonando repositório BRLN-OS...${NC}"
-  if sudo git clone https://github.com/pagcoinbr/brln-os.git /$USER/brln-os 2>&1; then
-    echo -e "${GREEN}Repositório clonado com sucesso.${NC}"
-  else
-    echo -e "${RED}Erro ao clonar o repositório BRLN-OS.${NC}"
-    exit 1
-  fi
-fi
+sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd,docker $ORIGINAL_USER
 
 tailscale_vpn() {
   echo -e "${CYAN}🌐 Instalando Tailscale VPN...${NC}"
@@ -305,9 +313,9 @@ terminal_web() {
     update_and_upgrade
     radio_update
     gotty_install
-    sudo chown -R $USER:$USER /var/www/html/radio
+    sudo chown -R root:root /var/www/html/radio
     sudo chmod +x /var/www/html/radio/radio-update.sh
-    sudo chmod +x /home/$USER/brln-os/html/radio/radio-update.sh
+    sudo chmod +x $INSTALL_DIR/html/radio/radio-update.sh
     tailscale_vpn
     opening
     exit 0
@@ -319,6 +327,12 @@ terminal_web() {
 
 update_and_upgrade() {
   app="Interface Gráfica"
+  
+  # Define as variáveis de caminho necessárias
+  HTML_SRC="$INSTALL_DIR/html"
+  WWW_HTML="/var/www/html"
+  CGI_DST="/usr/lib/cgi-bin"
+  
   echo "Instalando Apache..."
   sudo -v
   sudo apt install apache2 -y # >> /dev/null 2>&1 & spinner
@@ -326,6 +340,8 @@ update_and_upgrade() {
   sudo a2enmod cgid dir # >> /dev/null 2>&1 & spinner
   echo "Reiniciando o serviço Apache..."
   sudo systemctl restart apache2 # >> /dev/null 2>&1 & spinner
+
+  sudo mkdir -p /usr/lib/cgi-bin
 
   sudo rm -rf "$WWW_HTML"/*.html
   sudo rm -rf "$WWW_HTML/css"
@@ -376,11 +392,11 @@ update_and_upgrade() {
 www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
 EOF
   fi
-  # Abre a posta 80 no UFW
-  if ! sudo ufw status | grep -q "80/tcp"; then
-    sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network'
-  fi
-  sudo usermod -aG $USER www-data
+  # Abre a porta 80 no UFW (removido - sem regras de firewall automáticas)
+  # if ! sudo ufw status | grep -q "80/tcp"; then
+  #   sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network'
+  # fi
+  sudo usermod -aG root www-data
   # Garante que o pacote python3-venv esteja instalado
   if ! dpkg -l | grep -q python3-venv; then
     sudo apt install python3-venv -y # >> /dev/null 2>&1 & spinner
@@ -389,7 +405,7 @@ EOF
   fi
 
   # Define o diretório do ambiente virtual
-  FLASKVENV_DIR="/home/$USER/envflask"
+  FLASKVENV_DIR="/root/envflask"
 
   # Cria o ambiente virtual apenas se ainda não existir
   if [ ! -d "$FLASKVENV_DIR" ]; then
@@ -404,14 +420,14 @@ EOF
 
   # Instala Flask e Flask-CORS
   pip install flask flask-cors # >> /dev/null 2>&1 & spinner
-  sudo -u $USER bash setup_lnd_client.sh 
+  bash setup_lnd_client.sh 
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
-  SUDOERS_TMP="/etc/sudoers.d/$USER-services"
+  SUDOERS_TMP="/etc/sudoers.d/root-services"
 
   # 📝 Criação segura do arquivo usando here-document
   sudo tee "$SUDOERS_TMP" > /dev/null <<EOF
-$USER ALL=(ALL) NOPASSWD: /usr/bin/systemctl start control-systemd.service, /usr/bin/systemctl stop control-systemd.service, /usr/bin/systemctl start command-center.service, /usr/bin/systemctl stop command-center.service, /usr/bin/systemctl start gotty-fullauto.service, /usr/bin/systemctl stop gotty-fullauto.service
+root ALL=(ALL) NOPASSWD: /usr/bin/systemctl start control-systemd.service, /usr/bin/systemctl stop control-systemd.service, /usr/bin/systemctl start command-center.service, /usr/bin/systemctl stop command-center.service, /usr/bin/systemctl start gotty-fullauto.service, /usr/bin/systemctl stop gotty-fullauto.service
 EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
@@ -428,14 +444,14 @@ EOF
 
 gotty_do () {
   echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-  LOCAL_APPS="/home/$USER/brln-os/local_apps"
+  LOCAL_APPS="$INSTALL_DIR/local_apps"
   if [[ $arch == "x86_64" ]]; then
-    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /home/$USER >> /dev/null 2>&1
+    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C /root >> /dev/null 2>&1
   else
-    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /home/$USER >> /dev/null 2>&1
+    sudo tar -xvzf "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C /root >> /dev/null 2>&1
   fi
   # Move e torna executável
-  sudo mv /home/$USER/gotty /usr/local/bin/gotty
+  sudo mv /root/gotty /usr/local/bin/gotty
   sudo chmod +x /usr/local/bin/gotty
 }
 
@@ -449,17 +465,19 @@ else
 fi
 
 # Define arrays for services and ports
-SERVICES=("gotty-fullauto" "gotty-logs-lnd" "gotty-logs-elements" "gotty-logs-bitcoind" "control-systemd")
-PORTS=("3131" "3232" "5001")
+SERVICES=("gotty-fullauto" "command-center" "control-systemd")
+PORTS=("3131" "3434" "5001")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
-  "allow cli on port 3232 from local network" 
+  "allow command-center on port 3434 from local network" 
   "allow control-systemd on port 5001 from local network")
 
 # Remove and copy service files
-for service in "${SERVICES[@]}"; do
-  sudo rm -f /etc/systemd/system/$service.service
-  sudo cp /home/$USER/brln-os/services/$service.service /etc/systemd/system/$service.service
-done
+# for service in "${SERVICES[@]}"; do
+#   sudo rm -f /etc/systemd/system/$service.service
+#   sudo cp $USER/brln-os/services/$service.service /etc/systemd/system/$service.service
+# done
+
+sudo bash "$INSTALL_DIR/scripts/generate-services.sh"
 
 # Reload systemd and enable/start services
 sudo systemctl daemon-reload
@@ -469,9 +487,8 @@ for service in "${SERVICES[@]}"; do
     sudo systemctl restart $service.service # >> /dev/null 2>&1 & spinner
   fi
 done
-sudo bash "$INSTALL_DIR/scripts/generate-services.sh"
+
 }
 terminal_web
 
-bash "$INSTALL_DIR/brunel.sh"
 exit 0

@@ -125,3 +125,17 @@ seeds_backup.txt
 .env
 **/.env
 container/thunderhub/thubConfig.yaml
+lnd_client_env/lib64
+lnd_client_env/pyvenv.cfg
+lnd_client_env/bin/activate
+lnd_client_env/bin/activate.csh
+lnd_client_env/bin/activate.fish
+lnd_client_env/bin/Activate.ps1
+lnd_client_env/bin/normalizer
+lnd_client_env/bin/pip
+lnd_client_env/bin/pip3
+lnd_client_env/bin/pip3.12
+lnd_client_env/bin/python
+lnd_client_env/bin/python-grpc-tools-protoc
+lnd_client_env/bin/python3
+lnd_client_env/bin/python3.12
