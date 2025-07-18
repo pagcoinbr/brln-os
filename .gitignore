@@ -139,3 +139,12 @@ lnd_client_env/bin/python
 lnd_client_env/bin/python-grpc-tools-protoc
 lnd_client_env/bin/python3
 lnd_client_env/bin/python3.12
+invoices_pb2_grpc.py
+invoices_pb2.py
+invoices.proto
+lightning_pb2_grpc.py
+lightning_pb2.py
+lightning.proto
+router_pb2_grpc.py
+router_pb2.py
+router.proto
