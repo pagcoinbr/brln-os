@@ -38,14 +38,71 @@ brln_credentials() {
     log "✅ Credenciais capturadas com sucesso!"
     
     # Configurar arquivos
-    configure_lnd_conf "$brln_rpc_user" "$brln_rpc_pass"
-    configure_elements "$brln_rpc_user" "$brln_rpc_pass"
+    configure_lnd_conf_remote "$brln_rpc_user" "$brln_rpc_pass"
+    configure_elements_remote "$brln_rpc_user" "$brln_rpc_pass"
     
     log "🎯 Configuração remota concluída!"
     echo ""
     info "Os arquivos foram configurados para usar a blockchain remota da BRLN Club."
     warning "⚠️  Certifique-se de que as credenciais estão corretas antes de iniciar os containers."
     echo ""
+}
+
+# Função para configurar credenciais locais
+local_credentials() {
+    echo ""
+    log "🔑 Configuração das credenciais para Bitcoin Node Local"
+    echo ""
+    
+    # Solicitar usuário e senha RPC
+    echo "Configure as credenciais RPC para o Bitcoin Core local:"
+    echo ""
+    
+    while true; do
+        read -p "👤 Nome de usuário RPC (ex: btcuser): " local_rpc_user
+        if [[ -n "$local_rpc_user" ]]; then
+            break
+        else
+            error "Usuário não pode estar vazio!"
+        fi
+    done
+    
+    while true; do
+        read -p "🔐 Senha RPC: " local_rpc_pass
+        echo
+        if [[ -n "$local_rpc_pass" ]]; then
+            break
+        else
+            error "Senha não pode estar vazia!"
+        fi
+    done
+    
+    echo ""
+    log "🔧 Gerando rpcauth usando rpcauth.py..."
+    
+    # Gerar rpcauth usando o rpcauth.py
+    cd "$REPO_DIR/container/bitcoin"
+    rpcauth_output=$(python3 rpcauth.py "$local_rpc_user" "$local_rpc_pass" 2>/dev/null)
+    
+    if [[ $? -eq 0 ]]; then
+        # Extrair apenas a linha rpcauth= do output
+        rpcauth_line=$(echo "$rpcauth_output" | grep "^rpcauth=")
+        log "✅ rpcauth gerado com sucesso!"
+        
+        # Configurar arquivos
+        configure_bitcoin_conf "$rpcauth_line"
+        configure_lnd_conf_local "$local_rpc_user" "$local_rpc_pass"
+        configure_elements_local "$local_rpc_user" "$local_rpc_pass"
+        
+        log "🎯 Configuração local concluída!"
+        echo ""
+        info "Os arquivos foram configurados para usar o Bitcoin Node local."
+        warning "⚠️  O Bitcoin Core precisará sincronizar a blockchain completa."
+        echo ""
+    else
+        error "❌ Erro ao gerar rpcauth. Verifique se o Python3 está instalado."
+        exit 1
+    fi
 }
 # Função para configurar blockchain remota
 configure_remote_blockchain() {
@@ -69,6 +126,9 @@ configure_remote_blockchain() {
     echo "   • Requer mais tempo e espaço em disco"
     echo ""
     
+    # Mudar para o diretório do repositório para as configurações
+    cd "$REPO_DIR"
+    
     while true; do
         read -p "Deseja usar a blockchain remota da BRLN Club? (y/N): " -n 1 -r
         echo
@@ -82,6 +142,7 @@ configure_remote_blockchain() {
                 log "🏠 Usando blockchain local (configuração padrão)"
                 info "A sincronização da blockchain Bitcoin será realizada localmente."
                 warning "⚠️  Isso pode levar várias horas para sincronizar completamente."
+                local_credentials
                 break
                 ;;
             * )
@@ -133,6 +194,62 @@ configure_elements() {
     log "✅ elements.conf configurado com sucesso!"
 }
 
+# Função para configurar elements.conf para conexão remota
+configure_elements_remote() {
+    local user="$1"
+    local pass="$2"
+    local elements_conf="container/elements/elements.conf"
+    
+    log "📝 Configurando elements.conf para conexão remota..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$elements_conf" ]]; then
+        # Copiar do exemplo se não existir
+        if [[ -f "container/elements/elements.conf.example" ]]; then
+            cp "container/elements/elements.conf.example" "$elements_conf"
+            log "Arquivo elements.conf criado a partir do exemplo"
+        else
+            error "Arquivo elements.conf.example não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Atualizar credenciais para conexão remota
+    sed -i "s/mainchainrpcuser=<brln_rpc_user>/mainchainrpcuser=$user/g" "$elements_conf"
+    sed -i "s/mainchainrpcpassword=<brln_rpc_pass>/mainchainrpcpassword=$pass/g" "$elements_conf"
+    
+    log "✅ elements.conf configurado para conexão remota!"
+}
+
+# Função para configurar elements.conf para conexão local
+configure_elements_local() {
+    local user="$1"
+    local pass="$2"
+    local elements_conf="container/elements/elements.conf"
+    
+    log "📝 Configurando elements.conf para conexão local..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$elements_conf" ]]; then
+        # Copiar do exemplo se não existir
+        if [[ -f "container/elements/elements.conf.example" ]]; then
+            cp "container/elements/elements.conf.example" "$elements_conf"
+            log "Arquivo elements.conf criado a partir do exemplo"
+        else
+            error "Arquivo elements.conf.example não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Configurar para conexão local - atualizar host e credenciais
+    sed -i "s/mainchainrpchost=bitcoin.br-ln.com/mainchainrpchost=bitcoin/g" "$elements_conf"
+    sed -i "s/mainchainrpcport=8085/mainchainrpcport=8332/g" "$elements_conf"
+    sed -i "s/mainchainrpcuser=<brln_rpc_user>/mainchainrpcuser=$user/g" "$elements_conf"
+    sed -i "s/mainchainrpcpassword=<brln_rpc_pass>/mainchainrpcpassword=$pass/g" "$elements_conf"
+    
+    log "✅ elements.conf configurado para conexão local!"
+}
+
 configure_lnd_conf() {
     local user="$1"
     local pass="$2"
@@ -157,6 +274,87 @@ configure_lnd_conf() {
     sed -i "s/bitcoind.rpcpass=<brln_rpc_user>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
     
     log "✅ lnd.conf configurado com sucesso!"
+}
+
+# Função para configurar lnd.conf para conexão remota
+configure_lnd_conf_remote() {
+    local user="$1"
+    local pass="$2"
+    local lnd_conf="container/lnd/lnd.conf"
+    
+    log "📝 Configurando lnd.conf para conexão remota..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$lnd_conf" ]]; then
+        # Copiar do exemplo remoto se não existir
+        if [[ -f "container/lnd/lnd.conf.example.remote" ]]; then
+            cp "container/lnd/lnd.conf.example.remote" "$lnd_conf"
+            log "Arquivo lnd.conf criado a partir do exemplo remoto"
+        else
+            error "Arquivo lnd.conf.example.remote não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Atualizar credenciais para conexão remota
+    sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
+    sed -i "s/bitcoind.rpcpass=<brln_rpc_user>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
+    
+    log "✅ lnd.conf configurado para conexão remota!"
+}
+
+# Função para configurar lnd.conf para conexão local
+configure_lnd_conf_local() {
+    local user="$1"
+    local pass="$2"
+    local lnd_conf="container/lnd/lnd.conf"
+    
+    log "📝 Configurando lnd.conf para conexão local..."
+    
+    # Verificar se o arquivo existe
+    if [[ ! -f "$lnd_conf" ]]; then
+        # Copiar do exemplo local se não existir
+        if [[ -f "container/lnd/lnd.conf.example.local" ]]; then
+            cp "container/lnd/lnd.conf.example.local" "$lnd_conf"
+            log "Arquivo lnd.conf criado a partir do exemplo local"
+        else
+            error "Arquivo lnd.conf.example.local não encontrado!"
+            return 1
+        fi
+    fi
+    
+    # Atualizar credenciais para conexão local
+    sed -i "s/<seu_user_rpc>/$user/g" "$lnd_conf"
+    sed -i "s/<sua_senha_rpc>/$pass/g" "$lnd_conf"
+    
+    log "✅ lnd.conf configurado para conexão local!"
+}
+
+# Função para configurar bitcoin.conf com rpcauth
+configure_bitcoin_conf() {
+    local rpcauth_line="$1"
+    
+    log "📝 Configurando arquivos bitcoin.conf..."
+    
+    # Configurar bitcoin.conf.mainnet.example
+    local bitcoin_mainnet="container/bitcoin/bitcoin.conf.mainnet.example"
+    if [[ -f "$bitcoin_mainnet" ]]; then
+        # Substituir a linha rpcauth existente
+        sed -i "s/^rpcauth=.*/$rpcauth_line/" "$bitcoin_mainnet"
+        log "✅ bitcoin.conf.mainnet.example atualizado!"
+    else
+        warning "⚠️  Arquivo bitcoin.conf.mainnet.example não encontrado!"
+    fi
+    
+    # Configurar bitcoin.conf.testnet.example
+    local bitcoin_testnet="container/bitcoin/bitcoin.conf.testnet.example"
+    if [[ -f "$bitcoin_testnet" ]]; then
+        # Substituir a linha rpcauth existente
+        sed -i "s/^rpcauth=.*/$rpcauth_line/" "$bitcoin_testnet"
+        log "✅ bitcoin.conf.testnet.example atualizado!"
+    else
+        warning "⚠️  Arquivo bitcoin.conf.testnet.example não encontrado!"
+    fi
 }
 
 # Função para capturar seed do LND
