@@ -126,6 +126,7 @@ services:
       - tor
     environment:
       - LND_DATA=/data/lnd
+      - BITCOIN_NETWORK=${BITCOIN_NETWORK:-testnet}
 
   elements:
     build:

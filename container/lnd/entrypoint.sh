@@ -28,10 +28,23 @@ source "/opt/lnd/scripts/.env" 2>/dev/null || {
     }
 }
 
-# Configurações
+# Configurações dinâmicas baseadas na rede
+BITCOIN_NETWORK=${BITCOIN_NETWORK:-testnet}  # Padrão: testnet
+if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
+    NETWORK_PATH="mainnet"
+    ZMQ_RAWBLOCK_PORT="28332"
+    ZMQ_RAWTX_PORT="28333"
+    RPC_PORT="8332"
+else
+    NETWORK_PATH="testnet"
+    ZMQ_RAWBLOCK_PORT="28432"
+    ZMQ_RAWTX_PORT="28433"
+    RPC_PORT="18332"
+fi
+
 LND_DIR="/home/lnd/.lnd"
 PASSWORD_FILE="$LND_DIR/password.txt"
-WALLET_DB="$LND_DIR/data/chain/bitcoin/mainnet/wallet.db"
+WALLET_DB="$LND_DIR/data/chain/bitcoin/$NETWORK_PATH/wallet.db"
 SEED_FILE="$LND_DIR/seed.txt"
 LOG_FILE="/tmp/lnd-entrypoint.log"
 TLS_CERT_PATH=""  # Será definido dinamicamente
@@ -47,6 +60,40 @@ init_log_file() {
 
 # Inicializar log file imediatamente
 init_log_file
+
+# Função para configurar lnd.conf dinamicamente
+configure_network() {
+    log "Configurando rede: $BITCOIN_NETWORK"
+    
+    local lnd_conf="$LND_DIR/lnd.conf"
+    
+    # Fazer backup se o arquivo existir
+    if [[ -f "$lnd_conf" ]]; then
+        cp "$lnd_conf" "$lnd_conf.backup.$(date +%s)"
+        log "Backup criado do lnd.conf existente"
+    fi
+    
+    # Configurar baseado na rede
+    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
+        log "Configurando para MAINNET"
+        # Ajustar configurações para mainnet
+        sed -i 's/bitcoin.mainnet=false/bitcoin.mainnet=true/' "$lnd_conf" 2>/dev/null || true
+        sed -i 's/bitcoin.testnet=true/bitcoin.testnet=false/' "$lnd_conf" 2>/dev/null || true
+        # Ajustar portas ZMQ para mainnet
+        sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/" "$lnd_conf" 2>/dev/null || true
+        sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/" "$lnd_conf" 2>/dev/null || true
+    else
+        log "Configurando para TESTNET"
+        # Ajustar configurações para testnet
+        sed -i 's/bitcoin.mainnet=true/bitcoin.mainnet=false/' "$lnd_conf" 2>/dev/null || true
+        sed -i 's/bitcoin.testnet=false/bitcoin.testnet=true/' "$lnd_conf" 2>/dev/null || true
+        # Ajustar portas ZMQ para testnet
+        sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/" "$lnd_conf" 2>/dev/null || true
+        sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/" "$lnd_conf" 2>/dev/null || true
+    fi
+    
+    log "Configuração de rede aplicada: $BITCOIN_NETWORK"
+}
 
 # Função para verificar se a carteira já existe
 wallet_exists() {
@@ -106,6 +153,10 @@ create_wallet_auto() {
     
     # Aguardar LND estar pronto para aceitar comandos
     while [[ $attempt -lt $max_attempts ]]; do
+        # Verificar se a porta está respondendo primeiro
+    #    if nc -z localhost 10009 2>/dev/null; then
+    #        log "LND está respondendo na porta 10009!"
+            
             # Procurar pelo arquivo de certificado TLS
             local tls_cert_path=""
             if [[ -f "$LND_DIR/tls.cert" ]]; then
@@ -119,6 +170,7 @@ create_wallet_auto() {
                 TLS_CERT_PATH="$tls_cert_path"
                 break
             fi
+    #    fi
         
         log "Aguardando LND estar pronto... (tentativa $((attempt + 1))/$max_attempts)"
         sleep 3  # Aumentado para 3 segundos
@@ -188,16 +240,20 @@ setup_signal_handlers() {
 # Função principal
 main() {
     log "=== Iniciando LND com configuração automática de carteira ==="
+    log "Rede configurada: $BITCOIN_NETWORK"
+    
+    # Configurar rede dinamicamente
+    configure_network
     
     # Setup signal handlers
     setup_signal_handlers
     
     # Verificar se a carteira já existe
     if wallet_exists; then
-        log "Carteira já existe. Iniciando LND normalmente..."
+        log "Carteira já existe para $BITCOIN_NETWORK. Iniciando LND normalmente..."
         start_lnd_background
     else
-        log "Carteira não existe. Criando automaticamente..."
+        log "Carteira não existe para $BITCOIN_NETWORK. Criando automaticamente..."
         
         # Iniciar LND em background
         $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" >> "$LOG_FILE" 2>&1 &
