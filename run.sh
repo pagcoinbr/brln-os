@@ -311,7 +311,6 @@ terminal_web() {
   echo -e "${GREEN} Iniciando... ${NC}"
   if [[ ! -f /usr/local/bin/gotty ]]; then
     update_and_upgrade
-    radio_update
     gotty_install
     sudo chown -R root:root /var/www/html/radio
     sudo chmod +x /var/www/html/radio/radio-update.sh
@@ -466,26 +465,20 @@ fi
 
 # Define arrays for services and ports
 SERVICES=("gotty-fullauto" "command-center" "control-systemd")
-PORTS=("3131" "3434" "5001")
-COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
-  "allow command-center on port 3434 from local network" 
-  "allow control-systemd on port 5001 from local network")
-
-# Remove and copy service files
-# for service in "${SERVICES[@]}"; do
-#   sudo rm -f /etc/systemd/system/$service.service
-#   sudo cp $USER/brln-os/services/$service.service /etc/systemd/system/$service.service
-# done
 
 sudo bash "$INSTALL_DIR/scripts/generate-services.sh"
 
-# Reload systemd and enable/start services
+# Install and enable the generated services
+echo "Installing systemd services..."
+sudo cp /root/brln-os/services/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
+
+# Enable and start services
+SERVICES=("control-systemd" "command-center" "gotty-fullauto")
 for service in "${SERVICES[@]}"; do
-  if ! sudo systemctl is-enabled --quiet $service.service; then
-    sudo systemctl enable $service.service # >> /dev/null 2>&1
-    sudo systemctl restart $service.service # >> /dev/null 2>&1 & spinner
-  fi
+  echo "Enabling and starting $service..."
+  sudo systemctl enable $service.service
+  sudo systemctl restart $service.service
 done
 
 }
