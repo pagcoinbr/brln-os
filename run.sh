@@ -10,17 +10,6 @@ fi
 # Define o diretório de instalação como /root
 INSTALL_DIR="/root/brln-os"
 
-# Clone repository if it doesn't exist
-if [[ ! -d "$INSTALL_DIR" ]]; then
-  echo "Clonando repositório BRLN-OS..."
-  if git clone https://github.com/pagcoinbr/brln-os.git "$INSTALL_DIR" 2>&1; then
-    echo "Repositório clonado com sucesso."
-  else
-    echo "Erro ao clonar o repositório BRLN-OS."
-    exit 1
-  fi
-fi
-
 # Source das funções básicas
 source "$INSTALL_DIR/scripts/basic.sh"
 basics
@@ -93,24 +82,6 @@ if command -v docker &> /dev/null; then
     fi
 fi
 
-# Verificar se estamos no diretório correto
-if [[ ! -d "container" ]]; then
-    error "Diretório 'container' não encontrado!"
-    error "Execute este script no diretório raiz do projeto brlnfullauto"
-    echo ""
-    echo "Exemplo:"
-    echo "  git clone https://github.com/pagcoinbr/brln-os.git"
-    echo "  cd brlnfullauto"
-    echo "  ./setup.sh"
-    exit 1
-fi
-
-# Verificar se o script principal existe
-if [[ ! -f "container/setup-docker-smartsystem.sh" ]]; then
-    error "Script setup-docker-smartsystem.sh não encontrado em container/"
-    exit 1
-fi
-
 # Verificar pré-requisitos
 log "Verificando pré-requisitos do sistema..."
 
@@ -178,7 +149,7 @@ AVAILABLE_GB=$((AVAILABLE_SPACE / 1024 / 1024))
 
 if [[ $AVAILABLE_GB -lt 100 ]]; then
     warning "Espaço em disco baixo: ${AVAILABLE_GB}GB disponível"
-    warning "Recomendado: pelo menos 1000GB para blockchain completa"
+    warning "Recomendado: pelo menos 1000GB para blockchain completa ou 100GB para blockchain remota"
     echo ""
     read -p "Deseja continuar mesmo assim? y/N: " -n 1 -r
     echo
