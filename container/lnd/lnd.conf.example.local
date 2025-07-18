@@ -96,7 +96,6 @@ bitcoind.rpcuser=<seu_user_rpc>
 bitcoind.rpcpass=<sua_senha_rpc>
 bitcoind.zmqpubrawblock=tcp://bitcoin:28332
 bitcoind.zmqpubrawtx=tcp://bitcoin:28333
-## ATENCAO: Para bitcoin Externo como o da BRLN Comente as quatro linhas acima e descomente as 5 abaixo.
 
 [routerrpc]
 routerrpc.estimator=apriori

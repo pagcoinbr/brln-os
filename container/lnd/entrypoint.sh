@@ -6,10 +6,26 @@ set -e
 # Source das funções básicas
 source "/opt/lnd/scripts/.env" 2>/dev/null || {
     # Fallback se o .env não estiver disponível no container
-    log() { echo -e "\033[0;32m[$(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
-    error() { echo -e "\033[0;31m[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
-    warning() { echo -e "\033[1;33m[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
-    info() { echo -e "\033[0;34m[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1\033[0m"; }
+    log() { 
+        local msg="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+        echo -e "\033[0;32m$msg\033[0m"
+        [[ -f "$LOG_FILE" ]] && echo "$msg" >> "$LOG_FILE"
+    }
+    error() { 
+        local msg="[ERROR $(date '+%Y-%m-%d %H:%M:%S')] $1"
+        echo -e "\033[0;31m$msg\033[0m"
+        [[ -f "$LOG_FILE" ]] && echo "$msg" >> "$LOG_FILE"
+    }
+    warning() { 
+        local msg="[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1"
+        echo -e "\033[1;33m$msg\033[0m"
+        [[ -f "$LOG_FILE" ]] && echo "$msg" >> "$LOG_FILE"
+    }
+    info() { 
+        local msg="[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1"
+        echo -e "\033[0;34m$msg\033[0m"
+        [[ -f "$LOG_FILE" ]] && echo "$msg" >> "$LOG_FILE"
+    }
 }
 
 # Configurações
@@ -22,13 +38,15 @@ TLS_CERT_PATH=""  # Será definido dinamicamente
 LND_BIN_DATA="/opt/lnd"
 LND_DATA="/data/lnd"
 
-warning() {
-    echo -e "${YELLOW}[WARNING $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"
+# Inicializar arquivo de log
+init_log_file() {
+    touch "$LOG_FILE"
+    chmod 666 "$LOG_FILE"
+    echo "=== LND Entrypoint Log Started at $(date) ===" > "$LOG_FILE"
 }
 
-info() {
-    echo -e "${BLUE}[INFO $(date '+%Y-%m-%d %H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"
-}
+# Inicializar log file imediatamente
+init_log_file
 
 # Função para verificar se a carteira já existe
 wallet_exists() {
@@ -41,9 +59,26 @@ wallet_exists() {
 # Função para iniciar LND em background
 start_lnd_background() {
     log "Iniciando LND em background..."
+    
+    # Criar o arquivo de log antes de iniciar o LND
+    touch "$LOG_FILE"
+    chmod 666 "$LOG_FILE"  # Permissões de leitura e escrita para todos
+    
+    # Iniciar LND redirecionando output para o log
     $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" >> "$LOG_FILE" 2>&1 &
     LND_PID=$!
-    tail -f "$LOG_FILE" 
+    
+    # Aguardar um momento para garantir que o processo iniciou
+    sleep 2
+    
+    # Verificar se o arquivo de log existe antes do tail
+    if [[ -f "$LOG_FILE" ]]; then
+        tail -f "$LOG_FILE"
+    else
+        error "Arquivo de log não foi criado: $LOG_FILE"
+        return 1
+    fi
+    
     return 0
 }
 
@@ -170,12 +205,21 @@ main() {
         log "Carteira não existe. Criando automaticamente..."
         
         # Iniciar LND em background
-        start_lnd_background &
+        $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" >> "$LOG_FILE" 2>&1 &
+        LND_PID=$!
         
         sleep 5
 
-        create_wallet_auto 
-        tail -f "$LOG_FILE"
+        create_wallet_auto
+        
+        # Seguir os logs
+        if [[ -f "$LOG_FILE" ]]; then
+            tail -f "$LOG_FILE"
+        else
+            error "Arquivo de log não encontrado: $LOG_FILE"
+            # Fallback: seguir os logs do processo LND diretamente
+            wait $LND_PID
+        fi
     fi
 }
 
