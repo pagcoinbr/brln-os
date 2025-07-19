@@ -52,7 +52,7 @@ torcontrol=tor:9051
 i2psam=127.0.0.1:7656
 
 # Connections
-rpcauth=btcbrln:a9732d6b02e14619f8734c200f3b4206$5b6a6901bfd0c67173df2dcc9acdd5ae60f5efab56f262f45d4b5a85ecf722aa
+rpcauth=<PLACEHOLDER_RPCAUTH>
 
 # ZMQ settings
 zmqpubrawblock=tcp://0.0.0.0:28332

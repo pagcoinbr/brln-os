@@ -97,7 +97,6 @@ services:
       - tor
     environment:
       - BITCOIN_DATA=/data/bitcoin
-      - BITCOIN_NETWORK=mainnet
     healthcheck:
       test: ["CMD", "bitcoin-cli", "-datadir=/data/bitcoin", "getblockchaininfo"]
       interval: 30s
@@ -126,7 +125,6 @@ services:
       - tor
     environment:
       - LND_DATA=/data/lnd
-      - BITCOIN_NETWORK=${BITCOIN_NETWORK:-testnet}
 
   elements:
     build:

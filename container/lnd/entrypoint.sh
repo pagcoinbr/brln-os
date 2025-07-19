@@ -99,6 +99,17 @@ configure_network() {
     sed -i 's/^db.postgres.timeout=/#db.postgres.timeout=/' "$lnd_conf" 2>/dev/null || true
     sed -i 's/^\[postgres\]/#[postgres]/' "$lnd_conf" 2>/dev/null || true
     
+    # Atualizar credenciais RPC do Bitcoin Core
+    log "Atualizando credenciais RPC do Bitcoin Core"
+    
+    # Usar variáveis de ambiente ou valores padrão
+    local rpc_user=${BITCOIN_RPC_USER:-test}
+    local rpc_pass=${BITCOIN_RPC_PASS:-test123}
+    
+    log "Aplicando credenciais RPC: usuário=$rpc_user"
+    sed -i "s/bitcoind.rpcuser=<seu_user_rpc>/bitcoind.rpcuser=$rpc_user/" "$lnd_conf" 2>/dev/null || true
+    sed -i "s/bitcoind.rpcpass=<sua_senha_rpc>/bitcoind.rpcpass=$rpc_pass/" "$lnd_conf" 2>/dev/null || true
+    
     log "Configuração de rede aplicada: $BITCOIN_NETWORK"
 }
 
@@ -156,9 +167,9 @@ check_lnd_rpc() {
     return 1
 }
 
-# Função para criar carteira automaticamente
+# Função para criar carteira automaticamente - SIMPLIFICADA
 create_wallet_auto() {
-    log "Criando carteira automaticamente..."
+    log "Aguardando LND estar pronto para criar carteira..."
     
     if [[ ! -f "$PASSWORD_FILE" ]]; then
         error "Arquivo de senha não encontrado: $PASSWORD_FILE"
@@ -166,60 +177,34 @@ create_wallet_auto() {
     fi
     
     local password=$(cat "$PASSWORD_FILE" | tr -d '\n\r')
-    local max_attempts=15  # Reduzido de 30 para 15
+    
+    # Aguardar o certificado TLS ser criado (mais simples)
+    local max_attempts=20
     local attempt=0
     
-    # Aguardar LND estar pronto para aceitar comandos
     while [[ $attempt -lt $max_attempts ]]; do
-        # Procurar pelo arquivo de certificado TLS primeiro
-        local tls_cert_path=""
         if [[ -f "$LND_DIR/tls.cert" ]]; then
-            tls_cert_path="$LND_DIR/tls.cert"
-        else
-            tls_cert_path=$(find "$LND_DIR" -name "tls.cert.tmp" -o -name "tls.cert.*" 2>/dev/null | head -1)
+            log "Certificado TLS encontrado: $LND_DIR/tls.cert"
+            TLS_CERT_PATH="$LND_DIR/tls.cert"
+            break
         fi
         
-        if [[ -n "$tls_cert_path" ]]; then
-            log "Certificado TLS encontrado: $tls_cert_path"
-            
-            # Testar conectividade RPC diretamente
-            if check_lnd_rpc "$tls_cert_path"; then
-                log "LND RPC está funcionando!"
-                TLS_CERT_PATH="$tls_cert_path"
-                break
-            else
-                log "LND RPC ainda não está pronto..."
-            fi
-        else
-            log "Certificado TLS ainda não foi gerado..."
-        fi
-        
-        log "Aguardando LND estar pronto... (tentativa $((attempt + 1))/$max_attempts)"
-        sleep 3
+        log "Aguardando certificado TLS... (tentativa $((attempt + 1))/$max_attempts)"
+        sleep 2
         attempt=$((attempt + 1))
     done
     
     if [[ $attempt -eq $max_attempts ]]; then
-        error "LND não ficou pronto a tempo"
+        error "Certificado TLS não foi gerado a tempo"
         return 1
     fi
     
-    # Verificar se temos o caminho do certificado
-    if [[ -z "$TLS_CERT_PATH" ]]; then
-        # Última tentativa de encontrar o certificado
-        TLS_CERT_PATH=$(find "$LND_DIR" -name "tls.cert.tmp" -o -name "tls.cert.*" -o -name "tls.cert" 2>/dev/null | head -1)
-        if [[ -z "$TLS_CERT_PATH" ]]; then
-            error "Certificado TLS não encontrado"
-            return 1
-        fi
-    fi
-    
-    log "Usando certificado TLS: $TLS_CERT_PATH"
+    log "Criando carteira automaticamente..."
     
     # Exportar variáveis para o expect
     export LND_BIN_DATA TLS_CERT_PATH password
     
-    # Criar carteira usando expect - versão simplificada
+    # Criar carteira usando expect
     expect << 'EOF'
 set timeout 60
 spawn $env(LND_BIN_DATA)/lncli --rpcserver=localhost:10009 --tlscertpath=$env(TLS_CERT_PATH) create
@@ -238,11 +223,8 @@ expect {
     "wallet already exists" {
         puts "INFO: Carteira já existe!"
     }
-    "wallet already unlocked" {
-        puts "INFO: Carteira já desbloqueada!"
-    }
     timeout {
-        puts "ERROR: Timeout na criação"
+        puts "ERROR: Timeout na criação da carteira"
     }
     eof {
         puts "INFO: Processo finalizado"
@@ -259,9 +241,9 @@ setup_signal_handlers() {
     trap 'stop_lnd; exit 1' SIGTERM SIGINT
 }
 
-# Função principal
+# Função principal - SIMPLIFICADA mas com criação de carteira
 main() {
-    log "=== Iniciando LND com configuração automática de carteira ==="
+    log "=== Iniciando LND ==="
     log "Rede configurada: $BITCOIN_NETWORK"
     
     # Configurar rede dinamicamente
@@ -273,43 +255,28 @@ main() {
     # Verificar se a carteira já existe
     if wallet_exists; then
         log "Carteira já existe para $BITCOIN_NETWORK. Iniciando LND normalmente..."
-        start_lnd_background
+        # Usar exec para que o LND seja o processo principal
+        exec $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf"
     else
         log "Carteira não existe para $BITCOIN_NETWORK. Criando automaticamente..."
         
-        # Iniciar LND em background
-        log "Iniciando LND com: $LND_BIN_DATA/lnd --configfile=$LND_DIR/lnd.conf"
-        $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" >> "$LOG_FILE" 2>&1 &
+        # Iniciar LND em background para criar a carteira
+        log "Iniciando LND em background para criação da carteira..."
+        $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" &
         LND_PID=$!
-        log "LND iniciado com PID: $LND_PID"
         
-        # Aguardar mais tempo para o LND inicializar
-        log "Aguardando LND inicializar..."
-        sleep 10
-        
-        # Verificar se o processo ainda está rodando
-        if ! kill -0 $LND_PID 2>/dev/null; then
-            error "LND falhou ao iniciar. Verificando logs..."
-            if [[ -f "$LOG_FILE" ]]; then
-                error "=== LOGS DO LND ==="
-                tail -20 "$LOG_FILE"
-                error "=== FIM DOS LOGS ==="
-            fi
-            exit 1
-        else
-            log "LND está rodando com PID: $LND_PID"
-        fi
-
+        # Aguardar e criar carteira
+        sleep 5
         create_wallet_auto
         
-        # Seguir os logs
-        if [[ -f "$LOG_FILE" ]]; then
-            tail -f "$LOG_FILE"
-        else
-            error "Arquivo de log não encontrado: $LOG_FILE"
-            # Fallback: seguir os logs do processo LND diretamente
-            wait $LND_PID
-        fi
+        # Parar o LND background
+        log "Parando LND temporário..."
+        kill $LND_PID 2>/dev/null || true
+        wait $LND_PID 2>/dev/null || true
+        
+        # Reiniciar LND como processo principal
+        log "Reiniciando LND como processo principal..."
+        exec $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf"
     fi
 }
 

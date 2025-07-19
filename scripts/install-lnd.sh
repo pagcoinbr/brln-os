@@ -114,6 +114,11 @@ brln_credentials() {
     configure_lnd_conf_remote "$brln_rpc_user" "$brln_rpc_pass"
     configure_elements_remote "$brln_rpc_user" "$brln_rpc_pass"
     
+    # Salvar credenciais RPC no arquivo .env para o container LND
+    echo "BITCOIN_RPC_USER=$brln_rpc_user" >> "$REPO_DIR/container/.env"
+    echo "BITCOIN_RPC_PASS=$brln_rpc_pass" >> "$REPO_DIR/container/.env"
+    log "✅ Credenciais RPC salvas no arquivo .env"
+    
     log "🎯 Configuração remota concluída!"
     echo ""
     info "Os arquivos foram configurados para usar a blockchain remota da BRLN Club."
@@ -165,10 +170,20 @@ local_credentials() {
         # Voltar para o diretório do repositório para as configurações
         cd "$REPO_DIR"
         
+        # Salvar credenciais RPC no arquivo .env para uso do container
+        echo "BITCOIN_RPC_USER=$local_rpc_user" >> "$REPO_DIR/container/.env"
+        echo "BITCOIN_RPC_PASS=$local_rpc_pass" >> "$REPO_DIR/container/.env"
+        log "✅ Credenciais RPC salvas no arquivo .env"
+        
         # Configurar arquivos
         configure_bitcoin_conf "$rpcauth_line"
         configure_lnd_conf_local "$local_rpc_user" "$local_rpc_pass"
         configure_elements_local "$local_rpc_user" "$local_rpc_pass"
+        
+        # Salvar credenciais RPC no arquivo .env para o container LND
+        echo "BITCOIN_RPC_USER=$local_rpc_user" >> "$REPO_DIR/container/.env"
+        echo "BITCOIN_RPC_PASS=$local_rpc_pass" >> "$REPO_DIR/container/.env"
+        log "✅ Credenciais RPC salvas no arquivo .env"
         
         log "🎯 Configuração local concluída!"
         echo ""
@@ -575,6 +590,8 @@ auto_destruction_menu() {
 }
 
 start_lnd_docker() {
+    app="lnd"
+    app2="bitcoin"
     if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
         warning "O container lnd já está em execução."
         read -p "Deseja parar e remover o container lnd antes de reiniciar? (y/N): " -n 1 -r
@@ -592,11 +609,15 @@ start_lnd_docker() {
         cd "$REPO_DIR/container"
         sudo docker-compose build $app
         sudo docker-compose up -d $app
+        sudo docker-compose build $app2
+        sudo docker-compose up -d $app2
     elif [[ "$verbose_mode" == "n" ]]; then
         warning " 🕒 Aguarde..."
         cd "$REPO_DIR/container"
         sudo docker-compose build $app >> /dev/null 2>&1 & spinner
         sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
+        sudo docker-compose build $app2
+        sudo docker-compose up -d $app2
         clear
     else
         error "Opção inválida."
