@@ -86,6 +86,15 @@ routing.strictgraphpruning=true
 #db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
 #db.postgres.timeout=0
 
+## Comente as linhas se pretende usar o postgresql como banco de dados
+[bolt]
+## Database
+# Set the next value to false to disable auto-compact DB
+# and fast boot and comment the next line
+db.bolt.auto-compact=true
+# Uncomment to do DB compact at every LND reboot (default: 168h)
+#db.bolt.auto-compact-min-age=0h
+
 ## Ambiente de alta taxa (Opcional)
 # (padrão: CONSERVATIVE) Descomente as próximas 2 linhas
 [Bitcoind]
