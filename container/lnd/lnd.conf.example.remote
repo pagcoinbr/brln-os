@@ -133,4 +133,4 @@ tor.v3=true
 tor.skip-proxy-for-clearnet-targets=false
 tor.streamisolation=true
 tor.control=tor:9051
-tor.socks=tor:9050
+#tor.socks=tor:9050

@@ -130,5 +130,4 @@ tor.v3=true
 ## Se for usar clearnet troque para true e false as linhas abaixo respectivamente
 tor.skip-proxy-for-clearnet-targets=false
 tor.streamisolation=true
-#tor.control=tor:9051
-#tor.socks=tor:9050
+tor.control=tor:9051
