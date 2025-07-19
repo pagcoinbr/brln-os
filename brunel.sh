@@ -514,14 +514,14 @@ menu() {
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso \033[0m"
       menu
       ;;
-    4)
+    3)
       app="thunderhub"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
-    5)
+    4)
       app="Balance of Satoshis"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
@@ -538,21 +538,21 @@ menu() {
       fi
       menu
       ;;
-    6)
+    5)
       app="lndg"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
-    7)
+    6)
       app="lnbits"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
-    8)
+    7)
       submenu_opcoes
       ;;
     0)
