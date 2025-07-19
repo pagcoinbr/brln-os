@@ -5,7 +5,7 @@ source "$(dirname "$0")/.env"
 basics
 
 app="lnd"
-REPO_DIR="/home/$USER/brln-os"
+REPO_DIR="/root/brln-os"
 
 # Função para escolher a rede Bitcoin
 choose_bitcoin_network() {
@@ -107,6 +107,9 @@ brln_credentials() {
     echo ""
     log "✅ Credenciais capturadas com sucesso!"
     
+    # Ir para o diretório do repositório para as configurações
+    cd "$REPO_DIR"
+    
     # Configurar arquivos
     configure_lnd_conf_remote "$brln_rpc_user" "$brln_rpc_pass"
     configure_elements_remote "$brln_rpc_user" "$brln_rpc_pass"
@@ -159,6 +162,9 @@ local_credentials() {
         rpcauth_line=$(echo "$rpcauth_output" | grep "^rpcauth=")
         log "✅ rpcauth gerado com sucesso!"
         
+        # Voltar para o diretório do repositório para as configurações
+        cd "$REPO_DIR"
+        
         # Configurar arquivos
         configure_bitcoin_conf "$rpcauth_line"
         configure_lnd_conf_local "$local_rpc_user" "$local_rpc_pass"
@@ -176,11 +182,10 @@ local_credentials() {
 }
 # Função para configurar blockchain remota
 configure_remote_blockchain() {
-    sudo -v
     
     # Primeiro, escolher a rede
     choose_bitcoin_network
-    
+    if [[ BITCOIN_NETWORK == "testnet" ]]; then
     echo ""
     info "═══════════════════════════════════════════════════════════════"
     log "🔗 Configuração da Fonte Blockchain"
@@ -224,51 +229,13 @@ configure_remote_blockchain() {
                 ;;
         esac
     done
-    echo ""
-    read -p "Deseja exibir logs da instalação? (y/n): " verbose_mode
-    if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app
-        sudo docker-compose up -d $app
-    elif [[ "$verbose_mode" == "n" ]]; then
-        warning " 🕒 Aguarde..."
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
-        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        clear
     else
-        error "Opção inválida."
-        sudo bash "$REPO_DIR/brunel.sh"
+    warning "⚠️  ATENÇÃO: Você escolheu a rede TESTNET e esta configuração apenas permite conexão com bitcoin node local."
+    local_credentials
+    echo ""
     fi
 }
 
-configure_elements() {
-    local user="$1"
-    local pass="$2"
-    local elements_conf="container/elements/elements.conf"
-    
-    log "📝 Configurando elements.conf..."
-    
-    # Verificar se o arquivo existe
-    if [[ ! -f "$elements_conf" ]]; then
-        # Copiar do exemplo se não existir
-        if [[ -f "container/elements/elements.conf.example" ]]; then
-            cp "container/elements/elements.conf.example" "$elements_conf"
-            log "Arquivo elements.conf criado a partir do exemplo"
-        else
-            error "Arquivo elements.conf.example não encontrado!"
-            return 1
-        fi
-    fi
-    
-    # Atualizar credenciais no elements.conf
-    sed -i "s/mainchainrpcuser=<brln_rpc_user>/mainchainrpcuser=$user/g" "$elements_conf"
-    sed -i "s/mainchainrpcpassword=<brln_rpc_pass>/mainchainrpcpassword=$pass/g" "$elements_conf"
-    
-    log "✅ elements.conf configurado com sucesso!"
-}
-
-# Função para configurar elements.conf para conexão remota
 configure_elements_remote() {
     local user="$1"
     local pass="$2"
@@ -324,33 +291,6 @@ configure_elements_local() {
     log "✅ elements.conf configurado para conexão local!"
 }
 
-configure_lnd_conf() {
-    local user="$1"
-    local pass="$2"
-    local lnd_conf="container/lnd/lnd.conf"
-    
-    log "📝 Configurando lnd.conf..."
-    
-    # Verificar se o arquivo existe
-    if [[ ! -f "$lnd_conf" ]]; then
-        # Copiar do exemplo remoto se não existir
-        if [[ -f "container/lnd/lnd.conf.example.remote" ]]; then
-            cp "container/lnd/lnd.conf.example.remote" "$lnd_conf"
-            log "Arquivo lnd.conf criado a partir do exemplo remoto"
-        else
-            error "Arquivo lnd.conf.example.remote não encontrado!"
-            return 1
-        fi
-    fi
-    
-    # Atualizar credenciais no lnd.conf
-    sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
-    sed -i "s/bitcoind.rpcpass=<brln_rpc_user>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
-    
-    log "✅ lnd.conf configurado com sucesso!"
-}
-
-# Função para configurar lnd.conf para conexão remota
 configure_lnd_conf_remote() {
     local user="$1"
     local pass="$2"
@@ -372,7 +312,7 @@ configure_lnd_conf_remote() {
     
     # Atualizar credenciais para conexão remota
     sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
-    sed -i "s/bitcoind.rpcpass=<brln_rpc_user>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
+    sed -i "s/bitcoind.rpcpass=<brln_rpc_pass>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
     
     # Configurar para a rede escolhida
     if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
@@ -477,6 +417,8 @@ capture_lnd_seed() {
     # Tentar capturar a seed do LND
     warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS SEED DO LND"
     warning "Extraindo seed LND dos logs..."
+
+    sleep 5 & spinner
     
     # Tentar capturar a seed múltiplas vezes se necessário
     MAX_ATTEMPTS=1
@@ -508,20 +450,6 @@ capture_lnd_seed() {
         
         ((attempt++))
     done
-}
-
-# Função para capturar senhas
-capture_passwords() {
-    echo "capturando as senhas do lndg e do thunderhub..."
-    sleep 10 & spinner $!
-    docker logs lndg 2>/dev/null | grep "FIRST TIME LOGIN PASSWORD" | awk -F': ' '{print $2}' > ../passwords.txt
-    
-    echo ""
-    echo "Senha do LNDG: $(cat ../passwords.txt | grep -oP 'FIRST TIME LOGIN PASSWORD: \K.*')"
-    echo ""
-    
-    echo ""
-    warning "Anote agora as informações mostradas acima, caso você não o faça, elas não serão exibidas novamente no futuro!"
 }
 
 # Função para exibir e confirmar seed
@@ -592,7 +520,7 @@ auto_destruction_menu() {
     echo "1. 📁 Manter o arquivo salvo seeds.txt"
     echo "2. 🔥 Fazer autodestruição do arquivo"
     echo ""
-    echo "⚠️  ATENÇÃO: Se escolher autodestruição, você já anotado frase de 24 palavras seed do LND ou você não poderá recuperar seus bitcoins!"
+    echo "⚠️  ATENÇÃO: Se escolher autodestruição, certifique-se de que já anotou a frase de 24 palavras seed do LND ou você não poderá recuperar seus bitcoins!"
     echo ""
     
     while true; do
@@ -646,10 +574,40 @@ auto_destruction_menu() {
     done
 }
 
+start_lnd_docker() {
+    if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
+        warning "O container lnd já está em execução."
+        read -p "Deseja parar e remover o container lnd antes de reiniciar? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log "Parando e removendo o container lnd existente..."
+            sudo docker stop lnd
+            sudo docker rm lnd
+        else
+            log "Mantendo o container lnd atual."
+        fi
+    fi
+    read -p "Deseja exibir logs da instalação? (y/n): " verbose_mode
+    if [[ "$verbose_mode" == "y" ]]; then
+        cd "$REPO_DIR/container"
+        sudo docker-compose build $app
+        sudo docker-compose up -d $app
+    elif [[ "$verbose_mode" == "n" ]]; then
+        warning " 🕒 Aguarde..."
+        cd "$REPO_DIR/container"
+        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
+        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
+        clear
+    else
+        error "Opção inválida."
+        sudo bash "$REPO_DIR/brunel.sh"
+    fi
+}
 # Função principal
 main() {
+    configure_remote_blockchain
+    start_lnd_docker
     capture_lnd_seed
-    capture_passwords
     display_and_confirm_seed
     auto_destruction_menu
 }
