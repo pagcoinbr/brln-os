@@ -704,6 +704,7 @@ auto_destruction_menu() {
 start_lnd_docker() {
     app="bitcoin"
     app2="lnd"
+    cd "$REPO_DIR/container"
     if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
         warning "O container lnd já está em execução."
         read -p "Deseja parar e remover o container lnd e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
@@ -723,7 +724,6 @@ start_lnd_docker() {
         read -p "Deseja instalar o Bitcoin Core? (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            cd "$REPO_DIR/container"
             sudo docker-compose build $app >> /dev/null 2>&1 & spinner
             sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
             echo "Aguardando $app inicializar..."
@@ -738,7 +738,6 @@ start_lnd_docker() {
         read -p "Deseja instalar o Bitcoin Core? (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            cd "$REPO_DIR/container"
             sudo docker-compose build $app >> /dev/null 2>&1 & spinner
             sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
             echo "Aguardando $app inicializar..."
@@ -753,6 +752,7 @@ start_lnd_docker() {
         error "Opção inválida."
         sudo bash "$REPO_DIR/brunel.sh"
     fi
+    cd -
 }
 # Função principal
 main() {
