@@ -148,3 +148,6 @@ lightning.proto
 router_pb2_grpc.py
 router_pb2.py
 router.proto
+
+# Diretório de serviços (regenerados a cada instalação)
+services/
