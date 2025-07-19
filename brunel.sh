@@ -37,9 +37,92 @@ gui_update() {
 }
 
 create_main_dir() {
-  sudo mkdir /data
+  sudo mkdir -p /data
   sudo chown $USER:$USER /data
   cp -r "/root/brln-os/scripts/.env.example" "/root/brln-os/scripts/.env"
+}
+
+# Função para preparar o sistema Docker adequadamente
+prepare_docker_system() {
+  log "🔧 Preparando sistema Docker..."
+  
+  # Criar diretórios de dados necessários
+  log "📁 Criando diretórios de dados..."
+  sudo mkdir -p /data/{lnd,bitcoin,elements,lndg,thunderhub,lnbits}
+  sudo chown -R $USER:$USER /data
+  
+  # Copiar arquivos necessários para os volumes
+  log "📋 Copiando arquivos de configuração necessários..."
+  
+  # Copiar arquivo de senha do LND se não existir
+  if [[ ! -f "/data/lnd/password.txt" ]]; then
+    if [[ -f "$REPO_DIR/container/lnd/password.txt" ]]; then
+      sudo cp "$REPO_DIR/container/lnd/password.txt" "/data/lnd/"
+      log "✅ Arquivo password.txt copiado para /data/lnd/"
+    else
+      warning "⚠️ Arquivo password.txt não encontrado em container/lnd/"
+    fi
+  fi
+  
+  # Verificar se o setup-docker-smartsystem.sh existe e executá-lo
+  if [[ -f "$REPO_DIR/container/setup-docker-smartsystem.sh" ]]; then
+    log "🚀 Executando setup-docker-smartsystem.sh..."
+    cd "$REPO_DIR/container"
+    chmod +x setup-docker-smartsystem.sh
+    
+    # Executar o setup inteligente
+    if sudo ./setup-docker-smartsystem.sh; then
+      log "✅ Sistema Docker preparado com sucesso!"
+      # Criar arquivo de controle para indicar que o sistema foi preparado
+      touch "/data/.docker_system_prepared"
+    else
+      error "❌ Falha na preparação do sistema Docker"
+      return 1
+    fi
+  else
+    warning "⚠️ setup-docker-smartsystem.sh não encontrado"
+  fi
+  
+  log "🎯 Preparação do sistema concluída!"
+}
+
+# Função para verificar se o sistema Docker precisa ser preparado
+check_docker_system_ready() {
+  local ready=true
+  
+  # Verificar se os diretórios principais existem
+  if [[ ! -d "/data/lnd" ]] || [[ ! -d "/data/bitcoin" ]]; then
+    ready=false
+  fi
+  
+  # Verificar se o arquivo de senha do LND existe
+  if [[ ! -f "/data/lnd/password.txt" ]]; then
+    ready=false
+  fi
+  
+  echo $ready
+}
+
+# Função para garantir que o sistema Docker esteja preparado antes de instalar serviços
+ensure_docker_system_ready() {
+  local service_name="$1"
+  
+  # Verificar se já foi preparado
+  if [[ -f "/data/.docker_system_prepared" ]] && [[ $(check_docker_system_ready) == "true" ]]; then
+    log "✅ Sistema Docker já está preparado"
+    return 0
+  fi
+  
+  log "🔧 Sistema Docker precisa ser preparado antes de instalar $service_name"
+  log "🚀 Executando preparação automática do sistema..."
+  
+  if prepare_docker_system; then
+    log "✅ Sistema Docker preparado com sucesso para $service_name!"
+    return 0
+  else
+    error "❌ Falha na preparação do sistema Docker para $service_name"
+    return 1
+  fi
 }
 
 configure_ufw() {
@@ -492,6 +575,7 @@ menu() {
   echo -e "   ${GREEN}5${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}6${NC}- Instalar LNbits"
   echo -e "   ${GREEN}7${NC}- Mais opções"
+  echo -e "   ${GREEN}8${NC}- 🔧 Preparar Sistema Docker"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
@@ -503,6 +587,14 @@ menu() {
     1)
       app="lnd"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      
+      # Garantir que o sistema Docker esteja preparado
+      if ! ensure_docker_system_ready "$app"; then
+        error "❌ Falha na preparação do sistema Docker para $app"
+        menu
+        return 1
+      fi
+      
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ Sua instalação do $app foi bem sucedida! \033[0m"
       menu
@@ -510,6 +602,14 @@ menu() {
     2)
       app="elements"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      
+      # Garantir que o sistema Docker esteja preparado
+      if ! ensure_docker_system_ready "$app"; then
+        error "❌ Falha na preparação do sistema Docker para $app"
+        menu
+        return 1
+      fi
+      
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso \033[0m"
       menu
@@ -517,6 +617,14 @@ menu() {
     3)
       app="thunderhub"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      
+      # Garantir que o sistema Docker esteja preparado
+      if ! ensure_docker_system_ready "$app"; then
+        error "❌ Falha na preparação do sistema Docker para $app"
+        menu
+        return 1
+      fi
+      
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
@@ -541,6 +649,14 @@ menu() {
     5)
       app="lndg"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      
+      # Garantir que o sistema Docker esteja preparado
+      if ! ensure_docker_system_ready "$app"; then
+        error "❌ Falha na preparação do sistema Docker para $app"
+        menu
+        return 1
+      fi
+      
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
@@ -548,12 +664,29 @@ menu() {
     6)
       app="lnbits"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
+      
+      # Garantir que o sistema Docker esteja preparado
+      if ! ensure_docker_system_ready "$app"; then
+        error "❌ Falha na preparação do sistema Docker para $app"
+        menu
+        return 1
+      fi
+      
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ $app instalado com sucesso! \033[0m"
       menu
       ;;
     7)
       submenu_opcoes
+      ;;
+    8)
+      echo -e "${CYAN}🔧 Preparando Sistema Docker...${NC}"
+      if prepare_docker_system; then
+        echo -e "\033[43m\033[30m ✅ Sistema Docker preparado com sucesso! \033[0m"
+      else
+        echo -e "\033[41m\033[37m ❌ Falha na preparação do Sistema Docker! \033[0m"
+      fi
+      menu
       ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"

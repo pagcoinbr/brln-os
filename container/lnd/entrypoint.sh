@@ -172,9 +172,12 @@ create_wallet_auto() {
             fi
     #    fi
         
+        # Comentado para ver o erro real sem aguardar
         log "Aguardando LND estar pronto... (tentativa $((attempt + 1))/$max_attempts)"
-        sleep 3  # Aumentado para 3 segundos
-        attempt=$((attempt + 1))
+        # sleep 3  # Comentado temporariamente
+        # attempt=$((attempt + 1))
+        log "Tentando conectar ao LND imediatamente..."
+        break
     done
     
     if [[ $attempt -eq $max_attempts ]]; then
@@ -256,10 +259,27 @@ main() {
         log "Carteira não existe para $BITCOIN_NETWORK. Criando automaticamente..."
         
         # Iniciar LND em background
+        log "Iniciando LND com: $LND_BIN_DATA/lnd --configfile=$LND_DIR/lnd.conf"
         $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" >> "$LOG_FILE" 2>&1 &
         LND_PID=$!
+        log "LND iniciado com PID: $LND_PID"
         
-        sleep 5
+        # Aguardar mais tempo para o LND inicializar
+        log "Aguardando LND inicializar..."
+        sleep 10
+        
+        # Verificar se o processo ainda está rodando
+        if ! kill -0 $LND_PID 2>/dev/null; then
+            error "LND falhou ao iniciar. Verificando logs..."
+            if [[ -f "$LOG_FILE" ]]; then
+                error "=== LOGS DO LND ==="
+                tail -20 "$LOG_FILE"
+                error "=== FIM DOS LOGS ==="
+            fi
+            exit 1
+        else
+            log "LND está rodando com PID: $LND_PID"
+        fi
 
         create_wallet_auto
         
