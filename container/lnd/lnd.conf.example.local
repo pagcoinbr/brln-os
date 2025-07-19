@@ -79,12 +79,12 @@ wtclient.sweep-fee-rate=10
 routing.strictgraphpruning=true
 
 ## Descomente as linhas abaixo se você pretende utilizar o postgresql como banco de dados
-[db]
+#[db]
 ## Banco de dados
-db.backend=postgres
-[postgres]
-db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
-db.postgres.timeout=0
+#db.backend=postgres
+#[postgres]
+#db.postgres.dsn=postgresql://admin:admin@127.0.0.1:5432/lndb?sslmode=disable
+#db.postgres.timeout=0
 
 ## Ambiente de alta taxa (Opcional)
 # (padrão: CONSERVATIVE) Descomente as próximas 2 linhas
