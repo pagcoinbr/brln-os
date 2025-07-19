@@ -200,11 +200,13 @@ configure_remote_blockchain() {
     
     # Primeiro, escolher a rede
     choose_bitcoin_network
-    if [[ BITCOIN_NETWORK == "testnet" ]]; then
     echo ""
     info "═══════════════════════════════════════════════════════════════"
     log "🔗 Configuração da Fonte Blockchain"
     info "═══════════════════════════════════════════════════════════════"
+    echo ""
+    
+    warning "⚠️  ATENÇÃO: Se você escolheu a rede TESTNET e esta configuração apenas permite conexão com bitcoin node local!"
     echo ""
     
     info "Escolha a fonte da blockchain que deseja usar:"
@@ -244,11 +246,6 @@ configure_remote_blockchain() {
                 ;;
         esac
     done
-    else
-    warning "⚠️  ATENÇÃO: Você escolheu a rede TESTNET e esta configuração apenas permite conexão com bitcoin node local."
-    local_credentials
-    echo ""
-    fi
 }
 
 configure_elements_remote() {
@@ -427,8 +424,114 @@ configure_bitcoin_conf() {
     fi
 }
 
+# Função para verificar sincronização do Bitcoin Core
+check_bitcoin_sync() {
+    log "🔍 Verificando sincronização do Bitcoin Core..."
+    
+    # Tentar conectar e verificar status de sincronização
+    MAX_SYNC_ATTEMPTS=10
+    sync_attempt=1
+    
+    while [[ $sync_attempt -le $MAX_SYNC_ATTEMPTS ]]; do
+        log "Tentativa $sync_attempt de $MAX_SYNC_ATTEMPTS para verificar sincronização..."
+        
+        # Tentar obter informações da blockchain via RPC
+        sync_info=$(docker exec bitcoin bitcoin-cli getblockchaininfo 2>/dev/null | grep -E '"initialblockdownload"|"verificationprogress"' 2>/dev/null)
+        
+        if [[ $? -eq 0 && -n "$sync_info" ]]; then
+            # Extrair valores usando grep e cut
+            initial_download=$(echo "$sync_info" | grep "initialblockdownload" | cut -d':' -f2 | tr -d ' ,')
+            verification_progress=$(echo "$sync_info" | grep "verificationprogress" | cut -d':' -f2 | tr -d ' ,')
+            
+            # Converter progresso para porcentagem
+            if [[ -n "$verification_progress" ]]; then
+                progress_percent=$(echo "$verification_progress * 100" | bc -l 2>/dev/null | cut -d'.' -f1)
+                if [[ -z "$progress_percent" ]]; then
+                    progress_percent="0"
+                fi
+            else
+                progress_percent="0"
+            fi
+            
+            log "📊 Progresso da sincronização: ${progress_percent}%"
+            
+            # Verificar se ainda está em download inicial
+            if [[ "$initial_download" == "true" ]]; then
+                warning "⏳ Bitcoin Core ainda está sincronizando a blockchain..."
+                warning "📊 Progresso atual: ${progress_percent}%"
+                echo ""
+                warning "🚫 O LND não pode ser iniciado enquanto o Bitcoin Core estiver sincronizando!"
+                warning "⏰ Aguarde a sincronização completa antes de continuar."
+                echo ""
+                echo "💡 Opções:"
+                echo "1. ⏸️  Pausar e aguardar (recomendado)"
+                echo "2. 🔄 Tentar novamente em 30 segundos"
+                echo "3. ❌ Cancelar instalação"
+                echo ""
+                
+                while true; do
+                    read -p "Escolha uma opção (1/2/3): " -n 1 -r
+                    echo
+                    case $REPLY in
+                        "1" )
+                            echo ""
+                            info "⏸️  Instalação pausada. Execute novamente quando a sincronização estiver completa."
+                            echo ""
+                            info "💡 Para verificar o progresso manualmente:"
+                            echo "   docker exec bitcoin bitcoin-cli getblockchaininfo"
+                            echo ""
+                            exit 0
+                            ;;
+                        "2" )
+                            log "🔄 Aguardando 30 segundos antes de verificar novamente..."
+                            sleep 30
+                            break
+                            ;;
+                        "3" )
+                            error "❌ Instalação cancelada pelo usuário"
+                            exit 1
+                            ;;
+                        * )
+                            echo "Por favor, escolha 1, 2 ou 3."
+                            ;;
+                    esac
+                done
+            else
+                log "✅ Bitcoin Core sincronizado! Progresso: ${progress_percent}%"
+                log "🚀 Prosseguindo com a inicialização do LND..."
+                return 0
+            fi
+        else
+            warning "⚠️ Não foi possível conectar ao Bitcoin Core (tentativa $sync_attempt)"
+            if [[ $sync_attempt -lt $MAX_SYNC_ATTEMPTS ]]; then
+                log "Aguardando 10 segundos antes da próxima tentativa..."
+                sleep 10
+            fi
+        fi
+        
+        ((sync_attempt++))
+    done
+    
+    warning "⚠️ Não foi possível verificar o status de sincronização do Bitcoin Core"
+    warning "   Possíveis causas:"
+    warning "   - Container Bitcoin não está executando"
+    warning "   - RPC não está acessível"
+    warning "   - Credenciais RPC incorretas"
+    echo ""
+    
+    read -p "Deseja continuar mesmo assim? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        error "Operação cancelada pelo usuário"
+        exit 1
+    fi
+}
+
 # Função para capturar seed do LND
 capture_lnd_seed() {
+    # Verificar sincronização do Bitcoin Core antes de iniciar o LND
+    check_bitcoin_sync
+    
     # Tentar capturar a seed do LND
     warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS SEED DO LND"
     warning "Extraindo seed LND dos logs..."
@@ -436,7 +539,7 @@ capture_lnd_seed() {
     sleep 15 & spinner
     
     # Tentar capturar a seed múltiplas vezes se necessário
-    MAX_ATTEMPTS=1
+    MAX_ATTEMPTS=3
     attempt=1
     
     while [[ $attempt -le $MAX_ATTEMPTS ]]; do
