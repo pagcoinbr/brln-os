@@ -68,7 +68,7 @@ RUN mkdir -p ${HOME}/.lnd/data/chain/bitcoin/mainnet && \
 
 # Copiar arquivos de configuração e senha
 COPY password.txt ${HOME}/.lnd/password.txt
-COPY lnd.conf.example.local ${HOME}/.lnd/lnd.conf
+COPY lnd.conf ${HOME}/.lnd/lnd.conf
 
 # Ajustar todas as permissões de uma vez
 RUN chown -R ${USER}:${USER} ${HOME}/.lnd && \

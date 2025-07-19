@@ -11,6 +11,9 @@ debuglevel=info
 wallet-unlock-password-file=/data/lnd/password.txt
 wallet-unlock-allow-create=true
 
+# Configuração do caminho do admin macaroon
+adminmacaroonpath=/data/lnd/data/chain/bitcoin/${network}/admin.macaroon
+
 # Regenerar automaticamente o certificado quando estiver próximo do vencimento
 tlsautorefresh=true
 tlsextraip=127.0.0.1

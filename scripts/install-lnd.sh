@@ -326,6 +326,13 @@ configure_lnd_conf_remote() {
     sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
     sed -i "s/bitcoind.rpcpass=<brln_rpc_pass>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
     
+    # Substituir a variável ${network} com o valor correto da rede
+    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
+        sed -i "s/\${network}/mainnet/g" "$lnd_conf"
+    else
+        sed -i "s/\${network}/testnet/g" "$lnd_conf"
+    fi
+    
     # Configurar para a rede escolhida
     if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
         log "Configurando LND para MAINNET remota..."
@@ -365,6 +372,13 @@ configure_lnd_conf_local() {
     # Atualizar credenciais para conexão local
     sed -i "s/<seu_user_rpc>/$user/g" "$lnd_conf"
     sed -i "s/<sua_senha_rpc>/$pass/g" "$lnd_conf"
+    
+    # Substituir a variável ${network} com o valor correto da rede
+    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
+        sed -i "s/\${network}/mainnet/g" "$lnd_conf"
+    else
+        sed -i "s/\${network}/testnet/g" "$lnd_conf"
+    fi
     
     # Configurar para a rede escolhida
     if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
@@ -427,6 +441,8 @@ configure_bitcoin_conf() {
 # Função para verificar sincronização do Bitcoin Core
 check_bitcoin_sync() {
     log "🔍 Verificando sincronização do Bitcoin Core..."
+
+    sleep 10 & spinner
     
     # Tentar conectar e verificar status de sincronização
     MAX_SYNC_ATTEMPTS=10
@@ -721,8 +737,8 @@ start_lnd_docker() {
         cd "$REPO_DIR/container"
         sudo docker-compose build $app >> /dev/null 2>&1 & spinner
         sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
-        sudo docker-compose build $app2
-        sudo docker-compose up -d $app2
+        sudo docker-compose build $app2 >> /dev/null 2>&1 & spinner
+        sudo docker-compose up -d $app2 >> /dev/null 2>&1 & spinner
         clear
     else
         error "Opção inválida."
