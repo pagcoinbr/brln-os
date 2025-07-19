@@ -138,6 +138,17 @@ stop_lnd() {
     fi
 }
 
+# Função para verificar se LND está respondendo via RPC
+check_lnd_rpc() {
+    local tls_cert_path="$1"
+    if [[ -n "$tls_cert_path" && -f "$tls_cert_path" ]]; then
+        # Tentar um comando simples para verificar se RPC está funcionando
+        $LND_BIN_DATA/lncli --rpcserver=localhost:10009 --tlscertpath="$tls_cert_path" getinfo >/dev/null 2>&1
+        return $?
+    fi
+    return 1
+}
+
 # Função para criar carteira automaticamente
 create_wallet_auto() {
     log "Criando carteira automaticamente..."
@@ -153,31 +164,32 @@ create_wallet_auto() {
     
     # Aguardar LND estar pronto para aceitar comandos
     while [[ $attempt -lt $max_attempts ]]; do
-        # Verificar se a porta está respondendo primeiro
-    #    if nc -z localhost 10009 2>/dev/null; then
-    #        log "LND está respondendo na porta 10009!"
+        # Procurar pelo arquivo de certificado TLS primeiro
+        local tls_cert_path=""
+        if [[ -f "$LND_DIR/tls.cert" ]]; then
+            tls_cert_path="$LND_DIR/tls.cert"
+        else
+            tls_cert_path=$(find "$LND_DIR" -name "tls.cert.tmp" -o -name "tls.cert.*" 2>/dev/null | head -1)
+        fi
+        
+        if [[ -n "$tls_cert_path" ]]; then
+            log "Certificado TLS encontrado: $tls_cert_path"
             
-            # Procurar pelo arquivo de certificado TLS
-            local tls_cert_path=""
-            if [[ -f "$LND_DIR/tls.cert" ]]; then
-                tls_cert_path="$LND_DIR/tls.cert"
-            else
-                tls_cert_path=$(find "$LND_DIR" -name "tls.cert.tmp" -o -name "tls.cert.*" 2>/dev/null | head -1)
-            fi
-            
-            if [[ -n "$tls_cert_path" ]]; then
-                log "Usando certificado TLS: $tls_cert_path"
+            # Testar conectividade RPC diretamente
+            if check_lnd_rpc "$tls_cert_path"; then
+                log "LND RPC está funcionando!"
                 TLS_CERT_PATH="$tls_cert_path"
                 break
+            else
+                log "LND RPC ainda não está pronto..."
             fi
-    #    fi
+        else
+            log "Certificado TLS ainda não foi gerado..."
+        fi
         
-        # Comentado para ver o erro real sem aguardar
         log "Aguardando LND estar pronto... (tentativa $((attempt + 1))/$max_attempts)"
-        # sleep 3  # Comentado temporariamente
-        # attempt=$((attempt + 1))
-        log "Tentando conectar ao LND imediatamente..."
-        break
+        sleep 3
+        attempt=$((attempt + 1))
     done
     
     if [[ $attempt -eq $max_attempts ]]; then
@@ -203,7 +215,7 @@ create_wallet_auto() {
     # Criar carteira usando expect - versão simplificada
     expect << 'EOF'
 set timeout 60
-spawn $env(LND_BIN_DATA)/lncli --tlscertpath=$env(TLS_CERT_PATH) create
+spawn $env(LND_BIN_DATA)/lncli --rpcserver=localhost:10009 --tlscertpath=$env(TLS_CERT_PATH) create
 expect "Input wallet password:"
 send "$env(password)\r"
 expect "Confirm password:"

@@ -1,0 +1,13 @@
+[Unit]
+Description=Servidor Flask para Controle do LNBits
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/home/pagcoin/brln-os/
+Environment="PATH=/root/envflask/bin"
+ExecStart=/root/envflask/bin/python3 /home/pagcoin/brln-os/control-systemd.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

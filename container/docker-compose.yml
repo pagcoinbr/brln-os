@@ -107,8 +107,8 @@ services:
 
   lnd:
     build:
-      context: .
-      dockerfile: ./lnd/Dockerfile.lnd
+      context: ./lnd
+      dockerfile: Dockerfile.lnd
     container_name: lnd
     ports:
       - 9735:9735  # P2P port
