@@ -326,13 +326,6 @@ configure_lnd_conf_remote() {
     sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
     sed -i "s/bitcoind.rpcpass=<brln_rpc_pass>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
     
-    # Substituir a variável ${network} com o valor correto da rede
-    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
-        sed -i "s/\${network}/mainnet/g" "$lnd_conf"
-    else
-        sed -i "s/\${network}/testnet/g" "$lnd_conf"
-    fi
-    
     # Configurar para a rede escolhida
     if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
         log "Configurando LND para MAINNET remota..."
@@ -709,8 +702,8 @@ auto_destruction_menu() {
 }
 
 start_lnd_docker() {
-    app="lnd"
-    app2="bitcoin"
+    app="bitcoin"
+    app2="lnd"
     if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
         warning "O container lnd já está em execução."
         read -p "Deseja parar e remover o container lnd e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
@@ -727,16 +720,32 @@ start_lnd_docker() {
     fi
     read -p "Deseja exibir logs da instalação? (y/n): " verbose_mode
     if [[ "$verbose_mode" == "y" ]]; then
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app
-        sudo docker-compose up -d $app
+        read -p "Deseja instalar o Bitcoin Core? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            cd "$REPO_DIR/container"
+            sudo docker-compose build $app >> /dev/null 2>&1 & spinner
+            sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
+            echo "Aguardando $app inicializar..."
+            sleep 10 & spinner
+        else
+            warning "Bitcoin Core não será instalado."
+        fi
         sudo docker-compose build $app2
         sudo docker-compose up -d $app2
     elif [[ "$verbose_mode" == "n" ]]; then
         warning " 🕒 Aguarde..."
-        cd "$REPO_DIR/container"
-        sudo docker-compose build $app >> /dev/null 2>&1 & spinner
-        sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
+        read -p "Deseja instalar o Bitcoin Core? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            cd "$REPO_DIR/container"
+            sudo docker-compose build $app >> /dev/null 2>&1 & spinner
+            sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
+            echo "Aguardando $app inicializar..."
+            sleep 10 & spinner
+        else
+            warning "Bitcoin Core não será instalado."
+        fi
         sudo docker-compose build $app2 >> /dev/null 2>&1 & spinner
         sudo docker-compose up -d $app2 >> /dev/null 2>&1 & spinner
         clear

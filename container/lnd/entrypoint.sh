@@ -47,7 +47,7 @@ PASSWORD_FILE="$LND_DIR/password.txt"
 WALLET_DB="$LND_DIR/data/chain/bitcoin/$NETWORK_PATH/wallet.db"
 SEED_FILE="$LND_DIR/seed.txt"
 LOG_FILE="/tmp/lnd-entrypoint.log"
-TLS_CERT_PATH=""  # Será definido dinamicamente
+TLS_CERT_PATH="/home/lnd/.lnd/tls.cert"  # Será definido dinamicamente
 LND_BIN_DATA="/opt/lnd"
 LND_DATA="/data/lnd"
 
@@ -178,26 +178,26 @@ create_wallet_auto() {
     
     local password=$(cat "$PASSWORD_FILE" | tr -d '\n\r')
     
-    # Aguardar o certificado TLS ser criado (mais simples)
-    local max_attempts=20
-    local attempt=0
+    # # Aguardar o certificado TLS ser criado (mais simples)
+    # local max_attempts=20
+    # local attempt=0
     
-    while [[ $attempt -lt $max_attempts ]]; do
-        if [[ -f "$LND_DIR/tls.cert" ]]; then
-            log "Certificado TLS encontrado: $LND_DIR/tls.cert"
-            TLS_CERT_PATH="$LND_DIR/tls.cert"
-            break
-        fi
+    # while [[ $attempt -lt $max_attempts ]]; do
+    #     if [[ -f "$LND_DIR/tls.cert" ]]; then
+    #         log "Certificado TLS encontrado: $LND_DIR/tls.cert"
+    #         TLS_CERT_PATH="$LND_DIR/tls.cert"
+    #         break
+    #     fi
         
-        log "Aguardando certificado TLS... (tentativa $((attempt + 1))/$max_attempts)"
-        sleep 2
-        attempt=$((attempt + 1))
-    done
+    #     log "Aguardando certificado TLS... (tentativa $((attempt + 1))/$max_attempts)"
+    #     sleep 2
+    #     attempt=$((attempt + 1))
+    # done
     
-    if [[ $attempt -eq $max_attempts ]]; then
-        error "Certificado TLS não foi gerado a tempo"
-        return 1
-    fi
+    # if [[ $attempt -eq $max_attempts ]]; then
+    #     error "Certificado TLS não foi gerado a tempo"
+    #     return 1
+    # fi
     
     log "Criando carteira automaticamente..."
     
@@ -207,7 +207,7 @@ create_wallet_auto() {
     # Criar carteira usando expect
     expect << 'EOF'
 set timeout 60
-spawn $env(LND_BIN_DATA)/lncli --rpcserver=localhost:10009 --tlscertpath=$env(TLS_CERT_PATH) create
+spawn $env(LND_BIN_DATA)/lncli --rpcserver=localhost:10009 --tlscertpath=/data/lnd/tls.cert create
 expect "Input wallet password:"
 send "$env(password)\r"
 expect "Confirm password:"
@@ -276,7 +276,7 @@ main() {
         
         # Reiniciar LND como processo principal
         log "Reiniciando LND como processo principal..."
-        exec $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf"
+        exec $LND_BIN_DATA/lnd --configfile="$LND_DIR/lnd.conf" --adminmacaroonpath="/data/lnd/data/chain/bitcoin/$NETWORK_PATH/admin.macaroon"
     fi
 }
 
