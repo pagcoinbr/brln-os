@@ -92,6 +92,13 @@ configure_network() {
         sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/" "$lnd_conf" 2>/dev/null || true
     fi
     
+    # Garantir que PostgreSQL esteja comentado e BoltDB ativo
+    log "Desabilitando PostgreSQL e ativando BoltDB"
+    sed -i 's/^db.backend=postgres/#db.backend=postgres/' "$lnd_conf" 2>/dev/null || true
+    sed -i 's/^db.postgres.dsn=/#db.postgres.dsn=/' "$lnd_conf" 2>/dev/null || true
+    sed -i 's/^db.postgres.timeout=/#db.postgres.timeout=/' "$lnd_conf" 2>/dev/null || true
+    sed -i 's/^\[postgres\]/#[postgres]/' "$lnd_conf" 2>/dev/null || true
+    
     log "Configuração de rede aplicada: $BITCOIN_NETWORK"
 }
 
