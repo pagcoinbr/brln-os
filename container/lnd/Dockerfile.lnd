@@ -67,6 +67,7 @@ RUN mkdir -p ${HOME}/.lnd/data/chain/bitcoin/mainnet && \
     mkdir -p ${HOME}/.lnd/data/chain/bitcoin/testnet
 
 # Copiar arquivos de configuração e senha
+# Copiar arquivos de configuração e senha
 COPY password.txt ${HOME}/.lnd/password.txt
 COPY lnd.conf.example.local ${HOME}/.lnd/lnd.conf
 

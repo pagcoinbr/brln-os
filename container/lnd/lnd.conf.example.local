@@ -51,9 +51,9 @@ ignore-historical-gossip-filters=true
 
 [Bitcoin]
 # Turn to true to use mainnet
-bitcoin.mainnet=true
+bitcoin.mainnet=false
 # Turn to true to use testnet
-bitcoin.testnet=false
+bitcoin.testnet=true
 bitcoin.node=bitcoind
 # Configurações de taxa - taxa base padrão do LND = 1000 (mSat), taxa de comissão = 1 (ppm)
 # Você pode escolher o que quiser, por exemplo, ZeroFeeRouting (0,0) ou ZeroBaseFee (0,X)
@@ -92,10 +92,10 @@ db.postgres.timeout=0
 bitcoind.estimatemode=ECONOMICAL
 #bitcoind local - mesma maquina
 bitcoind.rpchost=bitcoin
-bitcoind.rpcuser=<seu_user_rpc>
-bitcoind.rpcpass=<sua_senha_rpc>
-bitcoind.zmqpubrawblock=tcp://bitcoin:28332
-bitcoind.zmqpubrawtx=tcp://bitcoin:28333
+bitcoind.rpcuser=brlnbitcoin
+bitcoind.rpcpass=admin
+bitcoind.zmqpubrawblock=tcp://bitcoin:28432
+bitcoind.zmqpubrawtx=tcp://bitcoin:28433
 
 [routerrpc]
 routerrpc.estimator=apriori
