@@ -91,7 +91,7 @@ services:
     volumes:
       - /data/bitcoin:/data/bitcoin
       - tor_var:/var/lib/tor:ro
-      - ./bitcoin/bitcoin.conf.example:/data/bitcoin/bitcoin.conf.example:ro
+      - ./bitcoin/bitcoin.conf:/data/bitcoin/bitcoin.conf:ro
     restart: unless-stopped
     depends_on:
       - tor

@@ -28,24 +28,11 @@ wait_for_service() {
     echo "✗ $service não ficou disponível após $max_attempts tentativas"
     return 1
 }
-echo "Copiando configuração de exemplo..."
-cp /data/bitcoin/bitcoin.conf.example /data/bitcoin/bitcoin.conf
 
 # Iniciar i2pd como processo em background
 echo "Iniciando i2pd..."
 if i2pd --conf=/etc/i2pd/i2pd.conf & then
     I2PD_PID=$!
-    echo "✓ i2pd iniciado com PID: $I2PD_PID"
-    
-    # Aguardar i2pd ficar disponível
-    if wait_for_service 127.0.0.1 7656 "I2P SAM"; then
-        echo "✓ I2P SAM está funcionando"
-    else
-        echo "⚠ I2P SAM não está disponível, Bitcoin continuará sem I2P"
-    fi
-else
-    echo "✗ Falha ao iniciar i2pd"
-    I2PD_PID=""
 fi
 
 # Aguardar Tor ficar disponível (conecta-se ao container tor)

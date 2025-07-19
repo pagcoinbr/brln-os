@@ -433,7 +433,7 @@ capture_lnd_seed() {
     warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS SEED DO LND"
     warning "Extraindo seed LND dos logs..."
 
-    sleep 5 & spinner
+    sleep 15 & spinner
     
     # Tentar capturar a seed múltiplas vezes se necessário
     MAX_ATTEMPTS=1
@@ -594,12 +594,14 @@ start_lnd_docker() {
     app2="bitcoin"
     if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
         warning "O container lnd já está em execução."
-        read -p "Deseja parar e remover o container lnd antes de reiniciar? (y/N): " -n 1 -r
+        read -p "Deseja parar e remover o container lnd e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             log "Parando e removendo o container lnd existente..."
             sudo docker stop lnd
             sudo docker rm lnd
+            sudo docker stop bitcoin
+            sudo docker rm bitcoin
         else
             log "Mantendo o container lnd atual."
         fi
