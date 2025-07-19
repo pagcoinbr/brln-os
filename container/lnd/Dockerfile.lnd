@@ -7,7 +7,7 @@ ENV LND_VERSION=0.18.5
 ENV USER=lnd
 ENV HOME=/home/${USER}
 ENV DATA_DIR=/data/lnd
-ENV LND_BIN_DATA=/opt/lndf
+ENV LND_BIN_DATA=/opt/lnd
 ENV PATH=/opt/lnd:$PATH
 
 # Instalar dependências básicas
