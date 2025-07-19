@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+ELEMENTS_DATA=/home/elements/.elements
 # Função para aguardar que o serviço esteja pronto
 wait_for_service() {
     echo "Aguardando Elements daemon inicializar..."

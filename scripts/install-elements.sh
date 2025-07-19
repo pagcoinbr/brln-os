@@ -25,11 +25,13 @@ print_error() {
 }
 
 # Caminho para o arquivo de configuração
-ELEMENTS_CONFIG_FILE="/home/$USER/brln-os/container/elements/elements.conf.example"
+ELEMENTS_CONFIG_FILE_EXAMPLE="/root/brln-os/container/elements/elements.conf.example"
+ELEMENTS_CONFIG_FILE="/root/brln-os/container/elements/elements.conf"
+ELEMENTS_DATA_DIR="/data/elements"
 
 # Verificar se o arquivo existe
-if [ ! -f "$ELEMENTS_CONFIG_FILE" ]; then
-    print_error "Arquivo $ELEMENTS_CONFIG_FILE não encontrado!"
+if [ ! -f "$ELEMENTS_CONFIG_FILE_EXAMPLE" ]; then
+    print_error "Arquivo $ELEMENTS_CONFIG_FILE_EXAMPLE não encontrado!"
     exit 1
 fi
 
@@ -47,7 +49,7 @@ if [ -z "$rpc_user" ]; then
 fi
 
 echo -n "Digite a senha RPC para Elements: "
-read -s rpc_password
+read -r rpc_password
 echo  # Nova linha após entrada silenciosa
 
 # Validar se a senha não está vazia
@@ -56,11 +58,13 @@ if [ -z "$rpc_password" ]; then
     exit 1
 fi
 
-print_info "Atualizando configurações no arquivo $ELEMENTS_CONFIG_FILE..."
+print_info "Atualizando configurações no arquivo $ELEMENTS_CONFIG_FILE_EXAMPLE..."
 
-# Fazer backup do arquivo original
-cp "$ELEMENTS_CONFIG_FILE" "$ELEMENTS_CONFIG_FILE.backup"
-print_info "Backup criado: $ELEMENTS_CONFIG_FILE.backup"
+# Copia para oficializar o conf
+cp "$ELEMENTS_CONFIG_FILE_EXAMPLE" "$ELEMENTS_CONFIG_FILE"
+
+# Copia o .conf para o /data para ser acessado pelo container
+cp "$ELEMENTS_CONFIG_FILE" "$ELEMENTS_DATA_DIR/elements.conf"
 
 # Substituir rpcuser usando sed
 sed -i "s/^rpcuser=.*/rpcuser=$rpc_user/" "$ELEMENTS_CONFIG_FILE"
@@ -100,5 +104,4 @@ docker-compose up -d $app >> /dev/null 2>&1 & spinner
 clear
 else
 echo "Opção inválida."
-menu
 fi 

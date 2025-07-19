@@ -37,6 +37,9 @@ COPY elements/elements.sh /opt/elements/
 RUN chmod +x /opt/elements/elements.sh \
     && sed -i 's/\r$//' /opt/elements/elements.sh
 
+# Copiar arquivo de configuração
+COPY elements/elements.conf ${ELEMENTS_DATA}/elements.conf
+
 # Definir o diretório de trabalho
 WORKDIR ${ELEMENTS_DATA}
 
