@@ -7,7 +7,7 @@ ENV LND_VERSION=0.18.5
 ENV USER=lnd
 ENV HOME=/home/${USER}
 ENV DATA_DIR=/data/lnd
-ENV LND_BIN_DATA=/opt/lnd
+ENV LND_BIN_DATA=/opt/lndf
 ENV PATH=/opt/lnd:$PATH
 
 # Instalar dependências básicas
@@ -48,7 +48,7 @@ RUN mkdir -p ${DATA_DIR} ${LND_BIN_DATA} ${HOME}/.lnd && \
     chown -R ${USER}:${USER} ${HOME}/.lnd
 
 # Copiar e extrair binários do LND
-COPY lnd/lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz /tmp/
+COPY lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz /tmp/
 RUN tar -xzf /tmp/lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz -C ${LND_BIN_DATA}/ \
     && chmod +x ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lnd \
     && chmod +x ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lncli \
@@ -57,15 +57,24 @@ RUN tar -xzf /tmp/lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz -C ${LND_BIN_DATA}
     && rm -rf /tmp/lnd-linux-*
 
 # Copiar script de entrypoint
-COPY lnd/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Definir permissões corretas
+# Definir permissões corretas para entrypoint
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Abordagem diferente - criar diretamente no HOME
+# Criar estrutura de diretórios primeiro
 RUN mkdir -p ${HOME}/.lnd/data/chain/bitcoin/mainnet && \
-    chown -R ${USER}:${USER} ${HOME}/.lnd && \
-    chmod -R 755 ${HOME}/.lnd
+    mkdir -p ${HOME}/.lnd/data/chain/bitcoin/testnet
+
+# Copiar arquivos de configuração e senha
+COPY password.txt ${HOME}/.lnd/password.txt
+COPY lnd.conf.example.local ${HOME}/.lnd/lnd.conf
+
+# Ajustar todas as permissões de uma vez
+RUN chown -R ${USER}:${USER} ${HOME}/.lnd && \
+    chmod -R 755 ${HOME}/.lnd && \
+    chmod 600 ${HOME}/.lnd/password.txt && \
+    chmod 644 ${HOME}/.lnd/lnd.conf
 
 # Mudar para usuário lnd
 USER ${USER}
