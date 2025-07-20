@@ -10,22 +10,29 @@ function atualizarStatus() {
           const lines = text.split('\n');
           for (const line of lines) {
               if (line.includes("CPU:")) {
-                  document.getElementById("cpu").innerText = line;
+                  const cpuElement = document.getElementById("cpu");
+                  if (cpuElement) cpuElement.innerText = line;
               } else if (line.includes("RAM:")) {
-                  document.getElementById("ram").innerText = line;
+                  const ramElement = document.getElementById("ram");
+                  if (ramElement) ramElement.innerText = line;
               } else if (line.includes("LND:")) {
-                  document.getElementById("lnd").innerText = line;
+                  const lndElement = document.getElementById("lnd");
+                  if (lndElement) lndElement.innerText = line;
               } else if (line.includes("Bitcoind:")) {
-                  document.getElementById("bitcoind").innerText = line;
+                  const bitcoindElement = document.getElementById("bitcoind");
+                  if (bitcoindElement) bitcoindElement.innerText = line;
               } else if (line.includes("Tor:")) {
-                  document.getElementById("tor").innerText = line;
+                  const torElement = document.getElementById("tor");
+                  if (torElement) torElement.innerText = line;
               } else if (line.includes("Blockchain:")) {
-                  document.getElementById("blockchain").innerText = line;
+                  const blockchainElement = document.getElementById("blockchain");
+                  if (blockchainElement) blockchainElement.innerText = line;
               }
           }
       })
       .catch(error => {
-          alert("Erro ao atualizar status: " + error.message);
+          console.error("Erro ao atualizar status:", error.message);
+          // Removido o alert para não incomodar o usuário
       });
 }
 

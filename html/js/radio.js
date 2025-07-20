@@ -49,7 +49,7 @@ jinglePlayer.addEventListener("ended", () => {
 let ultimoTimestamp = localStorage.getItem("ultimoTimestamp") || null;
 
 setInterval(() => {
-  fetch(`${window.location.protocol}//${window.location.hostname}:5001/status_novidade`)
+  fetch(`${window.location.protocol}//${window.location.hostname}:5003/status_novidade`)
     .then(response => response.json())
     .then(data => {
       if (data.novidade && data.timestamp !== ultimoTimestamp) {
