@@ -10,10 +10,10 @@
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://docker.com)
 [![Lightning](https://img.shields.io/badge/lightning-network-yellow.svg)](https://lightning.network)
 [![Bitcoin](https://img.shields.io/badge/bitcoin-core-orange.svg)](https://bitcoincore.org)
-[![Python](https://img.shields.io/badge/python-gRPC%20client-blue.svg)](https://python.org)
+[![JavaScript](https://img.shields.io/badge/javascript-gRPC%20server-yellow.svg)](https://nodejs.org)
 [![Elements](https://img.shields.io/badge/elements-liquid%20network-green.svg)](https://elementsproject.org)
 
-*Uma plataforma completa de nó Bitcoin e Lightning Network com interface web integrada, cliente Python gRPC e suporte avançado para PeerSwap*
+*Uma plataforma completa de nó Bitcoin e Lightning Network com interface web integrada, servidor JavaScript gRPC e suporte avançado para PeerSwap*
 
 </div>
 
@@ -21,25 +21,38 @@
 
 ## 🚀 Instalação Rápida
 
-Execute este comando simples para instalar o BRLN-OS em seu sistema:
+**⚠️ IMPORTANTE: Sempre inicie como root**
 
 ```bash
-# Instalação direta via script automatizado
-curl -fsSL https://pagcoin.org/start.sh | sudo bash
+# 1. PRIMEIRO: Torne-se root
+sudo su
 
-# OU clone e execute manualmente
+# 2. OPÇÃO A: Instalação automática via script
+curl -fsSL https://pagcoin.org/start.sh | bash
+
+# OU OPÇÃO B: Instalação manual
 git clone https://github.com/pagcoinbr/brln-os.git
 cd brln-os
-sudo ./run.sh
+./run.sh
+
+# 3. Após a instalação, acesse a interface web e finalize:
+# - Acesse: http://SEU_IP ou http://localhost
+# - Clique no botão "⚡ BRLN Node Manager" 
+# - Siga o passo a passo na interface gráfica para:
+#   • Configurar rede (mainnet/testnet)
+#   • Definir alias do nó
+#   • Configurar serviços Docker
+#   • Inicializar carteiras
+#   • Configurar Tor (opcional)
 ```
 
-**É isso!** O BRLN-OS será instalado automaticamente com todos os componentes necessários.
+**É isso!** O BRLN-OS será instalado automaticamente com todos os componentes necessários e você poderá configurar tudo através da interface web moderna.
 
 ---
 
 ## 📖 Sobre o Projeto
 
-O **BRLN-OS** é uma distribuição containerizada avançada que transforma qualquer sistema Linux em um poderoso nó Bitcoin e Lightning Network profissional. Baseado em Docker Compose, oferece uma solução completa e automatizada para executar um stack completo de serviços Bitcoin, incluindo interface web moderna, cliente Python gRPC para automação e monitoramento avançado.
+O **BRLN-OS** é uma distribuição containerizada avançada que transforma qualquer sistema Linux em um poderoso nó Bitcoin e Lightning Network profissional. Baseado em Docker Compose, oferece uma solução completa e automatizada para executar um stack completo de serviços Bitcoin, incluindo interface web moderna, servidor JavaScript gRPC para automação e monitoramento avançado.
 
 ### 🏗️ Arquitetura de Serviços
 
@@ -48,7 +61,46 @@ O **BRLN-OS** é uma distribuição containerizada avançada que transforma qual
 - **LNbits**: Sistema bancário Lightning web-based com múltiplas extensões
 - **Thunderhub**: Interface web moderna para gerenciamento avançado do LND
 - **LNDG**: Dashboard profissional com estatísticas detalhadas e análise de canais
-- **Cliente Python gRPC**: Automação e integração programática com LND e Elements
+- **BRLN-RPC-Server**: Servidor JavaScript gRPC para automação e integração programática
+
+#### ₿ **Stack Bitcoin & Liquid**
+- **Bitcoin Core v28.1**: Nó completo Bitcoin com ZMQ, I2P e suporte Tor
+- **Elements v23.2.7**: Suporte completo ao Liquid Network (sidechain do Bitcoin)
+- **PeerSwap v4.0**: Ferramenta avançada para swaps automáticos BTC ↔ Liquid
+- **PeerSwap Web**: Interface web moderna para gestão de swaps e liquidez
+
+#### 🛠️ **Ferramentas e Automação**
+- **Interface Web Integrada**: Dashboard unificado com rádio player e controle de serviços
+- **BRLN-RPC-Server**: Servidor JavaScript para gerenciamento de serviços via API
+- **Monitor de Saldos**: Sistema de monitoramento automático multi-assets
+- **Scripts de Automação**: Ferramentas para instalação, configuração e manutenção
+
+#### 🛡️ **Segurança e Privacidade**
+- **Tor Integration**: Proxy Tor completo para todos os serviços
+- **Container Isolation**: Cada serviço isolado em container próprio
+- **Network Security**: Rede Docker privada para comunicação entre serviços
+- **Backup Automation**: Scripts automatizados para backup de seeds e canais
+
+### ✨ **Principais Características**
+
+- **🎯 Instalação Zero-Config**: Um comando instala e configura tudo automaticamente
+- **🐳 Arquitetura Containerizada**: Isolamento completo com Docker Compose
+- **🔒 Segurança Máxima**: Integração Tor, isolamento de rede e criptografia end-to-end
+- **📊 Monitoramento Profissional**: Grafana, métricas em tempo real e logs centralizados
+- **🖥️ Interface Web Moderna**: Dashboard responsivo com controle total dos serviços
+- **⚡ Servidor JavaScript gRPC**: API programática para LND e Elements
+- **🔄 Auto-Updates**: Sistema de atualizações automáticas dos componentes
+- **📱 Mobile Friendly**: Interfaces otimizadas para dispositivos móveis
+- **⚡ PeerSwap Ready**: Liquidez automática entre Bitcoin e Liquid Network
+
+### 🏗️ Arquitetura de Serviços
+
+#### ⚡ **Núcleo Lightning Network**
+- **LND v0.18.5**: Daemon Lightning Network com suporte completo a gRPC
+- **LNbits**: Sistema bancário Lightning web-based com múltiplas extensões
+- **Thunderhub**: Interface web moderna para gerenciamento avançado do LND
+- **LNDG**: Dashboard profissional com estatísticas detalhadas e análise de canais
+- **BRLN-RPC-Server**: Servidor JavaScript gRPC para automação e integração programática
 
 #### ₿ **Stack Bitcoin & Liquid**
 - **Bitcoin Core v28.1**: Nó completo Bitcoin com ZMQ, I2P e suporte Tor
@@ -58,8 +110,8 @@ O **BRLN-OS** é uma distribuição containerizada avançada que transforma qual
 
 #### � **Ferramentas e Automação**
 - **Interface Web Integrada**: Dashboard unificado com rádio player e controle de serviços
-- **Sistema de Controle**: Scripts Python Flask para gerenciamento systemd via API
-- **Monitor de Saldos**: Cliente Python para monitoramento automático de saldos
+- **BRLN-RPC-Server**: Servidor JavaScript para gerenciamento de serviços via API
+- **Monitor de Saldos**: Sistema de monitoramento automático multi-assets
 - **Scripts de Automação**: Ferramentas para instalação, configuração e manutenção
 
 #### 🛡️ **Segurança e Privacidade**
@@ -75,7 +127,7 @@ O **BRLN-OS** é uma distribuição containerizada avançada que transforma qual
 - **🔒 Segurança Máxima**: Integração Tor, isolamento de rede e criptografia end-to-end
 - **📊 Monitoramento Profissional**: Grafana, métricas em tempo real e logs centralizados
 - **�️ Interface Web Moderna**: Dashboard responsivo com controle total dos serviços
-- **🐍 Cliente Python gRPC**: API programática para LND e Elements
+- **⚡ Servidor JavaScript gRPC**: API programática para LND e Elements
 - **🔄 Auto-Updates**: Sistema de atualizações automáticas dos componentes
 - **📱 Mobile Friendly**: Interfaces otimizadas para dispositivos móveis
 - **⚡ PeerSwap Ready**: Liquidez automática entre Bitcoin e Liquid Network
@@ -92,24 +144,26 @@ Se preferir instalar manualmente ou quiser mais controle sobre o processo:
 - **RAM**: Mínimo 4GB (8GB+ recomendado para uso profissional)
 - **Armazenamento**: 1TB+ (SSD NVMe recomendado para Bitcoin Core)
 - **Docker**: Será instalado automaticamente se não presente
-- **Python 3.8+**: Para cliente gRPC e scripts de automação
+- **Node.js**: Para servidor JavaScript gRPC
 - **Conexão**: Internet banda larga para sincronização inicial
 
 ### Processo Manual
 
 ```bash
-# 1. Clone o repositório
+# 1. IMPORTANTE: Torne-se root primeiro
+sudo su
+
+# 2. Clone o repositório
 git clone https://github.com/pagcoinbr/brln-os.git
 cd brln-os
 
-# 2. Execute o script de instalação principal
-sudo ./run.sh
+# 3. Execute o script de instalação principal
+./run.sh
 
-# 3. (Opcional) Configure o cliente Python gRPC
-./setup_lnd_client.sh
-
-# 4. (Opcional) Execute setup adicional via brunel.sh
-sudo ./brunel.sh
+# 4. Acesse a interface web para finalizar:
+# - Vá para: http://SEU_IP ou http://localhost
+# - Clique em "⚡ BRLN Node Manager"
+# - Siga o assistente de configuração
 ```
 
 ### Configuração Avançada
@@ -137,9 +191,11 @@ nano container/elements/elements.conf
 brln-os/
 ├── 📄 run.sh                     # Script principal de instalação
 ├── 📄 brunel.sh                  # Setup avançado e configuração GUI
-├── 📄 setup_lnd_client.sh        # Setup do cliente Python gRPC
-├── 🐍 lnd_balance_client_v2.py   # Cliente avançado Python gRPC
-├── 🐍 control-systemd.py         # API Flask para controle de serviços
+├── ⚡ brln-rpc-server/           # Servidor JavaScript gRPC
+│   ├── server.js                # Servidor principal multi-chain
+│   ├── package.json             # Dependências Node.js
+│   ├── config/config.json       # Configurações do servidor
+│   └── src/                     # Módulos JavaScript
 │
 ├── 📁 container/                 # Stack de containers Docker
 │   ├── 🐳 docker-compose.yml    # Orquestração principal dos serviços
@@ -226,21 +282,27 @@ Após a instalação, os serviços estarão disponíveis através das seguintes 
 | ⚡ **Thunderhub** | `http://localhost:3000` | 3000 | Gerenciamento avançado LND |
 | 💰 **LNbits** | `http://localhost:5000` | 5000 | Sistema bancário Lightning |
 | 📊 **LNDG** | `http://localhost:8889` | 8889 | Dashboard e estatísticas LND |
-| 🔄 **PeerSwap Web** | `http://localhost:1984` | 1984 | Interface PeerSwap |
+| 🔄 **PeerSwap Web** | `http://localhost:4000` | 4000 | Interface PeerSwap |
 | 📈 **Grafana** | `http://localhost:3010` | 3010 | Monitoramento e métricas |
-| 🖥️ **Terminal Web** | `http://localhost:8080` | 8080 | GoTTY - Terminal via browser |
+| 🖥️ **BRLN Node Manager** | `http://localhost:3131` | 3131 | Terminal configuração via GoTTY |
 
 ### 🔧 APIs e Conectividade
 
 | Protocolo | Endpoint | Porta | Finalidade |
 |-----------|----------|-------|-----------|
-| � **LND gRPC** | `localhost:10009` | 10009 | API gRPC Lightning Network |
+| ⚡ **LND gRPC** | `localhost:10009` | 10009 | API gRPC Lightning Network |
 | 🌐 **LND REST** | `http://localhost:8080` | 8080 | API REST Lightning Network |
 | ₿ **Bitcoin RPC** | `localhost:8332` | 8332 | RPC Bitcoin Core |
 | 🔷 **Elements RPC** | `localhost:18884` | 18884 | RPC Liquid Network |
 | 🔄 **PeerSwap** | `localhost:42069` | 42069 | API PeerSwap |
 | 🧅 **Tor SOCKS** | `localhost:9050` | 9050 | Proxy Tor |
-| ⚙️ **Control API** | `localhost:5001` | 5001 | API Flask controle sistema |
+| ⚙️ **BRLN-RPC-Server** | `localhost:5003` | 5003 | API JavaScript multi-chain |
+
+### 🔮 Recursos Futuros
+
+- **🔌 Electrum Server**: Suporte planejado para conexão com hardware wallets Bitcoin e Liquid on-chain
+- **📱 Mobile Apps**: Aplicações nativas para iOS e Android
+- **🔄 Auto-Rebalancing**: Rebalanceamento automático de canais Lightning
 
 ---
 
@@ -255,7 +317,7 @@ O BRLN-OS configura automaticamente:
 - ✅ Configurações otimizadas do Bitcoin Core com ZMQ
 - ✅ Integração completa Bitcoin ↔ Lightning ↔ Liquid
 - ✅ Setup automático do PeerSwap para liquidez
-- ✅ Cliente Python gRPC configurado e pronto
+- ✅ Servidor JavaScript gRPC configurado e pronto
 - ✅ Interface web com controle de serviços
 
 ### Personalização Avançada
@@ -294,7 +356,29 @@ nano container/elements/elements.conf
 # chain=liquidv1                # Rede Liquid mainnet
 ```
 
-#### Cliente Python gRPC
+#### BRLN-RPC-Server JavaScript
+```bash
+# Configurar servidor JavaScript
+nano brln-rpc-server/config/config.json
+
+# Personalizar endpoints e credenciais
+{
+  "server": {
+    "port": 5003,
+    "secretKey": "sua-chave-super-segura"
+  },
+  "lnd": {
+    "host": "localhost:10009",
+    "tlsCertPath": "/data/lnd/tls.cert",
+    "macaroonPath": "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon"
+  },
+  "elements": {
+    "rpcHost": "localhost",
+    "rpcPort": 18884,
+    "rpcUser": "elementsuser",
+    "rpcPassword": "elementspassword123"
+  }
+}
 ```bash
 # Configurar cliente Python
 nano lnd_client_config.ini
@@ -308,11 +392,6 @@ macaroon_path = /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon
 
 [ELEMENTS]
 host = localhost
-port = 18884
-rpc_user = elementsuser
-rpc_password = elementspassword123
-```
-
 ### Variáveis de Ambiente
 
 ```bash
@@ -327,67 +406,71 @@ GRAFANA_PASSWORD=suasenha      # Senha Grafana
 TOR_ENABLED=true              # Habilitar Tor
 ```
 
-## 🐍 Cliente Python gRPC
+## ⚡ BRLN-RPC-Server JavaScript
 
-O BRLN-OS inclui um cliente Python avançado para automação e integração:
+O BRLN-OS inclui um servidor JavaScript avançado para automação e integração:
 
-### Características do Cliente
+### Características do Servidor
 
 - **🔌 Conectividade gRPC**: Conexão direta com LND via gRPC
 - **🔷 Suporte Elements**: Integração com RPC Elements/Liquid
-- **📋 Configuração INI**: Arquivo de configuração flexível
-- **📊 Monitoramento**: Consulta de saldos e status dos nós
+- **📋 Configuração JSON**: Arquivo de configuração flexível
+- **📊 Monitoramento**: Consulta de saldos e status dos nós multi-assets
 - **🔒 Autenticação**: Suporte completo a macaroons e TLS
-- **📝 Logging**: Sistema de logs configurável
+- **📝 Logging**: Sistema de logs avançado
+- **🌐 API REST**: Endpoints para controle e consulta
 
-### Setup e Uso
+### Principais Endpoints
 
 ```bash
-# 1. Configurar ambiente Python
-./setup_lnd_client.sh
+# Status de saúde do servidor
+GET /health
 
-# 2. Ativar ambiente virtual
-source lnd_client_env/bin/activate
+# Saldos das carteiras (incluindo todos os assets Elements)
+GET /wallet-balances
 
-# 3. Executar cliente
-python3 lnd_balance_client_v2.py
+# Status de serviços Docker
+GET /service-status?app=lnd
 
-# Exemplo de saída:
-# ⚡ Lightning Network Daemon (LND) Status
-# 🔗 Conectado ao LND: localhost:10009
-# 💰 Saldo Lightning: 1,500,000 sats
-# ₿  Saldo On-chain: 0.05000000 BTC
-# 🔷 Saldo Liquid: 0.02000000 L-BTC
+# Controle de serviços (start/stop)
+POST /toggle-service?app=lnd
+
+# Endpoint específico para interface web
+GET /status_novidade
 ```
 
-### API de Exemplo
+### Exemplo de Uso da API
 
-```python
-from lnd_balance_client_v2 import LNDClient, ConfigManager
+```javascript
+// Consultar saldos de todas as carteiras
+const response = await fetch('http://localhost:5003/wallet-balances');
+const data = await response.json();
 
-# Inicializar cliente
-config = ConfigManager()
-client = LNDClient(config)
+console.log('Lightning:', data.lightning);
+console.log('Bitcoin:', data.bitcoin);
+console.log('Elements:', data.elements); // Mostra todos os assets
 
-# Conectar e obter informações
-client.connect()
-info = client.get_node_info()
-balance = client.get_wallet_balance()
-
-print(f"Nó: {info.alias}")
-print(f"Saldo: {balance.total_balance} sats")
+// Controlar serviços
+await fetch('http://localhost:5003/toggle-service?app=lnd', {
+  method: 'POST'
+});
+```
 ```
 
 ### Integração com Systemd
 
 ```bash
-# Instalar como serviço systemd
-cp services/control-systemd.service /etc/systemd/system/
-systemctl enable control-systemd
-systemctl start control-systemd
+# Verificar status do serviço
+systemctl status brln-rpc-server
 
-# API de controle disponível em localhost:5001
-curl http://localhost:5001/service-status?app=lnd
+# Ver logs do servidor
+journalctl -u brln-rpc-server -f
+
+# Reiniciar servidor
+systemctl restart brln-rpc-server
+
+# API de controle disponível em localhost:5003
+curl http://localhost:5003/health
 ```
 
 ## 🎯 Comandos Essenciais
@@ -499,17 +582,23 @@ docker exec peerswap pscli swapin --peer_id=<peer> --amt=<sats> --asset=lbtc
 docker exec peerswap pscli listswaps
 ```
 
-### 🐍 Cliente Python
+### ⚡ BRLN-RPC-Server API
 
 ```bash
-# Ativar ambiente virtual
-source lnd_client_env/bin/activate
+# Verificar status do BRLN-RPC-Server
+systemctl status brln-rpc-server
 
-# Executar cliente de saldos
-python3 lnd_balance_client_v2.py
+# Ver logs do servidor JavaScript
+journalctl -u brln-rpc-server -f
 
-# Verificar configuração
-python3 -c "from lnd_balance_client_v2 import ConfigManager; print(ConfigManager().config)"
+# Testar conectividade da API
+curl http://localhost:5003/health
+
+# Consultar saldos de todas as carteiras
+curl http://localhost:5003/wallet-balances
+
+# Verificar status de serviços
+curl http://localhost:5003/service-status?app=lnd
 ```
 
 ---
@@ -554,8 +643,8 @@ O BRLN-OS inclui uma interface web moderna otimizada para todos os dispositivos:
 # Configurar múltiplos canais para redundância
 docker exec lnd lncli openchannel --node_key=<routing_node> --local_amt=5000000
 
-# Monitor automático de liquidez
-python3 lnd_balance_client_v2.py --monitor --alert-threshold=1000000
+# Monitor automático de liquidez via API JavaScript
+curl -H "x-secret-key: sua-chave" http://localhost:5003/wallet-balances
 
 # Backup automático para múltiplos destinos
 ./backup-completo.sh && rsync -av /backup/ remote-server:/backup/
@@ -582,12 +671,8 @@ docker exec lnd lncli addinvoice --amt=50000 --memo="Recebimento teste"
 # Configurar PeerSwap para swaps automáticos
 docker exec peerswap pscli swapout --peer_id=<peer> --amt=100000 --asset=lbtc
 
-# Monitor de preços e oportunidades
-python3 -c "
-import requests
-btc_price = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd').json()
-print(f'BTC: \${btc_price[\"bitcoin\"][\"usd\"]}')
-"
+# Monitor de preços via API
+curl -s https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
 ```
 
 ### 🏪 Para Merchants
