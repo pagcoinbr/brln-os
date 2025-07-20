@@ -4,7 +4,7 @@
     "secretKey": "brln-os-secret-key-change-in-production",
     "allowedIps": ["127.0.0.1", "localhost", "0.0.0.0"],
     "cors": {
-      "origins": ["*"]
+      "origins": ["*", "http://localhost", "http://127.0.0.1", "http://100.77.237.26", "http://localhost:80", "http://127.0.0.1:80", "http://100.77.237.26:80"]
     }
   },
   "lnd": {

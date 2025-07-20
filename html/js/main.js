@@ -44,13 +44,35 @@ const appsPrincipais = [
   { id: 'peerswap-btn', porta: 1984 },
 ];
 
-// Lista dos apps gerenciados no painel de serviços
-const appsServicos = ["brln-rpc-server", "lnbits", "thunderhub", "lndg", "lnd", "bitcoind", "bos-telegram", "tor"];
+// Lista completa de serviços disponíveis no BRLN-OS
+const servicosDisponiveis = [
+  { name: 'brln-rpc-server', displayName: 'BRLN-RPC-Server', icon: '🚀', type: 'systemd' },
+  { name: 'bitcoin', displayName: 'Bitcoin Core', icon: '🪙', type: 'docker' },
+  { name: 'lnd', displayName: 'LND', icon: '⚡', type: 'docker' },
+  { name: 'elements', displayName: 'Elements', icon: '💧', type: 'docker' },
+  { name: 'tor', displayName: 'Tor', icon: '🧅', type: 'docker' },
+  { name: 'lnbits', displayName: 'LNBits', icon: '💰', type: 'docker' },
+  { name: 'thunderhub', displayName: 'ThunderHub', icon: '🌩️', type: 'docker' },
+  { name: 'lndg', displayName: 'LNDg', icon: '📊', type: 'docker' },
+  { name: 'peerswap', displayName: 'PeerSwap', icon: '💱', type: 'docker' },
+  { name: 'psweb', displayName: 'PeerSwap Web', icon: '🌐', type: 'docker' },
+  { name: 'grafana', displayName: 'Grafana', icon: '📈', type: 'docker' },
+  // Futuro Electrum Server
+  { name: 'electrum', displayName: 'Electrum Server', icon: '🔌', type: 'docker', available: false }
+];
+
+// Gerar lista de serviços dinamicamente (apenas os disponíveis)
+const appsServicos = servicosDisponiveis
+  .filter(service => service.available !== false)
+  .map(service => service.name);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Aplica o tema salvo
   const temaSalvo = localStorage.getItem('temaAtual') || 'dark';
   document.body.classList.add(`${temaSalvo}-theme`);
+
+  // Gera interface de serviços dinamicamente
+  generateServiceControls();
 
   // Atualiza status dos botões
   updateButtons();
@@ -61,23 +83,94 @@ document.addEventListener('DOMContentLoaded', () => {
   // Verifica status do servidor BRLN-RPC
   checkBRLNRPCServerStatus();
 
+  // Verifica status dos serviços principais
+  checkMainServicesStatus();
+
   // Verifica o status dos apps principais (de navegação)
   setTimeout(verificarServicosPrincipais, 50000);
 
-  // Atualiza status dos botões de serviços a cada 5 segundos
-  setInterval(updateButtons, 50000);
+  // Atualiza status dos botões de serviços a cada 30 segundos
+  setInterval(updateButtons, 30000);
 
   // Atualiza saldos das carteiras a cada 5 minutos (300000ms)
   setInterval(updateWalletBalances, 300000);
 
   // Verifica status do servidor BRLN-RPC a cada 30 segundos
   setInterval(checkBRLNRPCServerStatus, 30000);
+
+  // Verifica status dos serviços principais a cada 30 segundos
+  setInterval(checkMainServicesStatus, 30000);
 });
 
 // Função para abrir apps principais
 function abrirApp(porta) {
   const ip = window.location.hostname;
   window.open(`http://${ip}:${porta}`, '_blank');
+}
+
+// Gerar controles de serviços dinamicamente
+function generateServiceControls() {
+  const serviceGrid = document.getElementById('service-grid');
+  if (!serviceGrid) return;
+
+  // Limpar conteúdo existente
+  serviceGrid.innerHTML = '';
+
+  // Gerar um botão para cada serviço disponível
+  servicosDisponiveis
+    .filter(service => service.available !== false)
+    .forEach(service => {
+      const serviceRow = document.createElement('div');
+      serviceRow.className = 'service-row';
+      
+      serviceRow.innerHTML = `
+        <label for="${service.name}-button">
+          ${service.icon} ${service.displayName}
+          <span class="service-type">(${service.type})</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="${service.name}-button" onchange="toggleService('${service.name}')">
+          <span class="slider"></span>
+        </label>
+      `;
+      
+      serviceGrid.appendChild(serviceRow);
+    });
+}
+
+// Verificar status dos serviços principais no painel de status
+async function checkMainServicesStatus() {
+  const mainServices = ['lnd', 'bitcoin', 'elements', 'tor'];
+  
+  for (const serviceName of mainServices) {
+    const statusElement = document.getElementById(`${serviceName}-service-status`);
+    if (!statusElement) continue;
+
+    try {
+      const response = await fetch(`${flaskBaseURL}/service-status?app=${serviceName}`);
+      const data = await response.json();
+      
+      const service = servicosDisponiveis.find(s => s.name === serviceName);
+      const icon = service ? service.icon : '🔧';
+      const displayName = service ? service.displayName : serviceName;
+      
+      if (data.active) {
+        statusElement.textContent = `${icon} ${displayName}: 🟢 Online`;
+        statusElement.style.color = '#4CAF50';
+      } else {
+        statusElement.textContent = `${icon} ${displayName}: 🔴 Offline`;
+        statusElement.style.color = '#f44336';
+      }
+    } catch (error) {
+      const service = servicosDisponiveis.find(s => s.name === serviceName);
+      const icon = service ? service.icon : '🔧';
+      const displayName = service ? service.displayName : serviceName;
+      
+      statusElement.textContent = `${icon} ${displayName}: ❓ Erro de conexão`;
+      statusElement.style.color = '#ff9800';
+      console.warn(`❌ Erro ao verificar ${serviceName}:`, error);
+    }
+  }
 }
 
 function verificarServicosPrincipais() {
@@ -167,15 +260,17 @@ async function toggleService(appName) {
   }
 }
 
-// Formata o nome dos apps
+// Formatar nome dos apps (função legacy, agora usa servicosDisponiveis)
 function formatAppName(appName) {
+  const service = servicosDisponiveis.find(s => s.name === appName);
+  if (service) {
+    return `${service.icon} ${service.displayName}`;
+  }
+  
+  // Fallback para serviços não mapeados
   switch (appName) {
-    case "brln-rpc-server": return "BRLN-RPC-Server";
-    case "lnbits": return "LNbits";
-    case "thunderhub": return "Thunderhub";
-    case "simple": return "Simple LNWallet";
-    case "lndg": return "LNDG";
-    case "lnd": return "LND";
+    case "bitcoind": return "🪙 Bitcoin Core";
+    case "bos-telegram": return "📱 BOS Telegram";
     default: return appName;
   }
 }

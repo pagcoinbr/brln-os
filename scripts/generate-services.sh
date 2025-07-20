@@ -59,7 +59,7 @@ After=network.target
 User=$TARGET_USER
 WorkingDirectory=$INSTALL_DIR
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3434 -w bash $INSTALL_DIR/brunel.sh
+ExecStart=/usr/local/bin/gotty -p 3434 -w bash $INSTALL_DIR/scripts/command-central.sh
 Restart=always
 
 [Install]

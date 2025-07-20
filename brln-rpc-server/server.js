@@ -117,7 +117,7 @@ async function initLNDConnection() {
 // Função para executar comandos Elements/Liquid
 function executeElementsCommand(command, args = []) {
   return new Promise((resolve, reject) => {
-    const fullCommand = `docker exec elements elements-cli ${args.join(' ')}`;
+    const fullCommand = `docker exec elements elements-cli ${command} ${args.join(' ')}`;
     
     exec(fullCommand, (error, stdout, stderr) => {
       if (error) {
@@ -166,10 +166,20 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Endpoint para status de novidades (compatibilidade com radio.js)
+app.get('/status_novidade', (req, res) => {
+  res.json({
+    novidade: false,
+    timestamp: new Date().toISOString(),
+    message: 'Nenhuma novidade no momento'
+  });
+});
+
 // === FUNCIONALIDADES ESPECÍFICAS DO BRLN-OS ===
 
 // Mapeamento de apps para serviços Docker
 const APP_TO_SERVICE = {
+  "brln-rpc-server": "brln-rpc-server", // Serviço systemd especial
   "lnd": "lnd",
   "bitcoin": "bitcoin",
   "bitcoind": "bitcoin", // alias
@@ -178,8 +188,10 @@ const APP_TO_SERVICE = {
   "thunderhub": "thunderhub",
   "lndg": "lndg",
   "peerswap": "peerswap",
+  "psweb": "psweb",
   "tor": "tor",
-  "grafana": "grafana"
+  "grafana": "grafana",
+  "electrum": "electrum" // Futuro suporte
 };
 
 // Verificar status de serviço Docker
@@ -314,7 +326,30 @@ app.get('/wallet-balances', async (req, res) => {
     try {
       const elementsBalance = await executeElementsCommand('getbalance');
       balances.elements_status = 'connected';
-      balances.elements = `${parseFloat(elementsBalance || 0).toFixed(8)} L-BTC`;
+      
+      // Elements retorna um objeto com diferentes assets
+      if (typeof elementsBalance === 'object') {
+        // Criar uma string com todos os assets
+        const assetBalances = [];
+        
+        for (const [asset, balance] of Object.entries(elementsBalance)) {
+          if (parseFloat(balance) > 0) {
+            let assetName = asset;
+            // Identificar assets conhecidos
+            if (asset === 'bitcoin') {
+              assetName = 'L-BTC';
+            } else if (asset.length === 64) {
+              // Asset ID longo - mostrar apenas primeiros/últimos caracteres
+              assetName = asset.substring(0, 8) + '...' + asset.substring(56);
+            }
+            assetBalances.push(`${parseFloat(balance).toFixed(8)} ${assetName}`);
+          }
+        }
+        
+        balances.elements = assetBalances.length > 0 ? assetBalances.join(' | ') : '0.00000000 L-BTC';
+      } else {
+        balances.elements = '0.00000000 L-BTC';
+      }
       
       log('✅ Saldo Elements obtido com sucesso');
     } catch (error) {
@@ -329,53 +364,6 @@ app.get('/wallet-balances', async (req, res) => {
       success: false,
       error: error.message,
       timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Status de serviços Docker (substituindo o endpoint Python)
-app.get('/service-status', async (req, res) => {
-  try {
-    const { app } = req.query;
-    
-    if (!app) {
-      return res.status(400).json({ error: 'Parâmetro app é obrigatório' });
-    }
-
-    // Mapear nomes de apps para nomes de containers
-    const containerMap = {
-      'lnd': 'lnd',
-      'bitcoind': 'bitcoin',
-      'bitcoin': 'bitcoin', 
-      'lnbits': 'lnbits',
-      'thunderhub': 'thunderhub',
-      'lndg': 'lndg',
-      'peerswap': 'peerswap',
-      'tor': 'tor',
-      'elements': 'elements',
-      'grafana': 'grafana'
-    };
-
-    const containerName = containerMap[app] || app;
-    
-    // Verificar se container está rodando
-    const command = `docker ps --filter name=${containerName} --filter status=running --format "{{.Names}}"`;
-    const output = await executeDockerCommand(command);
-    
-    const isActive = output.includes(containerName);
-    
-    res.json({ 
-      active: isActive,
-      app: app,
-      container: containerName,
-      timestamp: new Date().toISOString()
-    });
-    
-  } catch (error) {
-    log(`❌ Erro ao verificar status do serviço: ${error.message}`, 'error');
-    res.status(500).json({ 
-      error: error.message,
-      active: false 
     });
   }
 });

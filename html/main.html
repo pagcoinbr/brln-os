@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="imagens/logopreto.png" />
   <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .service-type {
+      font-size: 0.7em;
+      color: #888;
+      font-weight: normal;
+    }
+    .loading {
+      color: #888;
+      font-style: italic;
+    }
+    .service-row label:first-child {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .status {
+      transition: color 0.3s ease;
+    }
+  </style>
   <title>BRLN Open Bank</title>
 </head>
 <body>
@@ -51,19 +70,17 @@
         <div id="cpu" class="status">CPU: ...</div>
         <div id="ram" class="status">RAM: ...</div>
         <div id="brln-rpc-server" class="status">🚀 BRLN-RPC-Server: Verificando...</div>
-        <div id="lnd" class="status">LND: ...</div>
-        <div id="bitcoind" class="status">Bitcoind: ...</div>
-        <div id="tor" class="status">Tor: ...</div>
-        <div id="blockchain" class="status">Blockchain: ...</div>
+        <div id="lnd-service-status" class="status">⚡ LND: Verificando...</div>
+        <div id="bitcoin-service-status" class="status">🪙 Bitcoin: Verificando...</div>
+        <div id="elements-service-status" class="status">💧 Elements: Verificando...</div>
+        <div id="tor-service-status" class="status">🧅 Tor: Verificando...</div>
     </div>
 
     <div class="section">
         <h2>💰 Saldos das Carteiras</h2>
         <div id="lightning-balance" class="status wallet-balance">⚡ Lightning: Carregando...</div>
         <div id="bitcoin-balance" class="status wallet-balance">₿ Bitcoin On-Chain: Carregando...</div>
-        <div id="liquid-balance" class="status wallet-balance">🌊 Liquid/Elements: Carregando...</div>
-        <div id="lnd-status" class="status">🔗 LND: Verificando...</div>
-        <div id="elements-status" class="status">🔗 Elements: Verificando...</div>
+        <div id="liquid-balance" class="status wallet-balance" style="word-break: break-all; white-space: normal;">🌊 Liquid/Elements: Carregando...</div>
         <div id="wallet-status" class="status wallet-status">🔄 Última atualização: ...</div>
     </div>
     <div class="section"> 
@@ -71,88 +88,18 @@
       <div class="ferramentas-extras"></div>
       <button class="botao piscando" onclick="abrirApp(3131)">⚡ BRLN Node Manager</button>
       <br>
-      <button class="botao" onclick="window.open(`http://${window.location.hostname}:5003/health`, '_blank')">🚀 BRLN-RPC-Server Status</button>
-      <br>
-      <button class="botao" onclick="abrirApp(3535)">⚡ Logs - LND</button>
-      <br>
-      <button class="botao" onclick="abrirApp(3434)">🪙 Logs - Bitcoin</button>
-      <br>
-      <button class="botao" onclick="abrirApp(3333)">💧 Logs - Elements</button>
+      <button class="botao" onclick="abrirApp(3434)">⚙️ Configurações</button>
       <br><br>     
       <hr style="border: none; border-top: 1px solid #6e6e6e; margin: 10px 0; margin-top: 20px; margin-bottom: 20px;">
         <h3>Gerenciador de Serviços ⚡</h3>
-        <div class="service-grid">
+        <p style="font-size: 0.9em; color: #888; margin-bottom: 15px;">
+          Controle todos os serviços containerizados do BRLN-OS
+        </p>
+        <div class="service-grid" id="service-grid">
+          <!-- Serviços serão carregados dinamicamente via JavaScript -->
           <div class="service-row">
-            <label for="brln-rpc-server-button">BRLN-RPC-Server</label>
-            <label class="switch">
-              <input type="checkbox" id="brln-rpc-server-button" onchange="toggleService('brln-rpc-server')">
-              <span class="slider"></span>
-            </label>
+            <span class="loading">🔄 Carregando serviços...</span>
           </div>
-
-          <div class="service-row">
-            <label for="lnbits-button">LNBits</label>
-            <label class="switch">
-              <input type="checkbox" id="lnbits-button" onchange="toggleService('lnbits')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="thunderhub-button">Thunderhub</label>
-            <label class="switch">
-              <input type="checkbox" id="thunderhub-button" onchange="toggleService('thunderhub')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="elements-button">Elements</label>
-            <label class="switch">
-              <input type="checkbox" id="simple-button" onchange="toggleService('Elements')">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="service-row">
-            <label for="lnd-lndg-button">LNDg</label>
-            <label class="switch">
-              <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
-              <span class="slider"></span>
-            </label>
-          </div>
-
-          <div class="service-row">
-            <label for="lnd-button">LND</label>
-            <label class="switch">
-              <input type="checkbox" id="lnd-button" onchange="toggleService('lnd')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="bitcoind-button">Bitcoind</label>
-            <label class="switch">
-              <input type="checkbox" id="bitcoind-button" onchange="toggleService('bitcoind')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="bos-telegram-button">BOS Telegram</label>
-            <label class="switch">
-              <input type="checkbox" id="bos-telegram-button" onchange="toggleService('bos-telegram')">
-              <span class="slider"></span>
-            </label>
-          </div>
-            
-          <div class="service-row">
-            <label for="tor-button">Tor</label>
-            <label class="switch">
-              <input type="checkbox" id="tor-button" onchange="toggleService('tor')">
-              <span class="slider"></span>
-            </label>
-          </div>    
         </div>
 
         <h2>🙏 Apoie Nosso Projeto</h2>
