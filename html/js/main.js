@@ -45,7 +45,7 @@ const appsPrincipais = [
 ];
 
 // Lista dos apps gerenciados no painel de serviços
-const appsServicos = ["lnbits", "thunderhub", "lndg", "lnd", "bitcoind", "bos-telegram", "tor"];
+const appsServicos = ["brln-rpc-server", "lnbits", "thunderhub", "lndg", "lnd", "bitcoind", "bos-telegram", "tor"];
 
 document.addEventListener('DOMContentLoaded', () => {
   // Aplica o tema salvo
@@ -58,6 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Atualiza saldos das carteiras
   updateWalletBalances();
 
+  // Verifica status do servidor BRLN-RPC
+  checkBRLNRPCServerStatus();
+
   // Verifica o status dos apps principais (de navegação)
   setTimeout(verificarServicosPrincipais, 50000);
 
@@ -66,6 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Atualiza saldos das carteiras a cada 5 minutos (300000ms)
   setInterval(updateWalletBalances, 300000);
+
+  // Verifica status do servidor BRLN-RPC a cada 30 segundos
+  setInterval(checkBRLNRPCServerStatus, 30000);
 });
 
 // Função para abrir apps principais
@@ -164,6 +170,7 @@ async function toggleService(appName) {
 // Formata o nome dos apps
 function formatAppName(appName) {
   switch (appName) {
+    case "brln-rpc-server": return "BRLN-RPC-Server";
     case "lnbits": return "LNbits";
     case "thunderhub": return "Thunderhub";
     case "simple": return "Simple LNWallet";
@@ -185,6 +192,28 @@ function alternarTema() {
   localStorage.setItem('temaAtual', novoTema);
 }
 
+// Verificar status do servidor BRLN-RPC
+async function checkBRLNRPCServerStatus() {
+  const statusElement = document.getElementById('brln-rpc-server');
+  if (!statusElement) return;
+
+  try {
+    const response = await fetch(`${flaskBaseURL}/health`);
+    const data = await response.json();
+    
+    if (data.status === 'ok') {
+      statusElement.textContent = `🚀 BRLN-RPC-Server: 🟢 Online (v${data.version || '1.0.0'})`;
+      statusElement.style.color = '#4CAF50';
+    } else {
+      throw new Error('Status não OK');
+    }
+  } catch (error) {
+    statusElement.textContent = '🚀 BRLN-RPC-Server: 🔴 Offline';
+    statusElement.style.color = '#f44336';
+    console.warn('❌ Servidor BRLN-RPC não disponível:', error);
+  }
+}
+
 // Atualizar saldos das carteiras usando nova API JavaScript
 async function updateWalletBalances() {
   try {
@@ -195,46 +224,80 @@ async function updateWalletBalances() {
       // Atualizar Lightning balance
       const lightningElement = document.getElementById('lightning-balance');
       if (lightningElement) {
-        lightningElement.textContent = data.lightning || 'Não disponível';
+        lightningElement.textContent = `⚡ Lightning: ${data.lightning || 'Não disponível'}`;
       }
       
       // Atualizar Bitcoin balance
       const bitcoinElement = document.getElementById('bitcoin-balance');
       if (bitcoinElement) {
-        bitcoinElement.textContent = data.bitcoin || 'Não disponível';
+        bitcoinElement.textContent = `₿ Bitcoin On-Chain: ${data.bitcoin || 'Não disponível'}`;
       }
       
       // Atualizar Elements/Liquid balance
-      const elementsElement = document.getElementById('elements-balance');
-      if (elementsElement) {
-        elementsElement.textContent = data.elements || 'Não disponível';
+      const liquidElement = document.getElementById('liquid-balance');
+      if (liquidElement) {
+        liquidElement.textContent = `🌊 Liquid/Elements: ${data.elements || 'Não disponível'}`;
       }
       
       // Atualizar status indicators
       const lndStatusElement = document.getElementById('lnd-status');
       if (lndStatusElement) {
-        lndStatusElement.textContent = data.lnd_status === 'connected' ? '🟢 Conectado' : '🔴 Desconectado';
+        const status = data.lnd_status === 'connected' ? '🟢 Conectado' : '🔴 Desconectado';
+        lndStatusElement.textContent = `🔗 LND: ${status}`;
       }
       
       const elementsStatusElement = document.getElementById('elements-status');
       if (elementsStatusElement) {
-        elementsStatusElement.textContent = data.elements_status === 'connected' ? '🟢 Conectado' : '🔴 Desconectado';
+        const status = data.elements_status === 'connected' ? '🟢 Conectado' : '🔴 Desconectado';
+        elementsStatusElement.textContent = `🔗 Elements: ${status}`;
+      }
+      
+      // Atualizar timestamp
+      const walletStatusElement = document.getElementById('wallet-status');
+      if (walletStatusElement) {
+        const timestamp = new Date(data.timestamp).toLocaleString('pt-BR');
+        walletStatusElement.textContent = `🔄 Última atualização: ${timestamp}`;
       }
       
       console.log('✅ Saldos atualizados com sucesso');
     } else {
       console.warn('⚠️ Erro ao obter saldos:', data.error || 'Erro desconhecido');
+      
+      // Mostrar erro nos elementos
+      ['lightning-balance', 'bitcoin-balance', 'liquid-balance'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          const type = id.includes('lightning') ? '⚡ Lightning' : 
+                      id.includes('bitcoin') ? '₿ Bitcoin On-Chain' : 
+                      '🌊 Liquid/Elements';
+          element.textContent = `${type}: Erro na conexão`;
+        }
+      });
     }
   } catch (error) {
     console.error('❌ Erro ao atualizar saldos:', error);
     
     // Mostrar erro nos elementos se existirem
-    ['lightning-balance', 'bitcoin-balance', 'elements-balance'].forEach(id => {
+    ['lightning-balance', 'bitcoin-balance', 'liquid-balance'].forEach(id => {
       const element = document.getElementById(id);
       if (element) {
-        element.textContent = 'Erro na conexão';
+        const type = id.includes('lightning') ? '⚡ Lightning' : 
+                    id.includes('bitcoin') ? '₿ Bitcoin On-Chain' : 
+                    '🌊 Liquid/Elements';
+        element.textContent = `${type}: Erro na conexão`;
       }
     });
+    
+    // Atualizar status de conexão
+    const lndStatusElement = document.getElementById('lnd-status');
+    if (lndStatusElement) {
+      lndStatusElement.textContent = '🔗 LND: 🔴 Erro de conexão';
+    }
+    
+    const elementsStatusElement = document.getElementById('elements-status');
+    if (elementsStatusElement) {
+      elementsStatusElement.textContent = '🔗 Elements: 🔴 Erro de conexão';
+    }
   }
 }
 

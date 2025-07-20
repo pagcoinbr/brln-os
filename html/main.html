@@ -50,6 +50,7 @@
         <h2>📊 Status do Sistema</h2>
         <div id="cpu" class="status">CPU: ...</div>
         <div id="ram" class="status">RAM: ...</div>
+        <div id="brln-rpc-server" class="status">🚀 BRLN-RPC-Server: Verificando...</div>
         <div id="lnd" class="status">LND: ...</div>
         <div id="bitcoind" class="status">Bitcoind: ...</div>
         <div id="tor" class="status">Tor: ...</div>
@@ -61,12 +62,16 @@
         <div id="lightning-balance" class="status wallet-balance">⚡ Lightning: Carregando...</div>
         <div id="bitcoin-balance" class="status wallet-balance">₿ Bitcoin On-Chain: Carregando...</div>
         <div id="liquid-balance" class="status wallet-balance">🌊 Liquid/Elements: Carregando...</div>
+        <div id="lnd-status" class="status">🔗 LND: Verificando...</div>
+        <div id="elements-status" class="status">🔗 Elements: Verificando...</div>
         <div id="wallet-status" class="status wallet-status">🔄 Última atualização: ...</div>
     </div>
     <div class="section"> 
       <h2 style="margin-bottom: 40px">🖥️ Painel de Controle</h2>
       <div class="ferramentas-extras"></div>
       <button class="botao piscando" onclick="abrirApp(3131)">⚡ BRLN Node Manager</button>
+      <br>
+      <button class="botao" onclick="window.open(`http://${window.location.hostname}:5003/health`, '_blank')">🚀 BRLN-RPC-Server Status</button>
       <br>
       <button class="botao" onclick="abrirApp(3535)">⚡ Logs - LND</button>
       <br>
@@ -77,6 +82,14 @@
       <hr style="border: none; border-top: 1px solid #6e6e6e; margin: 10px 0; margin-top: 20px; margin-bottom: 20px;">
         <h3>Gerenciador de Serviços ⚡</h3>
         <div class="service-grid">
+          <div class="service-row">
+            <label for="brln-rpc-server-button">BRLN-RPC-Server</label>
+            <label class="switch">
+              <input type="checkbox" id="brln-rpc-server-button" onchange="toggleService('brln-rpc-server')">
+              <span class="slider"></span>
+            </label>
+          </div>
+
           <div class="service-row">
             <label for="lnbits-button">LNBits</label>
             <label class="switch">
