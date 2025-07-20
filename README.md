@@ -13,7 +13,7 @@
 [![JavaScript](https://img.shields.io/badge/javascript-gRPC%20server-yellow.svg)](https://nodejs.org)
 [![Elements](https://img.shields.io/badge/elements-liquid%20network-green.svg)](https://elementsproject.org)
 
-*Uma plataforma completa de nó Bitcoin e Lightning Network com interface web integrada, servidor JavaScript gRPC e suporte avançado para PeerSwap*
+*Uma plataforma completa de nó Bitcoin, Lightning e Liquid Network com interface web integrada, servidor JavaScript gRPC e suporte a PeerSwap*
 
 </div>
 
@@ -24,7 +24,7 @@
 **⚠️ IMPORTANTE: Sempre inicie como root**
 
 ```bash
-# 1. PRIMEIRO: Torne-se root
+# 1. PRIMEIRO: Acesse o super uruário "root"
 sudo su
 
 # 2. OPÇÃO A: Instalação automática via script
@@ -35,157 +35,54 @@ git clone https://github.com/pagcoinbr/brln-os.git
 cd brln-os
 ./run.sh
 
-# 3. Após a instalação, acesse a interface web e finalize:
-# - Acesse: http://SEU_IP ou http://localhost
+# 3. Após a instalação inicial, você verá um qr code para acessar sua rede tailscale (VPN), caso não queira utilizar, acesse a interface web (http://SEU_IP ou http://localhost) e finalize a configuração do node:
 # - Clique no botão "⚡ BRLN Node Manager" 
 # - Siga o passo a passo na interface gráfica para:
-#   • Configurar rede (mainnet/testnet)
-#   • Definir alias do nó
-#   • Configurar serviços Docker
-#   • Inicializar carteiras
-#   • Configurar Tor (opcional)
+#   • Configurar rede (mainnet/testnet) 
+#   • Instalar os aplicativos de administração.
 ```
 
-**É isso!** O BRLN-OS será instalado automaticamente com todos os componentes necessários e você poderá configurar tudo através da interface web moderna.
+**É isso!** O BRLN-OS será instalado com todos os componentes necessários e você poderá configurar tudo através da interface web moderna.
 
 ---
 
 ## 📖 Sobre o Projeto
 
-O **BRLN-OS** é uma distribuição containerizada avançada que transforma qualquer sistema Linux em um poderoso nó Bitcoin e Lightning Network profissional. Baseado em Docker Compose, oferece uma solução completa e automatizada para executar um stack completo de serviços Bitcoin, incluindo interface web moderna, servidor JavaScript gRPC para automação e monitoramento avançado.
+O **BRLN-OS** é uma distribuição containerizada que transforma qualquer sistema Linux (Ubuntu recomendado) em um poderoso nó Bitcoin, Lightning e Elements Network. Baseado em Docker Compose, oferece uma solução completa e automatizada para executar um stack completo de serviços Bitcoin, incluindo interface web moderna, servidor JavaScript gRPC para monitoramento.
 
-### 🏗️ Arquitetura de Serviços
+### 🏗️ Arquitetura do Stack
 
-#### ⚡ **Núcleo Lightning Network**
-- **LND v0.18.5**: Daemon Lightning Network com suporte completo a gRPC
-- **LNbits**: Sistema bancário Lightning web-based com múltiplas extensões
-- **Thunderhub**: Interface web moderna para gerenciamento avançado do LND
-- **LNDG**: Dashboard profissional com estatísticas detalhadas e análise de canais
-- **BRLN-RPC-Server**: Servidor JavaScript gRPC para automação e integração programática
-
-#### ₿ **Stack Bitcoin & Liquid**
-- **Bitcoin Core v28.1**: Nó completo Bitcoin com ZMQ, I2P e suporte Tor
-- **Elements v23.2.7**: Suporte completo ao Liquid Network (sidechain do Bitcoin)
-- **PeerSwap v4.0**: Ferramenta avançada para swaps automáticos BTC ↔ Liquid
-- **PeerSwap Web**: Interface web moderna para gestão de swaps e liquidez
-
-#### 🛠️ **Ferramentas e Automação**
+- **LND v0.18.5**: Daemon Lightning Network com suporte completo a gRPC.
+- **LNbits 1.0**: Sistema bancário Lightning web-based com múltiplas extensões.
+- **Thunderhub**: Interface web moderna para gerenciamento do LND.
+- **LNDG**: Dashboard com estatísticas detalhadas e análise de canais.
+- **BRLN-RPC-Server**: Servidor JavaScript gRPC para automação e integração programática.
+- **Bitcoin Core v28.1**: Full Node Bitcoin com ZMQ, I2P e Tor.
+- **Elements v23.2.7**: Suporte completo ao Liquid Network (sidechain do Bitcoin).
+- **PeerSwap v4.0**: Ferramenta para swaps BTC ↔ Liquid com seus pares na LN.
 - **Interface Web Integrada**: Dashboard unificado com rádio player e controle de serviços
-- **BRLN-RPC-Server**: Servidor JavaScript para gerenciamento de serviços via API
-- **Monitor de Saldos**: Sistema de monitoramento automático multi-assets
-- **Scripts de Automação**: Ferramentas para instalação, configuração e manutenção
+- **BRLN-RPC-Server**: Servidor JavaScript para gerenciamento e monitoramento de serviços via API ou Interface web.
+- **Scripts de Automação**: Ferramentas para instalação, configuração e manutenção (Script Shell)
 
 #### 🛡️ **Segurança e Privacidade**
-- **Tor Integration**: Proxy Tor completo para todos os serviços
-- **Container Isolation**: Cada serviço isolado em container próprio
-- **Network Security**: Rede Docker privada para comunicação entre serviços
-- **Backup Automation**: Scripts automatizados para backup de seeds e canais
+- **Tor & I2P Integration**: Proxy Tor para os serviços, .
+- **Container Isolation**: Cada serviço isolado em container próprio.
+- **Network Security**: Rede Docker privada para comunicação entre serviços de forma segura.
 
 ### ✨ **Principais Características**
 
-- **🎯 Instalação Zero-Config**: Um comando instala e configura tudo automaticamente
-- **🐳 Arquitetura Containerizada**: Isolamento completo com Docker Compose
-- **🔒 Segurança Máxima**: Integração Tor, isolamento de rede e criptografia end-to-end
-- **📊 Monitoramento Profissional**: Grafana, métricas em tempo real e logs centralizados
-- **🖥️ Interface Web Moderna**: Dashboard responsivo com controle total dos serviços
-- **⚡ Servidor JavaScript gRPC**: API programática para LND e Elements
-- **🔄 Auto-Updates**: Sistema de atualizações automáticas dos componentes
-- **📱 Mobile Friendly**: Interfaces otimizadas para dispositivos móveis
-- **⚡ PeerSwap Ready**: Liquidez automática entre Bitcoin e Liquid Network
-
-### 🏗️ Arquitetura de Serviços
-
-#### ⚡ **Núcleo Lightning Network**
-- **LND v0.18.5**: Daemon Lightning Network com suporte completo a gRPC
-- **LNbits**: Sistema bancário Lightning web-based com múltiplas extensões
-- **Thunderhub**: Interface web moderna para gerenciamento avançado do LND
-- **LNDG**: Dashboard profissional com estatísticas detalhadas e análise de canais
-- **BRLN-RPC-Server**: Servidor JavaScript gRPC para automação e integração programática
-
-#### ₿ **Stack Bitcoin & Liquid**
-- **Bitcoin Core v28.1**: Nó completo Bitcoin com ZMQ, I2P e suporte Tor
-- **Elements v23.2.7**: Suporte completo ao Liquid Network (sidechain do Bitcoin)
-- **PeerSwap v4.0**: Ferramenta avançada para swaps automáticos BTC ↔ Liquid
-- **PeerSwap Web**: Interface web moderna para gestão de swaps e liquidez
-
-#### � **Ferramentas e Automação**
-- **Interface Web Integrada**: Dashboard unificado com rádio player e controle de serviços
-- **BRLN-RPC-Server**: Servidor JavaScript para gerenciamento de serviços via API
-- **Monitor de Saldos**: Sistema de monitoramento automático multi-assets
-- **Scripts de Automação**: Ferramentas para instalação, configuração e manutenção
-
-#### 🛡️ **Segurança e Privacidade**
-- **Tor Integration**: Proxy Tor completo para todos os serviços
-- **Container Isolation**: Cada serviço isolado em container próprio
-- **Network Security**: Rede Docker privada para comunicação entre serviços
-- **Backup Automation**: Scripts automatizados para backup de seeds e canais
-
-### ✨ **Principais Características**
-
-- **🎯 Instalação Zero-Config**: Um comando instala e configura tudo automaticamente
-- **🐳 Arquitetura Containerizada**: Isolamento completo com Docker Compose
-- **🔒 Segurança Máxima**: Integração Tor, isolamento de rede e criptografia end-to-end
-- **📊 Monitoramento Profissional**: Grafana, métricas em tempo real e logs centralizados
-- **�️ Interface Web Moderna**: Dashboard responsivo com controle total dos serviços
-- **⚡ Servidor JavaScript gRPC**: API programática para LND e Elements
-- **🔄 Auto-Updates**: Sistema de atualizações automáticas dos componentes
-- **📱 Mobile Friendly**: Interfaces otimizadas para dispositivos móveis
-- **⚡ PeerSwap Ready**: Liquidez automática entre Bitcoin e Liquid Network
+- **🎯 Instalação Zero-Config**: Um comando instala e configura tudo automaticamente.
+- **🐳 Arquitetura Containerizada**: Isolamento completo com Docker Compose.
+- **🔒 Segurança Máxima**: Integração Tor, isolamento de rede e criptografia.
+- **🖥️ Interface Web Moderna**: Dashboard responsivo com controle total dos serviços.
+- **⚡ Servidor JavaScript gRPC**: API programática para LND e Elements.
+- **🔄 Updates**: Sistema de atualizações manuais dos componentes, impedindo atualizações automáticas, permitindo o usuário decidir entre atualizar ou não uma ferramenta.
+- **📱 Mobile Friendly**: Interfaces otimizadas para dispositivos móveis.
+- **⚡ PeerSwap Ready**: Troque liquidez entre Bitcoin e Liquid Network com menos custos.
 
 ---
 
-## 🛠️ Instalação Manual
-
-Se preferir instalar manualmente ou quiser mais controle sobre o processo:
-
-### Pré-requisitos
-
-- **Sistema**: Linux (Ubuntu 20.04+ recomendado)
-- **RAM**: Mínimo 4GB (8GB+ recomendado para uso profissional)
-- **Armazenamento**: 1TB+ (SSD NVMe recomendado para Bitcoin Core)
-- **Docker**: Será instalado automaticamente se não presente
-- **Node.js**: Para servidor JavaScript gRPC
-- **Conexão**: Internet banda larga para sincronização inicial
-
-### Processo Manual
-
-```bash
-# 1. IMPORTANTE: Torne-se root primeiro
-sudo su
-
-# 2. Clone o repositório
-git clone https://github.com/pagcoinbr/brln-os.git
-cd brln-os
-
-# 3. Execute o script de instalação principal
-./run.sh
-
-# 4. Acesse a interface web para finalizar:
-# - Vá para: http://SEU_IP ou http://localhost
-# - Clique em "⚡ BRLN Node Manager"
-# - Siga o assistente de configuração
-```
-
-### Configuração Avançada
-
-```bash
-# Configurar variáveis de ambiente
-cp scripts/.env.example scripts/.env
-nano scripts/.env
-
-# Personalizar configurações Bitcoin
-nano container/bitcoin/bitcoin.conf
-
-# Personalizar configurações LND
-nano container/lnd/lnd.conf
-
-# Configurar Elements/Liquid
-nano container/elements/elements.conf
-```
-
----
-
-## 🏗️ Arquitetura do Sistema
+## 🏗️ Arquitetura do Projeto
 
 ```
 brln-os/
@@ -247,7 +144,7 @@ brln-os/
 │   ├── radio.html               # Player de rádio integrado
 │   ├── css/                     # Estilos responsivos
 │   ├── js/                      # Scripts JavaScript
-│   └── cgi-bin/                 # Scripts CGI Python
+│   └── cgi-bin/                 # Scripts CGI (Shell Script)
 │
 ├── 📁 scripts/                  # Scripts de automação
 │   ├── .env.example             # Variáveis de ambiente
@@ -255,21 +152,17 @@ brln-os/
 │   ├── command-central.sh       # Centro de comandos
 │   └── generate-services.sh     # Gerador de serviços systemd
 │
-├── 📁 services/                 # Serviços systemd
-│   ├── control-systemd.service  # Serviço de controle
-│   └── command-center.service   # Centro de comandos
-│
 └── 📁 local_apps/               # Aplicações locais
-    └── gotty/                   # Terminal web (GoTTY)
+    └── gotty/                   # Terminal web em Go (GoTTY)
 ```  
 ## 🌐 Painel de Controle Web
 
-O BRLN-OS inclui uma interface web moderna e responsiva para controle completo do sistema:
+O BRLN-OS inclui uma interface web para controle completo do sistema:
 
 ### 🎨 Interface Principal
 - **Dashboard Unificado**: Controle de todos os serviços em uma única tela
 - **Player de Rádio**: Rádio BRL Lightning Club integrado
-- **Tema Claro/Escuro**: Alternância automática de temas
+- **Tema Claro/Escuro**: Alternância de temas para o dia e a noite.
 - **Design Responsivo**: Otimizado para desktop e mobile
 
 ### 🔗 Acesso aos Serviços
@@ -300,9 +193,8 @@ Após a instalação, os serviços estarão disponíveis através das seguintes 
 
 ### 🔮 Recursos Futuros
 
-- **🔌 Electrum Server**: Suporte planejado para conexão com hardware wallets Bitcoin e Liquid on-chain
-- **📱 Mobile Apps**: Aplicações nativas para iOS e Android
-- **🔄 Auto-Rebalancing**: Rebalanceamento automático de canais Lightning
+- **🔌 Electrum Server**: Suporte planejado para conexão com hardware wallets Bitcoin e Liquid Network.
+- **📱 Mobile Apps**: Interface otimizada para iOS e Android
 
 ---
 
@@ -312,99 +204,16 @@ Após a instalação, os serviços estarão disponíveis através das seguintes 
 
 O BRLN-OS configura automaticamente:
 - ✅ Certificados TLS e autenticação macaroon para LND
-- ✅ Endereços Tor hidden services para todos os serviços
 - ✅ Conexões seguras entre componentes Docker
-- ✅ Configurações otimizadas do Bitcoin Core com ZMQ
-- ✅ Integração completa Bitcoin ↔ Lightning ↔ Liquid
+- ✅ Configurações otimizadas do Bitcoin em todas as suas redes
+- ✅ Integração completa Bitcoin ↔ Lightning ↔ Liquid, permitindo maior flexibilidade
 - ✅ Setup automático do PeerSwap para liquidez
-- ✅ Servidor JavaScript gRPC configurado e pronto
-- ✅ Interface web com controle de serviços
+- ✅ Servidor JavaScript gRPC configurado com arquivo .proto (Original Lightning Labs)
+- ✅ Interface web com controle de serviços (Exclusivo do BRLN-OS)
 
 ### Personalização Avançada
 
-Para personalizar configurações específicas:
-
-#### Bitcoin Core
-```bash
-# Editar configuração Bitcoin
-nano container/bitcoin/bitcoin.conf
-
-# Exemplo de configurações avançadas:
-# prune=550           # Modo pruned para economizar espaço
-# maxconnections=40   # Limite de conexões
-# dbcache=2048       # Cache de banco de dados
-```
-
-#### Lightning Network (LND)
-```bash
-# Editar configuração LND
-nano container/lnd/lnd.conf
-
-# Configurações importantes:
-# bitcoin.feerate=1              # Taxa mínima de fee
-# routing.assumechanvalid=true   # Otimização de roteamento
-# wtclient.active=true          # Watchtower client ativo
-```
-
-#### Liquid Network (Elements)
-```bash
-# Editar configuração Elements
-nano container/elements/elements.conf
-
-# Configurações Liquid:
-# fallbackfee=0.00001000        # Fee padrão Liquid
-# chain=liquidv1                # Rede Liquid mainnet
-```
-
-#### BRLN-RPC-Server JavaScript
-```bash
-# Configurar servidor JavaScript
-nano brln-rpc-server/config/config.json
-
-# Personalizar endpoints e credenciais
-{
-  "server": {
-    "port": 5003,
-    "secretKey": "sua-chave-super-segura"
-  },
-  "lnd": {
-    "host": "localhost:10009",
-    "tlsCertPath": "/data/lnd/tls.cert",
-    "macaroonPath": "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon"
-  },
-  "elements": {
-    "rpcHost": "localhost",
-    "rpcPort": 18884,
-    "rpcUser": "elementsuser",
-    "rpcPassword": "elementspassword123"
-  }
-}
-```bash
-# Configurar cliente Python
-nano lnd_client_config.ini
-
-# Personalizar endpoints e credenciais
-[LND]
-host = localhost
-port = 10009
-tls_cert_path = /data/lnd/tls.cert
-macaroon_path = /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon
-
-[ELEMENTS]
-host = localhost
-### Variáveis de Ambiente
-
-```bash
-# Configurar ambiente
-cp scripts/.env.example scripts/.env
-nano scripts/.env
-
-# Principais variáveis:
-BITCOIN_NETWORK=mainnet        # mainnet, testnet, regtest
-LND_ALIAS="Meu Nó BRLN"       # Nome do seu nó Lightning
-GRAFANA_PASSWORD=suasenha      # Senha Grafana
-TOR_ENABLED=true              # Habilitar Tor
-```
+Para personalizar configurações específicas o botão de *"Configurações"* na tela principal da interface gráfica.
 
 ## ⚡ BRLN-RPC-Server JavaScript
 
@@ -414,13 +223,12 @@ O BRLN-OS inclui um servidor JavaScript avançado para automação e integraçã
 
 - **🔌 Conectividade gRPC**: Conexão direta com LND via gRPC
 - **🔷 Suporte Elements**: Integração com RPC Elements/Liquid
-- **📋 Configuração JSON**: Arquivo de configuração flexível
-- **📊 Monitoramento**: Consulta de saldos e status dos nós multi-assets
+- **📋 Configuração JSON**: Arquivo de configuração flexível e de simples configuração
+- **📊 Monitoramento**: Consulta de saldos e status dos serbiços do servidor
 - **🔒 Autenticação**: Suporte completo a macaroons e TLS
-- **📝 Logging**: Sistema de logs avançado
 - **🌐 API REST**: Endpoints para controle e consulta
 
-### Principais Endpoints
+### Principais Endpoints da API RPC
 
 ```bash
 # Status de saúde do servidor
@@ -435,7 +243,7 @@ GET /service-status?app=lnd
 # Controle de serviços (start/stop)
 POST /toggle-service?app=lnd
 
-# Endpoint específico para interface web
+# Endpoint específico para rádio da interface web
 GET /status_novidade
 ```
 
@@ -448,7 +256,7 @@ const data = await response.json();
 
 console.log('Lightning:', data.lightning);
 console.log('Bitcoin:', data.bitcoin);
-console.log('Elements:', data.elements); // Mostra todos os assets
+console.log('Elements:', data.elements); // Mostra todos os saldos nas 3 redes
 
 // Controlar serviços
 await fetch('http://localhost:5003/toggle-service?app=lnd', {
@@ -488,7 +296,7 @@ docker-compose ps
 docker-compose up -d
 
 # Parar todos os serviços
-docker-compose down
+docker-compose down -v
 
 # Reiniciar serviço específico
 docker-compose restart <serviço>
@@ -501,7 +309,16 @@ docker-compose logs -f bitcoin
 
 # Exemplo: Reiniciar LND
 docker-compose restart lnd
+
+# Parar um serviço específico
+docker stop <serviço>
+
+# Remover um volume específico (Não causa perda de dados críticos)
+docker rm -sf <serviço> 
+ou
+docker-compose rm -sf <serviço>
 ```
+*Todos os comandos que usam "docker-compose" precisam executados dentro do diretório /root/brln-os/container.*
 
 ### ⚡ Lightning Network (LND) CLI
 
@@ -564,6 +381,9 @@ docker exec elements elements-cli sendtoaddress <endereço> <valor>
 
 # Listar assets Liquid
 docker exec elements elements-cli listissuances
+
+# Gerar novo endereço liquid
+docekr exec elements elements-cli getnewaddress
 ```
 
 ### 🔄 PeerSwap CLI
@@ -589,7 +409,7 @@ docker exec peerswap pscli listswaps
 systemctl status brln-rpc-server
 
 # Ver logs do servidor JavaScript
-journalctl -u brln-rpc-server -f
+journalctl -fu brln-rpc-server
 
 # Testar conectividade da API
 curl http://localhost:5003/health
@@ -615,82 +435,11 @@ O BRLN-OS inclui uma interface web moderna otimizada para todos os dispositivos:
 - **⚡ Controle de Serviços**: Botões diretos para acesso a todas as aplicações
 - **🔗 Links Externos**: Acesso rápido a ferramentas essenciais do ecossistema Bitcoin
 
-### 📱 Aplicações Mobile-Ready
+### 🌐 Acesso Remoto via Tor e Tailscale VPN
 
-| App | Mobile Support | Características |
-|-----|----------------|-----------------|
-| 💰 **LNbits** | ✅ PWA Completo | App web progressivo, funciona offline |
-| ⚡ **Thunderhub** | ✅ Responsivo | Interface otimizada para mobile |
-| 📊 **LNDG** | ✅ Adaptável | Dashboards redimensionáveis |
-| 🔄 **PeerSwap Web** | ✅ Mobile-First | Interface simplificada para mobile |
-| 📈 **Grafana** | ✅ Responsivo | Dashboards adaptativos |
-
-### 🌐 Acesso Remoto via Tor
-
-- **🧅 Hidden Services**: Todos os serviços disponíveis via endereços .onion
-- **🔒 Conexão Segura**: Acesso criptografado de qualquer lugar do mundo
-- **📱 Mobile Tor**: Use navegadores com suporte Tor (Tor Browser, Orbot)
-- **🔐 Sem Exposição de IP**: Mantenha privacidade total
-
----
-
-## 🏆 Casos de Uso e Exemplos
-
-### 🏢 Para Empresas
-
-```bash
-# Setup empresarial com alta disponibilidade
-# Configurar múltiplos canais para redundância
-docker exec lnd lncli openchannel --node_key=<routing_node> --local_amt=5000000
-
-# Monitor automático de liquidez via API JavaScript
-curl -H "x-secret-key: sua-chave" http://localhost:5003/wallet-balances
-
-# Backup automático para múltiplos destinos
-./backup-completo.sh && rsync -av /backup/ remote-server:/backup/
-```
-
-### 🏠 Para Uso Pessoal
-
-```bash
-# Setup básico para HODLers
-# Abrir canal com nó de roteamento confiável
-docker exec lnd lncli openchannel --node_key=<trusted_node> --local_amt=1000000
-
-# Configurar recebimento Lightning
-docker exec lnd lncli addinvoice --amt=50000 --memo="Recebimento teste"
-
-# Monitoramento simples via interface web
-# Acesse: http://localhost:8889 (LNDG)
-```
-
-### 🔄 Para Trading/Arbitragem
-
-```bash
-# Setup para arbitragem Bitcoin/Liquid
-# Configurar PeerSwap para swaps automáticos
-docker exec peerswap pscli swapout --peer_id=<peer> --amt=100000 --asset=lbtc
-
-# Monitor de preços via API
-curl -s https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
-```
-
-### 🏪 Para Merchants
-
-```bash
-# Setup para aceitar pagamentos Lightning
-# Configurar LNbits com extensões de e-commerce
-# Acesse: http://localhost:5000
-
-# Criar carteira para loja
-# Via interface LNbits ou API:
-curl -X POST http://localhost:5000/api/v1/wallet \
-  -H "X-Api-Key: <admin_key>" \
-  -d '{"name": "Loja Virtual", "user": "merchant"}'
-
-# Gerar QR code para pagamento
-docker exec lnd lncli addinvoice --amt=25000 --memo="Produto XYZ"
-```
+- **🧅 Hidden Services**: Todos os serviços disponíveis via endereços .onion (configuração adicional necessária)
+- **🔒 Conexão Segura**: Acesso criptografado de qualquer lugar do mundo com IP tailnet ou endereço .onion
+- **🔐 Sem Exposição de IP**: Mantenha privacidade e segurança total
 
 ---
 
@@ -708,32 +457,29 @@ docker exec lnd lncli addinvoice --amt=25000 --memo="Produto XYZ"
 ### � Configurações de Segurança
 
 ```bash
-# Configurar firewall (recomendado)
+# Configurar firewall é recomendado para acesso à rede local, já que para maior segurança o acesso a todos os serviços vem com sua conexão bloqueada, sendo liberado apenas a porta 22 (SSH) para recuperação emergencial.
 ufw enable
-ufw allow 22/tcp      # SSH
 ufw allow 80/tcp      # Interface web
 ufw allow 3000/tcp    # Thunderhub
 ufw allow 5000/tcp    # LNbits
 ufw allow 8889/tcp    # LNDG
-
-# Configurar Tor hidden services (automático)
-# Os endereços .onion são gerados automaticamente
-
-# Verificar integridade dos containers
-docker-compose config --quiet && echo "Configuração válida"
 ```
 
 ### 📦 Backup Essencial
 
-#### 1. 🔑 Seed LND (CRÍTICO - FAÇA PRIMEIRO!)
+#### 1. 🔑 Seed LND + Elements (CRÍTICO - FAÇA PRIMEIRO!)
 ```bash
-# A seed é exibida APENAS na primeira inicialização do LND
+# A seed é exibida na primeira inicialização do LND
 # ANOTE IMEDIATAMENTE em local seguro offline!
 
 # Formato: 24 palavras em inglês
 # Exemplo: abandon ability able about above absent absorb...
 
+# Para mitigação de riscos, recomendamos utilizar o mecanismo de autodestruição do arquivo temporário seed.txt durante a instalação, assim evitando armazenamento digital da seed do seu node.
+
 # ⚠️ SEM A SEED, VOCÊ PERDE TODOS OS FUNDOS! ⚠️
+
+# ATENÇÃO!!! Como o node Elements (Liquid Node) não trabalha com o padrão de seed para recuperação da carteira, a forma mais recomendada de backup é fazer um processo de backup automático do arquivo /data/elements/liquidv1/wallets/peerswap/wallet.dat -> Segundo os próprios devs do elements, é necessário realizar o backup após cada transação.
 ```
 
 #### 2. ⚡ Backup dos Canais Lightning
@@ -743,107 +489,32 @@ docker exec lnd lncli exportchanbackup --all --output_file=/tmp/channels.backup
 
 # Copiar backup para sistema host
 docker cp lnd:/tmp/channels.backup ./backup-canais-$(date +%Y%m%d).backup
-
-# Script automático de backup
-cat > backup-lightning.sh << 'EOF'
-#!/bin/bash
-BACKUP_DIR="/backup/lightning/$(date +%Y%m%d)"
-mkdir -p "$BACKUP_DIR"
-docker exec lnd lncli exportchanbackup --all --output_file=/tmp/channels.backup
-docker cp lnd:/tmp/channels.backup "$BACKUP_DIR/"
-echo "Backup realizado em: $BACKUP_DIR"
-EOF
-
-chmod +x backup-lightning.sh
 ```
-
-#### 3. 💾 Backup das Configurações
-```bash
-# Backup completo das configurações
-tar -czf backup-brln-os-$(date +%Y%m%d).tar.gz \
-    container/ \
-    scripts/.env \
-    lnd_client_config.ini \
-    --exclude="container/*/data"
-
-# Backup das carteiras Bitcoin e Elements
-docker exec bitcoin bitcoin-cli backupwallet /tmp/bitcoin-wallet.backup
-docker exec elements elements-cli backupwallet /tmp/elements-wallet.backup
-
-docker cp bitcoin:/tmp/bitcoin-wallet.backup ./backup-bitcoin-$(date +%Y%m%d).backup
-docker cp elements:/tmp/elements-wallet.backup ./backup-elements-$(date +%Y%m%d).backup
-```
-
-#### 4. 📋 Script de Backup Automatizado
-```bash
-#!/bin/bash
-# Salvar como: backup-completo.sh
-
-BACKUP_ROOT="/backup/brln-os"
-DATE=$(date +%Y%m%d-%H%M%S)
-BACKUP_DIR="$BACKUP_ROOT/$DATE"
-
-mkdir -p "$BACKUP_DIR"
-
-echo "🔄 Iniciando backup completo BRLN-OS..."
-
-# Backup canais Lightning
-echo "⚡ Backup canais Lightning..."
-docker exec lnd lncli exportchanbackup --all --output_file=/tmp/channels.backup
-docker cp lnd:/tmp/channels.backup "$BACKUP_DIR/"
-
-# Backup carteiras
-echo "💰 Backup carteiras..."
-docker exec bitcoin bitcoin-cli backupwallet /tmp/bitcoin-wallet.backup 2>/dev/null || true
-docker exec elements elements-cli backupwallet /tmp/elements-wallet.backup 2>/dev/null || true
-docker cp bitcoin:/tmp/bitcoin-wallet.backup "$BACKUP_DIR/" 2>/dev/null || true
-docker cp elements:/tmp/elements-wallet.backup "$BACKUP_DIR/" 2>/dev/null || true
-
-# Backup configurações
-echo "⚙️ Backup configurações..."
-tar -czf "$BACKUP_DIR/config-backup.tar.gz" container/ scripts/.env lnd_client_config.ini
-
-echo "✅ Backup completo realizado em: $BACKUP_DIR"
-
-# Limpar backups antigos (manter últimos 7 dias)
-find "$BACKUP_ROOT" -type d -mtime +7 -exec rm -rf {} + 2>/dev/null || true
-```
-
-### 🔄 Rotina de Backup Recomendada
-
-```bash
-# Adicionar ao crontab para backup automático
-crontab -e
-
-# Backup diário às 3:00 AM
-0 3 * * * /root/brln-os/backup-completo.sh
-
-# Backup dos canais a cada 6 horas
-0 */6 * * * docker exec lnd lncli exportchanbackup --all --output_file=/backup/channels-$(date +\%Y\%m\%d-\%H\%M).backup
-```
+Ou você pode optar por solicitar o arquivo de backup para o Balance of Satoshis bot no telegram.
 
 ## �️ Troubleshooting e Manutenção
 
 ### � Diagnóstico de Problemas
 
-#### Container não inicia
+#### Comandos úteis para diagnóstico docker
 ```bash
+# Verificar logs gerais
+docker-compose logs
+
 # Verificar logs específicos
-docker-compose logs <nome_do_serviço>
+docker logs <container>
 
-# Verificar configuração
-docker-compose config
-
-# Recriar container com problema
-docker-compose up -d --force-recreate <nome_do_serviço>
+# Erro ao recriar container
+docker rm -sf <container>
+docker-compose up -d <container>
 
 # Verificar recursos do sistema
 docker system df
-free -h
+# Ou alternativamente
 df -h
 ```
 
-#### Sincronização lenta
+#### Acompanhar Sincronização
 ```bash
 # Verificar progresso Bitcoin Core
 docker exec bitcoin bitcoin-cli getblockchaininfo | grep -E "(blocks|headers|verificationprogress)"
@@ -851,8 +522,8 @@ docker exec bitcoin bitcoin-cli getblockchaininfo | grep -E "(blocks|headers|ver
 # Verificar progresso Elements
 docker exec elements elements-cli getblockchaininfo
 
-# Verificar status LND
-docker exec lnd lncli getinfo
+# Verificar status LND 
+docker exec lnd lncli getinfo | grep graph
 
 # Verificar conectividade de rede
 docker exec bitcoin bitcoin-cli getnetworkinfo
@@ -871,6 +542,18 @@ docker exec lnd lncli getinfo
 
 # Verificar certificados LND
 docker exec lnd ls -la /data/lnd/
+```
+
+Caso esteja conectado à lnd testnet e receba o erro
+
+```bash
+root@brlnbolt:~/brln-os# docker exec lnd lncli getinfo 
+[lncli] could not load global options: unable to read macaroon path (check the network setting!): open /home/lnd/.lnd/data/chain/bitcoin/mainnet/admin.macaroon: no such file or directory
+```
+Na testnet é necessário indicar o arquivo macaron:
+
+```bash
+docker exec lnd lncli --macaroonpath=/home/lnd/.lnd/data/chain/bitcoin/testnet/admin.macaroon getinfo 
 ```
 
 ### 🔧 Comandos de Manutenção
