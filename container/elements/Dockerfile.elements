@@ -44,7 +44,7 @@ COPY elements/elements.conf ${ELEMENTS_DATA}/elements.conf
 WORKDIR ${ELEMENTS_DATA}
 
 # Expor portas
-EXPOSE 7041 18884
+EXPOSE 7041 18884 7040 
 
 # Definir usuário
 USER elements

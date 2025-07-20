@@ -397,7 +397,7 @@ EOF
 
   # 📝 Criação segura do arquivo usando here-document
   sudo tee "$SUDOERS_TMP" > /dev/null <<EOF
-root ALL=(ALL) NOPASSWD: /usr/bin/systemctl start control-systemd.service, /usr/bin/systemctl stop control-systemd.service, /usr/bin/systemctl start command-center.service, /usr/bin/systemctl stop command-center.service, /usr/bin/systemctl start gotty-fullauto.service, /usr/bin/systemctl stop gotty-fullauto.service
+root ALL=(ALL) NOPASSWD: /usr/bin/systemctl start brln-rpc-server.service, /usr/bin/systemctl stop brln-rpc-server.service, /usr/bin/systemctl start command-center.service, /usr/bin/systemctl stop command-center.service, /usr/bin/systemctl start gotty-fullauto.service, /usr/bin/systemctl stop gotty-fullauto.service
 EOF
 
   # ✅ Valida se o novo arquivo sudoers é válido
@@ -436,7 +436,7 @@ else
 fi
 
 # Define arrays for services and ports
-SERVICES=("gotty-fullauto" "command-center" "control-systemd")
+SERVICES=("gotty-fullauto" "command-center" "brln-rpc-server")
 
 sudo bash "$INSTALL_DIR/scripts/generate-services.sh" root "$INSTALL_DIR"
 
@@ -446,7 +446,7 @@ sudo cp $INSTALL_DIR/services/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
 # Enable and start services
-SERVICES=("control-systemd" "command-center" "gotty-fullauto")
+SERVICES=("brln-rpc-server" "command-center" "gotty-fullauto")
 for service in "${SERVICES[@]}"; do
   echo "Enabling and starting $service..."
   sudo systemctl enable $service.service

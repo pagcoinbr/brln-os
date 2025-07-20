@@ -33,8 +33,8 @@ function atualizarStatus() {
   setInterval(atualizarStatus, 50000);
   window.onload = atualizarStatus;
 
-// Base URL do Flask
-const flaskBaseURL = `http://${window.location.hostname}:5001`;
+// Base URL do BRLN-RPC-Server JavaScript (substituindo o Flask Python)
+const flaskBaseURL = `http://${window.location.hostname}:5003`;
 
 // Lista dos apps que aparecem no menu principal
 const appsPrincipais = [
@@ -178,11 +178,64 @@ function alternarTema() {
   const body = document.body;
   const temaAtual = body.classList.contains('dark-theme') ? 'dark' : 'light';
   const novoTema = temaAtual === 'dark' ? 'light' : 'dark';
-
+  
   body.classList.remove(`${temaAtual}-theme`);
   body.classList.add(`${novoTema}-theme`);
-
+  
   localStorage.setItem('temaAtual', novoTema);
+}
+
+// Atualizar saldos das carteiras usando nova API JavaScript
+async function updateWalletBalances() {
+  try {
+    const response = await fetch(`${flaskBaseURL}/wallet-balances`);
+    const data = await response.json();
+    
+    if (data.success) {
+      // Atualizar Lightning balance
+      const lightningElement = document.getElementById('lightning-balance');
+      if (lightningElement) {
+        lightningElement.textContent = data.lightning || 'Não disponível';
+      }
+      
+      // Atualizar Bitcoin balance
+      const bitcoinElement = document.getElementById('bitcoin-balance');
+      if (bitcoinElement) {
+        bitcoinElement.textContent = data.bitcoin || 'Não disponível';
+      }
+      
+      // Atualizar Elements/Liquid balance
+      const elementsElement = document.getElementById('elements-balance');
+      if (elementsElement) {
+        elementsElement.textContent = data.elements || 'Não disponível';
+      }
+      
+      // Atualizar status indicators
+      const lndStatusElement = document.getElementById('lnd-status');
+      if (lndStatusElement) {
+        lndStatusElement.textContent = data.lnd_status === 'connected' ? '🟢 Conectado' : '🔴 Desconectado';
+      }
+      
+      const elementsStatusElement = document.getElementById('elements-status');
+      if (elementsStatusElement) {
+        elementsStatusElement.textContent = data.elements_status === 'connected' ? '🟢 Conectado' : '🔴 Desconectado';
+      }
+      
+      console.log('✅ Saldos atualizados com sucesso');
+    } else {
+      console.warn('⚠️ Erro ao obter saldos:', data.error || 'Erro desconhecido');
+    }
+  } catch (error) {
+    console.error('❌ Erro ao atualizar saldos:', error);
+    
+    // Mostrar erro nos elementos se existirem
+    ['lightning-balance', 'bitcoin-balance', 'elements-balance'].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.textContent = 'Erro na conexão';
+      }
+    });
+  }
 }
 
 // Salvar última página aberta (opcional)
@@ -197,144 +250,3 @@ function toggleExtras(button) {
   button.classList.toggle("rotate", isHidden);
 }
 
-// Função para atualizar saldos das carteiras
-async function updateWalletBalances() {
-  const lightningElement = document.getElementById('lightning-balance');
-  const bitcoinElement = document.getElementById('bitcoin-balance');
-  const liquidElement = document.getElementById('liquid-balance');
-  const statusElement = document.getElementById('wallet-status');
-
-  // Definir status de carregamento
-  lightningElement.textContent = '⚡ Lightning: 🔄 Verificando...';
-  bitcoinElement.textContent = '₿ Bitcoin On-Chain: 🔄 Verificando...';
-  liquidElement.textContent = '🌊 Liquid/Elements: 🔄 Verificando...';
-  statusElement.textContent = '🔄 Atualizando saldos...';
-
-  try {
-    const response = await fetch(`${flaskBaseURL}/wallet-balances`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    
-    if (data.success) {
-      // Parse da saída do cliente Python
-      const output = data.raw_output || '';
-      const timestamp = data.timestamp || new Date().toLocaleString('pt-BR');
-      
-      // Extrair saldos da saída usando regex
-      const lightningBalance = extractLightningBalance(output);
-      const bitcoinBalance = extractBitcoinBalance(output);
-      const liquidBalance = extractLiquidBalance(output);
-      
-      // Atualizar elementos DOM
-      lightningElement.textContent = `⚡ Lightning: ${lightningBalance}`;
-      bitcoinElement.textContent = `₿ Bitcoin On-Chain: ${bitcoinBalance}`;
-      liquidElement.textContent = `🌊 Liquid/Elements: ${liquidBalance}`;
-      
-      // Status das conexões
-      const lndStatus = data.connections?.lnd ? '✅' : '❌';
-      const elementsStatus = data.connections?.elements ? '✅' : '❌';
-      statusElement.textContent = `🔄 Última atualização: ${timestamp} | LND: ${lndStatus} | Elements: ${elementsStatus}`;
-      
-    } else {
-      throw new Error(data.error || 'Erro desconhecido');
-    }
-
-  } catch (error) {
-    console.error('Erro ao obter saldos:', error);
-    
-    lightningElement.textContent = '⚡ Lightning: ❌ Erro';
-    bitcoinElement.textContent = '₿ Bitcoin On-Chain: ❌ Erro';
-    liquidElement.textContent = '🌊 Liquid/Elements: ❌ Erro';
-    statusElement.textContent = `❌ Erro: ${error.message}`;
-  }
-}
-
-// Função para extrair saldo Lightning da saída
-function extractLightningBalance(output) {
-  try {
-    // Procura por "Saldo Local:" seguido do valor
-    const localMatch = output.match(/Saldo Local:\s*([0-9.,]+\s*BTC[^)]*\([^)]+\))/);
-    if (localMatch) {
-      return localMatch[1].trim();
-    }
-    
-    // Fallback: procura por qualquer padrão de BTC
-    const btcMatch = output.match(/([0-9.]+\s*BTC[^)]*\([^)]+\))/);
-    if (btcMatch) {
-      return btcMatch[1].trim();
-    }
-    
-    return 'Não disponível';
-  } catch (e) {
-    return 'Erro na leitura';
-  }
-}
-
-// Função para extrair saldo Bitcoin on-chain da saída
-function extractBitcoinBalance(output) {
-  try {
-    // Procura por "Total:" na seção Bitcoin on-chain
-    const totalMatch = output.match(/Total:\s*([0-9.,]+\s*BTC[^)]*\([^)]+\))/);
-    if (totalMatch) {
-      return totalMatch[1].trim();
-    }
-    
-    // Fallback: procura por "Confirmado:"
-    const confirmedMatch = output.match(/Confirmado:\s*([0-9.,]+\s*BTC[^)]*\([^)]+\))/);
-    if (confirmedMatch) {
-      return confirmedMatch[1].trim();
-    }
-    
-    return 'Não disponível';
-  } catch (e) {
-    return 'Erro na leitura';
-  }
-}
-
-// Função para extrair saldo Liquid/Elements da saída
-function extractLiquidBalance(output) {
-  try {
-    // Procura por valores L-BTC ou outros assets
-    const liquidMatch = output.match(/Confirmado:\s*([^\\n]+L-BTC[^\\n]*)/);
-    if (liquidMatch) {
-      return liquidMatch[1].trim();
-    }
-    
-    // Fallback: procura na seção Elements
-    const elementsSection = output.match(/LIQUID \(ELEMENTS\)(.*?)(?=\n\n|Status das Conexões|$)/s);
-    if (elementsSection) {
-      const balanceMatch = elementsSection[1].match(/Confirmado:\s*([^\\n]+)/);
-      if (balanceMatch) {
-        return balanceMatch[1].trim();
-      }
-    }
-    
-    return 'Não disponível';
-  } catch (e) {
-    return 'Erro na leitura';
-  }
-}
-
-// Função para formatar valores para exibição mais compacta
-function formatBalanceForDisplay(balanceText) {
-  if (!balanceText || balanceText === 'Não disponível') {
-    return balanceText;
-  }
-  
-  try {
-    // Remove texto extra e mantém apenas o essencial
-    return balanceText.replace(/\s+/g, ' ').trim();
-  } catch (e) {
-    return balanceText;
-  }
-}

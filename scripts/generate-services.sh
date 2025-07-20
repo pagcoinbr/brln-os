@@ -23,18 +23,27 @@ mkdir -p "$SERVICES_DIR"
 echo "Gerando serviços para o usuário: $TARGET_USER"
 echo "Diretório de instalação: $INSTALL_DIR"
 
-# Gera o arquivo control-systemd.service
-cat > "$SERVICES_DIR/control-systemd.service" << EOF
+# Gera o arquivo brln-rpc-server.service (substituindo o control-systemd Flask)
+cat > "$SERVICES_DIR/brln-rpc-server.service" << EOF
 [Unit]
-Description=Servidor Flask para Controle do LNBits
-After=network.target
+Description=BRLN RPC Server - Multi-chain payment server (Bitcoin, Lightning, Liquid)
+After=network.target docker.service
+Wants=docker.service
 
 [Service]
+Type=simple
 User=$TARGET_USER
-WorkingDirectory=$INSTALL_DIR/
-Environment="PATH=/root/envflask/bin"
-ExecStart=/root/envflask/bin/python3 $INSTALL_DIR/control-systemd.py
+Group=$TARGET_USER
+WorkingDirectory=$INSTALL_DIR/brln-rpc-server
+Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStartPre=/bin/bash -c 'cd $INSTALL_DIR/brln-rpc-server && npm install --production'
+ExecStart=/usr/bin/node $INSTALL_DIR/brln-rpc-server/server.js
 Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=brln-rpc-server
 
 [Install]
 WantedBy=multi-user.target
@@ -76,11 +85,11 @@ EOF
 
 echo "Serviços gerados com sucesso em: $SERVICES_DIR"
 echo "Arquivos criados:"
-echo "  - control-systemd.service"
+echo "  - brln-rpc-server.service (Novo servidor JavaScript multi-chain)"
 echo "  - command-center.service"
 echo "  - gotty-fullauto.service"
 echo ""
 echo "Para instalar os serviços no systemd, execute:"
 echo "  sudo cp $SERVICES_DIR/*.service /etc/systemd/system/"
 echo "  sudo systemctl daemon-reload"
-echo "  sudo systemctl enable control-systemd command-center gotty-fullauto"
+echo "  sudo systemctl enable brln-rpc-server command-center gotty-fullauto"

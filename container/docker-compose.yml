@@ -132,8 +132,8 @@ services:
       dockerfile: ./elements/Dockerfile.elements
     container_name: elements
     ports:
-      - 7041:7041   # P2P port
-      - 18884:18884 # RPC port
+      - 7040:7040   # RPC port
+      - 18884:18884 # P2P port
     networks:
       - grafana-net
     volumes:
