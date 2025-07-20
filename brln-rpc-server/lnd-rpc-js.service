@@ -1,0 +1,35 @@
+[Unit]
+Description=LND RPC JS Payment Server
+Documentation=https://github.com/pagcoinbr/lnd-rpc-js
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/root/lnd-rpc-js
+Environment=NODE_ENV=production
+Environment=PATH=/usr/bin:/usr/local/bin
+ExecStartPre=/bin/bash -c 'cd /root/lnd-rpc-js && npm install'
+ExecStart=/usr/bin/node src/server.js
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStopSec=30
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lnd-rpc-js
+
+# Limites de recursos
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Segurança
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
