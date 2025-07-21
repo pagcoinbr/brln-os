@@ -31,6 +31,9 @@ ENV TOR_ACCESS_GID=1050
 ENV LNDELEMENTS_GID=1051
 ENV PEERSWAP_GID=1052
 
+# Criar grupo bitcoin com mesmo GID do container Bitcoin
+RUN groupadd -f -g 1007 bitcoin
+
 # Criar usuário lnd e adicionar aos grupos necessários
 RUN useradd -m -s /bin/bash ${USER} && \
     usermod -aG sudo ${USER} && \
@@ -38,7 +41,7 @@ RUN useradd -m -s /bin/bash ${USER} && \
     groupadd -f -g ${TOR_ACCESS_GID} tor-access && \
     groupadd -f -g ${LNDELEMENTS_GID} lnd-elements && \
     groupadd -f -g ${PEERSWAP_GID} peerswap && \
-    usermod -a -G tor-access,${USER},debian-tor,lnd-elements,peerswap ${USER}
+    usermod -a -G tor-access,${USER},debian-tor,lnd-elements,peerswap,bitcoin ${USER}
 
 # Criar diretório de dados e diretório para binários
 RUN mkdir -p ${DATA_DIR} ${LND_BIN_DATA} ${HOME}/.lnd && \

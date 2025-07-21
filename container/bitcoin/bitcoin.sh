@@ -29,9 +29,14 @@ wait_for_service() {
     return 1
 }
 
-# Iniciar i2pd como processo em background
+# Criar arquivo de log para o i2pd e ajustar permissões
+I2PD_LOG="/tmp/i2pd.log"
+touch "$I2PD_LOG"
+chmod 755 "$I2PD_LOG"
+
+# Iniciar i2pd como processo em background, direcionando saída para o log
 echo "Iniciando i2pd..."
-if i2pd --conf=/etc/i2pd/i2pd.conf & then
+if i2pd --conf=/etc/i2pd/i2pd.conf >>"$I2PD_LOG" 2>&1 & then
     I2PD_PID=$!
 fi
 

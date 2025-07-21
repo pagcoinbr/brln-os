@@ -71,7 +71,7 @@ RUN apt-get update && apt-get install -y netcat-openbsd && rm -rf /var/lib/apt/l
 RUN ln -s /data/bitcoin /home/bitcoin/.bitcoin
 
 # Copiar arquivo de configuração de exemplo
-COPY container/bitcoin/bitcoin.conf /data/bitcoin/bitcoin.conf
+COPY bitcoin/bitcoin.conf /data/bitcoin/bitcoin.conf
 
 # Expor portas
 EXPOSE 8332 8333 7656

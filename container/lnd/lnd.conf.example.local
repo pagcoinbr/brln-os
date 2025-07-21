@@ -100,9 +100,8 @@ db.bolt.auto-compact=true
 [Bitcoind]
 bitcoind.estimatemode=ECONOMICAL
 #bitcoind local - mesma maquina
-bitcoind.rpchost=bitcoin
-bitcoind.rpcuser=<seu_user_rpc>
-bitcoind.rpcpass=<sua_senha_rpc>
+bitcoind.rpchost=bitcoin:8332
+bitcoind.rpccookie=/home/lnd/.bitcoin/testnet3/.cookie
 bitcoind.zmqpubrawblock=tcp://bitcoin:28432
 bitcoind.zmqpubrawtx=tcp://bitcoin:28433
 

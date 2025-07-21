@@ -79,12 +79,16 @@ services:
         ARCH: x86_64
     container_name: bitcoin
     ports:
-      - 8332:8332  # RPC port
-      - 8333:8333  # P2P port
-      - 28332:28332  # ZMQ rawblock
-      - 28333:28333  # ZMQ rawtx
+      # Mainnet ports (active)
+      - 8332:8332    # RPC port (mainnet)
+      - 8333:8333    # P2P port (mainnet)
+      - 28432:28432  # ZMQ rawblock
+      - 28433:28433  # ZMQ rawtx
       - 28334:28334  # ZMQ hashtx
       - 28335:28335  # ZMQ hashblock
+      # Testnet ports (commented)
+      # - 18332:18332  # RPC port (testnet)
+      # - 18333:18333  # P2P port (testnet)
       # Note: I2P SAM port (7656) is internal only - no need to expose
     networks:
       - grafana-net
@@ -132,8 +136,12 @@ services:
       dockerfile: ./elements/Dockerfile.elements
     container_name: elements
     ports:
-      - 7040:7040   # RPC port
-      - 18884:18884 # P2P port
+      # Mainnet ports (active)
+      - 7041:7041   # RPC port (mainnet)
+      - 7042:7042   # P2P port (mainnet)
+      # Testnet ports (commented)
+      # - 7040:7040   # RPC port (testnet)
+      # - 18884:18884 # P2P port (testnet)
     networks:
       - grafana-net
     volumes:
@@ -193,6 +201,7 @@ services:
     environment:
       - LND_RPC_HOST=lnd:10009
       - LND_NETWORK=mainnet
+      # - LND_NETWORK=testnet  # Testnet option (commented)
 
   peerswap:
     build:
