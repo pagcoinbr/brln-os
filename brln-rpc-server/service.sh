@@ -55,6 +55,9 @@ install_service() {
     
     # Recarregar systemd
     systemctl daemon-reload
+
+    apt install -y nodejs npm
+    npm install --prefix "$PROJECT_DIR"
     
     # Habilitar o serviço para iniciar automaticamente
     systemctl enable "$SERVICE_NAME"

@@ -37,7 +37,6 @@ Group=$TARGET_USER
 WorkingDirectory=$INSTALL_DIR/brln-rpc-server
 Environment=NODE_ENV=production
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
-ExecStartPre=/bin/bash -c 'cd $INSTALL_DIR/brln-rpc-server && npm install --production'
 ExecStart=/usr/bin/node $INSTALL_DIR/brln-rpc-server/server.js
 Restart=always
 RestartSec=5
