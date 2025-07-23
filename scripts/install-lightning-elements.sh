@@ -86,10 +86,10 @@ backup_existing_lightning() {
 setup_lightning_project() {
     log "Clonando projeto Lightning do fork pagcoinbr (com extensões Elements)..."
     
-    git clone https://github.com/pagcoinbr/lightning.git
+    git clone -b master https://github.com/pagcoinbr/brln-os.git lightning
     cd lightning
     
-    success "Projeto Lightning clonado do fork pagcoinbr"
+    success "Projeto Lightning clonado do fork pagcoinbr (branch master)"
     
     log "Instalando dependências npm..."
     npm install
