@@ -390,7 +390,14 @@ EOF
 
   # Instala Flask e Flask-CORS
   pip install flask flask-cors # >> /dev/null 2>&1 & spinner
-  bash setup_lnd_client.sh 
+  
+  # Instalar Lightning + Elements Integration
+  echo "⚡ Instalando integração Lightning + Elements..."
+  if [[ -f "$INSTALL_DIR/scripts/install-lightning-elements.sh" ]]; then
+    bash "$INSTALL_DIR/scripts/install-lightning-elements.sh"
+  else
+    echo "⚠️ Script install-lightning-elements.sh não encontrado, pulando..."
+  fi 
 
   # 🛡️ Caminho seguro para o novo arquivo dentro do sudoers.d
   SUDOERS_TMP="/etc/sudoers.d/root-services"
@@ -438,6 +445,18 @@ fi
 # Define arrays for services and ports
 SERVICES=("gotty-fullauto" "command-center" "brln-rpc-server")
 
+# Verificar se o Lightning foi instalado antes de gerar os serviços
+if [[ ! -d "$INSTALL_DIR/lightning" ]]; then
+  echo "⚠️ Diretório lightning não encontrado. Tentando instalar..."
+  if [[ -f "$INSTALL_DIR/scripts/install-lightning-elements.sh" ]]; then
+    bash "$INSTALL_DIR/scripts/install-lightning-elements.sh"
+  else
+    echo "❌ Script install-lightning-elements.sh não encontrado!"
+    echo "❌ Serviço brln-rpc-server não será instalado."
+    SERVICES=("gotty-fullauto" "command-center")
+  fi
+fi
+
 sudo bash "$INSTALL_DIR/scripts/generate-services.sh" root "$INSTALL_DIR"
 
 # Install and enable the generated services
@@ -446,11 +465,15 @@ sudo cp $INSTALL_DIR/services/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
 # Enable and start services
-SERVICES=("brln-rpc-server" "command-center" "gotty-fullauto")
+# Usar a mesma lista de serviços definida anteriormente
 for service in "${SERVICES[@]}"; do
-  echo "Enabling and starting $service..."
-  sudo systemctl enable $service.service
-  sudo systemctl restart $service.service
+  if [[ -f "/etc/systemd/system/$service.service" ]]; then
+    echo "Enabling and starting $service..."
+    sudo systemctl enable $service.service
+    sudo systemctl restart $service.service
+  else
+    echo "⚠️ Serviço $service.service não encontrado, pulando..."
+  fi
 done
 
 }
