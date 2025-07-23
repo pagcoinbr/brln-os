@@ -14,6 +14,7 @@
     "@types/ws": "8.18.1",
     "async": "3.2.6",
     "asyncjs-util": "1.2.12",
+    "axios": "^1.6.0",
     "bitcoinjs-lib": "6.1.7",
     "bn.js": "5.2.2",
     "bolt07": "1.9.4",

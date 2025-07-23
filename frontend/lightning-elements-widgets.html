@@ -1,0 +1,234 @@
+<!-- ===================================================================
+     ELEMENTOS HTML PARA INTEGRAÇÃO LIGHTNING + ELEMENTS
+     Adicione estes elementos ao seu HTML existente
+     =================================================================== -->
+
+<!-- 1. WIDGET DE SALDOS DAS CARTEIRAS -->
+<div class="wallet-balances">
+  <div class="balance-card">
+    <div id="lightning-balance">
+      <strong>⚡ Lightning:</strong> Carregando...
+    </div>
+  </div>
+  
+  <div class="balance-card">
+    <div id="bitcoin-balance">
+      <strong>₿ Bitcoin:</strong> Carregando...
+    </div>
+  </div>
+  
+  <div class="balance-card">
+    <div id="liquid-balance">
+      <strong>🌊 Liquid:</strong> Carregando...
+    </div>
+    <div id="liquid-assets" class="assets-container">
+      <!-- Assets serão carregados aqui -->
+    </div>
+  </div>
+</div>
+
+<!-- 2. INFORMAÇÕES DAS BLOCKCHAINS -->
+<div class="blockchain-section">
+  <div id="lightning-info">
+    <!-- Informações Lightning serão carregadas aqui -->
+  </div>
+  
+  <div id="liquid-info">
+    <!-- Informações Liquid serão carregadas aqui -->
+  </div>
+</div>
+
+<!-- 3. CRIAÇÃO DE INVOICE LIGHTNING -->
+<div class="lightning-operations">
+  <h3>⚡ Operações Lightning</h3>
+  <div class="invoice-creator">
+    <label for="invoice-amount">Valor (satoshis):</label>
+    <input type="number" id="invoice-amount" placeholder="1000" min="1">
+    
+    <label for="invoice-description">Descrição:</label>
+    <input type="text" id="invoice-description" placeholder="Pagamento BRLN-OS">
+    
+    <button onclick="criarInvoiceLightning()">Criar Invoice</button>
+  </div>
+  
+  <div id="invoice-result">
+    <!-- Resultado do invoice aparecerá aqui -->
+  </div>
+</div>
+
+<!-- 4. CRIAÇÃO DE ENDEREÇO LIQUID -->
+<div class="liquid-operations">
+  <h3>🌊 Operações Liquid</h3>
+  <div class="address-creator">
+    <label for="address-label">Label do endereço:</label>
+    <input type="text" id="address-label" placeholder="Meu endereço L-BTC">
+    
+    <button onclick="criarEnderecoLiquid()">Criar Endereço</button>
+  </div>
+  
+  <div id="address-result">
+    <!-- Resultado do endereço aparecerá aqui -->
+  </div>
+</div>
+
+<!-- 5. CONTROLES DE CONTAINERS (estender os existentes) -->
+<div class="container-controls">
+  <h3>🐳 Controle de Containers</h3>
+  <div class="container-grid">
+    <!-- Adicionar botões para controlar containers -->
+    <button onclick="controlarContainer('bitcoin', 'restart')" class="container-btn">
+      🪙 Restart Bitcoin
+    </button>
+    <button onclick="controlarContainer('lnd', 'restart')" class="container-btn">
+      ⚡ Restart LND
+    </button>
+    <button onclick="controlarContainer('elements', 'restart')" class="container-btn">
+      🌊 Restart Elements
+    </button>
+    <button onclick="controlarContainer('tor', 'restart')" class="container-btn">
+      🧅 Restart Tor
+    </button>
+  </div>
+</div>
+
+<!-- 6. TESTE DE INTEGRAÇÃO -->
+<div class="integration-test-section">
+  <h3>🧪 Teste de Integração</h3>
+  <button onclick="testarIntegracao()">Testar Lightning + Elements</button>
+  <div id="integration-test">
+    <!-- Resultado do teste aparecerá aqui -->
+  </div>
+</div>
+
+<!-- 7. STATUS ESTENDIDO (adicionar ao seu status existente) -->
+<div class="extended-status">
+  <!-- Seus elementos de status existentes ficam aqui -->
+  <div id="cpu">CPU: Carregando...</div>
+  <div id="ram">RAM: Carregando...</div>
+  <div id="lnd">LND: Carregando...</div>
+  <div id="bitcoind">Bitcoind: Carregando...</div>
+  <div id="tor">Tor: Carregando...</div>
+  <div id="blockchain">Blockchain: Carregando...</div>
+  
+  <!-- NOVO: Status do Elements -->
+  <div id="elements">Elements: Carregando...</div>
+</div>
+
+<!-- 8. DASHBOARD DE MONITORAMENTO UNIFICADO -->
+<div class="unified-dashboard">
+  <h2>📊 Dashboard BRLN-OS</h2>
+  
+  <div class="dashboard-grid">
+    <!-- Coluna 1: Status do Sistema -->
+    <div class="dashboard-card">
+      <h3>💻 Sistema</h3>
+      <div class="system-metrics">
+        <div id="cpu">CPU: --</div>
+        <div id="ram">RAM: --</div>
+      </div>
+    </div>
+    
+    <!-- Coluna 2: Status dos Serviços -->
+    <div class="dashboard-card">
+      <h3>🔧 Serviços</h3>
+      <div class="services-status">
+        <div id="bitcoind">Bitcoin: --</div>
+        <div id="lnd">LND: --</div>
+        <div id="elements">Elements: --</div>
+        <div id="tor">Tor: --</div>
+      </div>
+    </div>
+    
+    <!-- Coluna 3: Saldos das Carteiras -->
+    <div class="dashboard-card">
+      <h3>💰 Carteiras</h3>
+      <div class="wallet-summary">
+        <div id="bitcoin-balance">Bitcoin: --</div>
+        <div id="lightning-balance">Lightning: --</div>
+        <div id="liquid-balance">Liquid: --</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9. MODAL PARA OPERAÇÕES AVANÇADAS -->
+<div id="advanced-operations-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('advanced-operations-modal').style.display='none'">&times;</span>
+    <h2>🔧 Operações Avançadas</h2>
+    
+    <div class="operation-tabs">
+      <button class="tab-button active" onclick="showTab('lightning-tab')">⚡ Lightning</button>
+      <button class="tab-button" onclick="showTab('liquid-tab')">🌊 Liquid</button>
+      <button class="tab-button" onclick="showTab('docker-tab')">🐳 Docker</button>
+    </div>
+    
+    <div id="lightning-tab" class="tab-content">
+      <!-- Conteúdo das operações Lightning -->
+      <div class="operation-form">
+        <h4>Criar Invoice</h4>
+        <input type="number" id="modal-invoice-amount" placeholder="Valor em sats">
+        <input type="text" id="modal-invoice-desc" placeholder="Descrição">
+        <button onclick="criarInvoiceLightning()">Criar</button>
+      </div>
+    </div>
+    
+    <div id="liquid-tab" class="tab-content" style="display: none;">
+      <!-- Conteúdo das operações Liquid -->
+      <div class="operation-form">
+        <h4>Criar Endereço L-BTC</h4>
+        <input type="text" id="modal-address-label" placeholder="Label do endereço">
+        <button onclick="criarEnderecoLiquid()">Criar</button>
+      </div>
+    </div>
+    
+    <div id="docker-tab" class="tab-content" style="display: none;">
+      <!-- Conteúdo do controle Docker -->
+      <div class="docker-controls">
+        <h4>Controle de Containers</h4>
+        <div class="container-buttons">
+          <button onclick="controlarContainer('bitcoin', 'stop')">Stop Bitcoin</button>
+          <button onclick="controlarContainer('bitcoin', 'start')">Start Bitcoin</button>
+          <button onclick="controlarContainer('lnd', 'restart')">Restart LND</button>
+          <button onclick="controlarContainer('elements', 'restart')">Restart Elements</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10. BOTÃO PARA ABRIR MODAL -->
+<button onclick="document.getElementById('advanced-operations-modal').style.display='block'" class="advanced-btn">
+  🔧 Operações Avançadas
+</button>
+
+<!-- ===================================================================
+     SCRIPTS NECESSÁRIOS
+     =================================================================== -->
+
+<script>
+// Função para alternar abas no modal
+function showTab(tabId) {
+  // Esconder todas as abas
+  const tabs = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => tab.style.display = 'none');
+  
+  // Remover classe active de todos os botões
+  const buttons = document.querySelectorAll('.tab-button');
+  buttons.forEach(btn => btn.classList.remove('active'));
+  
+  // Mostrar aba selecionada
+  document.getElementById(tabId).style.display = 'block';
+  
+  // Adicionar classe active ao botão correspondente
+  event.target.classList.add('active');
+}
+
+// Auto-refresh da página a cada 5 minutos para manter dados atualizados
+setInterval(() => {
+  console.log('🔄 Auto-refresh dos dados...');
+  atualizarStatusMelhorado();
+  atualizarSaldos();
+  atualizarBlockchainInfo();
+}, 300000); // 5 minutos
+</script>

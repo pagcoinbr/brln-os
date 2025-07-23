@@ -1,0 +1,24 @@
+{
+  "name": "brln-lightning-elements-server",
+  "version": "1.0.0",
+  "description": "BRLN-OS Lightning + Elements Integration Server",
+  "main": "brln-server.js",
+  "scripts": {
+    "start": "node brln-server.js",
+    "dev": "nodemon brln-server.js",
+    "test": "node test/test-integration.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "fs-extra": "^11.1.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": ["lightning", "elements", "liquid", "bitcoin", "brln-os"],
+  "author": "pagcoinbr",
+  "license": "MIT"
+}

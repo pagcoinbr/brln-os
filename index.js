@@ -1,6 +1,16 @@
 const {addAdvertisedFeature} = require('./lnd_methods');
 const {addExternalSocket} = require('./lnd_methods');
 const {addPeer} = require('./lnd_methods');
+
+// Elements/Liquid methods
+const {createChainAddress: createElementsAddress} = require('./elements_methods');
+const {getChainBalance: getElementsBalance} = require('./elements_methods');
+const {getChainInfo: getElementsInfo} = require('./elements_methods');
+const {getLiquidAssets} = require('./elements_methods');
+const {sendToChainAddress: sendToElementsAddress} = require('./elements_methods');
+
+// Elements RPC client
+const elementsRpc = require('./elements_rpc');
 const {authenticatedLndGrpc} = require('./lnd_grpc');
 const {beginGroupSigningSession} = require('./lnd_methods');
 const {broadcastChainTransaction} = require('./lnd_methods');
@@ -172,6 +182,7 @@ module.exports = {
   closeChannel,
   connectWatchtower,
   createChainAddress,
+  createElementsAddress,
   createFundedPsbt,
   createHodlInvoice,
   createInvoice,
@@ -187,6 +198,7 @@ module.exports = {
   deletePendingChannel,
   disableChannel,
   disconnectWatchtower,
+  elementsRpc,
   enableChannel,
   endGroupSigningSession,
   diffieHellmanComputeSecret,
@@ -210,6 +222,8 @@ module.exports = {
   getClosedChannels,
   getConfiguration,
   getConnectedWatchtowers,
+  getElementsBalance,
+  getElementsInfo,
   getEphemeralChannelIds,
   getFailedPayments,
   getFeeRates,
@@ -220,6 +234,7 @@ module.exports = {
   getIdentity,
   getInvoice,
   getInvoices,
+  getLiquidAssets,
   getLockedUtxos,
   getMasterPublicKeys,
   getMethods,
@@ -273,6 +288,7 @@ module.exports = {
   sendToChainAddress,
   sendToChainAddresses,
   sendToChainOutputScripts,
+  sendToElementsAddress,
   setAutopilot,
   settleHodlInvoice,
   signBytes,
