@@ -152,3 +152,7 @@ router.proto
 # Diretório de serviços (regenerados a cada instalação)
 services/
 container/bitcoin/bitcoin.conf.example
+
+# Projeto Lightning (clonado do fork pagcoinbr/lightning)
+lightning/
+lightning.backup.*/

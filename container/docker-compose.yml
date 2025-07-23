@@ -136,12 +136,12 @@ services:
       dockerfile: ./elements/Dockerfile.elements
     container_name: elements
     ports:
-      # Mainnet ports (active)
-      - 7041:7041   # RPC port (mainnet)
-      - 7042:7042   # P2P port (mainnet)
-      # Testnet ports (commented)
-      # - 7040:7040   # RPC port (testnet)
-      # - 18884:18884 # P2P port (testnet)
+      # Mainnet ports (commented)
+      # - 7041:7041   # RPC port (mainnet)
+      # - 7042:7042   # P2P port (mainnet)
+      # Testnet ports (active)
+      - 7040:7040   # RPC port (testnet)
+      - 18884:18884 # P2P port (testnet)
     networks:
       - grafana-net
     volumes:

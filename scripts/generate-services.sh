@@ -23,10 +23,10 @@ mkdir -p "$SERVICES_DIR"
 echo "Gerando serviços para o usuário: $TARGET_USER"
 echo "Diretório de instalação: $INSTALL_DIR"
 
-# Gera o arquivo brln-rpc-server.service (substituindo o control-systemd Flask)
+# Gera o arquivo brln-rpc-server.service (servidor Lightning + Elements integrado)
 cat > "$SERVICES_DIR/brln-rpc-server.service" << EOF
 [Unit]
-Description=BRLN RPC Server - Multi-chain payment server (Bitcoin, Lightning, Liquid)
+Description=BRLN Lightning + Elements RPC Server - Multi-chain payment server
 After=network.target docker.service
 Wants=docker.service
 
@@ -34,15 +34,19 @@ Wants=docker.service
 Type=simple
 User=$TARGET_USER
 Group=$TARGET_USER
-WorkingDirectory=$INSTALL_DIR/brln-rpc-server
+WorkingDirectory=$INSTALL_DIR/lightning/server
 Environment=NODE_ENV=production
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/node $INSTALL_DIR/brln-rpc-server/server.js
+ExecStart=/usr/bin/node $INSTALL_DIR/lightning/server/brln-server.js
 Restart=always
-RestartSec=5
+RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=brln-rpc-server
+SyslogIdentifier=brln-lightning-server
+TimeoutStartSec=30
+
+# Aguarda os containers estarem prontos
+ExecStartPre=/bin/sleep 5
 
 [Install]
 WantedBy=multi-user.target
@@ -84,7 +88,7 @@ EOF
 
 echo "Serviços gerados com sucesso em: $SERVICES_DIR"
 echo "Arquivos criados:"
-echo "  - brln-rpc-server.service (Novo servidor JavaScript multi-chain)"
+echo "  - brln-rpc-server.service (Servidor Lightning + Elements integrado na porta 5003)"
 echo "  - command-center.service"
 echo "  - gotty-fullauto.service"
 echo ""
@@ -92,3 +96,8 @@ echo "Para instalar os serviços no systemd, execute:"
 echo "  sudo cp $SERVICES_DIR/*.service /etc/systemd/system/"
 echo "  sudo systemctl daemon-reload"
 echo "  sudo systemctl enable brln-rpc-server command-center gotty-fullauto"
+echo "  sudo systemctl start brln-rpc-server"
+echo ""
+echo "Para verificar o status do servidor Lightning:"
+echo "  sudo systemctl status brln-rpc-server"
+echo "  journalctl -u brln-rpc-server -f"

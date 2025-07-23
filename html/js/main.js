@@ -326,19 +326,29 @@ async function updateWalletBalances() {
       // Atualizar Lightning balance
       const lightningElement = document.getElementById('lightning-balance');
       if (lightningElement) {
-        lightningElement.textContent = `⚡ Lightning: ${data.lightning || 'Não disponível'}`;
+        const lightningBalance = data.lightning ? `${(data.lightning / 100000000).toFixed(8)} BTC` : 'Não disponível';
+        lightningElement.textContent = `⚡ Lightning: ${lightningBalance}`;
       }
       
       // Atualizar Bitcoin balance
       const bitcoinElement = document.getElementById('bitcoin-balance');
       if (bitcoinElement) {
-        bitcoinElement.textContent = `₿ Bitcoin On-Chain: ${data.bitcoin || 'Não disponível'}`;
+        const bitcoinBalance = data.bitcoin ? `${(data.bitcoin / 100000000).toFixed(8)} BTC` : 'Não disponível';
+        bitcoinElement.textContent = `₿ Bitcoin On-Chain: ${bitcoinBalance}`;
       }
       
-      // Atualizar Elements/Liquid balance
+      // Atualizar Elements/Liquid balance - NOVO!
       const liquidElement = document.getElementById('liquid-balance');
       if (liquidElement) {
-        liquidElement.textContent = `🌊 Liquid/Elements: ${data.elements || 'Não disponível'}`;
+        const liquidBalance = data.elements ? `${parseFloat(data.elements).toFixed(8)} L-BTC` : 'Não disponível';
+        liquidElement.textContent = `🌊 Liquid/Elements: ${liquidBalance}`;
+      }
+
+      // NOVO: Atualizar assets Liquid se disponível
+      const assetsElement = document.getElementById('liquid-assets');
+      if (assetsElement && data.liquid_assets) {
+        const assetsCount = Array.isArray(data.liquid_assets) ? data.liquid_assets.length : 0;
+        assetsElement.textContent = `💎 Liquid Assets: ${assetsCount} ativos`;
       }
       
       // Atualizar status indicators
@@ -413,5 +423,171 @@ function toggleExtras(button) {
   const isHidden = extras.style.display === "none";
   extras.style.display = isHidden ? "block" : "none";
   button.classList.toggle("rotate", isHidden);
+}
+
+// ====================================================================
+// NOVAS FUNÇÕES PARA LIGHTNING + ELEMENTS INTEGRATION
+// ====================================================================
+
+// Criar endereço Liquid/Elements
+async function createLiquidAddress() {
+  try {
+    const response = await fetch(`${flaskBaseURL}/create-address`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        network: 'liquid',
+        type: 'bech32'
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      const addressElement = document.getElementById('liquid-address');
+      if (addressElement) {
+        addressElement.value = data.address;
+        addressElement.title = `Endereço criado: ${new Date().toLocaleString('pt-BR')}`;
+      }
+      console.log('✅ Endereço Liquid criado:', data.address);
+    } else {
+      console.error('❌ Erro ao criar endereço Liquid:', data.error);
+      alert('Erro ao criar endereço: ' + data.error);
+    }
+  } catch (error) {
+    console.error('❌ Erro na requisição:', error);
+    alert('Erro de conexão ao criar endereço');
+  }
+}
+
+// Enviar transação Liquid/Elements
+async function sendLiquidTransaction() {
+  const address = document.getElementById('liquid-send-address')?.value;
+  const amount = document.getElementById('liquid-send-amount')?.value;
+  
+  if (!address || !amount) {
+    alert('Por favor, preencha o endereço e valor');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${flaskBaseURL}/send-transaction`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        network: 'liquid',
+        address: address,
+        amount: parseFloat(amount),
+        asset: 'bitcoin' // L-BTC
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(`✅ Transação enviada!\nTXID: ${data.txid}`);
+      // Limpar campos
+      document.getElementById('liquid-send-address').value = '';
+      document.getElementById('liquid-send-amount').value = '';
+      // Atualizar saldos
+      updateWalletBalances();
+    } else {
+      alert('❌ Erro ao enviar transação: ' + data.error);
+    }
+  } catch (error) {
+    console.error('❌ Erro na transação:', error);
+    alert('Erro de conexão ao enviar transação');
+  }
+}
+
+// Visualizar assets Liquid
+async function showLiquidAssets() {
+  try {
+    const response = await fetch(`${flaskBaseURL}/liquid-assets`);
+    const data = await response.json();
+    
+    if (data.success && data.assets) {
+      const assetsContainer = document.getElementById('liquid-assets-list');
+      if (!assetsContainer) return;
+
+      assetsContainer.innerHTML = '';
+      
+      if (data.assets.length === 0) {
+        assetsContainer.innerHTML = '<p>Nenhum asset encontrado</p>';
+        return;
+      }
+
+      data.assets.forEach(asset => {
+        const assetDiv = document.createElement('div');
+        assetDiv.className = 'asset-item';
+        assetDiv.innerHTML = `
+          <strong>${asset.name || 'Asset Desconhecido'}</strong><br>
+          <small>ID: ${asset.asset_id.substring(0, 16)}...</small><br>
+          <span>Ticker: ${asset.ticker || 'N/A'}</span>
+        `;
+        assetsContainer.appendChild(assetDiv);
+      });
+    } else {
+      console.error('❌ Erro ao obter assets:', data.error);
+    }
+  } catch (error) {
+    console.error('❌ Erro na requisição de assets:', error);
+  }
+}
+
+// Verificar conectividade Lightning + Elements
+async function checkNetworkConnectivity() {
+  try {
+    const response = await fetch(`${flaskBaseURL}/network-info`);
+    const data = await response.json();
+    
+    const connectivityStatus = document.getElementById('network-connectivity');
+    if (!connectivityStatus) return;
+
+    let statusHtml = '<h4>🔗 Status da Conectividade</h4>';
+    
+    // LND Status
+    if (data.lnd) {
+      const lndStatus = data.lnd.connected ? '🟢 Conectado' : '🔴 Desconectado';
+      statusHtml += `<p>⚡ LND: ${lndStatus}`;
+      if (data.lnd.connected && data.lnd.peers) {
+        statusHtml += ` (${data.lnd.peers} peers)`;
+      }
+      statusHtml += '</p>';
+    }
+
+    // Elements Status
+    if (data.elements) {
+      const elementsStatus = data.elements.connected ? '🟢 Conectado' : '🔴 Desconectado';
+      statusHtml += `<p>🌊 Elements: ${elementsStatus}`;
+      if (data.elements.connected && data.elements.chain) {
+        statusHtml += ` (${data.elements.chain})`;
+      }
+      statusHtml += '</p>';
+    }
+
+    connectivityStatus.innerHTML = statusHtml;
+    
+  } catch (error) {
+    console.error('❌ Erro ao verificar conectividade:', error);
+  }
+}
+
+// Auto-executar verificação de conectividade a cada 60 segundos
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Verificar conectividade na inicialização
+    setTimeout(checkNetworkConnectivity, 2000);
+    // E a cada 60 segundos
+    setInterval(checkNetworkConnectivity, 60000);
+  });
+} else {
+  // Se o DOM já carregou
+  setTimeout(checkNetworkConnectivity, 2000);
+  setInterval(checkNetworkConnectivity, 60000);
 }
 
