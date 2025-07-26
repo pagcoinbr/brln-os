@@ -192,17 +192,7 @@ sudo sed -i "s|^alias=.*|$alias_line|" "$file_path"
 read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
     log "Você escolheu usar o Postgres!"
-    read -p "Você deseja exibir os logs da instalação? (y/n): " show_logs
-    if [[ $show_logs == "y" ]]; then
-      log "Exibindo logs da instalação do Postgres..."
-      postgres_db
-    elif [[ $show_logs == "n" ]]; then
-      warning "Você escolheu não exibir os logs da instalação do Postgres!"
-      postgres_db >> /dev/null 2>&1 & spinner
-    else
-      error "Opção inválida. Por favor, escolha 'y' ou 'n'."
-      exit 1
-    fi
+    postgres_db
     psql -V
     lnd_db=$(cat <<EOF
 [db]
@@ -587,14 +577,6 @@ menu() {
     1)
       app="lnd"
       echo -e "${CYAN}🚀 Iniciando a instalação do $app...${NC}"
-      
-      # Garantir que o sistema Docker esteja preparado
-      if ! ensure_docker_system_ready "$app"; then
-        error "❌ Falha na preparação do sistema Docker para $app"
-        menu
-        return 1
-      fi
-      
       sudo bash "$REPO_DIR/scripts/install-$app.sh"
       echo -e "\033[43m\033[30m ✅ Sua instalação do $app foi bem sucedida! \033[0m"
       menu
@@ -634,16 +616,7 @@ menu() {
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
       read -p "Deseja exibir logs? (y/n): " verbose_mode
-      if [[ "$verbose_mode" == "y" ]]; then
-        install_bos
-      elif [[ "$verbose_mode" == "n" ]]; then
-        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco...${NC}  "
-        install_bos >> /dev/null 2>&1 & spinner
-        clear
-      else
-        echo "Opção inválida."
-        menu
-      fi
+      install_bos
       menu
       ;;
     5)

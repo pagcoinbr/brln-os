@@ -53,7 +53,7 @@ ignore-historical-gossip-filters=true
 # Turn to true to use mainnet
 bitcoin.mainnet=false
 # Turn to true to use testnet
-bitcoin.testnet=true
+#bitcoin.testnet=true
 bitcoin.node=bitcoind
 # Configurações de taxa - taxa base padrão do LND = 1000 (mSat), taxa de comissão = 1 (ppm)
 # Você pode escolher o que quiser, por exemplo, ZeroFeeRouting (0,0) ou ZeroBaseFee (0,X)

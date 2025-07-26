@@ -6,75 +6,7 @@ basics
 
 app="lnd"
 REPO_DIR="/root/brln-os"
-
-# Função para escolher a rede Bitcoin
-choose_bitcoin_network() {
-    echo ""
-    info "═══════════════════════════════════════════════════════════════"
-    log "🔗 Escolha da Rede Bitcoin"
-    info "═══════════════════════════════════════════════════════════════"
-    echo ""
-    
-    info "Escolha qual rede Bitcoin você deseja usar:"
-    echo ""
-    echo "1. 🧪 TESTNET (Recomendado para testes)"
-    echo "   • Rede de teste do Bitcoin"
-    echo "   • Bitcoins não têm valor real"
-    echo "   • Perfeito para aprendizado e testes"
-    echo "   • Sincronização mais rápida"
-    echo ""
-    echo "2. 💰 MAINNET (Rede principal)"
-    echo "   • Rede principal do Bitcoin"
-    echo "   • Bitcoins têm valor real"
-    echo "   • Requer maior cuidado com segurança"
-    echo "   • Sincronização mais lenta"
-    echo ""
-    
-    while true; do
-        read -p "Escolha a rede (1 para TESTNET, 2 para MAINNET) [1]: " -n 1 -r
-        echo
-        
-        case $REPLY in
-            "1"|"" ) 
-                export BITCOIN_NETWORK="testnet"
-                log "🧪 Rede TESTNET selecionada"
-                echo ""
-                info "Você escolheu a rede TESTNET:"
-                echo "• Os bitcoins não têm valor monetário real"
-                echo "• Perfeito para testes e aprendizado"
-                echo "• Transações mais rápidas e baratas"
-                break
-                ;;
-            "2" )
-                export BITCOIN_NETWORK="mainnet"
-                log "💰 Rede MAINNET selecionada"
-                echo ""
-                warning "⚠️  ATENÇÃO: Você escolheu a rede MAINNET!"
-                warning "• Os bitcoins têm valor monetário REAL"
-                warning "• Mantenha suas chaves privadas SEGURAS"
-                warning "• Faça backup da sua seed phrase"
-                echo ""
-                read -p "Você tem certeza que deseja usar MAINNET? (y/N): " -n 1 -r
-                echo
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
-                    break
-                else
-                    echo "Voltando para seleção de rede..."
-                    echo ""
-                    continue
-                fi
-                ;;
-            * )
-                echo "Por favor, escolha 1 para TESTNET ou 2 para MAINNET."
-                ;;
-        esac
-    done
-    
-    # Salvar a escolha da rede em um arquivo para o docker-compose usar
-    echo "BITCOIN_NETWORK=$BITCOIN_NETWORK" > "$REPO_DIR/container/.env"
-    log "✅ Configuração de rede salva em .env"
-    echo ""
-}
+CONTAINER_DIR="$REPO_DIR/container"
 
 brln_credentials() {
     echo ""
@@ -111,7 +43,11 @@ brln_credentials() {
     cd "$REPO_DIR"
     
     # Configurar arquivos
+    echo "📝 Criando bitcoin.conf..."
+    configure_bitcoin_conf_remote
+    echo "📝 Criando lnd.conf..."
     configure_lnd_conf_remote "$brln_rpc_user" "$brln_rpc_pass"
+    echo "📝 Criando elements.conf..."
     configure_elements_remote "$brln_rpc_user" "$brln_rpc_pass"
     
     # Salvar credenciais RPC no arquivo .env para o container LND
@@ -133,7 +69,7 @@ local_credentials() {
     echo ""
     
     # Solicitar usuário e senha RPC
-    echo "Configure as credenciais RPC para o Bitcoin Core local:"
+    echo "Configure as credenciais locais:"
     echo ""
     
     while true; do
@@ -176,8 +112,11 @@ local_credentials() {
         log "✅ Credenciais RPC salvas no arquivo .env"
         
         # Configurar arquivos
+        echo "📝 Criando bitcoin.conf..."
         configure_bitcoin_conf "$rpcauth_line"
+        echo "📝 Criando lnd.conf..."
         configure_lnd_conf_local "$local_rpc_user" "$local_rpc_pass"
+        echo "📝 Criando elements.conf..."
         configure_elements_local "$local_rpc_user" "$local_rpc_pass"
         
         # Salvar credenciais RPC no arquivo .env para o container LND
@@ -194,19 +133,19 @@ local_credentials() {
         error "❌ Erro ao gerar rpcauth. Verifique se o Python3 está instalado."
         exit 1
     fi
+    cd -
 }
 # Função para configurar blockchain remota
 configure_remote_blockchain() {
     
-    # Primeiro, escolher a rede
-    choose_bitcoin_network
+    # Configuração sempre para mainnet
+    BITCOIN_NETWORK="mainnet"
     echo ""
     info "═══════════════════════════════════════════════════════════════"
-    log "🔗 Configuração da Fonte Blockchain"
+    log "🔗 Configuração da Fonte Blockchain (MAINNET)"
     info "═══════════════════════════════════════════════════════════════"
     echo ""
     
-    warning "⚠️  ATENÇÃO: Se você escolheu a rede TESTNET e esta configuração apenas permite conexão com bitcoin node local!"
     echo ""
     
     info "Escolha a fonte da blockchain que deseja usar:"
@@ -311,33 +250,19 @@ configure_lnd_conf_remote() {
     log "📝 Configurando lnd.conf para conexão remota ($BITCOIN_NETWORK)..."
     
     # Verificar se o arquivo existe
-    if [[ ! -f "$lnd_conf" ]]; then
-        # Copiar do exemplo remoto se não existir
-        if [[ -f "container/lnd/lnd.conf.example.remote" ]]; then
-            cp "container/lnd/lnd.conf.example.remote" "$lnd_conf"
-            log "Arquivo lnd.conf criado a partir do exemplo remoto"
-        else
-            error "Arquivo lnd.conf.example.remote não encontrado!"
-            return 1
-        fi
+    # Copiar do exemplo remoto se não existir
+    if [[ -f "container/lnd/lnd.conf.example.remote" ]]; then
+        cp "container/lnd/lnd.conf.example.remote" "$lnd_conf"
+        log "Arquivo lnd.conf criado a partir do exemplo de configuração remoto"
+    else
+        error "Arquivo lnd.conf.example.remote não encontrado!"
+        return 1
     fi
     
     # Atualizar credenciais para conexão remota
     sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
     sed -i "s/bitcoind.rpcpass=<brln_rpc_pass>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
-    
-    # Configurar para a rede escolhida
-    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
-        log "Configurando LND para MAINNET remota..."
-        sed -i 's/bitcoin.mainnet=false/bitcoin.mainnet=true/' "$lnd_conf"
-        sed -i 's/bitcoin.testnet=true/bitcoin.testnet=false/' "$lnd_conf"
-        # Portas para mainnet (as portas remotas já devem estar corretas no template)
-    else
-        log "Configurando LND para TESTNET remota..."
-        sed -i 's/bitcoin.mainnet=true/bitcoin.mainnet=false/' "$lnd_conf"
-        sed -i 's/bitcoin.testnet=false/bitcoin.testnet=true/' "$lnd_conf"
-        # Portas para testnet (as portas remotas já devem estar corretas no template)
-    fi
+    log "Configurando LND para MAINNET remota..."
     
     log "✅ lnd.conf configurado para conexão remota ($BITCOIN_NETWORK)!"
 }
@@ -350,45 +275,23 @@ configure_lnd_conf_local() {
     
     log "📝 Configurando lnd.conf para conexão local ($BITCOIN_NETWORK)..."
     
-    # Verificar se o arquivo existe
-    if [[ ! -f "$lnd_conf" ]]; then
-        # Copiar do exemplo local se não existir
-        if [[ -f "container/lnd/lnd.conf.example.local" ]]; then
-            cp "container/lnd/lnd.conf.example.local" "$lnd_conf"
-            log "Arquivo lnd.conf criado a partir do exemplo local"
-        else
-            error "Arquivo lnd.conf.example.local não encontrado!"
-            return 1
-        fi
+    if [[ -f "container/lnd/lnd.conf.example.local" ]]; then
+        cp "container/lnd/lnd.conf.example.local" "$lnd_conf"
+        log "Arquivo lnd.conf criado a partir do exemplo local"
+    else
+        error "Arquivo lnd.conf.example.local não encontrado!"
+        return 1
     fi
     
     # Atualizar credenciais para conexão local
     sed -i "s/<seu_user_rpc>/$user/g" "$lnd_conf"
     sed -i "s/<sua_senha_rpc>/$pass/g" "$lnd_conf"
-    
-    # Substituir a variável ${network} com o valor correto da rede
-    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
-        sed -i "s/\${network}/mainnet/g" "$lnd_conf"
-    else
-        sed -i "s/\${network}/testnet/g" "$lnd_conf"
-    fi
-    
-    # Configurar para a rede escolhida
-    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
-        log "Configurando LND para MAINNET local..."
-        sed -i 's/bitcoin.mainnet=false/bitcoin.mainnet=true/' "$lnd_conf"
-        sed -i 's/bitcoin.testnet=true/bitcoin.testnet=false/' "$lnd_conf"
-        # Ajustar portas ZMQ para mainnet
-        sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/" "$lnd_conf" 2>/dev/null || true
-        sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/" "$lnd_conf" 2>/dev/null || true
-    else
-        log "Configurando LND para TESTNET local..."
-        sed -i 's/bitcoin.mainnet=true/bitcoin.mainnet=false/' "$lnd_conf"
-        sed -i 's/bitcoin.testnet=false/bitcoin.testnet=true/' "$lnd_conf"
-        # Ajustar portas ZMQ para testnet
-        sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/" "$lnd_conf" 2>/dev/null || true
-        sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/" "$lnd_conf" 2>/dev/null || true
-    fi
+    sed -i "s/\${network}/mainnet/g" "$lnd_conf"
+    log "Configurando LND para MAINNET local..."
+    sed -i 's/bitcoin.mainnet=false/bitcoin.mainnet=true/' "$lnd_conf"
+    # Ajustar portas ZMQ para mainnet
+    sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/" "$lnd_conf" 2>/dev/null || true
+    sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/" "$lnd_conf" 2>/dev/null || true
     
     log "✅ lnd.conf configurado para conexão local ($BITCOIN_NETWORK)!"
 }
@@ -396,38 +299,37 @@ configure_lnd_conf_local() {
 # Função para configurar bitcoin.conf com rpcauth
 configure_bitcoin_conf() {
     local rpcauth_line="$1"
+    log "📝 Configurando arquivos bitcoin.conf"
+    local bitcoin_conf="container/bitcoin/bitcoin.conf.example"
+    local target_conf="container/bitcoin/bitcoin.conf"
     
-    log "📝 Configurando arquivos bitcoin.conf para $BITCOIN_NETWORK..."
-    
-    # Escolher o arquivo correto baseado na rede
-    if [[ "$BITCOIN_NETWORK" == "mainnet" ]]; then
-        local bitcoin_conf="container/bitcoin/bitcoin.conf.mainnet.example"
-        local target_conf="container/bitcoin/bitcoin.conf"
-        
-        if [[ -f "$bitcoin_conf" ]]; then
-            # Copiar o template mainnet para o arquivo final
-            cp "$bitcoin_conf" "$target_conf"
-            # Substituir a linha rpcauth
-            sed -i "s/^rpcauth=.*/$rpcauth_line/" "$target_conf"
-            log "✅ bitcoin.conf configurado para MAINNET!"
-        else
-            warning "⚠️  Arquivo bitcoin.conf.mainnet.example não encontrado!"
-            return 1
-        fi
+    if [[ -f "$bitcoin_conf" ]]; then
+        # Copiar o template exemplo para o arquivo final
+        cp "$bitcoin_conf" "$target_conf"
+        # Substituir a linha rpcauth placeholder
+        sed -i "s/rpcauth=<PLACEHOLDER_RPCAUTH>/$rpcauth_line/" "$target_conf"
+        log "✅ bitcoin.conf configurado para MAINNET!"
     else
-        local bitcoin_conf="container/bitcoin/bitcoin.conf.testnet.example"
-        local target_conf="container/bitcoin/bitcoin.conf"
-        
-        if [[ -f "$bitcoin_conf" ]]; then
-            # Copiar o template testnet para o arquivo final
-            cp "$bitcoin_conf" "$target_conf"
-            # Substituir a linha rpcauth
-            sed -i "s/^rpcauth=.*/$rpcauth_line/" "$target_conf"
-            log "✅ bitcoin.conf configurado para TESTNET!"
-        else
-            warning "⚠️  Arquivo bitcoin.conf.testnet.example não encontrado!"
-            return 1
-        fi
+        error "⚠️  Arquivo bitcoin.conf.example não encontrado!"
+        return 1
+    fi
+}
+
+# Função para configurar bitcoin.conf para conexão remota (sem RPC local)
+configure_bitcoin_conf_remote() {
+    log "📝 Configurando arquivos bitcoin.conf para conexão remota"
+    local bitcoin_conf="container/bitcoin/bitcoin.conf.example"
+    local target_conf="container/bitcoin/bitcoin.conf"
+    
+    if [[ -f "$bitcoin_conf" ]]; then
+        # Copiar o template exemplo para o arquivo final
+        cp "$bitcoin_conf" "$target_conf"
+        # Para conexão remota, comentar ou remover a linha rpcauth já que não usaremos RPC local
+        sed -i "s/rpcauth=<PLACEHOLDER_RPCAUTH>/#rpcauth=# Not needed for remote connection/" "$target_conf"
+        log "✅ bitcoin.conf configurado para conexão remota!"
+    else
+        error "⚠️  Arquivo bitcoin.conf.example não encontrado!"
+        return 1
     fi
 }
 
@@ -438,7 +340,7 @@ check_bitcoin_sync() {
     sleep 10 & spinner
     
     # Tentar conectar e verificar status de sincronização
-    MAX_SYNC_ATTEMPTS=10
+    MAX_SYNC_ATTEMPTS=1
     sync_attempt=1
     
     while [[ $sync_attempt -le $MAX_SYNC_ATTEMPTS ]]; do
@@ -526,6 +428,7 @@ check_bitcoin_sync() {
     warning "   - Container Bitcoin não está executando"
     warning "   - RPC não está acessível"
     warning "   - Credenciais RPC incorretas"
+    warning "   - Bitcoin Core em modo remoto"
     echo ""
     
     read -p "Deseja continuar mesmo assim? (y/N): " -n 1 -r
@@ -719,45 +622,29 @@ start_lnd_docker() {
             log "Mantendo o container lnd atual."
         fi
     fi
-    read -p "Deseja exibir logs da instalação? (y/n): " verbose_mode
-    if [[ "$verbose_mode" == "y" ]]; then
-        read -p "Deseja instalar o Bitcoin Core? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            sudo docker-compose build $app >> /dev/null 2>&1 & spinner
-            sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
-            echo "Aguardando $app inicializar..."
-            sleep 10 & spinner
-        else
-            warning "Bitcoin Core não será instalado."
-        fi
-        sudo docker-compose build $app2
-        sudo docker-compose up -d $app2
-    elif [[ "$verbose_mode" == "n" ]]; then
-        warning " 🕒 Aguarde..."
-        read -p "Deseja instalar o Bitcoin Core? (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            sudo docker-compose build $app >> /dev/null 2>&1 & spinner
-            sudo docker-compose up -d $app >> /dev/null 2>&1 & spinner
-            echo "Aguardando $app inicializar..."
-            sleep 10 & spinner
-        else
-            warning "Bitcoin Core não será instalado."
-        fi
-        sudo docker-compose build $app2 >> /dev/null 2>&1 & spinner
-        sudo docker-compose up -d $app2 >> /dev/null 2>&1 & spinner
-        clear
+    warning " 🕒 Aguarde..."
+    read -p "Deseja instalar o $app? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        sudo docker-compose build $app
+        sudo docker-compose up -d $app
+        echo "Aguardando $app inicializar..."
     else
-        error "Opção inválida."
-        sudo bash "$REPO_DIR/brunel.sh"
+        warning "Bitcoin Core não será instalado."
     fi
+    sudo docker-compose build $app2
+    sudo docker-compose up -d $app2
     cd -
 }
 # Função principal
 main() {
+    # Primeiro configurar a blockchain e criar todos os arquivos de configuração
     configure_remote_blockchain
+    
+    # Depois iniciar os containers (agora os arquivos já existem)
     start_lnd_docker
+    
+    # Capturar e exibir seed
     capture_lnd_seed
     display_and_confirm_seed
     auto_destruction_menu
