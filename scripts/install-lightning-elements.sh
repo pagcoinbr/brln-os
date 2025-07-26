@@ -8,6 +8,13 @@
 
 set -e
 
+# Verificar se está sendo executado como root
+if [[ $EUID -ne 0 ]]; then
+    echo "Este script precisa ser executado como root para instalar dependências."
+    echo "Execute: sudo bash $0"
+    exit 1
+fi
+
 # Cores para output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -42,32 +49,85 @@ check_directory() {
     success "Diretório brln-os detectado"
 }
 
+# Instalar Node.js 20.x
+install_nodejs() {
+    log "Instalando Node.js 20.x..."
+    
+    # Verificar se já existe uma instalação do Node.js e removê-la se necessário
+    if command -v node &> /dev/null; then
+        log "Removendo instalação anterior do Node.js..."
+        apt remove -y nodejs npm 2>/dev/null || true
+        apt autoremove -y 2>/dev/null || true
+    fi
+    
+    # Atualizar repositórios
+    log "Atualizando repositórios do sistema..."
+    apt update -y
+    
+    # Instalar dependências necessárias
+    log "Instalando dependências necessárias..."
+    apt install -y curl ca-certificates gnupg lsb-release
+    
+    # Adicionar repositório NodeSource para Node.js 20.x
+    log "Adicionando repositório NodeSource..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    
+    # Instalar Node.js
+    log "Instalando Node.js e npm..."
+    apt install -y nodejs
+    
+    # Verificar instalação
+    if command -v node &> /dev/null && command -v npm &> /dev/null; then
+        NODE_VER=$(node --version)
+        NPM_VER=$(npm --version)
+        success "Node.js $NODE_VER e npm $NPM_VER instalados com sucesso"
+        
+        # Configurar npm para evitar problemas de permissão
+        log "Configurando npm..."
+        npm config set fund false --global
+        npm config set audit-level moderate --global
+        
+    else
+        error "Falha na instalação do Node.js"
+        exit 1
+    fi
+}
+
 # Verificar dependências
 check_dependencies() {
     log "Verificando dependências..."
     
     # Node.js
     if ! command -v node &> /dev/null; then
-        error "Node.js não encontrado. Por favor, instale Node.js 16+ primeiro."
-        exit 1
+        warning "Node.js não encontrado. Instalando Node.js 20.x..."
+        install_nodejs
+    else
+        NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
+        if [[ $NODE_VERSION -lt 16 ]]; then
+            warning "Node.js versão 16+ é necessário. Versão atual: $(node --version)"
+            warning "Atualizando para Node.js 20.x..."
+            install_nodejs
+        else
+            success "Node.js $(node --version) já está instalado"
+        fi
     fi
     
-    NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
-    if [[ $NODE_VERSION -lt 16 ]]; then
-        error "Node.js versão 16+ é necessário. Versão atual: $(node --version)"
-        exit 1
-    fi
-    
-    # npm
+    # npm (geralmente vem com Node.js, mas verificar)
     if ! command -v npm &> /dev/null; then
-        error "npm não encontrado."
-        exit 1
+        warning "npm não encontrado. Reinstalando Node.js..."
+        install_nodejs
+    else
+        success "npm $(npm --version) disponível"
     fi
     
     # Git (para clonar o repositório original)
     if ! command -v git &> /dev/null; then
-        error "Git não encontrado."
-        exit 1
+        log "Instalando Git..."
+        apt update -y
+        apt install -y git
+        success "Git instalado"
+    else
+        success "Git $(git --version | cut -d' ' -f3) disponível"
     fi
     
     success "Todas as dependências estão instaladas"
@@ -86,7 +146,7 @@ backup_existing_lightning() {
 setup_lightning_project() {
     log "Clonando projeto Lightning do fork pagcoinbr (com extensões Elements)..."
     
-    git clone -b master https://github.com/pagcoinbr/brln-os.git lightning
+    git clone https://github.com/pagcoinbr/lightning.git lightning
     cd lightning
     
     success "Projeto Lightning clonado do fork pagcoinbr (branch master)"
@@ -124,11 +184,14 @@ create_express_server() {
     log "Servidor brln-server.js já configurado para usar porta 5003"
     log "Compatível com seu main.js existente em html/js/"
     
-        success "Servidor Express configurado"
+    success "Servidor Express configurado"
 }
 
-# Criar arquivo de configuração
-}
+# Criar arquivo de configuração do servidor
+create_server_config() {
+    log "Criando arquivo brln-server.js..."
+    
+    cat > lightning/server/brln-server.js << 'EOF'
 
 const app = express();
 const PORT = process.env.PORT || 5003;
@@ -419,6 +482,9 @@ EOF
 
     success "Servidor Express criado"
 }
+
+# Criar arquivo de configuração
+create_config_file() {
     log "Criando arquivo de configuração..."
     
     cat > lightning/config/brln-elements-config.js << 'EOF'
@@ -789,6 +855,7 @@ main() {
     mkdir -p lightning/examples
     
     create_express_server
+    create_server_config
     create_config_file
     create_integration_example
     create_env_file

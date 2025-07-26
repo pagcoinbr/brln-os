@@ -25,8 +25,9 @@
 
 ```bash
 
-# OU OPÇÃO B: Instalação manual
-sudo su -c "git clone https://github.com/pagcoinbr/brln-os.git /root/brln-os && cd /root/brln-os && bash run.sh"
+# Execute o comando:
+sudo su -c "git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh; bash"
+
 
 # Após a instalação inicial, você verá um qr code para acessar sua rede tailscale (VPN), caso não queira utilizar, acesse a interface web (http://SEU_IP ou http://localhost) e finalize a configuração do node:
 # - Clique no botão "⚡ BRLN Node Manager" 

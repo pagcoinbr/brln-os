@@ -5,7 +5,7 @@ source /root/brln-os/scripts/.env
 if [[ "$EUID" -ne 0 ]]; then
     echo "Este script deve ser executado como root."
     echo " "
-    echo "Execute: sudo su & git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh"
+    echo "sudo su -c \"git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh; bash\""
     exit 1
 fi
 
@@ -453,9 +453,20 @@ if [[ ! -d "$INSTALL_DIR/lightning" ]]; then
     bash "$INSTALL_DIR/scripts/install-lightning-elements.sh"
   else
     echo "❌ Script install-lightning-elements.sh não encontrado!"
+    echo "🔄 Instalando Lightning diretamente..."
+    cd "$INSTALL_DIR"
+    git clone https://github.com/pagcoinbr/lightning.git
+    echo "✅ Lightning clonado com sucesso!"
+  fi
+  
+  # Verificar novamente se foi instalado
+  if [[ ! -d "$INSTALL_DIR/lightning" ]]; then
+    echo "❌ Falha na instalação do Lightning!"
     echo "❌ Serviço brln-rpc-server não será instalado."
     SERVICES=("gotty-fullauto" "command-center")
   fi
+else
+  echo "✅ Diretório lightning já existe."
 fi
 
 sudo bash "$INSTALL_DIR/scripts/generate-services.sh" root "$INSTALL_DIR"
