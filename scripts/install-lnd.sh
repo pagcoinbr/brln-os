@@ -286,9 +286,6 @@ configure_lnd_conf_local() {
     # Atualizar credenciais para conexão local
     sed -i "s/<seu_user_rpc>/$user/g" "$lnd_conf"
     sed -i "s/<sua_senha_rpc>/$pass/g" "$lnd_conf"
-    sed -i "s/\${network}/mainnet/g" "$lnd_conf"
-    log "Configurando LND para MAINNET local..."
-    sed -i 's/bitcoin.mainnet=false/bitcoin.mainnet=true/' "$lnd_conf"
     # Ajustar portas ZMQ para mainnet
     sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/" "$lnd_conf" 2>/dev/null || true
     sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/" "$lnd_conf" 2>/dev/null || true

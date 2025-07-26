@@ -92,10 +92,10 @@ db.bolt.auto-compact=true
 # Uncomment to do DB compact at every LND reboot (default: 168h)
 db.bolt.auto-compact-min-age=0h
 
-## ATENCAO: Para bitcoin Externo como o da BRLN Comente as quatro linhas acima e descomente as 5 abaixo.
+[Bitcoind]
 bitcoind.rpchost=bitcoin.br-ln.com:8085
 bitcoind.rpcuser=<brln_rpc_user>
-bitcoind.rpcpass=<brln_rpc_user>
+bitcoind.rpcpass=<brln_rpc_pass>
 bitcoind.zmqpubrawblock=tcp://bitcoin.br-ln.com:28332
 bitcoind.zmqpubrawtx=tcp://bitcoin.br-ln.com:28333
 
