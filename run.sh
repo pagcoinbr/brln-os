@@ -4,7 +4,8 @@ source /root/brln-os/scripts/.env
 # Força execução como root
 if [[ "$EUID" -ne 0 ]]; then
     echo "Este script deve ser executado como root."
-    echo "Execute: sudo $0"
+    echo " "
+    echo "Execute: sudo su & git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh"
     exit 1
 fi
 

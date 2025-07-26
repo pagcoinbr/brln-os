@@ -28,12 +28,10 @@
 sudo su
 
 # 2. OPÇÃO A: Instalação automática via script
-curl -fsSL https://pagcoin.org/start.sh | bash
+curl -fsSL https://pagcoin.org/start.sh | bash ###EM MANUTENÇÃO###
 
 # OU OPÇÃO B: Instalação manual
-git clone https://github.com/pagcoinbr/brln-os.git
-cd brln-os
-./run.sh
+sudo su -c "git clone https://github.com/pagcoinbr/brln-os.git /root/brln-os && cd /root/brln-os && bash run.sh"
 
 # 3. Após a instalação inicial, você verá um qr code para acessar sua rede tailscale (VPN), caso não queira utilizar, acesse a interface web (http://SEU_IP ou http://localhost) e finalize a configuração do node:
 # - Clique no botão "⚡ BRLN Node Manager" 
