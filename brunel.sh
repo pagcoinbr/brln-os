@@ -88,8 +88,12 @@ prepare_docker_system() {
     cd "$REPO_DIR/container"
     chmod +x setup-docker-smartsystem.sh
     
-    # Executar o setup inteligente
-    if sudo ./setup-docker-smartsystem.sh; then
+    # Executar o setup inteligente em background com spinner
+    app="Setup Docker"
+    (sudo ./setup-docker-smartsystem.sh >> /dev/null 2>&1) &
+    spinner
+    
+    if [[ $? -eq 0 ]]; then
       log "✅ Sistema Docker preparado com sucesso!"
       # Criar arquivo de controle para indicar que o sistema foi preparado
       touch "/data/.docker_system_prepared"

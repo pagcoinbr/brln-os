@@ -706,32 +706,9 @@ start_lnd_docker() {
         chmod -R 755 "/data/lnd"
         log "✅ Permissões básicas aplicadas"
     fi
-    
-    if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
-        warning "O container lnd já está em execução."
-        read -p "Deseja parar e remover o container lnd e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log "Parando e removendo o container lnd existente..."
-            docker-compose down -v
-        else
-            log "Mantendo o container lnd atual."
-        fi
-    fi
     warning " 🕒 Aguarde..."
-    read -p "Deseja instalar o $app? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        sudo docker-compose build $app
-        sudo docker-compose up -d $app
-        echo "Aguardando $app inicializar..."
-    else
-        warning "Bitcoin Core não será instalado."
-    fi
-    sudo docker-compose build $app2
-    sudo docker-compose up -d $app2
-    cd -
 }
+
 # Função principal
 main() {
     # Primeiro configurar a blockchain e criar todos os arquivos de configuração

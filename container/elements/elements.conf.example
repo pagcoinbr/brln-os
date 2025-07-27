@@ -8,8 +8,8 @@ txindex=1
 # validatepegin=1
 
 # Configurações globais de RPC
-rpcuser=elementsuser
-rpcpassword=elementspassword123
+rpcuser=ELEMENTS_RPC_USER
+rpcpassword=ELEMENTS_RPC_PASSWORD
 rpcallowip=0.0.0.0/0
 
 # ====================================================================

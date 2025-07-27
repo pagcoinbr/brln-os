@@ -1,5 +1,5 @@
 #!/bin/bash
-
+source /root/brln-os/scripts/.env
 # Script para configurar Elements/Liquid
 # Substitui as credenciais RPC no elements.conf.example
 
@@ -9,6 +9,7 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Função para imprimir mensagens coloridas
@@ -28,6 +29,18 @@ print_error() {
 ELEMENTS_CONFIG_FILE_EXAMPLE="/root/brln-os/container/elements/elements.conf.example"
 ELEMENTS_CONFIG_FILE="/root/brln-os/container/elements/elements.conf"
 ELEMENTS_DATA_DIR="/data/elements"
+
+if sudo docker ps --format '{{.Names}}' | grep -q "^elements$"; then
+    print_warning "O container elements já está em execução."
+    read -p "Deseja parar e remover o container elements e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Parando e removendo o container elements existente..."
+        docker-compose down -v
+    else
+        print_info "Mantendo o container elements atual."
+    fi
+fi
 
 # Verificar se o arquivo existe
 if [ ! -f "$ELEMENTS_CONFIG_FILE_EXAMPLE" ]; then
@@ -67,7 +80,7 @@ cp "$ELEMENTS_CONFIG_FILE_EXAMPLE" "$ELEMENTS_CONFIG_FILE"
 cp "$ELEMENTS_CONFIG_FILE" "$ELEMENTS_DATA_DIR/elements.conf"
 
 # Substituir rpcuser usando sed
-sed -i "s/^rpcuser=.*/rpcuser=$rpc_user/" "$ELEMENTS_CONFIG_FILE"
+sed -i "s/^rpcuser=ELEMENTS_RPC_USER/rpcuser=$rpc_user/" "$ELEMENTS_CONFIG_FILE"
 if [ $? -eq 0 ]; then
     print_info "rpcuser atualizado com sucesso"
 else
@@ -76,7 +89,7 @@ else
 fi
 
 # Substituir rpcpassword usando sed
-sed -i "s/^rpcpassword=.*/rpcpassword=$rpc_password/" "$ELEMENTS_CONFIG_FILE"
+sed -i "s/^rpcpassword=ELEMENTS_RPC_PASSWORD/rpcpassword=$rpc_password/" "$ELEMENTS_CONFIG_FILE"
 if [ $? -eq 0 ]; then
     print_info "rpcpassword atualizado com sucesso"
 else
@@ -91,7 +104,7 @@ echo "  rpcpassword=***"
 echo
 print_warning "Lembre-se de manter suas credenciais seguras!"
 echo ""
-echo -e "${CYAN}🚀 Instalando ThunderHub...${NC}"
+echo -e "${CYAN}🚀 Instalando Elements...${NC}"
 read -p "Deseja exibir logs? (y/n): " verbose_mode
 app="elements"
 if [[ "$verbose_mode" == "y" ]]; then
