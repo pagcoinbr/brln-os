@@ -155,3 +155,4 @@ services/
 # Projeto Lightning (clonado do fork pagcoinbr/lightning)
 lightning/
 lightning.backup.*/
+password.txt
