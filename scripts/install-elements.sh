@@ -150,16 +150,9 @@ echo
 print_warning "Lembre-se de manter suas credenciais seguras!"
 echo ""
 echo -e "${CYAN}🚀 Instalando Elements...${NC}"
-read -p "Deseja exibir logs? (y/n): " verbose_mode
 app="elements"
-if [[ "$verbose_mode" == "y" ]]; then
+
 docker-compose build $app
 docker-compose up -d $app
-elif [[ "$verbose_mode" == "n" ]]; then
-echo -e "${YELLOW} 🕒 Aguarde, isso poderá demorar 10min ou mais. Seja paciente...${NC}"
-docker-compose build $app >> /dev/null 2>&1 & spinner
-docker-compose up -d $app >> /dev/null 2>&1 & spinner
-clear
-else
-echo "Opção inválida."
-fi 
+#clear
+
