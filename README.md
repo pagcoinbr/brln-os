@@ -30,7 +30,7 @@ sudo su
 ```
 depois:
 ```bash
-git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh
+cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh
 
 
 # Após a instalação inicial, você verá um qr code para acessar sua rede tailscale (VPN), caso não queira utilizar, acesse a interface web (http://SEU_IP ou http://localhost) e finalize a configuração do node:
