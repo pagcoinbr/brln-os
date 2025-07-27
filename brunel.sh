@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -euo pipefail
 # Source das funções básicas
 source "$(dirname "$0")/scripts/.env"
 basics
@@ -549,8 +549,6 @@ menu() {
   echo "$BRLN_ASCII_FULL"
   echo -e "${GREEN}"
   echo "$BRLN_OS_ASCII"
-  echo -e "${YELLOW}"
-  echo "$LIGHTNING_BOLT"
   echo -e "${NC}"
   echo
   echo -e "${YELLOW} Acesse seu nó usando o IP no navegador:${RED} $ip_local${NC}"

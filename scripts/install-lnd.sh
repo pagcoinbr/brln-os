@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Source das funções básicas
 source "$(dirname "$0")/.env"
@@ -38,6 +39,9 @@ brln_credentials() {
     
     echo ""
     log "✅ Credenciais capturadas com sucesso!"
+    
+    # Criar arquivo de senha do LND
+    create_password_file
     
     # Ir para o diretório do repositório para as configurações
     cd "$REPO_DIR"
@@ -106,6 +110,9 @@ local_credentials() {
         # Voltar para o diretório do repositório para as configurações
         cd "$REPO_DIR"
         
+        # Criar arquivo de senha do LND
+        create_password_file
+        
         # Salvar credenciais RPC no arquivo .env para uso do container
         echo "BITCOIN_RPC_USER=$local_rpc_user" >> "$REPO_DIR/container/.env"
         echo "BITCOIN_RPC_PASS=$local_rpc_pass" >> "$REPO_DIR/container/.env"
@@ -170,6 +177,7 @@ configure_remote_blockchain() {
         case $REPLY in
             [Yy]* )
                 log "📡 Configurando conexão com blockchain remota BRLN Club..."
+                btc_mode="remote"
                 brln_credentials
                 break
                 ;;
@@ -177,6 +185,7 @@ configure_remote_blockchain() {
                 log "🏠 Usando blockchain local (configuração padrão)"
                 info "A sincronização da blockchain Bitcoin será realizada localmente."
                 warning "⚠️  Isso pode levar várias horas para sincronizar completamente."
+                btc_mode="local"
                 local_credentials
                 break
                 ;;
@@ -245,25 +254,35 @@ configure_elements_local() {
 configure_lnd_conf_remote() {
     local user="$1"
     local pass="$2"
-    local lnd_conf="container/lnd/lnd.conf"
+    local lnd_conf="/data/lnd/lnd.conf"
     
     log "📝 Configurando lnd.conf para conexão remota ($BITCOIN_NETWORK)..."
     
     # Verificar se o arquivo existe
-    # Copiar do exemplo remoto se não existir
-    if [[ -f "container/lnd/lnd.conf.example.remote" ]]; then
-        cp "container/lnd/lnd.conf.example.remote" "$lnd_conf"
-        log "Arquivo lnd.conf criado a partir do exemplo de configuração remoto"
+    # Copiar do exemplo se não existir
+    if [[ -f "container/lnd/lnd.conf.example" ]]; then
+        cp "container/lnd/lnd.conf.example" "$lnd_conf"
+        log "Arquivo lnd.conf criado a partir do exemplo de configuração"
     else
-        error "Arquivo lnd.conf.example.remote não encontrado!"
+        error "Arquivo lnd.conf.example não encontrado!"
         return 1
     fi
     
-    # Atualizar credenciais para conexão remota
-    sed -i "s/bitcoind.rpcuser=<brln_rpc_user>/bitcoind.rpcuser=$user/g" "$lnd_conf"
-    sed -i "s/bitcoind.rpcpass=<brln_rpc_pass>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
-    log "Configurando LND para MAINNET remota..."
+    # Para conexão remota: comentar configuração local e descomentar configuração remota
+    # Comentar linhas locais
+    sed -i "s/bitcoind.rpcuser=<seu_user_rpc>/#bitcoind.rpcuser=<seu_user_rpc>/g" "$lnd_conf"
+    sed -i "s/bitcoind.rpcpass=<sua_senha_rpc>/#bitcoind.rpcpass=<sua_senha_rpc>/g" "$lnd_conf"
+    sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/#bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/g" "$lnd_conf"
+    sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/#bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/g" "$lnd_conf"
     
+    # Descomentar e configurar linhas remotas
+    sed -i "s/#bitcoind.rpchost=bitcoin.br-ln.com:8085/bitcoind.rpchost=bitcoin.br-ln.com:8085/g" "$lnd_conf"
+    sed -i "s/#bitcoind.rpcuser=<seu_user_rpc>/bitcoind.rpcuser=$user/g" "$lnd_conf"
+    sed -i "s/#bitcoind.rpcpass=<sua_senha_rpc>/bitcoind.rpcpass=$pass/g" "$lnd_conf"
+    sed -i "s/#bitcoind.zmqpubrawblock=tcp:\/\/bitcoin.br-ln.com:28332/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin.br-ln.com:28332/g" "$lnd_conf"
+    sed -i "s/#bitcoind.zmqpubrawtx=tcp:\/\/bitcoin.br-ln.com:28333/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin.br-ln.com:28333/g" "$lnd_conf"
+    
+    log "Configurando LND para MAINNET remota..."
     log "✅ lnd.conf configurado para conexão remota ($BITCOIN_NETWORK)!"
 }
 
@@ -271,24 +290,24 @@ configure_lnd_conf_remote() {
 configure_lnd_conf_local() {
     local user="$1"
     local pass="$2"
-    local lnd_conf="container/lnd/lnd.conf"
-    
+    local lnd_conf="/data/lnd/lnd.conf"
+
     log "📝 Configurando lnd.conf para conexão local ($BITCOIN_NETWORK)..."
     
-    if [[ -f "container/lnd/lnd.conf.example.local" ]]; then
-        cp "container/lnd/lnd.conf.example.local" "$lnd_conf"
-        log "Arquivo lnd.conf criado a partir do exemplo local"
+    if [[ -f "container/lnd/lnd.conf.example" ]]; then
+        cp "container/lnd/lnd.conf.example" "$lnd_conf"
+        log "Arquivo lnd.conf criado a partir do exemplo"
     else
-        error "Arquivo lnd.conf.example.local não encontrado!"
+        error "Arquivo lnd.conf.example não encontrado!"
         return 1
     fi
     
-    # Atualizar credenciais para conexão local
+    # Para conexão local: manter configuração local ativa e configurar credenciais
+    # Substituir placeholders nas linhas locais (descomentadas)
     sed -i "s/<seu_user_rpc>/$user/g" "$lnd_conf"
     sed -i "s/<sua_senha_rpc>/$pass/g" "$lnd_conf"
-    # Ajustar portas ZMQ para mainnet
-    sed -i "s/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28432/bitcoind.zmqpubrawblock=tcp:\/\/bitcoin:28332/" "$lnd_conf" 2>/dev/null || true
-    sed -i "s/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28433/bitcoind.zmqpubrawtx=tcp:\/\/bitcoin:28333/" "$lnd_conf" 2>/dev/null || true
+    
+    # Não precisa ajustar portas ZMQ pois já estão corretas no template (28332/28333)
     
     log "✅ lnd.conf configurado para conexão local ($BITCOIN_NETWORK)!"
 }
@@ -328,6 +347,55 @@ configure_bitcoin_conf_remote() {
         error "⚠️  Arquivo bitcoin.conf.example não encontrado!"
         return 1
     fi
+}
+
+# Função para criar arquivo password.txt com senha do usuário
+create_password_file() {
+    echo ""
+    log "🔐 Configuração de senha para o LND"
+    echo ""
+    
+    info "Para desbloquear o LND, será necessária uma senha."
+    info "Esta senha será salva no arquivo password.txt para desbloqueio automático."
+    echo ""
+    warning "⚠️  IMPORTANTE: Anote esta senha em local seguro!"
+    warning "📝 Você precisará desta senha para acessar seus bitcoins!"
+    echo ""
+    
+    while true; do
+        read -p "🔐 Digite uma senha para o LND (mínimo 8 caracteres): " lnd_password
+        
+        if [[ -z "$lnd_password" ]]; then
+            error "Senha não pode estar vazia!"
+            continue
+        fi
+        
+        if [[ ${#lnd_password} -lt 8 ]]; then
+            error "Senha deve ter no mínimo 8 caracteres!"
+            continue
+        fi
+        
+        read -p "🔐 Confirme a senha: " lnd_password_confirm
+        
+        if [[ "$lnd_password" != "$lnd_password_confirm" ]]; then
+            error "Senhas não conferem! Tente novamente."
+            continue
+        fi
+        
+        break
+    done
+    
+    # Salvar senha no arquivo password.txt
+    # Criar diretório se não existir
+    mkdir -p "/data/lnd"
+    echo "$lnd_password" > "/data/lnd/password.txt"
+    chmod 600 "/data/lnd/password.txt"
+
+    log "✅ Senha salva em password.txt com permissões restritas!"
+    echo ""
+    warning "🚨 BACKUP: Faça backup da senha anotando em local seguro!"
+    warning "📁 O arquivo password.txt foi criado em: /data/lnd/password.txt"
+    echo ""
 }
 
 # Função para verificar sincronização do Bitcoin Core
@@ -439,7 +507,9 @@ check_bitcoin_sync() {
 # Função para capturar seed do LND
 capture_lnd_seed() {
     # Verificar sincronização do Bitcoin Core antes de iniciar o LND
-    check_bitcoin_sync
+    if [[ btc_mode == "local" ]]; then
+        check_bitcoin_sync
+    fi
     
     # Tentar capturar a seed do LND
     warning "⚠️ IMPORTANTE: PEGUE PAPEL E CANETA PARA ANOTAR A SUA FRASE DE 24 PALAVRAS SEED DO LND"
@@ -541,17 +611,20 @@ display_and_confirm_seed() {
 # Função para autodestruction de arquivos
 auto_destruction_menu() {
     # Perguntar sobre autodestruição
-    warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos de senha"
+    warning "🔥 OPÇÃO DE SEGURANÇA: Autodestruição dos arquivos sensíveis"
     echo ""
     echo "Por segurança, você pode optar por:"
-    echo "1. 📁 Manter o arquivo salvo seeds.txt"
-    echo "2. 🔥 Fazer autodestruição do arquivo"
+    echo "1. 📁 Manter os arquivos salvos (seeds.txt e password.txt)"
+    echo "2. 🔥 Fazer autodestruição dos arquivos"
     echo ""
-    echo "⚠️  ATENÇÃO: Se escolher autodestruição, certifique-se de que já anotou a frase de 24 palavras seed do LND ou você não poderá recuperar seus bitcoins!"
+    echo "⚠️  ATENÇÃO: Se escolher autodestruição, certifique-se de que já anotou:"
+    echo "   • A frase de 24 palavras seed do LND"
+    echo "   • A senha do LND"
+    echo "   Ou você não poderá recuperar seus bitcoins!"
     echo ""
     
     while true; do
-        read -p "Deseja fazer autodestruição dos arquivos de seeds? y/N: " -n 1 -r
+        read -p "Deseja fazer autodestruição dos arquivos sensíveis? y/N: " -n 1 -r
         echo
         case $REPLY in
             [Yy]* ) 
@@ -561,6 +634,7 @@ auto_destruction_menu() {
                 echo ""
                 echo "Arquivos que serão apagados:"
                 echo "  • seeds.txt"
+                echo "  • password.txt"
                 echo ""
                 
                 for i in {10..1}; do
@@ -570,12 +644,17 @@ auto_destruction_menu() {
                 echo ""
                 echo ""
                 
-                log "🔥 Iniciando autodestruição dos arquivos de seed..."
+                log "🔥 Iniciando autodestruição dos arquivos sensíveis..."
                 
                 # Apagar arquivos
                 if [[ -f "../seeds.txt" ]]; then
                     rm -f "../seeds.txt"
                     log "❌ seeds.txt apagado"
+                fi
+                
+                if [[ -f "$REPO_DIR/password.txt" ]]; then
+                    rm -f "$REPO_DIR/password.txt"
+                    log "❌ password.txt apagado"
                 fi
                 
                 echo ""
@@ -585,11 +664,9 @@ auto_destruction_menu() {
                 break
                 ;;
             [Nn]* ) 
-                log "📁 Arquivos de senha mantidos:"
-                echo "  • passwords.md"
-                echo "  • passwords.txt"
+                log "📁 Arquivos sensíveis mantidos:"
                 echo "  • seeds.txt"
-                echo "  • startup.md"
+                echo "  • password.txt"
                 echo ""
                 info "💡 Dica: Faça backup destes arquivos em local seguro!"
                 break
@@ -611,10 +688,7 @@ start_lnd_docker() {
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             log "Parando e removendo o container lnd existente..."
-            sudo docker stop lnd
-            sudo docker rm lnd
-            sudo docker stop bitcoin
-            sudo docker rm bitcoin
+            docker-compose down -v
         else
             log "Mantendo o container lnd atual."
         fi

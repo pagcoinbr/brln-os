@@ -3,9 +3,9 @@ FROM ubuntu:22.04
 
 # Variáveis de ambiente
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LND_VERSION=0.18.5
+ENV LND_VERSION=0.19.2
 ENV USER=lnd
-ENV HOME=/home/${USER}
+ENV HOME=/data
 ENV DATA_DIR=/data/lnd
 ENV LND_BIN_DATA=/opt/lnd
 ENV PATH=/opt/lnd:$PATH
@@ -44,20 +44,21 @@ RUN useradd -m -s /bin/bash ${USER} && \
     usermod -a -G tor-access,${USER},debian-tor,lnd-elements,peerswap,bitcoin ${USER}
 
 # Criar diretório de dados e diretório para binários
-RUN mkdir -p ${DATA_DIR} ${LND_BIN_DATA} ${HOME}/.lnd && \
+RUN mkdir -p ${DATA_DIR} ${LND_BIN_DATA} ${HOME}/lnd && \
     chown -R ${USER}:${USER} ${DATA_DIR} && \
     chmod -R 755 ${DATA_DIR} && \
     chown -R ${USER}:${USER} ${LND_BIN_DATA} && \
-    chown -R ${USER}:${USER} ${HOME}/.lnd
+    chown -R ${USER}:${USER} ${HOME}/lnd
 
 # Copiar e extrair binários do LND
 COPY lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz /tmp/
-RUN tar -xzf /tmp/lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz -C ${LND_BIN_DATA}/ \
-    && chmod +x ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lnd \
-    && chmod +x ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lncli \
-    && ln -s ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lnd ${LND_BIN_DATA}/lnd \
-    && ln -s ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lncli ${LND_BIN_DATA}/lncli \
-    && rm -rf /tmp/lnd-linux-*
+RUN cd /tmp && \
+    tar -xzf lnd-linux-amd64-v${LND_VERSION}-beta.tar.gz -C ${LND_BIN_DATA}/ && \
+    chmod +x ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lnd && \
+    chmod +x ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lncli && \
+    ln -s ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lnd ${LND_BIN_DATA}/lnd && \
+    ln -s ${LND_BIN_DATA}/lnd-linux-amd64-v${LND_VERSION}-beta/lncli ${LND_BIN_DATA}/lncli && \
+    rm -rf /tmp/lnd-linux-*
 
 # Copiar script de entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -66,18 +67,14 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Criar estrutura de diretórios primeiro
-RUN mkdir -p ${HOME}/.lnd/data/chain/bitcoin/mainnet && \
-    mkdir -p ${HOME}/.lnd/data/chain/bitcoin/testnet
+RUN mkdir -p ${HOME}/lnd/data/chain/bitcoin/mainnet
 
 # Copiar arquivos de configuração e senha
-COPY password.txt ${HOME}/.lnd/password.txt
-COPY lnd.conf ${HOME}/.lnd/lnd.conf
+RUN mkdir -p /data/lnd
 
 # Ajustar todas as permissões de uma vez
-RUN chown -R ${USER}:${USER} ${HOME}/.lnd && \
-    chmod -R 755 ${HOME}/.lnd && \
-    chmod 600 ${HOME}/.lnd/password.txt && \
-    chmod 644 ${HOME}/.lnd/lnd.conf
+RUN chown -R ${USER}:${USER} ${HOME}/lnd && \
+    chmod -R 755 ${HOME}/lnd
 
 # Mudar para usuário lnd
 USER ${USER}

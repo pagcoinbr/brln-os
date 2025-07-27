@@ -137,11 +137,11 @@ services:
     container_name: elements
     ports:
       # Mainnet ports (commented)
-      # - 7041:7041   # RPC port (mainnet)
-      # - 7042:7042   # P2P port (mainnet)
+      - 7041:7041   # RPC port (mainnet)
+      - 7042:7042   # P2P port (mainnet)
       # Testnet ports (active)
-      - 7040:7040   # RPC port (testnet)
-      - 18884:18884 # P2P port (testnet)
+      # - 7040:7040   # RPC port (testnet)
+      # - 18884:18884 # P2P port (testnet)
     networks:
       - grafana-net
     volumes:
