@@ -679,8 +679,7 @@ auto_destruction_menu() {
 }
 
 start_lnd_docker() {
-    app="bitcoin"
-    app2="lnd"
+    app="lnd"
     cd "$REPO_DIR/container"
     
     # Verificar e corrigir permissões antes de iniciar os containers
@@ -706,9 +705,22 @@ start_lnd_docker() {
         chmod -R 755 "/data/lnd"
         log "✅ Permissões básicas aplicadas"
     fi
-    warning " 🕒 Aguarde..."
+    
+    if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
+        warning "O container lnd já está em execução."
+        read -p "Deseja parar e remover o container lnd e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log "Parando e removendo o container lnd existente..."
+            docker-compose down -v
+        else
+            log "Mantendo o container lnd atual."
+        fi
+    fi
+    sudo docker-compose build $app
+    sudo docker-compose up -d $app
+    cd -
 }
-
 # Função principal
 main() {
     # Primeiro configurar a blockchain e criar todos os arquivos de configuração

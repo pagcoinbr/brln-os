@@ -127,6 +127,7 @@ services:
     restart: unless-stopped
     depends_on:
       - tor
+      - bitcoin
     environment:
       - LND_DATA=/data/lnd
 
@@ -149,6 +150,8 @@ services:
     restart: unless-stopped
     depends_on:
       - tor
+      - lnd
+      - bitcoin
     environment:
       - ELEMENTS_DATA=/home/elements/.elements
 

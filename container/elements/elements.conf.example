@@ -5,7 +5,7 @@ daemon=0
 server=1
 listen=1
 txindex=1
-# validatepegin=1
+validatepegin=0
 
 # Configurações globais de RPC
 rpcuser=ELEMENTS_RPC_USER
@@ -16,7 +16,7 @@ rpcallowip=0.0.0.0/0
 # CONFIGURAÇÃO LIQUID MAINNET (INATIVO)
 # Para usar mainnet: descomente a linha chain=liquidv1 abaixo
 # ====================================================================
-# chain=liquidv1
+chain=liquidv1
 
 [liquidv1]
 # RPC específico para mainnet
@@ -29,9 +29,9 @@ assetdir=ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2:USDT
 
 # RPC conexão remota com Bitcoin Core - Mainnet
 mainchainrpchost=bitcoin
-mainchainrpcport=8332
-mainchainrpcuser=test
-mainchainrpcpassword=test
+mainchainrpcport=8085
+mainchainrpcuser=ELEMENTS_RPC_USER
+mainchainrpcpassword=ELEMENTS_RPC_PASSWORD
 
 # ====================================================================
 # CONFIGURAÇÃO LIQUID TESTNET (ATIVO)
@@ -47,8 +47,8 @@ mainchainrpcpassword=test
 # # RPC conexão remota com Bitcoin Core - Testnet
 # mainchainrpchost=bitcoin
 # mainchainrpcport=18332
-# mainchainrpcuser=test
-# mainchainrpcpassword=test
+# mainchainrpcuser=ELEMENTS_RPC_USER
+# mainchainrpcpassword=ELEMENTS_RPC_PASSWORD
 
 # ====================================================================
 

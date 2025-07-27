@@ -50,7 +50,7 @@ fi
 
 print_info "Configurando Elements RPC credentials..."
 echo
-
+echo "Você pode utilizar credenciais locais ou as remotas do BRLN Club."
 # Solicitar credenciais do usuário
 echo -n "Digite o nome de usuário RPC para Elements: "
 read -r rpc_user
@@ -70,6 +70,32 @@ if [ -z "$rpc_password" ]; then
     print_error "Senha não pode estar vazia!"
     exit 1
 fi
+
+# Perguntar sobre o tipo de conexão RPC
+echo
+print_info "Configurando tipo de conexão RPC do Bitcoin..."
+echo "1) Conexão local (bitcoin)"
+echo "2) Conexão remota BRLN Club (bitcoin.br-ln.com)"
+echo -n "Escolha o tipo de conexão (1 ou 2): "
+read -r connection_type
+
+# Validar a escolha
+case $connection_type in
+    1)
+        mainchain_host="bitcoin"
+        rpc_port=8332
+        print_info "Configurado para conexão local"
+        ;;
+    2)
+        rpc_port=8085
+        mainchain_host="bitcoin.br-ln.com"
+        print_info "Configurado para conexão remota BRLN Club"
+        ;;
+    *)
+        print_error "Opção inválida! Use 1 para local ou 2 para remoto"
+        exit 1
+        ;;
+esac
 
 print_info "Atualizando configurações no arquivo $ELEMENTS_CONFIG_FILE_EXAMPLE..."
 
@@ -97,10 +123,29 @@ else
     exit 1
 fi
 
+# Substituir mainchainrpchost usando sed
+sed -i "s/^mainchainrpchost=bitcoin/mainchainrpchost=$mainchain_host/" "$ELEMENTS_CONFIG_FILE"
+if [ $? -eq 0 ]; then
+    print_info "mainchainrpchost atualizado para $mainchain_host"
+else
+    print_error "Erro ao atualizar mainchainrpchost"
+    exit 1
+fi
+
+# Substituir rpcport usando sed
+sed -i "s/^rpcport=8085/rpcport=$rpc_port/" "$ELEMENTS_CONFIG_FILE"
+if [ $? -eq 0 ]; then
+    print_info "rpcport atualizado para $rpc_port"
+else
+    print_error "Erro ao atualizar rpcport"
+    exit 1
+fi
+
 print_info "Configuração concluída!"
 print_info "As seguintes linhas foram atualizadas:"
 echo "  rpcuser=$rpc_user"
 echo "  rpcpassword=***"
+echo "  mainchainrpchost=$mainchain_host"
 echo
 print_warning "Lembre-se de manter suas credenciais seguras!"
 echo ""

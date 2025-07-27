@@ -635,7 +635,6 @@ menu() {
       app="Balance of Satoshis"
       sudo -v
       echo -e "${CYAN}🚀 Instalando Balance of Satoshis...${NC}"
-      read -p "Deseja exibir logs? (y/n): " verbose_mode
       install_bos
       menu
       ;;
