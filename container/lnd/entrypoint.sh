@@ -224,8 +224,10 @@ main() {
         lnd_args="--lnddir=$LND_DIR --configfile=$config_file"
     else
         log "Arquivo de configuração não encontrado. Usando parâmetros diretos."
-        lnd_args="--lnddir=$LND_DIR --bitcoin.mainnet --bitcoin.node=bitcoind --rpclisten=localhost:10009 --listen=localhost:9735"
+        lnd_args="--lnddir=$LND_DIR --bitcoin.mainnet --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoin --bitcoind.rpcuser=btcuser --bitcoind.rpcpass=btcpass --rpclisten=localhost:10009 --listen=localhost:9735"
     fi
+    
+    log "Argumentos do LND: $lnd_args"
     
     # Verificar se a carteira já existe
     if wallet_exists; then
@@ -251,7 +253,7 @@ main() {
         
         # Reiniciar LND como processo principal
         log "Reiniciando LND como processo principal..."
-        exec $LND_BIN_DATA/lnd $lnd_args --adminmacaroonpath="/data/lnd/data/chain/bitcoin/$NETWORK_PATH/admin.macaroon"
+        exec $LND_BIN_DATA/lnd $lnd_args
     fi
 }
 

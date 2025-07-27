@@ -682,6 +682,55 @@ start_lnd_docker() {
     app="bitcoin"
     app2="lnd"
     cd "$REPO_DIR/container"
+    
+    # Verificar e corrigir permissões do Bitcoin antes de iniciar os containers
+    log "🔧 Verificando permissões dos diretórios do Bitcoin..."
+    if [[ -f "$REPO_DIR/scripts/fix-bitcoin-permissions.sh" ]]; then
+        "$REPO_DIR/scripts/fix-bitcoin-permissions.sh"
+    else
+        warning "⚠️ Script de correção de permissões do Bitcoin não encontrado!"
+        log "   Criando diretório Bitcoin manualmente..."
+        
+        # Fallback: criar diretório com permissões básicas
+        mkdir -p "/data/bitcoin"
+        
+        # Tentar obter UID do usuário Bitcoin do container
+        if docker-compose run --rm bitcoin id bitcoin &>/dev/null; then
+            local bitcoin_uid_gid=$(docker-compose run --rm bitcoin id bitcoin 2>/dev/null | grep -o 'uid=[0-9]*.*gid=[0-9]*' | sed 's/uid=//;s/gid=/:/;s/(.*)//g' | tr -d ' ')
+            if [[ -n "$bitcoin_uid_gid" ]]; then
+                log "Corrigindo permissões para $bitcoin_uid_gid..."
+                chown -R "$bitcoin_uid_gid" "/data/bitcoin" 2>/dev/null || true
+            fi
+        fi
+        
+        chmod -R 755 "/data/bitcoin"
+        log "✅ Permissões básicas do Bitcoin aplicadas"
+    fi
+    
+    # Verificar e corrigir permissões do LND
+    log "🔧 Verificando permissões dos diretórios do LND..."
+    if [[ -f "$REPO_DIR/scripts/fix-lnd-permissions.sh" ]]; then
+        "$REPO_DIR/scripts/fix-lnd-permissions.sh"
+    else
+        warning "⚠️ Script de correção de permissões do LND não encontrado!"
+        log "   Criando diretório LND manualmente..."
+        
+        # Fallback: criar diretório com permissões básicas
+        mkdir -p "/data/lnd"
+        
+        # Tentar obter UID do usuário LND do container
+        if docker-compose run --rm lnd id lnd &>/dev/null; then
+            local lnd_uid_gid=$(docker-compose run --rm lnd id lnd 2>/dev/null | grep -o 'uid=[0-9]*.*gid=[0-9]*' | sed 's/uid=//;s/gid=/:/;s/(.*)//g' | tr -d ' ')
+            if [[ -n "$lnd_uid_gid" ]]; then
+                log "Corrigindo permissões para $lnd_uid_gid..."
+                chown -R "$lnd_uid_gid" "/data/lnd" 2>/dev/null || true
+            fi
+        fi
+        
+        chmod -R 755 "/data/lnd"
+        log "✅ Permissões básicas do LND aplicadas"
+    fi
+    
     if sudo docker ps --format '{{.Names}}' | grep -q "^lnd$"; then
         warning "O container lnd já está em execução."
         read -p "Deseja parar e remover o container lnd e bitcoin antes de reiniciar? Isso não causará perda de dados. (y/N): " -n 1 -r
