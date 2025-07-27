@@ -1,8 +1,26 @@
 #!/bin/bash
-set -euo pipefail
 # Source das funções básicas
 source "$(dirname "$0")/scripts/.env"
-basics
+# Executa o script de configuração Docker no diretório container
+log_setup_docker() {
+    local container_dir="/root/brln-os/container"
+    local setup_script="setup-docker-smartsystem.sh"
+    
+    if [[ -d "$container_dir" && -f "$container_dir/$setup_script" ]]; then
+        echo "🔧 Executando configuração inicial do sistema Docker..."
+        (cd "$container_dir" && sudo bash "$setup_script")
+        echo "✅ Configuração Docker concluída!"
+    else
+        echo "⚠️ Diretório container ou script de setup não encontrado"
+        return 1
+    fi
+}
+
+# Executa a configuração inicial se necessário
+app="Sistema Docker"
+log_setup_docker >> /dev/null 2>&1 &
+spinner
+set -euo pipefail
 
 SCRIPT_VERSION=v2.0-alfa
 TOR_LINIK=https://deb.torproject.org/torproject.org
