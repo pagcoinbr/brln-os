@@ -38,6 +38,8 @@ passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd br
 # - Siga o passo a passo na interface gráfica para:
 #   • Configurar rede (mainnet/testnet) 
 #   • Instalar os aplicativos de administração.
+#
+# Digite a nova senha do Super usuário (root), para continuar:
 ```
 
 **É isso!** O BRLN-OS será instalado com todos os componentes necessários e você poderá configurar tudo através da interface web moderna.
