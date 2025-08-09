@@ -38,7 +38,7 @@ Para instalar a vesão 1.0-alfa: (FUNCIONAL)
 ```bash
 passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && git switch brlnfullauto && bash run.sh
 ```
-
+```
 # Após a instalação inicial, você verá um qr code para acessar sua rede tailscale (VPN), caso não queira utilizar, acesse a interface web (http://SEU_IP ou http://localhost) e finalize a configuração do node:
 # - Clique no botão "⚡ BRLN Node Manager" 
 # - Siga o passo a passo na interface gráfica para:
