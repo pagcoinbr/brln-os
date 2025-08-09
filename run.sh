@@ -12,26 +12,10 @@ NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
-cp ${(pwd)} ${INSTALL_DIR}
+cp -r ~/brln-os  ${INSTALL_DIR}
 
 echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
 sleep 1
-
-brln_check () {
-  if [[ -d "$INSTALL_DIR" ]]; then
-    echo -e "${YELLOW}Digite a senha do usuário admin para continuar...${NC}"
-  else
-    sudo -u admin git clone -q https://github.com/$git_user/brlnfullauto.git "$INSTALL_DIR"
-    sudo chown -R admin:admin "$INSTALL_DIR"
-    sleep 2
-    sudo -u admin git -C "$INSTALL_DIR" switch $branch > /dev/null
-  fi
-
-  sudo usermod -aG sudo,adm,cdrom,dip,plugdev,lxd admin
-  sudo chmod +x "$INSTALL_DIR/brunel.sh"
-  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
-  exit 0
-}
 
 dir_check () {
   # Verifica se o diretório /home/admin existe
@@ -60,6 +44,7 @@ else
   sudo chmod 755 /home/admin
   echo
 fi
+  cp -r ~/brln-os  ${INSTALL_DIR}
 }
 
 main_call () {
@@ -67,7 +52,7 @@ main_call () {
 atual_user=$(whoami)
 if [[ $atual_user = "admin" ]]; then
   dir_check
-  brln_check
+  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
 else
   if id "admin" &>/dev/null; then
   sudo -u admin bash "$INSTALL_DIR/brunel.sh"
@@ -79,12 +64,12 @@ fi
 if id "admin" &>/dev/null; then
   sudo passwd admin
   dir_check
-  brln_check
+  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
   exit 0
 else
   sudo adduser --gecos "" --ingroup admin admin
   dir_check
-  brln_check
+  sudo -u admin bash "$INSTALL_DIR/brunel.sh"
   exit 0
 fi
 }
