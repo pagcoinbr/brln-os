@@ -12,6 +12,8 @@ NC='\033[0m' # Sem cor
 
 INSTALL_DIR="/home/admin/brlnfullauto"
 
+cp ${(pwd)} ${INSTALL_DIR}
+
 echo -e "${BLUE}Criando usuário administrador/admin.${NC}"
 sleep 1
 
