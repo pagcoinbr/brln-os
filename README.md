@@ -34,7 +34,7 @@ Para instalar a versão 2.0-alfa: (EM DESENVOLVIMENTO)
 passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh
 ```
 
-Para instalar a vesão v1.0-alfa: (FUNCIONAL)
+Para instalar a vesão 1.0-alfa: (FUNCIONAL)
 ```bash
 passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && git switch brlnfullauto && bash run.sh
 ```
