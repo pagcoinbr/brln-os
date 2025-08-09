@@ -23,9 +23,9 @@
 
 **⚠️ IMPORTANTE: Sempre inicie como root**
 
-```bash
+Execute o comando:
 
-# Execute o comando:
+```bash
 sudo su
 ```
 
