@@ -25,6 +25,10 @@ Se não souber o IP:
 
 Execute um comando:
 ```bash
+sudo su
+```
+
+```bash
 passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && git switch brlnfullauto && bash run.sh
 ```
 
