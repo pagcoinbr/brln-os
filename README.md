@@ -25,7 +25,11 @@ Se não souber o IP:
 
 Execute um comando:
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
+sudo su
+```
+
+```bash
+passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && git switch brlnfullauto && bash run.sh
 ```
 
 💡 Esse script vai:
