@@ -1,0 +1,71 @@
+services:
+
+  tor:
+    build:
+      context: .
+      dockerfile: Dockerfile.tor
+    container_name: tor
+    ports:
+      - 9050:9050  # SOCKS proxy
+      - 9051:9051  # Control port
+    networks:
+      - diy-net
+    volumes:
+      - tor_data:/run/tor
+      - tor_var:/var/lib/tor
+    restart: unless-stopped
+
+  lnd:
+    build:
+      context: .
+      dockerfile: Dockerfile.lnd
+    container_name: lnd
+    ports:
+      - 9735:9735  # P2P port
+      - 10009:10009  # gRPC port
+      - 8080:8080   # REST port
+    networks:
+      - diy-net
+    volumes:
+      - /data/lnd:/data/lnd
+      - tor_var:/var/lib/tor:ro
+      - /data/lnd:/home/lnd/.lnd
+      - /data/bitcoin:/home/lnd/.bitcoin:ro
+    restart: unless-stopped
+    depends_on:
+      - tor
+      - bitcoin
+    environment:
+      - LND_DATA=/data/lnd
+
+  elements:
+    build:
+      context: .
+      dockerfile: Dockerfile.elements
+    container_name: elements
+    ports:
+      # Mainnet ports (commented)
+      - 7041:7041   # RPC port (mainnet)
+      - 7042:7042   # P2P port (mainnet)
+      # Testnet ports (active)
+      # - 7040:7040   # RPC port (testnet)
+      # - 18884:18884 # P2P port (testnet)
+    networks:
+      - diy-net
+    volumes:
+      - /data/elements:/home/elements/.elements
+    restart: unless-stopped
+    depends_on:
+      - tor
+      - lnd
+      - bitcoin
+    environment:
+      - ELEMENTS_DATA=/home/elements/.elements
+
+networks:
+  diy-net:
+    driver: bridge
+
+volumes:
+  tor_data:
+  tor_var: 
