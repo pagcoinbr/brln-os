@@ -350,6 +350,7 @@ configure_lnd() {
     echo -e "${GREEN} Você escolheu usar o bitcoind remoto da BRLN! ${NC}"
     read -p "Digite o bitcoind.rpcuser(BRLN): " bitcoind_rpcuser
     read -p "Digite o bitcoind.rpcpass(BRLN): " bitcoind_rpcpass
+    sudo chown -R admin:admin /home/admin
     sed -i "s|^bitcoind\.rpcuser=.*|bitcoind.rpcuser=${bitcoind_rpcuser}|" "$file_path"
     sed -i "s|^bitcoind\.rpcpass=.*|bitcoind.rpcpass=${bitcoind_rpcpass}|" "$file_path"
   elif [[ $use_brlnd == "n" ]]; then
@@ -361,6 +362,7 @@ configure_lnd() {
   fi
   # Coloca o alias lá na linha 8 (essa parte pode manter igual)
   local alias_line="alias=$alias BR⚡️LN"
+  sudo chown -R admin:admin /home/admin
   sudo sed -i "s|^alias=.*|$alias_line|" "$file_path"
   read -p "Qual Database você deseja usar? (postgres/bbolt): " db_choice
   if [[ $db_choice == "postgres" ]]; then
@@ -403,6 +405,7 @@ EOF
     echo -e "${RED}Opção inválida. Por favor, escolha 'sqlite' ou 'bbolt'.${NC}"
     exit 1
   fi
+  sudo chown -R admin:admin /home/admin
   # Inserir a configuração no arquivo lnd.conf na linha 100
   sed -i "/^routing\.strictgraphpruning=true/r /dev/stdin" "$file_path" <<< "
 
@@ -513,6 +516,7 @@ install_bitcoind() {
   sudo chown admin:admin /data/bitcoin/bitcoin.conf
   sudo chmod 640 /data/bitcoin/bitcoin.conf
   cd /home/admin/.bitcoin
+  sudo chown -R admin:admin /home/admin
   wget https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
   sudo sed -i "54s|.*|$(python3 rpcauth.py minibolt $rpcpsswd > /home/admin/.bitcoin/rpc.auth | grep '^rpcauth=')|" /home/admin/brlnfullauto/conf_files/bitcoin.conf
   sudo cp $SERVICES_DIR/bitcoind.service /etc/systemd/system/bitcoind.service
