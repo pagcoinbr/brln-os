@@ -156,3 +156,4 @@ services/
 lightning/
 lightning.backup.*/
 password.txt
+**/password.txt
