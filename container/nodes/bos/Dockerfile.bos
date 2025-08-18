@@ -1,0 +1,65 @@
+# Dockerfile para Balance of Satoshis (BOS)
+FROM node:18-alpine
+
+# Argumentos para configuração de usuário via docker-compose
+ARG BOS_UID=1009
+ARG BOS_GID=1009
+
+# Definir variáveis de ambiente
+ENV NODE_ENV=production
+ENV USER=bos
+ENV HOME=/home/bos
+ENV NPM_CONFIG_PREFIX=/home/bos/.npm-global
+ENV PATH=/home/bos/.npm-global/bin:$PATH
+
+# Instalar dependências do sistema
+RUN apk add --no-cache \
+    curl \
+    ca-certificates \
+    python3 \
+    make \
+    g++ \
+    shadow \
+    && rm -rf /var/cache/apk/*
+
+# Criar usuário BOS
+RUN groupadd -g ${BOS_GID} bos && \
+    useradd -u ${BOS_UID} -g ${BOS_GID} -m -s /bin/sh bos
+
+# Criar diretório para npm global
+RUN mkdir -p /home/bos/.npm-global && \
+    chown -R bos:bos /home/bos
+
+# Definir diretório de trabalho
+WORKDIR /home/bos
+
+# Configurar npm para instalação global sem sudo
+RUN npm config set prefix '/home/bos/.npm-global'
+
+# Adicionar caminho do npm global ao PATH no .profile
+RUN echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.profile && \
+    echo 'export NPM_CONFIG_PREFIX="$HOME/.npm-global"' >> ~/.profile
+
+# Instalar o Balance of Satoshis globalmente
+RUN npm install -g balanceofsatoshis
+
+# Criar diretório para configurações do BOS
+RUN mkdir -p /home/bos/.bos
+
+# Copiar script de configuração
+COPY bos/configure-bos.sh /home/bos/configure-bos.sh
+
+# Verificar instalação
+RUN which bos && bos --version
+
+# Criar script de entrada
+RUN echo '#!/bin/sh' > /home/bos/entrypoint.sh && \
+    echo 'source ~/.profile' >> /home/bos/entrypoint.sh && \
+    echo 'echo "BOS (Balance of Satoshis) está pronto!"' >> /home/bos/entrypoint.sh && \
+    echo 'echo "Execute: docker exec -it bos sh para usar o BOS"' >> /home/bos/entrypoint.sh && \
+    echo 'echo "Ou execute: docker exec -it bos bos balance para ver o saldo"' >> /home/bos/entrypoint.sh && \
+    echo 'exec "$@"' >> /home/bos/entrypoint.sh && \
+    chmod +x /home/bos/entrypoint.sh /home/bos/configure-bos.sh
+
+# Comando padrão
+CMD ["bos", "telegram", "--use-small-units", "--connect", "ID_TELEGRAM"]

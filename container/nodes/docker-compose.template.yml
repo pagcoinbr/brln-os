@@ -1,0 +1,243 @@
+version: '3.8'
+
+# Generic Docker Compose Template
+# Fill in the values according to your specific needs
+
+services:
+  # Service Name - Replace with your actual service name
+  service-name:
+    # Container name
+    container_name: "container-name"
+    
+    # Image specification
+    image: "image-name:tag"
+    
+    # Alternative: Build from Dockerfile
+    # build:
+    #   context: ./path-to-dockerfile
+    #   dockerfile: Dockerfile.servicename
+    
+    # Command to run inside container
+    command: ["command", "arg1", "arg2"]
+    
+    # User to run the container as
+    user: "1000:1000"  # uid:gid or username
+    
+    # Environment variables
+    environment:
+      - ENV_VAR_1=value1
+      - ENV_VAR_2=value2
+      - ENV_VAR_3=value3
+    
+    # Environment file
+    env_file:
+      - .env
+      - ./config/service.env
+    
+    # Ports mapping (host:container)
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+      - "9735:9735"
+    
+    # Expose ports (internal only)
+    expose:
+      - "8080"
+      - "9090"
+    
+    # Volumes mapping
+    volumes:
+      - ./data:/data
+      - ./config:/config
+      - ./logs:/logs
+      # For sensitive data - consider using tmpfs instead
+      - ./tls:/tls:ro
+      - ./macaroons:/macaroons:ro
+    
+    # Temporary filesystems for sensitive data
+    tmpfs:
+      - /tmp/tls:noexec,nosuid,size=100m
+      - /tmp/macaroons:noexec,nosuid,size=50m
+      - /tmp/cookies:noexec,nosuid,size=10m
+    
+    # Networks
+    networks:
+      network-name:
+        aliases:
+          - service-alias
+          - another-alias
+    
+    # Dependencies
+    depends_on:
+      - dependency-service-1
+      - dependency-service-2
+    
+    # Restart policy
+    restart: unless-stopped  # Options: "no", "always", "on-failure", "unless-stopped"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Group add (for Docker socket access, etc)
+    group_add:
+      - docker
+      - audio
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+
+  # Second service example
+  second-service:
+    container_name: "second-container"
+    image: "second-image:latest"
+    
+    # Alternative command format
+    command: >
+      sh -c "
+      command1 &&
+      command2 &&
+      exec main-command
+      "
+    
+    user: "root"
+    
+    environment:
+      - SERVICE_MODE=production
+      - DEBUG=false
+    
+    env_file:
+      - .env
+    
+    ports:
+      - "3000:3000"
+    
+    volumes:
+      - second_data:/app/data
+      - ./second-config:/app/config:ro
+    
+    networks:
+      - network-name
+      - external-network
+    
+    depends_on:
+      - service-name
+    
+    restart: on-failure
+    
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/ping || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Database service example
+  database-service:
+    container_name: "database"
+    image: "postgres:15-alpine"
+    
+    user: "postgres"
+    
+    environment:
+      - POSTGRES_DB=dbname
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    
+    # Using secrets for sensitive data
+    secrets:
+      - db_password
+    
+    ports:
+      - "5432:5432"
+    
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    
+    # Tmpfs for sensitive temporary data
+    tmpfs:
+      - /tmp:noexec,nosuid,size=200m
+      - /run:noexec,nosuid,size=100m
+    
+    networks:
+      - network-name
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbuser -d dbname"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+# Networks definition
+networks:
+  # Internal network
+  network-name:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+    
+  # External network (already exists)
+  external-network:
+    external: true
+    name: existing-network-name
+
+# Volumes definition
+volumes:
+  # Named volume
+  second_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /host/path/to/data
+  
+  # Database volume
+  db_data:
+    driver: local
+
+# Secrets definition (for sensitive data)
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  
+  tls_cert:
+    file: ./secrets/tls.crt
+  
+  api_key:
+    external: true
+    external_name: external_api_key
+
+# Additional configurations examples:
+
+# For logging configuration
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# For common environment variables
+x-common-variables: &common-env
+  - TZ=UTC
+  - LANG=en_US.UTF-8
+
+# Example of using the logging and env templates:
+# logging: *default-logging
+# environment: 
+#   <<: *common-env
+#   - CUSTOM_VAR=value

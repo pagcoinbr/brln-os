@@ -1,0 +1,31 @@
+# Dockerfile para LND baseado no script BRLN
+FROM debian:bookworm-slim
+
+# Argumentos para configuração de usuário via docker-compose
+ARG LND_UID=1008
+ARG LND_GID=1008
+
+# Variáveis de ambiente
+ENV DATA_DIR=/data/lnd
+ENV LND_BIN_DATA=/usr/local/bin
+ENV USER=lnd
+
+# Instalar dependências básicas
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    ca-certificates \
+    expect \
+    && rm -rf /var/lib/apt/lists/*
+
+# Criar usuário LND
+RUN groupadd -r -g ${LND_GID} lnd && \
+    useradd -r -g ${LND_GID} -u ${LND_UID} -s /bin/bash -m lnd
+
+# Copiar e extrair binários do LND
+COPY lnd ${LND_BIN_DATA}
+
+# Copiar arquivos de configuração e senha
+RUN mkdir -p ${DATA_DIR}
+
+CMD [ "lnd" , "--configfile=${DATA_DIR}/lnd.conf" , "--datadir=${DATA_DIR}" ] 
