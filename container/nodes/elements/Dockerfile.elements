@@ -2,7 +2,7 @@
 FROM ubuntu:22.04
 
 # Definir variáveis de ambiente
-ENV ELEMENTS_VERSION=23.2.7
+ENV ELEMENTS_VERSION=23.3.0
 ENV ELEMENTS_USER=elements
 ENV ELEMENTS_DATA=/home/elements/.elements
 ENV PATH=/opt/elements:$PATH
@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y \
     sudo \
     gosu \
     apt-utils \
+    python3 \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar usuário elements
@@ -30,12 +32,16 @@ RUN mkdir -p /opt/elements ${ELEMENTS_DATA} ${ELEMENTS_DATA}/liquidv1/wallets \
     && chmod -R 755 ${ELEMENTS_DATA}
 
 # Copiar e extrair binários do Elements
-COPY elements/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz /tmp/
-RUN tar -xvzf /tmp/elements-${ELEMENTS_VERSION}-x86_64-linux-gnu.tar.gz -C /opt/elements/ \
-    && chmod +x /opt/elements/elements-${ELEMENTS_VERSION}/bin/elementsd /opt/elements/elements-${ELEMENTS_VERSION}/bin/elements-cli \
-    && ln -s /opt/elements/elements-${ELEMENTS_VERSION}/bin/elementsd /opt/elements/elementsd \
-    && ln -s /opt/elements/elements-${ELEMENTS_VERSION}/bin/elements-cli /opt/elements/elements-cli \
+COPY elements/elements-23.3.0-x86_64-linux-gnu.tar.gz /tmp/
+RUN tar -xvzf /tmp/elements-23.3.0-x86_64-linux-gnu.tar.gz -C /opt/elements/ \
+    && chmod +x /opt/elements/elements-23.3.0/bin/elementsd /opt/elements/elements-23.3.0/bin/elements-cli \
+    && ln -s /opt/elements/elements-23.3.0/bin/elementsd /opt/elements/elementsd \
+    && ln -s /opt/elements/elements-23.3.0/bin/elements-cli /opt/elements/elements-cli \
     && rm -rf /tmp/elements-*
+
+# Copiar rpcauth.py
+COPY bitcoin/rpcauth.py /usr/local/bin/
+RUN chmod +x /usr/local/bin/rpcauth.py
 
 # Script de entrada
 COPY elements/elements.sh /opt/elements/
@@ -43,17 +49,23 @@ RUN chmod +x /opt/elements/elements.sh \
     && sed -i 's/\r$//' /opt/elements/elements.sh
 
 # Copiar arquivo de configuração
-COPY elements/elements.conf ${ELEMENTS_DATA}/elements.conf
+COPY elements/elements.conf.example ${ELEMENTS_DATA}/elements.conf
 
-# Definir o diretório de trabalho
+# Definir diretório de trabalho
 WORKDIR ${ELEMENTS_DATA}
 
-# Expor portas
-EXPOSE 7041 18884 7040 
+# Declarar volume para persistência de dados
+VOLUME ["${ELEMENTS_DATA}"]
 
-# Definir usuário
-USER elements
+# Mudar para usuário não-root
+USER ${ELEMENTS_UID}
 
-# Ponto de entrada
+# Expor portas padrão do Elements
+EXPOSE 7041 18884 7040
+
+# Health check para verificar se o Elements está rodando
+HEALTHCHECK --interval=120s --timeout=10s --start-period=5s --retries=3 \
+    CMD elements-cli -conf=${ELEMENTS_DATA}/elements.conf getblockchaininfo || exit 1
+
 ENTRYPOINT ["/opt/elements/elements.sh"]
 CMD ["elementsd"]
