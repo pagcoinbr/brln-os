@@ -1,0 +1,40 @@
+# Security: Prevent sensitive files from being included in Docker build context for Elements
+
+# Configuration files with RPC credentials
+elements.conf
+*.conf
+
+# Private keys and certificates
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Database and wallet files
+*.db
+*.sqlite
+*.sqlite3
+wallet.dat
+**/wallet.dat
+
+# Logs
+*.log
+logs/
+debug.log
+
+# Development files
+*.bak
+*.backup
+*.swp
+*.tmp
+*~
+
+# Data directory
+data/
+**/data/
+
+# Git files
+.git/
+.gitignore
