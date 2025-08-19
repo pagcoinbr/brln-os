@@ -6,7 +6,7 @@ ARG LND_UID=1008
 ARG LND_GID=1008
 
 # Variáveis de ambiente
-ENV DATA_DIR=/data/lnd
+ENV DATA_DIR=/data
 ENV LND_BIN_DATA=/usr/local/bin
 ENV USER=lnd
 
@@ -23,9 +23,16 @@ RUN groupadd -r -g ${LND_GID} lnd && \
     useradd -r -g ${LND_GID} -u ${LND_UID} -s /bin/bash -m lnd
 
 # Copiar e extrair binários do LND
-COPY lnd ${LND_BIN_DATA}
+COPY lnd-linux-amd64-v0.19.2-beta/lnd ${LND_BIN_DATA}/lnd
+COPY lnd-linux-amd64-v0.19.2-beta/lncli ${LND_BIN_DATA}/lncli
+
+# Tornar os binários executáveis
+RUN chmod +x ${LND_BIN_DATA}/lnd ${LND_BIN_DATA}/lncli
+
+# Criar diretório de dados e definir permissões
+RUN mkdir -p ${DATA_DIR} && chown -R ${LND_UID}:${LND_GID} ${DATA_DIR}
 
 # Copiar arquivos de configuração e senha
-RUN mkdir -p ${DATA_DIR}
+USER ${LND_UID}
 
 CMD [ "lnd" , "--configfile=${DATA_DIR}/lnd.conf" , "--datadir=${DATA_DIR}" ] 

@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /tmp/tor-install /
 
 # Copiar arquivo de configuração customizado
-COPY torrc /etc/tor/torrc
+COPY tor/torrc /etc/tor/torrc
 
 # Criar usuário e grupos antes de definir permissões
 RUN groupadd -f -g 1050 tor-access && \
