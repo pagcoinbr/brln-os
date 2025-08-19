@@ -11,8 +11,6 @@ volumes:
   tor_data:
   bitcoin_data:
   elements_data:
-  lnd_tls:
-  lnd_macaroons:
   # postgres_data:  # Comentado - usando LND com BoltDB
 
 configs:
@@ -107,7 +105,7 @@ services:
       start_period: 180s
 
   lnd:
-    image: pagcoinbr/brln-lnd:latest
+    image: pagcoin/brln-lnd:latest
     container_name: lnd
     restart: unless-stopped
     depends_on: [tor]
@@ -115,17 +113,14 @@ services:
     stop_grace_period: 2m
     configs:
       - source: lnd_conf
-        target: /home/lnd/.lnd/lnd.conf
+        target: /data/lnd/lnd.conf
         mode: 0644
       - source: lnd_password
-        target: /home/lnd/.lnd/password.txt
+        target: /data/lnd/password.txt
         mode: 0600
     volumes:
       # Dados do LND persistidos no host
-      - ./lnd/data:/home/lnd/.lnd
-      # TLS e macaroons em volumes compartilhados apenas com quem precisa
-      - lnd_tls:/home/lnd/.lnd/tls
-      - lnd_macaroons:/home/lnd/.lnd/data/chain/bitcoin/${BITCOIN_NETWORK:-mainnet}
+      - /data/lnd:/data/lnd
       # Acesso somente leitura aos cookies do bitcoind
       - bitcoin_data:/home/bitcoin/.bitcoin:ro
       - tor_data:/run/tor:ro
@@ -210,9 +205,7 @@ services:
       - LND_TLS_CERT=/home/bos/.lnd/tls/tls.cert
       - LND_MACAROON_PATH=/home/bos/.lnd/macaroons/admin.macaroon
     volumes:
-      - lnd_tls:/home/bos/.lnd/tls:ro
-      - lnd_macaroons:/home/bos/.lnd/macaroons:ro
-      - ./data/lnd:/home/bos/.lnd/data:ro  # acesso read-only aos dados do LND
+      - /data/lnd:/home/bos/.lnd/data:ro  # acesso read-only aos dados do LND
     user: "${BOS_UID:-1009}:${BOS_GID:-1009}"  # bos user
 
   # peerswap:

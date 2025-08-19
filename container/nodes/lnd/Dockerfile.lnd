@@ -6,7 +6,7 @@ ARG LND_UID=1008
 ARG LND_GID=1008
 
 # Variáveis de ambiente
-ENV DATA_DIR=/data
+ENV DATA_DIR=/data/lnd
 ENV LND_BIN_DATA=/usr/local/bin
 ENV USER=lnd
 
@@ -29,10 +29,28 @@ COPY lnd-linux-amd64-v0.19.2-beta/lncli ${LND_BIN_DATA}/lncli
 # Tornar os binários executáveis
 RUN chmod +x ${LND_BIN_DATA}/lnd ${LND_BIN_DATA}/lncli
 
-# Criar diretório de dados e definir permissões
-RUN mkdir -p ${DATA_DIR} && chown -R ${LND_UID}:${LND_GID} ${DATA_DIR}
+# Criar diretórios necessários e definir permissões
+RUN mkdir -p ${DATA_DIR} \
+    && mkdir -p ${DATA_DIR}/chain/bitcoin/mainnet \
+    && mkdir -p ${DATA_DIR}/logs \
+    && mkdir -p ${DATA_DIR}/tls \
+    && chown -R ${LND_UID}:${LND_GID} ${DATA_DIR}
 
-# Copiar arquivos de configuração e senha
+# Definir diretório de trabalho
+WORKDIR ${DATA_DIR}
+
+# Declarar volume para persistência de dados
+VOLUME ["${DATA_DIR}"]
+
+# Mudar para usuário não-root
 USER ${LND_UID}
 
-CMD [ "lnd" , "--configfile=${DATA_DIR}/lnd.conf" , "--datadir=${DATA_DIR}" ] 
+# Expor portas padrão do LND
+EXPOSE 9735 10009 8080
+
+# Health check para verificar se o LND está rodando
+HEALTHCHECK --interval=120s --timeout=10s --start-period=5s --retries=3 \
+    CMD lncli --network=mainnet --rpcserver=localhost:10009 getinfo || exit 1
+
+ENTRYPOINT [ "lnd" ]
+CMD [ "--configfile=/data/lnd/lnd.conf" , "--datadir=/data/lnd" ] 
