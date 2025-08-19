@@ -87,7 +87,7 @@ services:
         target: /home/elements/.elements/elements.conf
         mode: 0644
     volumes:
-      - elements_data:/home/elements/.elements
+      - /data/elements:/home/elements/.elements
       - tor_data:/run/tor:ro
     environment:
       - ELEMENTS_NETWORK=${ELEMENTS_NETWORK:-liquidv1}
