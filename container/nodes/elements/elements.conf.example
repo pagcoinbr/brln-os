@@ -29,7 +29,7 @@ assetdir=ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2:USDT
 
 # RPC conexão remota com Bitcoin Core - Mainnet
 mainchainrpchost=bitcoin
-mainchainrpcport=8085
+mainchainrpcport=8332
 mainchainrpcuser=ELEMENTS_RPC_USER
 mainchainrpcpassword=ELEMENTS_RPC_PASSWORD
 

@@ -41,11 +41,10 @@ if [ -n "$ELEMENTS_RPC_USER" ] && [ -n "$ELEMENTS_RPC_PASSWORD" ]; then
             # Remover configurações antigas de rpc
             sed -i '/^rpcuser=/d' "$DATA_DIR/elements.conf"
             sed -i '/^rpcpassword=/d' "$DATA_DIR/elements.conf"
-            sed -i '/^rpcauth=/d' "$DATA_DIR/elements.conf"
+
             
             # Adicionar nova configuração rpcauth
             echo "# Configuração automática de RPC" >> "$DATA_DIR/elements.conf"
-            echo "$RPCAUTH_LINE" >> "$DATA_DIR/elements.conf"
             echo "Configuração RPC atualizada com rpcauth"
         else
             echo "AVISO: Arquivo elements.conf não encontrado em $DATA_DIR"
@@ -58,7 +57,6 @@ else
     echo "Usando autenticação via cookie (ELEMENTS_RPC_USER/ELEMENTS_RPC_PASSWORD não definidos)"
     # Remover linhas de autenticação se estiverem presentes
     if [ -f "$DATA_DIR/elements.conf" ]; then
-        sed -i '/^rpcauth=/d' "$DATA_DIR/elements.conf"
         sed -i '/^rpcuser=/d' "$DATA_DIR/elements.conf"
         sed -i '/^rpcpassword=/d' "$DATA_DIR/elements.conf"
         echo "Removida configuração rpcauth/rpcuser, usando cookie"

@@ -14,6 +14,18 @@ volumes:
   # elements_data:  # Using host directory instead
   # postgres_data:  # Comentado - usando LND com BoltDB
 
+configs:
+  bitcoin_conf:
+    file: ./bitcoin/bitcoin.conf
+  bitcoin_i2pd_conf:
+    file: ./bitcoin/i2pd.conf
+  elements_conf:
+    file: ./elements/elements.conf
+  lnd_conf:
+    file: ./lnd/lnd.conf
+  lnd_password:
+    file: ./lnd/password.txt
+
 services:
   tor:
     image: pagcoin/brln-tor:latest
@@ -34,12 +46,16 @@ services:
     restart: unless-stopped
     depends_on: [tor]
     networks: [core, edge]   # edge para o "IP2/Clearnet" interno à LAN/VPN
-    # Let container create its own config - no mounted config file
+    configs:
+      - source: bitcoin_conf
+        target: /home/bitcoin/.bitcoin/bitcoin.conf
+        mode: 0644
+      - source: bitcoin_i2pd_conf
+        target: /home/bitcoin/.bitcoin/i2pd.conf
+        mode: 0644
     volumes:
       - bitcoin_data:/home/bitcoin/.bitcoin
       - tor_data:/run/tor:ro
-      # Only mount i2pd config as read-only
-      - ./bitcoin/i2pd.conf:/home/bitcoin/.bitcoin/i2pd.conf:ro
     environment:
       - BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
       - BITCOIN_RPC_USER=${BITCOIN_RPC_USER:-}
@@ -52,6 +68,8 @@ services:
       - "${BITCOIN_ZMQ_TX:-28333}:28333"
     # O arquivo .cookie ficará em /home/bitcoin/.bitcoin/.cookie
     user: "${BITCOIN_UID:-1007}:${BITCOIN_GID:-1007}"  # bitcoin user
+    tmpfs:
+      - /tmp/bitcoin-cookies:noexec,nosuid,size=10m
     healthcheck:
       test: ["CMD", "bitcoin-cli", "-datadir=/home/bitcoin/.bitcoin", "getblockchaininfo"]
       interval: 30s
@@ -94,15 +112,19 @@ services:
     depends_on: [bitcoind, tor]
     networks: [core]
     stop_grace_period: 2m
+    configs:
+      - source: lnd_conf
+        target: /home/lnd/.lnd/lnd.conf
+        mode: 0644
+      - source: lnd_password
+        target: /home/lnd/.lnd/password.txt
+        mode: 0600
     volumes:
       # Dados do LND persistidos no host - será criado automaticamente
-      - lnd_data:/data/lnd
+      - lnd_data:/home/lnd/.lnd
       # Acesso somente leitura aos cookies do bitcoind
       - bitcoin_data:/home/bitcoin/.bitcoin:ro
       - tor_data:/run/tor:ro
-      # Mount config files directly at expected paths
-      - ./lnd/lnd.conf:/data/lnd/lnd.conf:ro
-      - ./lnd/password.txt:/data/lnd/password.txt:ro
     environment:
       - LND_EXTRA_ARGS=--alias=${LND_ALIAS:-BRLN} --listen=0.0.0.0:9735 --rpclisten=0.0.0.0:10009 --bitcoin.active --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoind:8332 --bitcoind.zmqpubrawblock=tcp://bitcoind:28332 --bitcoind.zmqpubrawtx=tcp://bitcoind:28333 --bitcoind.dir=/home/bitcoin/.bitcoin --tlsextraip=lnd --tlsextradomain=lnd
       - USE_BITCOIN_COOKIE=1
