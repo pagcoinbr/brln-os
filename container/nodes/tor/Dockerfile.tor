@@ -48,6 +48,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Instalar apenas dependências de runtime
 RUN apt-get update && apt-get install -y \
     libevent-2.1-7 \
+    bash \
+    iproute2 \
     libssl3 \
     zlib1g \
     libzstd1 \
@@ -60,41 +62,34 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /tmp/tor-install /
 
 # Copiar arquivo de configuração customizado
-COPY tor/torrc /etc/tor/torrc
+COPY container/nodes/tor/torrc /etc/tor/torrc
+
+# Copiar script de entrada
+COPY container/nodes/tor/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Criar usuário e grupos antes de definir permissões
 RUN groupadd -f -g 1050 tor-access && \
-    useradd -r -s /bin/false -u 1050 -g tor-access debian-tor
+    useradd -r -s /bin/false -u 1050 -g tor-access debian-tor && \
+    groupadd -f -g 1008 lnd && \
+    useradd -r -s /bin/false -u 1008 -g lnd lnd && \
+    usermod -a -G tor-access lnd
 
 # Criar diretórios necessários e definir permissões
 RUN mkdir -p /var/lib/tor && \
     chown -R debian-tor:tor-access /var/lib/tor && \
-    chmod 755 /var/lib/tor && \
+    chmod 750 /var/lib/tor && \
     chown debian-tor:tor-access /etc/tor/torrc && \
     chmod 644 /etc/tor/torrc
-
-# Criar script de inicialização
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-# Garantir que o diretório existe\n\
-mkdir -p /var/lib/tor\n\
-\n\
-# Se estivermos rodando como root (para lidar com volumes)\n\
-if [ "$(id -u)" = "0" ]; then\n\
-    # Corrigir permissões do volume se necessário\n\
-    chown -R debian-tor:tor-access /var/lib/tor\n\
-    chmod 755 /var/lib/tor\n\
-    # Executar como usuário debian-tor\n\
-    exec runuser -u debian-tor -- /usr/local/bin/tor -f /etc/tor/torrc\n\
-else\n\
-    # Já estamos rodando como debian-tor\n\
-    exec /usr/local/bin/tor -f /etc/tor/torrc\n\
-fi' > /usr/local/bin/start-tor.sh && \
-    chmod +x /usr/local/bin/start-tor.sh
 
 # Expor portas
 EXPOSE 9050 9051
 
-# Comando para iniciar Tor (rodamos como root para lidar com volumes)
-CMD ["/usr/local/bin/start-tor.sh"]
+# Usar entrypoint para garantir permissões corretas
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# Mudar para usuário debian-tor será feito no entrypoint
+# USER debian-tor
+
+# Comando para iniciar Tor diretamente
+CMD ["/usr/local/bin/tor", "-f", "/etc/tor/torrc", "--RunAsDaemon", "0"]

@@ -16,17 +16,6 @@ CookieAuthentication 1
 # Data directory configuration
 DataDirectory /var/lib/tor
 
-# Logging configuration
-# Log notices to stdout
-Log notice stdout
-
 # Daemon configuration
 # Do not run as daemon (run in foreground)
 RunAsDaemon 0
-
-# Security settings for container environment
-# Disable client capabilities we don't need
-ClientOnly 0
-
-# Disable some client features for better security in server mode
-ClientRejectInternalAddresses 1

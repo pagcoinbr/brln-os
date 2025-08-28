@@ -18,9 +18,11 @@ RUN apt-get update && apt-get install -y \
     expect \
     && rm -rf /var/lib/apt/lists/*
 
-# Criar usuário LND
+# Criar usuário LND e grupo tor-access
 RUN groupadd -r -g ${LND_GID} lnd && \
-    useradd -r -g ${LND_GID} -u ${LND_UID} -s /bin/bash -m lnd
+    groupadd -f -g 1050 tor-access && \
+    useradd -r -g ${LND_GID} -u ${LND_UID} -s /bin/bash -m lnd && \
+    usermod -a -G tor-access lnd
 
 # Copiar e extrair binários do LND
 COPY lnd-linux-amd64-v0.19.2-beta/lnd ${LND_BIN_DATA}/lnd
