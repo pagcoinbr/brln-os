@@ -1,0 +1,32 @@
+{
+  "name": "brln-os",
+  "version": "1.0.0",
+  "description": "a bitcoin manager",
+  "keywords": [
+    "brln",
+    "lightning",
+    "bitcoin"
+  ],
+  "homepage": "https://github.com/pagcoinbr/brln-os#readme",
+  "bugs": {
+    "url": "https://github.com/pagcoinbr/brln-os/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagcoinbr/brln-os.git"
+  },
+  "license": "MIT",
+  "author": "pagcoinbr",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "next dev"
+  },
+  "dependencies": {
+    "next": "^15.5.5",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
