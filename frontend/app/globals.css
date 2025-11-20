@@ -1,5 +1,5 @@
 /* ------------------------------
-   Estilos Base Gerais
+   Estilos Base Gerais (Original BRLN Style)
 ------------------------------ */
 
 body {
@@ -30,7 +30,7 @@ body.light-theme {
    Logo Responsivo
 ------------------------------ */
 
-img {
+.brln-logo {
   width: 800px;
   max-width: 100%;
   margin: 20px auto;
@@ -42,7 +42,7 @@ img {
 ------------------------------ */
 
 /* Container principal (menu) */
-#botoes {
+.botoes {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 colunas */
   gap: 15px;
@@ -51,7 +51,7 @@ img {
 }
 
 /* Container para ferramentas extras */
-#ferramentas-extras {
+.ferramentas-extras {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 colunas */
   gap: 15px;
@@ -96,7 +96,7 @@ img {
 
 .slider:before {
   position: absolute;
-  content: "🔴";
+  content: " ";
   height: 26px;
   width: 26px;
   left: 4px;
@@ -115,11 +115,11 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(26px);
-  content: "🟢";
+  content: " ";
 }
 
 /* ------------------------------
-   Botões
+   Service Grid
 ------------------------------ */
 
 .service-grid {
@@ -141,7 +141,12 @@ input:checked + .slider:before {
   justify-content: space-between;
 }
 
-.botao, a.botao {
+/* ------------------------------
+   Botões (Original BRLN Style)
+------------------------------ */
+
+.botao,
+a.botao {
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -176,37 +181,42 @@ input:checked + .slider:before {
   transform: rotate(180deg);
 }
 
-/* Botões dentro do #botoes */
-#botoes .botao, #botoes a.botao {
+/* Botões dentro do .botoes */
+.botoes .botao,
+.botoes a.botao {
   width: 100%;
 }
 
-/* Botões dentro do #ferramentas-extras */
-#ferramentas-extras .botao, #ferramentas-extras a.botao {
+/* Botões dentro do .ferramentas-extras */
+.ferramentas-extras .botao,
+.ferramentas-extras a.botao {
   flex: 1 1 45%; /* Deixa 2 botões por linha */
 }
 
 /* ------------------------------
-   Estilos Visuais dos Botões
+   Estilos Visuais dos Botões (Original)
 ------------------------------ */
 
 /* Estilo Dark */
-body.dark-theme .botao, body.dark-theme a.botao {
+body.dark-theme .botao,
+body.dark-theme a.botao {
   background: linear-gradient(45deg, #1f0f79, #4d00ff);
   color: #fff;
   box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88;
 }
 
 /* Estilo Light */
-body.light-theme .botao, body.light-theme a.botao {
+body.light-theme .botao,
+body.light-theme a.botao {
   background: linear-gradient(45deg, #5d96ff);
   color: #000000;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Brilho que passa no botão */
-.botao::after, a.botao::after {
-  content: '';
+.botao::after,
+a.botao::after {
+  content: "";
   position: absolute;
   top: 0;
   left: -75%;
@@ -218,12 +228,14 @@ body.light-theme .botao, body.light-theme a.botao {
   transition: left 0.4s ease-in-out;
 }
 
-.botao:hover::after, a.botao:hover::after {
+.botao:hover::after,
+a.botao:hover::after {
   left: 130%;
 }
 
 /* Hover Escuro */
-body.dark-theme .botao:hover, body.dark-theme a.botao:hover {
+body.dark-theme .botao:hover,
+body.dark-theme a.botao:hover {
   background: #ffdd00;
   color: #000;
   box-shadow: 0 0 25px #ffdd00, 0 0 50px #ffdd00;
@@ -231,7 +243,8 @@ body.dark-theme .botao:hover, body.dark-theme a.botao:hover {
 }
 
 /* Hover Claro */
-body.light-theme .botao:hover, body.light-theme a.botao:hover {
+body.light-theme .botao:hover,
+body.light-theme a.botao:hover {
   background: #32c5ff;
   color: #000;
   box-shadow: 0 0 25px #32c5ff, 0 0 50px #32c5ff;
@@ -243,9 +256,9 @@ body.light-theme .botao:hover, body.light-theme a.botao:hover {
 ------------------------------ */
 
 .section {
-  background-color: rgba(255,255,255,0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   padding: 20px;
   margin: 20px;
   width: 80%; /* ocupa 90% da largura da tela */
@@ -269,12 +282,128 @@ pre {
 }
 
 /* ------------------------------
-   Animação de Piscar (Se necessário)
+   Radio Player Styles (Original)
+------------------------------ */
+
+.radio-player-container {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a; /* Preto mais "profundo" */
+  color: #e0e0e0; /* Cinza claro para o texto */
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+/* Botão principal de Rádio */
+.radio-button {
+  background: linear-gradient(45deg, #00bcd4, #00838f); /* Azul ciano moderno */
+  color: #0a0a0a;
+  border: none;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #00bcd488;
+  transition: all 0.3s ease-in-out;
+}
+
+.radio-button:hover {
+  background: #0097a7;
+  color: white;
+}
+
+/* Controles de Volume */
+.vol-control {
+  background: linear-gradient(45deg, #666, #999);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  margin: 0 5px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 0 8px #66666688;
+  transition: all 0.3s ease-in-out;
+}
+
+.vol-control:hover {
+  background: linear-gradient(45deg, #888, #bbb);
+  transform: scale(1.1);
+}
+
+/* Botão de Novidades */
+.novidades-button {
+  background: linear-gradient(45deg, #ff9800, #f57c00);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  margin-left: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 0 10px #ff980088;
+  transition: all 0.3s ease-in-out;
+}
+
+.novidades-button:hover {
+  background: #e65100;
+  transform: scale(1.05);
+}
+
+/* Marquee (Letreiro) */
+.marquee {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.marquee-content {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marquee 15s linear infinite;
+}
+
+.marquee-content a {
+  color: #00bcd4;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.marquee-content a:hover {
+  color: #00acc1;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+/* ------------------------------
+   Animação de Piscar
 ------------------------------ */
 
 @keyframes piscar {
-  0%, 100% { box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88; }
-  50% { box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0; }
+  0%,
+  100% {
+    box-shadow: 0 0 10px #00ffff88, 0 0 20px #4d00ff88;
+  }
+  50% {
+    box-shadow: 0 0 25px #ffff00, 0 0 40px #ff0;
+  }
 }
 
 .piscando {
@@ -286,14 +415,19 @@ pre {
 ------------------------------ */
 
 @media (max-width: 600px) {
-  #botoes {
+  .botoes {
     grid-template-columns: 1fr;
   }
-  #ferramentas-extras .botao, #ferramentas-extras a.botao {
+  .ferramentas-extras .botao,
+  .ferramentas-extras a.botao {
     flex: 1 1 100%;
   }
-  .botao, a.botao {
+  .botao,
+  a.botao {
     font-size: 16px;
     padding: 12px 20px;
+  }
+  .brln-logo {
+    width: 90%;
   }
 }

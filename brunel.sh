@@ -6,9 +6,7 @@ LND_VERSION=0.18.5
 BTC_VERSION=28.1
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 REPO_DIR="/home/admin/brlnfullauto"
-HTML_SRC="$REPO_DIR/html"
-CGI_DST="/usr/lib/cgi-bin"
-WWW_HTML="/var/www/html"
+FRONTEND_DIR="$REPO_DIR/frontend"
 SERVICES_DIR="/home/admin/brlnfullauto/services"
 POETRY_BIN="/home/admin/.local/bin/poetry"
 FLASKVENV_DIR="/home/admin/envflask"
@@ -26,74 +24,57 @@ CYAN='\033[1;36m'
 NC='\033[0m' # Sem cor
 
 update_and_upgrade() {
-  app="Interface Gráfica"
-  echo "Instalando Apache..."
+  app="Interface Web Next.js"
+  echo "Instalando Node.js..."
   sudo -v
-  sudo apt install apache2 -y >> /dev/null 2>&1 & spinner
-  echo "Habilitando módulos do Apache..."
-  sudo a2enmod cgid dir >> /dev/null 2>&1 & spinner
-  echo "Reiniciando o serviço Apache..."
-  sudo systemctl restart apache2 >> /dev/null 2>&1 & spinner
+  # Install Node.js if not already installed
+  if ! command -v npm &> /dev/null; then
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+    sudo apt install nodejs -y >> /dev/null 2>&1 & spinner
+  else
+    echo "✅ Node.js já está instalado."
+  fi
 
   # Executa o git dentro do diretório, sem precisar dar cd
   git -C "$REPO_DIR" stash || true
   git -C "$REPO_DIR" pull origin "$branch"
 
-  sudo rm -rf "$WWW_HTML"/*.html
-  sudo rm -rf "$WWW_HTML/css"
-  sudo rm -rf "$WWW_HTML/js"
-  sudo rm -rf "$WWW_HTML/imagens"
-  sudo rm -rf "$WWW_HTML/radio"
-  sudo rm -rf "$CGI_DST"/*.sh
+  echo "📥 Atualizando interface Next.js..."
 
-  echo "📥 Copiando novos arquivos da interface web..."
+  # Navigate to frontend directory and install dependencies
+  cd "$REPO_DIR/frontend"
+  echo "Instalando dependências..."
+  npm install >> /dev/null 2>&1 & spinner
 
-  # Copia os HTMLs principais
-  sudo cp "$HTML_SRC"/*.html "$WWW_HTML/"
+  echo "Construindo aplicação Next.js..."
+  npm run build >> /dev/null 2>&1 & spinner
 
-  # Copia pastas CSS, JS, Imagens
-  sudo cp -r "$HTML_SRC/css" "$WWW_HTML/"
-  sudo cp -r "$HTML_SRC/js" "$WWW_HTML/"
-  sudo cp -r "$HTML_SRC/imagens" "$WWW_HTML/"
-  sudo cp -r "$HTML_SRC/radio" "$WWW_HTML/"
+  # Set Node.js capabilities to bind to port 80
+  echo "Configurando permissões para porta 80..."
+  sudo setcap 'cap_net_bind_service=+ep' $(which node)
 
-  # Copia scripts CGI para /usr/lib/cgi-bin
-  sudo cp "$HTML_SRC/cgi-bin/"*.sh "$CGI_DST/"
+  # Install/Update systemd service
+  echo "Configurando serviço systemd..."
+  sudo cp "$REPO_DIR/services/brln-frontend.service" /etc/systemd/system/
+  sudo systemctl daemon-reload
 
-  # Corrigir permissões de execução
-  sudo chmod +x "$CGI_DST"/*.sh
-  for script in "$CGI_DST"/*.sh; do
-    sudo chmod +x "$script"
-  done
-
-  # Configurar o Apache para permitir CGI no diretório correto
-  if ! grep -q 'Directory "/usr/lib/cgi-bin"' "/etc/apache2/sites-enabled/000-default.conf"; then
-    echo "Adicionando bloco de configuração CGI ao Apache..."
-    sudo sed -i '/<\/VirtualHost>/i \
-    <Directory "/usr/lib/cgi-bin">\n\
-      AllowOverride None\n\
-      Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch\n\
-      Require all granted\n\
-      AddHandler cgi-script .sh\n\
-    </Directory>\n' "/etc/apache2/sites-enabled/000-default.conf"
-  else
-    echo "Bloco de configuração CGI já existe no Apache."
+  # Stop Apache if it's running and disable it
+  if sudo systemctl is-active --quiet apache2; then
+    echo "Parando Apache..."
+    sudo systemctl stop apache2
+    sudo systemctl disable apache2
   fi
 
-  # Gerar sudoers dinâmico com todos os scripts .sh do cgi-bin
-  SCRIPT_LIST=$(sudo find "$CGI_DST" -maxdepth 1 -type f -name "*.sh" | sort | tr '\n' ',' | sed 's/,$//')
+  # Enable and start the Next.js frontend service
+  sudo systemctl enable brln-frontend
+  sudo systemctl restart brln-frontend
 
-  if [ -n "$SCRIPT_LIST" ]; then
-    sudo tee /etc/sudoers.d/www-data-scripts > /dev/null <<EOF
-www-data ALL=(ALL) NOPASSWD: $SCRIPT_LIST
-EOF
-  fi
-  # Abre a posta 80 no UFW
+  # Open port 80 in UFW
   if ! sudo ufw status | grep -q "80/tcp"; then
-    sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network'
+    sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Next.js frontend from local network'
   fi
-  sudo usermod -aG admin www-data
-  # Garante que o pacote python3-venv esteja instalado
+
+  # Garante que o pacote python3-venv esteja instalado (still needed for control scripts)
   if ! dpkg -l | grep -q python3-venv; then
     sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
   else
@@ -133,8 +114,6 @@ EOF
     sudo rm -f "$SUDOERS_TMP"
     exit 1
   fi
-  sudo systemctl restart apache2
-  sudo apt install -y python3-flask >> /dev/null 2>&1 & spinner
 }
 
 gotty_do () {
@@ -160,15 +139,14 @@ else
 fi
 
 # Define arrays for services and ports
-SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor" "control-systemd")
-PORTS=("3131" "3232" "3434" "3535" "3636" "3333" "5001")
+SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
+PORTS=("3131" "3232" "3434" "3535" "3636" "3333")
 COMMENTS=("allow BRLNfullauto on port 3131 from local network" 
   "allow cli on port 3232 from local network" 
   "allow bitcoinlogs on port 3434 from local network" 
   "allow lndlogs on port 3535 from local network"
   "allow btc-editor on port 3636 from local network"
-  "allow lnd-editor on port 3333 from local network"
-  "allow control-systemd on port 5001 from local network")
+  "allow lnd-editor on port 3333 from local network")
 
 # Remove and copy service files
 for service in "${SERVICES[@]}"; do
@@ -196,9 +174,6 @@ done
 gui_update() {
   update_and_upgrade
   gotty_install
-  sudo chown -R admin:admin /var/www/html/radio
-  sudo chmod +x /var/www/html/radio/radio-update.sh
-  sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
   menu
 }
 
@@ -209,9 +184,6 @@ terminal_web() {
     update_and_upgrade
     radio_update
     gotty_install
-    sudo chown -R admin:admin /var/www/html/radio
-    sudo chmod +x /var/www/html/radio/radio-update.sh
-    sudo chmod +x /home/admin/brlnfullauto/html/radio/radio-update.sh
     tailscale_vpn
     opening
     exit 0
