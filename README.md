@@ -1,4 +1,5 @@
 # 🚀 Instalação Passo a Passo - BR⚡LN Bolt
+# INSTALAÇÃO EM MANUTENÇÃO ATÉ 2026
 # Lightning Node Bootstrap
 
 ![Tela principal](https://github.com/user-attachments/assets/efbed0d2-5199-4e21-8d10-40bb742b5ef7)
