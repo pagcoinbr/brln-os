@@ -1,8 +1,0 @@
-# Configuração para ThunderHub - BRLNBolt
-masterPassword: 'changeme123'
-accounts:
-  - name: 'BRLNBolt'
-    serverUrl: 'lnd:10009'
-    macaroonPath: '/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon'
-    certificatePath: '/data/lnd/tls.cert'
-    password: 'changeme123'
