@@ -1,0 +1,20 @@
+[Unit]
+Description=BRLN Frontend (Next.js)
+After=network.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/brlnfullauto/frontend
+ExecStart=/usr/bin/node .next/standalone/server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=80
+Environment=HOSTNAME=0.0.0.0
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

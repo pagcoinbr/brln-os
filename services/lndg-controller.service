@@ -1,0 +1,18 @@
+[Unit]
+Description=Controlador de backend para Lndg
+After=network.target
+
+[Service]
+Type=simple
+Environment=PYTHONUNBUFFERED=1
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/lndg
+ExecStart=/home/admin/lndg/.venv/bin/python3 /home/admin/lndg/controller.py
+StandardOutput=append:/var/log/lndg-controller.log
+StandardError=append:/var/log/lndg-controller.log
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

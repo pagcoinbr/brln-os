@@ -1,0 +1,13 @@
+[Unit]
+Description=Terminal Web com logs do LND via GoTTY
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3535 -w journalctl -fu lnd
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

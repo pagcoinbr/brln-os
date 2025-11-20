@@ -1,248 +1,136 @@
-# ⚡ BRLN-OS
+# 🚀 Instalação Passo a Passo - BR⚡LN Bolt
+# Lightning Node Bootstrap
 
-<div align="center">
+![Tela principal](https://github.com/user-attachments/assets/efbed0d2-5199-4e21-8d10-40bb742b5ef7)
 
-![BRLN-OS Logo](https://img.shields.io/badge/BRLN--OS-Lightning%20Node-orange?style=for-the-badge&logo=bitcoin&logoColor=white)
+### 1. 🖥️ Instale o Ubuntu Server (Recomendado: 24.04 LTS)
 
-**Sistema operacional containerizado completo para Bitcoin, Lightning Network e Liquid Network**
+Prepare o terreno:
+- Baixe o Ubuntu Server: https://ubuntu.com/download/server
+- Grave a ISO em um pendrive usando [Balena Etcher](https://etcher.io) ou [Rufus](https://rufus.ie)
+- Durante a instalação, ative o **OpenSSH Server** (importantíssimo para acessar seu node pela rede)
+- Durante a escolha de disco desative a opção de **usar como LVM**.
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://docker.com)
-[![Lightning](https://img.shields.io/badge/lightning-network-yellow.svg)](https://lightning.network)
-[![Bitcoin](https://img.shields.io/badge/bitcoin-core-orange.svg)](https://bitcoincore.org)
-[![JavaScript](https://img.shields.io/badge/javascript-gRPC%20server-yellow.svg)](https://nodejs.org)
-[![Elements](https://img.shields.io/badge/elements-liquid%20network-green.svg)](https://elementsproject.org)
-
-*Uma plataforma completa de nó Bitcoin, Lightning e Liquid Network com interface web integrada, servidor JavaScript gRPC e suporte a PeerSwap*
-
-</div>
+👉 Após a instalação, conecte via SSH usando o IP local do seu node. Exemplo:
+```bash
+ssh admin@192.168.1.104
+```
+Se não souber o IP:
+- Ele aparece na tela do Ubuntu após o login
+- Ou use um app de scan de rede como Fing
 
 ---
 
-## 🚀 Instalação Rápida
+### 2. ⚡ Inicie o Instalador FullAuto
 
-**⚠️ IMPORTANTE: Sempre inicie como root**
-
-Execute o comando:
-
+Execute um comando:
 ```bash
-sudo su
+bash <(curl -s https://raw.githubusercontent.com/pagcoinbr/brlnfullauto/main/run.sh)
 ```
 
-Para instalar a versão 2.0-alfa: (EM DESENVOLVIMENTO)
+💡 Esse script vai:
+- Criar o usuário `admin`
+- Iniciar o script principal `brunel.sh`
+- Apresentar o menu gráfico interativo.
+
+**ATENÇÃO!** Após a criação do usuário `admin`, o script vai finalizar da seguinte maneira:
+
+![Captura de tela 2025-04-21 141434](https://github.com/user-attachments/assets/419765f3-83ab-45ca-863e-f5d45c3c7651)
+
+### . 🌐 Agora Acesse a Interface Gráfica
+
+Após a instalação inicial, acesse via navegador:
 ```bash
-passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash run.sh
+http://<seu_ip_local> ou http://<seu_ip_tailscale>
 ```
-
-Para instalar a vesão 1.0-alfa: (FUNCIONAL)
-```bash
-passwd root && cd && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && git switch brlnfullauto && bash run.sh
-```
-```
-# Após a instalação inicial, você verá um qr code para acessar sua rede tailscale (VPN), caso não queira utilizar, acesse a interface web (http://SEU_IP ou http://localhost) e finalize a configuração do node:
-# - Clique no botão "⚡ BRLN Node Manager" 
-# - Siga o passo a passo na interface gráfica para:
-#   • Configurar rede (mainnet/testnet) 
-#   • Instalar os aplicativos de administração.
-#
-# Digite a nova senha do Super usuário (root), para continuar:
-```
-
-**É isso!** O BRLN-OS será instalado com todos os componentes necessários e você poderá configurar tudo através da interface web moderna.
 
 ---
 
-## 🔧 Instalação Manual com Podman
+No menu de botões escolha: ⚡ BRLN Node Manager.
 
-Para quem preferir uma instalação manual com podman e controle total sobre os componentes:
+### 3. 🧭 Use o Menu Interativo
 
-### 🚀 Início Rápido
-
-```bash
-# Clone o repositório e execute o script de início rápido
-git clone https://github.com/pagcoinbr/brln-os.git
-cd brln-os/container/nodes
-sudo ./start-brln.sh
-```
-
-O script `start-brln.sh` executará automaticamente:
-1. Configuração de permissões
-2. Criação de arquivos de configuração
-3. Inicialização de todos os serviços
-
-### 📋 Instalação Passo a Passo
-
-### 1. Pré-requisitos
+O script exibe um menu com várias opções. Siga a ordem de cima pra baixo:
 
 ```bash
-# Instale o podman e podman-compose
-sudo apt update && sudo apt install -y podman podman-compose
-
-# Clone o repositório
-git clone https://github.com/pagcoinbr/brln-os.git
-cd brln-os/container/nodes
+   1 - Instalar Interface de Rede e Gráfica
+   2 - Instalar Bitcoin Core ( bitcoind )
+   3 - Instalar LND e criar a carteira
+   4 - Instalar Simple LNWallet
+   5 - Instalar Thunderhub + Balance of Satoshis
+   6 - Instalar LNDG
+   7 - Instalar LNbits
+   8 - Mais opções ( Atualizações, Telegram )
 ```
 
-### 2. Configuração de Permissões (CRÍTICO)
-
-As aplicações precisam de diretórios persistentes com permissões específicas.
-
-**Opção A: Script Automático (Recomendado)**
-
-```bash
-# Execute o script de configuração de permissões
-sudo ./setup-permissions.sh
-```
-
-**Opção B: Configuração Manual**
-
-```bash
-# Crie os diretórios de dados
-sudo mkdir -p /data/{elements,lnd}
-
-# Configure ownership para os UIDs dos containers
-sudo chown 1001:1001 /data/elements  # Elements daemon
-sudo chown 1008:1008 /data/lnd        # LND daemon
-
-# Configure permissões (777 temporariamente para Elements devido a bug no container)
-sudo chmod -R 777 /data/elements
-sudo chmod -R 755 /data/lnd
-```
-
-**⚠️ NOTA DE SEGURANÇA**: As permissões 777 para Elements são necessárias devido a um bug no script de inicialização do container que tenta criar arquivos temporários. Em produção, considere usar volumes do podman ou corrigir o script do container.
-
-### 3. Configuração dos Arquivos
-
-```bash
-# Os arquivos de configuração serão criados automaticamente pelo script setup-permissions.sh
-# Ou você pode copiá-los manualmente:
-cp bitcoin/bitcoin.conf.example bitcoin/bitcoin.conf
-cp elements/elements.conf.example elements/elements.conf  
-cp lnd/lnd.conf.example lnd/lnd.conf
-```
-
-### 4. Configuração para Bitcoin Remoto (Opcional)
-
-Se você quiser usar um Bitcoin Core remoto em vez do local:
-
-```bash
-# Edite elements/elements.conf para apontar para seu nó Bitcoin
-# Substitua as linhas do mainchain:
-mainchainrpchost=bitcoin.br-ln.com
-mainchainrpcport=8085
-mainchainrpcuser=seu_usuario
-mainchainrpcpassword=sua_senha
-```
-
-### 5. Inicialização dos Serviços
-
-```bash
-# Inicie todos os serviços
-podman-compose up -d
-
-# Verifique o status
-podman-compose ps
-
-# Acompanhe os logs
-podman-compose logs -f
-```
-
-### 6. Dados Persistentes
-
-Os seguintes dados são persistidos no host:
-
-- **`/data/elements/`**: Blockchain do Liquid Network, configurações do Elements
-- **`/data/lnd/`**: Wallet Lightning, canais, macaroons, certificados TLS
-- **`nodes_bitcoin_data`**: Volume do Bitcoin Core (se usando local)
-- **`nodes_tor_data`**: Configurações e chaves do Tor
-
-### 7. Portas Expostas
-
-- **8085**: Bitcoin Core RPC (se local)
-- **7041**: Elements RPC
-- **9735**: LND P2P (Lightning Network)
-- **28332-28333**: Bitcoin ZMQ (para LND)
-
-### 8. Verificação da Instalação
-
-```bash
-# Teste conexão com Elements
-podman exec -it elementsd elements-cli getblockchaininfo
-
-# Teste LND (após sincronização)
-podman exec -it lnd lncli getinfo
-
-# Verifique logs detalhados
-podman logs elementsd
-podman logs lnd
-```
-
-### 🛠️ Scripts Disponíveis
-
-- **`setup-permissions.sh`**: Configura permissões e diretórios necessários
-- **`start-brln.sh`**: Script completo que configura e inicia todos os serviços
-- **`docker-compose.yml`**: Configuração dos contêineres
-
-### 🔄 Comandos Úteis
-
-```bash
-# Parar todos os serviços
-podman-compose down
-
-# Reiniciar um serviço específico
-podman-compose restart [service_name]
-
-# Ver logs em tempo real
-podman-compose logs -f [service_name]
-
-# Executar comandos dentro dos contêineres
-podman exec -it bitcoind bitcoin-cli getinfo
-podman exec -it elementsd elements-cli getinfo
-podman exec -it lnd lncli getinfo
-```
-
-### 🚨 Solução de Problemas Comuns
-
-#### Bitcoin Container Error: "Device or resource busy"
-
-**Problema**: O container do Bitcoin falha ao iniciar com erro "sed: can't move '/home/bitcoin/.bitcoin/bitcoin.conf.tmp' to '/home/bitcoin/.bitcoin/bitcoin.conf': Device or resource busy"
-
-**Causa**: O arquivo `bitcoin.conf` está montado diretamente do host, impedindo que o container o modifique.
-
-**Solução**:
-
-1. **Remova o mount direto do arquivo de configuração** no `docker-compose.yml`:
-   ```yaml
-   # Remova ou comente esta linha:
-   # - ./bitcoin/bitcoin.conf:/home/bitcoin/.bitcoin/bitcoin.conf
-   ```
-
-2. **Copie o arquivo para o diretório de dados**:
-   ```bash
-   # Pare o serviço Bitcoin
-   podman-compose down bitcoind
-   
-   # Copie o arquivo de configuração para o volume de dados
-   sudo cp container/nodes/bitcoin/bitcoin.conf /var/lib/containers/storage/volumes/nodes_bitcoin_data/_data/
-   
-   # Configure as permissões corretas
-   sudo chown 1007:1007 /var/lib/containers/storage/volumes/nodes_bitcoin_data/_data/bitcoin.conf
-   sudo chmod 644 /var/lib/containers/storage/volumes/nodes_bitcoin_data/_data/bitcoin.conf
-   ```
-
-3. **Reinicie o container**:
-   ```bash
-   # Remove containers existentes se necessário
-   podman-compose down
-   
-   # Inicie novamente
-   podman-compose up -d bitcoind
-   
-   # Verifique os logs
-   podman-compose logs bitcoind
-   ```
-
-**Resultado**: O container agora consegue ler a configuração e modificar o arquivo conforme necessário, seguindo o mesmo padrão usado pelo Elements.
+💬 Durante a instalação, o script vai perguntar:
+- Se você quer exibir os logs ("y" para ver o que acontece por trás, "n" para uma instalação mais limpa.)
+** É sabido que alguns sistemas podem travar durante a instalação sem logs, dê preferência por ver os logs**
+- Se quer usar o Bitcoin remoto da BRLN ou o local
+- Qual nome dar para o seu node Lightning
+- Se prefere PostgreSQL ou Bbolt como banco de dados
 
 ---
 
+### 4. 🔐 Criação da Wallet Lightning (24 palavras)
+
+Ao instalar o LND (passo 3), o script te guiará para:
+- Inserir usuário e senha do bitcoind
+- Escolher entre usar o Bitcoin da BRLN ou o local
+- Criar a senha do LND (confirmar duas vezes)
+- Gerar uma nova seed de 24 palavras
+
+🧠 **IMPORTANTE:** Anote suas 24 palavras com muito carinho e guarde em local seguro. Sem elas, seus fundos podem ser perdidos PARA SEMPRE.
+
+---
+
+### 6. 🤖 Ative o BOS Telegram
+
+O script inclui um assistente para configurar o bot BOS Telegram:
+1. Crie seu bot via @BotFather no Telegram
+2. Rode `bos telegram` no "Terminal Web"
+3. Execute a opção "8" do Node Manager
+4. Envie `/start` e `/connect` no Telegram
+5. Copie o Connection Code e insira no terminal
+
+⚙️ O script atualiza automaticamente o `bos-telegram.service` com seu código e ativa o bot como serviço systemd.
+
+---
+
+### 7. 🛰️ Ative o Acesso VPN com Tailscale
+
+Via menu > opção VPN:
+- Instala o Tailscale
+- Gera QR Code com link de login
+- Permite que você acesse seu node de qualquer lugar do mundo
+
+📱 Baixe o app do Tailscale no celular e escaneie o QR code. Pronto, seu node virou seu parceiro de viagem!
+
+- **Teve algum problema? Até agora, se você não depositou nenhum fundo e não está conseguindo progredir pois fez alguma coisa errada? Basta reiniciar o processo formatando a máquina e fazendo a instalação do ubuntu, novamente.**
+
+---
+![ChatGPT Image 21 de abr  de 2025, 02_47_48](https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4)
+---
+
+## 📚 Bibliografia e Repositórios Utilizados
+
+Esses são os projetos e repositórios que inspiraram ou foram integrados no BR⚡LN Bolt:
+
+- **Gotty (Terminal Web):** https://github.com/yudai/gotty
+- **Thunderhub (Gerenciador LN):** https://github.com/apotdevin/thunderhub
+- **Simple LNwallet (Carteira leve):** https://github.com/jvxis/simple-lnwallet-go
+- **LNbits (Camada bancária sobre LN):** https://github.com/lnbits/lnbits
+- **LNDG (Dashboard com insights e rebalanceamento):** https://github.com/cryptosharks131/lndg
+- **Balance of Satoshis (Admin CLI para LND):** https://github.com/alexbosworth/balanceofsatoshis
+- **Bitcoin Core:** https://github.com/bitcoin/bitcoin
+- **LND - Lightning Labs:** https://github.com/lightningnetwork/lnd
+- **Tailscale VPN:** https://github.com/tailscale/tailscale
+
+---
+
+## 💬 Contato
+
+- Telegram: https://t.me/pagcoinbr
+- Email: suporte.brln@gmail.com ou suporte@pagcoin.org
+- Projeto: https://services.br-ln.com
+- Colabore: Fork, PRs e ideias são bem-vindos!

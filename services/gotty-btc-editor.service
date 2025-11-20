@@ -1,0 +1,13 @@
+[Unit]
+Description=Edita o bitcoin.conf
+After=network.target
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3636 -w nano /home/admin/.bitcoin/bitcoin.conf
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

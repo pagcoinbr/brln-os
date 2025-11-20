@@ -1,0 +1,34 @@
+# MiniBolt: systemd unit for Thunderhub
+# /etc/systemd/system/thunderhub.service
+
+[Unit]
+Description=ThunderHub
+After=network.target lnd.service
+
+[Service]
+User=admin
+WorkingDirectory=/home/admin/thunderhub
+
+# Aguarda o LND responder na porta gRPC 10009
+ExecStartPre=/bin/bash -c 'until nc -z 127.0.0.1 10009; do echo "⏳ Aguardando LND..."; sleep 5; done'
+
+# Inicia o ThunderHub com npm
+ExecStart=/usr/bin/npm run start
+
+# Ambiente correto se você usa venv
+Environment=PATH=/home/admin/.myenv/bin:/usr/bin:/bin
+Environment=HOME=/home/admin
+
+# Reinício automático
+Restart=on-failure
+RestartSec=10
+TimeoutSec=300
+
+# Segurança extra
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+
+[Install]
+WantedBy=multi-user.target
