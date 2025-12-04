@@ -23,8 +23,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "NODE_OPTIONS='--localstorage-file=/tmp/jest-localstorage' jest",
+    "test:watch": "NODE_OPTIONS='--localstorage-file=/tmp/jest-localstorage' jest --watch"
   },
   "dependencies": {
     "next": "^15.5.5",
@@ -35,5 +35,5 @@
   "devDependencies": {
     "jest": "^30.2.0"
   },
-  "type": "commonjs"
+  "type": "module"
 }
