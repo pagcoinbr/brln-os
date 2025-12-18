@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Header</title>
+    <link rel="stylesheet" href="header.css" />
+    <base href="../../" />
+    <style>
+      /* Previne flash de conteúdo não estilizado */
+      body {
+        opacity: 0;
+        transition: opacity 0.1s ease-in;
+      }
+      body.loaded {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="navbar">
+      <div class="navbar-container">
+        <div class="logo-section">
+          <img src="pages/home/logo.png" alt="Logo da Pagcoin" class="logo" />
+          <span class="logo-text">BRLN-OS</span>
+        </div>
+        <nav class="nav-menu">
+          <a
+            href="#"
+            class="nav-link active"
+            data-page="pages/home/index.html"
+            onclick="navigateTo('pages/home/index.html', this); return false;"
+            >INÍCIO</a
+          >
+          <a
+            href="#"
+            class="nav-link"
+            data-page="pages/components/calculadoras/calculadoras.html"
+            onclick="navigateTo('pages/components/calculadoras/calculadoras.html', this); return false;"
+            >CALCULADORAS</a
+          >
+          <a
+            href="#"
+            class="nav-link"
+            data-page="pages/components/aplicativos/aplicativos.html"
+            onclick="navigateTo('pages/components/aplicativos/aplicativos.html', this); return false;"
+            >APLICATIVOS</a
+          >
+          <a
+            href="#"
+            class="nav-link"
+            data-page="pages/info/termos.html"
+            onclick="navigateTo('pages/info/termos.html', this); return false;"
+            >Termos de uso</a
+          >
+        </nav>
+        
+        <!-- Controles de Rádio -->
+        <div class="radio-controls">
+          <button id="radio-button" class="radio-btn" title="Play/Pause Rádio">▶️</button>
+          <button class="vol-control" id="vol-down" title="Diminuir Volume">−</button>
+          <button class="vol-control" id="vol-up" title="Aumentar Volume">+</button>
+          <button id="novidades-button" class="novidades-btn" title="Sem novidades no momento">📢</button>
+        </div>
+      </div>
+      
+      <!-- Letreiro animado -->
+      <div class="marquee">
+        <div class="marquee-content">
+          <a href="https://services.br-ln.com" target="_blank">⚡ Clique aqui para acessar o site da BRLN. Junte-se a nós! - v1.0-beta</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Player de áudio invisível -->
+    <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
+
+    <script>
+      function navigateTo(page, linkElement) {
+        // Muda o conteúdo do iframe inferior
+        parent.document.getElementById("contentFrame").src = page;
+
+        // Atualiza classe active
+        const links = document.querySelectorAll(".nav-link");
+        links.forEach((link) => link.classList.remove("active"));
+        linkElement.classList.add("active");
+
+        // Armazena a página atual no sessionStorage
+        sessionStorage.setItem("currentPage", page);
+      }
+
+      function navigateToSection(page, sectionId, linkElement) {
+        // Carrega a página
+        parent.document.getElementById("contentFrame").src = page;
+
+        // Atualiza classe active
+        const links = document.querySelectorAll(".nav-link");
+        links.forEach((link) => link.classList.remove("active"));
+        linkElement.classList.add("active");
+
+        // Aguarda carregar e depois faz o scroll
+        setTimeout(() => {
+          const contentFrame = parent.document.getElementById("contentFrame");
+          const section =
+            contentFrame.contentWindow.document.getElementById(sectionId);
+          if (section) {
+            section.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 300);
+
+        // Armazena a página e seção atual
+        sessionStorage.setItem("currentPage", page);
+        sessionStorage.setItem("currentSection", sectionId);
+      }
+
+      // Restaura a página ativa ao carregar o header
+      function initializeHeader() {
+        const currentPage = sessionStorage.getItem("currentPage");
+        const links = document.querySelectorAll(".nav-link");
+
+        // Remove todas as classes active primeiro
+        links.forEach((link) => link.classList.remove("active"));
+
+        // Adiciona active ao link correto
+        if (currentPage) {
+          let foundActive = false;
+          links.forEach((link) => {
+            if (link.dataset.page === currentPage) {
+              // Força reflow antes de adicionar a classe
+              void link.offsetHeight;
+              link.classList.add("active");
+              foundActive = true;
+            }
+          });
+
+          // Se não encontrou a página, ativa o primeiro link (INÍCIO)
+          if (!foundActive && links.length > 0) {
+            void links[0].offsetHeight;
+            links[0].classList.add("active");
+          }
+        } else {
+          // Se não há página salva, ativa o primeiro link
+          if (links.length > 0) {
+            void links[0].offsetHeight;
+            links[0].classList.add("active");
+          }
+        }
+
+        // Mostra o body após inicialização
+        document.body.classList.add("loaded");
+      }
+
+      // Executa quando o DOM estiver pronto
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initializeHeader);
+      } else {
+        // Se o DOM já está pronto, executa imediatamente
+        initializeHeader();
+      }
+
+      // ========== RÁDIO CONTROLS ==========
+      const radioPlayer = document.getElementById('radio-player');
+      const radioButton = document.getElementById('radio-button');
+      const volDownBtn = document.getElementById('vol-down');
+      const volUpBtn = document.getElementById('vol-up');
+      const novidadesBtn = document.getElementById('novidades-button');
+
+      let isPlaying = false;
+      let currentVolume = 0.5;
+
+      // Define volume inicial
+      radioPlayer.volume = currentVolume;
+
+      // Toggle Play/Pause
+      radioButton.addEventListener('click', () => {
+        if (isPlaying) {
+          radioPlayer.pause();
+          radioButton.textContent = '▶️';
+          radioButton.title = 'Play Rádio';
+        } else {
+          radioPlayer.play();
+          radioButton.textContent = '⏸️';
+          radioButton.title = 'Pause Rádio';
+        }
+        isPlaying = !isPlaying;
+      });
+
+      // Diminuir volume
+      volDownBtn.addEventListener('click', () => {
+        currentVolume = Math.max(0, currentVolume - 0.1);
+        radioPlayer.volume = currentVolume;
+      });
+
+      // Aumentar volume
+      volUpBtn.addEventListener('click', () => {
+        currentVolume = Math.min(1, currentVolume + 0.1);
+        radioPlayer.volume = currentVolume;
+      });
+
+      // Botão de novidades (exemplo)
+      novidadesBtn.addEventListener('click', () => {
+        alert('Sem novidades no momento!');
+      });
+    </script>
+  </body>
+</html>

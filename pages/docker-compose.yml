@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  pagcoin-web:
+    build: .
+    container_name: pagcoin-cloudflared
+    ports:
+      - "80:80" # Porta local opcional (o cloudflared cria um túnel público)
+    restart: unless-stopped
+    env_file:
+      - .env # Carrega variáveis do arquivo .env (incluindo o token)
+    # volumes:
+      # Descomente se quiser fazer alterações sem rebuild
+      # - ./pages:/usr/share/nginx/html/pages:ro
+      # - ./main.html:/usr/share/nginx/html/main.html:ro
+    stdin_open: true
+    tty: true

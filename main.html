@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAGCOIN.ORG - Bitcoin for the People</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        height: 100vh;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      .header-frame {
+        height: 80px;
+        border: none;
+        border-bottom: 2px solid #ccc;
+        flex-shrink: 0;
+      }
+
+      .content-frame {
+        flex: 1;
+        border: none;
+        width: 100%;
+        height: calc(100vh - 80px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- IFRAME SUPERIOR: Cabeçalho fixo -->
+      <iframe
+        id="headerFrame"
+        class="header-frame"
+        src="pages/components/header.html"
+        scrolling="no"
+      ></iframe>
+
+      <!-- IFRAME INFERIOR: Conteúdo dinâmico -->
+      <iframe
+        id="contentFrame"
+        class="content-frame"
+        src="pages/home/index.html"
+        name="contentFrame"
+      ></iframe>
+    </div>
+
+    <script>
+      // Gerenciamento de navegação e estado
+      window.addEventListener("DOMContentLoaded", () => {
+        // Restaura a última página visitada (se houver)
+        const savedPage = sessionStorage.getItem("currentPage");
+        if (savedPage) {
+          document.getElementById("contentFrame").src = savedPage;
+        } else {
+          // Define página inicial padrão
+          sessionStorage.setItem("currentPage", "pages/home/index.html");
+        }
+      });
+
+      // Função global para navegação externa (pode ser chamada de qualquer lugar)
+      function navigateToPage(page) {
+        document.getElementById("contentFrame").src = page;
+        sessionStorage.setItem("currentPage", page);
+      }
+    </script>
+  </body>
+</html>

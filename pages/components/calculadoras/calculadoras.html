@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PAGCOIN.ORG - Conversor P2P</title>
+    <link rel="stylesheet" href="calculadoras.css" />
+  </head>
+  <body>
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <h1 class="page-title">Conversor</h1>
+
+      <section class="converters-container">
+        <!-- LEFT PANEL: CONVERSOR -->
+        <div class="converter-panel">
+          <div class="panel-card">
+            <h2 class="panel-title">Conversor</h2>
+
+            <div class="exchange-rates">
+              <div class="rate-item">
+                <span class="rate-label">1 BTC ≈</span>
+                <span class="rate-value" id="btcToReais">Carregando...</span>
+              </div>
+              <div class="rate-item">
+                <span class="rate-label">1 USD ≈</span>
+                <span class="rate-value" id="usdToReais">Carregando...</span>
+              </div>
+              <div class="rate-item">
+                <span class="rate-label">1 EUR ≈</span>
+                <span class="rate-value" id="eurToReais">Carregando...</span>
+              </div>
+            </div>
+
+            <!-- BRL Input -->
+            <div class="input-group">
+              <label for="inputBRL" class="input-label">Reais (BRL):</label>
+              <input
+                type="number"
+                id="inputBRL"
+                class="input-field"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            <!-- USD Input -->
+            <div class="input-group">
+              <label for="inputUSD" class="input-label">Dólares (USD):</label>
+              <input
+                type="number"
+                id="inputUSD"
+                class="input-field"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            <!-- EUR Input -->
+            <div class="input-group">
+              <label for="inputEUR" class="input-label">Euros (EUR):</label>
+              <input
+                type="number"
+                id="inputEUR"
+                class="input-field"
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            <!-- BTC Input -->
+            <div class="input-group">
+              <label for="inputBTC" class="input-label">Bitcoin (BTC):</label>
+              <input
+                type="number"
+                id="inputBTC"
+                class="input-field"
+                placeholder="0.00000000"
+                step="0.00000001"
+              />
+            </div>
+
+            <!-- SATS Input -->
+            <div class="input-group">
+              <label for="inputSATS" class="input-label"
+                >Satoshis (SATS):</label
+              >
+              <input
+                type="number"
+                id="inputSATS"
+                class="input-field"
+                placeholder="0"
+                step="1"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL: CALCULADORA P2P -->
+        <div class="calculator-panel">
+          <div class="panel-card">
+            <h2 class="panel-title">Calculadora P2P</h2>
+
+            <div class="calculator-info">
+              <div class="info-row">
+                <span class="info-label">Cotação do BTC:</span>
+                <span class="info-value">
+                  <span id="quoteBTC">...</span>
+                  <span class="info-currency">BRL</span>
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Cotação USD:</span>
+                <span class="info-value">
+                  <span id="quoteUSD">...</span>
+                  <span class="info-currency">BTC</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Client Value Input BRL -->
+            <div class="input-group">
+              <label for="clientValueBRL" class="input-label"
+                >Valor do cliente (BRL):</label
+              >
+              <input
+                type="number"
+                id="clientValueBRL"
+                class="input-field"
+                placeholder="Ex: 500.00"
+                step="0.01"
+              />
+            </div>
+
+            <!-- Client Value Input USD -->
+            <div class="input-group">
+              <label for="clientValueUSD" class="input-label"
+                >Valor do cliente (USD):</label
+              >
+              <input
+                type="number"
+                id="clientValueUSD"
+                class="input-field"
+                placeholder="Ex: 100.00"
+                step="0.01"
+              />
+            </div>
+
+            <!-- Ágio/Markup Input -->
+            <div class="input-group">
+              <label for="markupPercentage" class="input-label"
+                >Ágio em % (opcional):</label
+              >
+              <input
+                type="number"
+                id="markupPercentage"
+                class="input-field"
+                placeholder="0"
+                step="0.1"
+              />
+            </div>
+
+            <!-- Result Display -->
+            <div class="result-box">
+              <div class="result-value" id="p2pResult">0</div>
+            </div>
+
+            <div class="result-breakdown">
+              <div class="breakdown-item">
+                <span class="breakdown-label">Valor Bruto (BTC):</span>
+                <span class="breakdown-value" id="grossValue">0</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Ágio em BRL:</span>
+                <span class="breakdown-value" id="markupValue">0</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Total com Ágio (BRL):</span>
+                <span class="breakdown-value" id="totalWithMarkup">0</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Total em BTC:</span>
+                <span class="breakdown-value" id="totalBTC">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p class="location">Based in São Paulo - Brasil</p>
+        <p class="since">Since 2023</p>
+      </div>
+    </footer>
+
+    <script src="calculadoras.js"></script>
+  </body>
+</html>
