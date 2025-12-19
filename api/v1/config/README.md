@@ -1,4 +1,4 @@
-# BRLN-OS Aplicativos API
+# BRLN-OS Config API
 
 API para gerenciamento de status do sistema e controle de serviços.
 
@@ -25,13 +25,13 @@ sudo systemctl status brln-api
 
 ## Endpoints
 
-### GET /api/v1/aplicativos/system-status
+### GET /api/v1/config/system-status
 Retorna informações sobre CPU, RAM, LND, Bitcoin, Tor e Blockchain.
 
-### GET /api/v1/aplicativos/services-status
+### GET /api/v1/config/services-status
 Retorna o status (ativo/inativo) de todos os serviços.
 
-### POST /api/v1/aplicativos/service
+### POST /api/v1/config/service
 Gerencia serviços (start/stop/restart).
 
 Body:
@@ -42,7 +42,7 @@ Body:
 }
 ```
 
-### GET /api/v1/aplicativos/health
+### GET /api/v1/config/health
 Health check do serviço.
 
 ## Porta

@@ -48,6 +48,61 @@ body {
   padding: 0 20px;
 }
 
+/* Main Apps Section */
+.services {
+  padding: 40px 20px;
+  background-color: var(--light-bg);
+}
+
+.main-apps-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.main-apps-grid .service-card {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 250px;
+  background: var(--primary-light);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.main-apps-grid .service-card:hover {
+  background-color: var(--bitcoin-orange);
+  color: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.service-title {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Responsivo para telas menores */
+@media (max-width: 768px) {
+  .main-apps-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-apps-grid .service-card {
+    flex: 1 1 100%;
+  }
+}
+
 .logo-section {
   display: flex;
   align-items: center;

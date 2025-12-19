@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-API para gerenciamento de aplicativos e status do sistema BRLN-OS
+API para gerenciamento do comando central e status do sistema BRLN-OS
 """
 
 from flask import Flask, jsonify, request
@@ -147,7 +147,7 @@ def get_blockchain_size():
         print(f"Error calculating blockchain size: {e}")
     return "N/A"
 
-@app.route('/api/v1/aplicativos/system-status', methods=['GET'])
+@app.route('/api/v1/config/system-status', methods=['GET'])
 def system_status():
     """Retorna o status do sistema"""
     try:
@@ -193,7 +193,7 @@ def system_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/v1/aplicativos/services-status', methods=['GET'])
+@app.route('/api/v1/config/services-status', methods=['GET'])
 def services_status():
     """Retorna o status de todos os serviços"""
     try:
@@ -205,7 +205,7 @@ def services_status():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/v1/aplicativos/service', methods=['POST'])
+@app.route('/api/v1/config/service', methods=['POST'])
 def manage_service():
     """Gerencia um serviço (start/stop)"""
     try:
@@ -243,7 +243,7 @@ def manage_service():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/v1/aplicativos/health', methods=['GET'])
+@app.route('/api/v1/config/health', methods=['GET'])
 def health():
     """Health check endpoint"""
     return jsonify({'status': 'ok', 'version': '1.0'})

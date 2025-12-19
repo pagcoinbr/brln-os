@@ -1,6 +1,12 @@
 // ============================================
-// CONVERSOR E CALCULADORA P2P - SEM VALORES HARDCODED
+// FERRAMENTAS - CONVERSOR E CALCULADORA P2P
 // ============================================
+
+// Abrir aplicativo em nova janela
+function abrirApp(porta) {
+  const url = `http://${window.location.hostname}:${porta}`;
+  window.open(url, '_blank');
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   // ===== CONVERSOR =====

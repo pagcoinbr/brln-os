@@ -1,9 +1,9 @@
 #!/bin/bash
-# Script de instalação da API BRLN-OS Aplicativos
+# Script de instalação da API BRLN-OS Comando Central
 
 set -e
 
-echo "🚀 Instalando API BRLN-OS Aplicativos..."
+echo "🚀 Instalando API BRLN-OS Comando Central..."
 
 # Cores
 GREEN='\033[0;32m'
@@ -11,7 +11,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Diretórios
-API_DIR="/root/brln-os/api/v1/aplicativos"
+API_DIR="/root/brln-os/api/v1/comandcentral"
 VENV_DIR="/home/admin/envflask"
 SERVICE_FILE="/root/brln-os/services/brln-api.service"
 
@@ -58,7 +58,7 @@ if systemctl is-active --quiet brln-api; then
     echo ""
     echo "📊 Status: systemctl status brln-api"
     echo "📋 Logs: journalctl -u brln-api -f"
-    echo "🌐 Health Check: curl http://localhost:5001/api/v1/aplicativos/health"
+    echo "🌐 Health Check: curl http://localhost:5001/api/v1/comandcentral/health"
     echo ""
     echo "⚠️  Não esqueça de reiniciar o Nginx para aplicar as mudanças:"
     echo "   sudo systemctl restart nginx"
