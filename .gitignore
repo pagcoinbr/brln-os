@@ -77,6 +77,29 @@ Thumbs.db
 logs
 *.log
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.env
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.pytest_cache/
+.hypothesis/
+.tox/
+*.egg-info/
+dist/
+build/
+
 # Temporary files
 tmp/
 temp/

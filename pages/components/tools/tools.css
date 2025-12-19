@@ -4,10 +4,12 @@
   --accent-orange: #f5a623;
   --bitcoin-orange: #ff9500;
   --text-color: #333;
-  --light-bg: #f5f5f5;
+  --light-bg: #e8e8e8;
   --border-color: #333;
   --input-bg: #fafafa;
   --input-border: #bbb;
+  --card-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -18,8 +20,8 @@
 
 html,
 body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background-color: #f0f0f0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--light-bg);
   color: var(--text-color);
   height: 100%;
 }
@@ -65,31 +67,45 @@ body {
 .main-apps-grid .service-card {
   flex: 1 1 calc(50% - 10px);
   min-width: 250px;
-  background: var(--primary-light);
-  border: 2px solid var(--border-color);
+  background: #f7f7f7;
+  border: 2px solid black;
   border-radius: 12px;
-  padding: 20px;
+  padding: 30px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-decoration: none;
   color: var(--text-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80px;
+  min-height: 100px;
+  box-shadow: 8px 8px 0px 0px #444;
 }
 
 .main-apps-grid .service-card:hover {
-  background-color: var(--bitcoin-orange);
-  color: var(--primary-light);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: #333;
+  color: #fff;
+  box-shadow: 4px 4px 0px 0px #000;
+  transform: translate(2px, 2px);
+}
+
+.main-apps-grid .service-card:hover .service-title {
+  color: #fff;
+}
+
+.main-apps-grid .service-card:active {
+  background-color: #111;
+  box-shadow: none;
+  transform: translate(8px, 8px);
 }
 
 .service-title {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: bold;
   text-align: center;
+  color: black;
+  transition: color 0.2s ease;
+  width: 100%;
 }
 
 /* Responsivo para telas menores */
@@ -190,21 +206,40 @@ body {
 
 .panel-card {
   background-color: #f7f7f7;
-  border: 2px solid #333;
+  border: 2px solid black;
   border-radius: 12px;
   padding: 30px;
   width: 100%;
   max-width: 350px;
   box-shadow: 8px 8px 0px 0px #444;
   position: relative;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.panel-card:hover {
+  background-color: #333;
+  color: #fff;
+  box-shadow: 4px 4px 0px 0px #000;
+  transform: translate(2px, 2px);
+}
+
+.panel-card:hover .rate-label,
+.panel-card:hover .rate-value,
+.panel-card:hover .info-label,
+.panel-card:hover .info-value span,
+.panel-card:hover .breakdown-label,
+.panel-card:hover .breakdown-value {
+  color: #fff;
 }
 
 .panel-title {
-  color: #222;
+  color: black;
   text-align: center;
   margin-bottom: 20px;
   font-size: 24px;
   font-weight: bold;
+  transition: color 0.2s ease;
 }
 
 /* EXCHANGE RATES SECTION */
@@ -263,18 +298,18 @@ body {
 .input-field {
   width: 100%;
   padding: 12px;
-  border: 2px solid #555;
+  border: 2px solid black;
   border-radius: 8px;
   font-size: 16px;
   background-color: #fff;
-  box-shadow: inset 3px 3px 5px #ccc;
+  box-shadow: 2px 2px 0px 0px #444;
   transition: box-shadow 0.3s ease;
 }
 
 .input-field:focus {
   outline: none;
-  border-color: #000;
-  box-shadow: inset 3px 3px 5px #aaa, 0 0 5px #999;
+  border-color: black;
+  box-shadow: 1px 1px 0px 0px #000;
 }
 
 .input-field::placeholder {
@@ -322,10 +357,10 @@ body {
   text-align: center;
   padding: 15px;
   background-color: #fff;
-  color: #000;
+  color: black;
   border-radius: 8px;
-  border: 2px dashed #444;
-  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
+  border: 2px solid black;
+  box-shadow: 4px 4px 0px 0px #444;
   margin-top: 20px;
   margin-bottom: 20px;
 }
@@ -379,6 +414,7 @@ body {
   padding: 20px;
   text-align: center;
   margin-top: auto;
+  margin-bottom: auto;
 }
 
 .footer-content p {

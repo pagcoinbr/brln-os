@@ -10,7 +10,24 @@
   <body>
     <!-- MAIN CONTENT -->
     <main class="main-content">
-      <h1 class="page-title">Ferramentas</h1>
+
+          <!-- Services Section - Main Apps -->
+    <section class="services">
+      <div class="main-apps-grid">
+        <button class="service-card" onclick="abrirApp(8889)">
+          <div class="service-title">🔄 LNDg</div>
+        </button>
+        <button class="service-card" onclick="abrirApp(3000)">
+          <div class="service-title">🌩️ Thunderhub</div>
+        </button>
+        <button class="service-card" onclick="abrirApp(5000)">
+          <div class="service-title">💰 LNBits</div>
+        </button>
+        <button class="service-card" onclick="abrirApp(35671)">
+          <div class="service-title">📱 Simple LNWallet</div>
+        </button>
+      </div>
+    </section>
 
       <section class="converters-container">
         <!-- LEFT PANEL: CONVERSOR -->
@@ -189,45 +206,32 @@
       </section>
     </main>
 
-    <!-- Services Section - Main Apps -->
+    <!-- External Tools Section -->
     <section class="services">
-      <div class="main-apps-grid">
-        <button class="service-card" onclick="abrirApp(8889)">
-          <div class="service-title">🔄 LNDg</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(3000)">
-          <div class="service-title">🌩️ Thunderhub</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(5000)">
-          <div class="service-title">💰 LNBits</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(35671)">
-          <div class="service-title">📱 Simple LNWallet</div>
-        </button>
-      </div>
-    </section>
-
-    <!-- FOOTER DE ASSOCIAÇÃO -->
-    <footer class="association-footer">
-      <div class="association-content">
-        <h3 class="association-title">Junte-se ao Clube BR-LN!</h3>
-        <p class="association-description">
-          Faça parte da revolução Bitcoin no Brasil. Conecte-se com outros entusiastas, 
-          aprenda sobre Lightning Network e contribua para a descentralização financeira.
-        </p>
-        <div class="association-actions">
-          <a href="https://services.br-ln.com" target="_blank" class="association-btn primary">
-            Associar-se Agora
+      <div class="content-wrapper">
+        <h2 style="text-align: center; margin-bottom: 30px;">🛍️ FERRAMENTAS EXTERNAS</h2>
+        <div class="main-apps-grid">
+          <a href="https://amboss.space" class="service-card" target="_blank">
+            <div class="service-title">🌐 AMBOSS</div>
           </a>
-          <a href="https://br-ln.com" target="_blank" class="association-btn secondary">
-            Saiba Mais
+          <a href="https://lightningnetwork.plus/" class="service-card" target="_blank">
+            <div class="service-title">➕ Lightning Network +</div>
+          </a>
+          <a href="https://mempool.space" class="service-card" target="_blank">
+            <div class="service-title">🧧 Mempool</div>
+          </a>
+          <a href="https://unsafe.robosats.org/" class="service-card" target="_blank">
+            <div class="service-title">🤖 RoboSats DEX</div>
+          </a>
+          <a href="https://bitcoin.clarkmoody.com/dashboard/" class="service-card" target="_blank">
+            <div class="service-title">📊 Bitcoin Dashboard</div>
+          </a>
+          <a href="https://bitcoinvisuals.com/lightning" class="service-card" target="_blank">
+            <div class="service-title">📈 Lightning Dashboard</div>
           </a>
         </div>
-        <p class="association-note">
-          Construindo o futuro descentralizado, um satoshi por vez
-        </p>
       </div>
-    </footer>
+    </section>
 
     <!-- FOOTER -->
     <footer class="footer">

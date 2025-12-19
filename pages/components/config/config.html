@@ -112,45 +112,31 @@
       #cpu, #ram, #lnd, #bitcoind, #tor, #blockchain {
         text-align: center;
       }
+
+      /* Layout de duas colunas para status do sistema */
+      .system-status-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+      }
+
+      .status-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+      }
+
+      @media (max-width: 768px) {
+        .system-status-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
 <body>
-
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-background"></div>
-    <div class="hero-content">
-      <h1 class="hero-title">CONFIG</h1>
-      <p class="hero-subtitle">GERENCIE SEU NODE</p>
-    </div>
-  </section>
-
-  <!-- Extra Tools Section -->
-  <section class="content-section">
-    <div class="content-wrapper">
-      <h2>🛠️ FERRAMENTAS EXTERNAS</h2>
-      <div class="services-container" style="margin-top: 20px;">
-        <a href="https://amboss.space" class="service-card" target="_blank">
-          <div class="service-title">🌐 AMBOSS</div>
-        </a>
-        <a href="https://lightningnetwork.plus/" class="service-card" target="_blank">
-          <div class="service-title">➕ Lightning Network +</div>
-        </a>
-        <a href="https://mempool.space" class="service-card" target="_blank">
-          <div class="service-title">🧱 Mempool</div>
-        </a>
-        <a href="https://unsafe.robosats.org/" class="service-card" target="_blank">
-          <div class="service-title">🤖 RoboSats DEX</div>
-        </a>
-        <a href="https://bitcoin.clarkmoody.com/dashboard/" class="service-card" target="_blank">
-          <div class="service-title">📊 Bitcoin Dashboard</div>
-        </a>
-        <a href="https://bitcoinvisuals.com/lightning" class="service-card" target="_blank">
-          <div class="service-title">📈 Lightning Dashboard</div>
-        </a>
-      </div>
-    </div>
-  </section>
 
   <!-- Configuration Panel -->
   <section class="content-section">
@@ -158,12 +144,26 @@
       <h2>PAINEL DE CONFIGURAÇÕES</h2>
       
       <h3>STATUS DO SISTEMA</h3>
-      <div id="cpu" style="padding: 10px; margin: 5px 0;">CPU: ...</div>
-      <div id="ram" style="padding: 10px; margin: 5px 0;">RAM: ...</div>
-      <div id="lnd" style="padding: 10px; margin: 5px 0;">LND: ...</div>
-      <div id="bitcoind" style="padding: 10px; margin: 5px 0;">Bitcoind: ...</div>
-      <div id="tor" style="padding: 10px; margin: 5px 0;">Tor: ...</div>
-      <div id="blockchain" style="padding: 10px; margin: 5px 0;">Blockchain: ...</div>
+      <div class="system-status-grid">
+        <div class="status-item">
+          <div id="cpu">CPU: ...</div>
+        </div>
+        <div class="status-item">
+          <div id="ram">RAM: ...</div>
+        </div>
+        <div class="status-item">
+          <div id="lnd">LND: ...</div>
+        </div>
+        <div class="status-item">
+          <div id="bitcoind">Bitcoind: ...</div>
+        </div>
+        <div class="status-item">
+          <div id="tor">Tor: ...</div>
+        </div>
+        <div class="status-item">
+          <div id="blockchain">Blockchain: ...</div>
+        </div>
+      </div>
 
       <h3 style="margin-top: 30px;">PAINEL DE CONTROLE</h3>
       <div class="services-container" style="margin-top: 20px;">
@@ -271,28 +271,6 @@
       </div>
     </div>
   </section>
-
-  <!-- FOOTER DE ASSOCIAÇÃO -->
-  <footer class="association-footer">
-    <div class="association-content">
-      <h3 class="association-title">🚀 Junte-se ao Clube BR-LN!</h3>
-      <p class="association-description">
-        Faça parte da revolução Bitcoin no Brasil. Conecte-se com outros entusiastas, 
-        aprenda sobre Lightning Network e contribua para a descentralização financeira.
-      </p>
-      <div class="association-actions">
-        <a href="https://services.br-ln.com" target="_blank" class="association-btn primary">
-          Associar-se Agora
-        </a>
-        <a href="https://br-ln.com" target="_blank" class="association-btn secondary">
-          Saiba Mais
-        </a>
-      </div>
-      <p class="association-note">
-        💡 Construindo o futuro descentralizado, um satoshi por vez
-      </p>
-    </div>
-  </footer>
 
   <!-- FOOTER ORIGINAL -->
   <footer class="footer">
