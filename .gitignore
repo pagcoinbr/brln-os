@@ -129,3 +129,64 @@ container/apps/*/
 container/nodes/*/
 !container/apps/*.example
 !container/nodes/*.example
+
+# Proto compiled files (generated during installation)
+*_pb2.py
+*_pb2_grpc.py
+
+# Virtual environments (created during API setup)
+venv/
+envflask/
+.venv/
+
+# Installation temporary directories
+lnd-install/
+bitcoin-*/
+SHA256SUMS*
+
+# Downloaded binaries and extracted archives
+gotty
+simple-lnwallet*
+bitcoin-*-linux-gnu/
+
+# API target directory (copied during installation)
+/home/admin/brln-api/
+
+# Installation logs
+/tmp/tailscale_*.log
+/tmp/*.log
+*.log.tmp
+
+# Package manager cache
+.cache/
+.npm-global/
+
+# Systemd generated files
+*.service.tmp
+
+# Database files (runtime data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js installation artifacts
+node_modules/
+package-lock.json
+
+# Python package installation artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Docker build context files
+.dockerignore.tmp
+
+api/v1/chainrpc
+api/v1/invoicesrpc
+api/v1/peersrpc
+api/v1/walletrpc
+api/v1/routerrpc
+api/v1/signrpc
+api/v1/proto

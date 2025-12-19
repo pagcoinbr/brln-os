@@ -1,14 +1,15 @@
 [Unit]
-Description=BRLN-OS Aplicativos API
-After=network.target
+Description=BRLN-OS API gRPC - Comando Central
+After=network.target lnd.service
 
 [Service]
 Type=simple
 User=admin
-WorkingDirectory=/root/brln-os/api/v1/aplicativos
-ExecStart=/home/admin/envflask/bin/python3 /root/brln-os/api/v1/aplicativos/app.py
+WorkingDirectory=/home/admin/brln-api
+ExecStart=/home/admin/envflask/bin/python3 /home/admin/brln-api/app.py
 Restart=always
 RestartSec=10
+Environment=PYTHONPATH=/home/admin/brln-api
 
 # Segurança
 NoNewPrivileges=true

@@ -12,7 +12,7 @@ async function toggleService(serviceName) {
   const action = checkbox.checked ? 'start' : 'stop';
   
   try {
-    const response = await fetch('/api/v1/config/service', {
+    const response = await fetch('/api/v1/system/service', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ async function toggleService(serviceName) {
 // Carregar status dos serviços
 async function loadServicesStatus() {
   try {
-    const response = await fetch('/api/v1/config/services-status');
+    const response = await fetch('/api/v1/system/services');
     const data = await response.json();
     
     if (data.services) {
@@ -61,7 +61,7 @@ async function loadServicesStatus() {
 // Carregar status do sistema
 async function loadSystemStatus() {
   try {
-    const response = await fetch('/api/v1/config/system-status');
+    const response = await fetch('/api/v1/system/status');
     const data = await response.json();
     
     // Atualizar CPU

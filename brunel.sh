@@ -1034,6 +1034,143 @@ simple_lnwallet () {
   echo
 }
 
+install_brln_api() {
+  echo -e "${GREEN}🚀 Instalando API BRLN-OS Comando Central (gRPC)...${NC}"
+  
+  # Diretórios
+  API_DIR="/root/brln-os/api/v1"
+  API_TARGET="/home/admin/brln-api"
+  SERVICE_FILE="/root/brln-os/services/brln-api.service"
+  
+  # Verificar se está rodando como root
+  if [ "$EUID" -ne 0 ]; then 
+    echo -e "${RED}❌ Por favor, execute como root (sudo)${NC}"
+    return 1
+  fi
+  
+  echo -e "${YELLOW}🔧 Verificando dependências do sistema...${NC}"
+  
+  # Instalar protoc se necessário
+  if ! command -v protoc &> /dev/null; then
+    echo -e "${YELLOW}📦 Instalando protobuf-compiler...${NC}"
+    sudo apt install -y protobuf-compiler python3-full > /dev/null 2>&1
+    echo -e "${GREEN}✅ protobuf-compiler instalado${NC}"
+  else
+    echo -e "${GREEN}✅ protobuf-compiler já está instalado${NC}"
+  fi
+  
+  # Ativar ambiente virtual (já criado em outras funções)
+  if [ -d "$FLASKVENV_DIR" ]; then
+    source "$FLASKVENV_DIR/bin/activate"
+  else
+    echo -e "${RED}❌ Ambiente virtual não encontrado. Execute primeiro a opção 1 (Interface de Rede)${NC}"
+    return 1
+  fi
+  
+  # Instalar dependências Python específicas para gRPC
+  echo -e "${YELLOW}📦 Instalando dependências Python gRPC...${NC}"
+  pip install --upgrade pip > /dev/null 2>&1
+  pip install -r "$API_DIR/requirements.txt" > /dev/null 2>&1
+  echo -e "${GREEN}✅ Dependências Python gRPC instaladas${NC}"
+  
+  # Compilar proto files do LND
+  echo -e "${YELLOW}⚡ Compilando proto files do LND...${NC}"
+  cd "$API_DIR"
+  
+  # Criar diretórios para proto files se não existirem  
+  mkdir -p proto/{signrpc,invoicesrpc,walletrpc,routerrpc,chainrpc,peersrpc}
+  
+  # Lista dos proto files principais do LND
+  declare -A PROTO_FILES=(
+    ["lightning.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/lightning.proto"
+    ["signrpc/signer.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/signrpc/signer.proto"
+    ["invoicesrpc/invoices.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/invoicesrpc/invoices.proto"
+    ["walletrpc/walletkit.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/walletrpc/walletkit.proto"
+    ["routerrpc/router.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/routerrpc/router.proto"
+    ["chainrpc/chainnotifier.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/chainrpc/chainnotifier.proto"
+    ["peersrpc/peers.proto"]="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc/peersrpc/peers.proto"
+  )
+  
+  # Baixar proto files se não existirem
+  for proto_file in "${!PROTO_FILES[@]}"; do
+    if [ ! -f "proto/$proto_file" ]; then
+      echo -e "${YELLOW}📥 Baixando $proto_file...${NC}"
+      curl -s -o "proto/$proto_file" "${PROTO_FILES[$proto_file]}"
+      echo -e "${GREEN}✅ $proto_file baixado${NC}"
+    fi
+  done
+  
+  # Compilar proto files
+  echo -e "${YELLOW}🔨 Compilando protobuf files...${NC}"
+  COMPILE_ORDER=(
+    "lightning.proto"
+    "signrpc/signer.proto" 
+    "chainrpc/chainnotifier.proto"
+    "invoicesrpc/invoices.proto"
+    "walletrpc/walletkit.proto"
+    "routerrpc/router.proto"
+    "peersrpc/peers.proto"
+  )
+  
+  for proto_file in "${COMPILE_ORDER[@]}"; do
+    python3 -m grpc_tools.protoc \
+      --proto_path=proto \
+      --python_out=. \
+      --grpc_python_out=. \
+      "proto/$proto_file" 2>/dev/null || true
+  done
+  
+  # Ajustar imports
+  for grpc_file in *_pb2_grpc.py; do
+    if [ -f "$grpc_file" ]; then
+      sed -i 's/from \. import \([a-z_]*\)_pb2/import \1_pb2/g' "$grpc_file" 2>/dev/null || true
+    fi
+  done
+  
+  # Verificar se a compilação foi bem-sucedida
+  if [ -f "lightning_pb2.py" ] && [ -f "lightning_pb2_grpc.py" ]; then
+    echo -e "${GREEN}✅ Proto files compilados com sucesso!${NC}"
+  else
+    echo -e "${RED}❌ Erro na compilação dos proto files!${NC}"
+    return 1
+  fi
+  
+  # Tornar o app.py executável
+  chmod +x "$API_DIR/app.py"
+  
+  # Copiar API para diretório acessível
+  echo -e "${YELLOW}📁 Configurando API...${NC}"
+  cp -r "$API_DIR" "$API_TARGET"
+  chown -R admin:admin "$API_TARGET"
+  
+  # Configurar firewall para a API
+  if ! sudo ufw status | grep -q "2121/tcp"; then
+    sudo ufw allow from $subnet to any port 2121 proto tcp comment 'allow BRLN API from local network'
+  fi
+  
+  # Copiar e habilitar o serviço systemd
+  echo -e "${YELLOW}⚙️ Configurando serviço systemd...${NC}"
+  cp "$SERVICE_FILE" /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable brln-api
+  
+  # Iniciar o serviço
+  echo -e "${YELLOW}🚀 Iniciando serviço API...${NC}"
+  systemctl restart brln-api
+  sleep 3
+  
+  # Verificar status
+  if systemctl is-active --quiet brln-api; then
+    echo -e "${GREEN}✅ API BRLN gRPC iniciada com sucesso!${NC}"
+    echo ""
+    echo -e "${CYAN}🌐 API rodando em: http://localhost:2121${NC}"
+    echo -e "${CYAN}🔍 Health Check: curl http://localhost:2121/api/v1/system/health${NC}"
+  else
+    echo -e "${RED}⚠️ Serviço com problemas!${NC}"
+    echo "Verifique os logs: journalctl -u brln-api -n 50"
+  fi
+}
+
 config_bos_telegram () {
   # ⚡ Script para configurar o BOS Telegram no systemd
   # 🔐 Substitui o placeholder pelo Connection Code fornecido
@@ -1332,6 +1469,7 @@ menu() {
   echo -e "   ${GREEN}6${NC}- Instalar Lndg (Exige LND)"
   echo -e "   ${GREEN}7${NC}- Instalar LNbits"
   echo -e "   ${GREEN}8${NC}- Mais opções"
+  echo -e "   ${GREEN}9${NC}- Instalar API BRLN gRPC (Exige Interface de Rede)"
   echo -e "   ${RED}0${NC}- Sair"
   echo 
   echo -e "${GREEN} $SCRIPT_VERSION ${NC}"
@@ -1498,6 +1636,24 @@ menu() {
       ;;
     8)
       submenu_opcoes
+      ;;
+    9)
+      app="API BRLN gRPC"
+      sudo -v
+      echo -e "${CYAN}🚀 Instalando API BRLN gRPC...${NC}"
+      read -p "Deseja exibir logs? (y/n): " verbose_mode
+      if [[ "$verbose_mode" == "y" ]]; then
+        install_brln_api
+      elif [[ "$verbose_mode" == "n" ]]; then
+        echo -e "${YELLOW} 🕒 Aguarde, isso pode demorar um pouco... Seja paciente.${NC}"
+        install_brln_api >> /dev/null 2>&1 & spinner
+        clear
+      else
+        echo "Opção inválida."
+        menu
+      fi
+      echo -e "\033[43m\033[30m ✅ API BRLN gRPC instalada com sucesso! \033[0m"
+      menu
       ;;
     0)
       echo -e "${MAGENTA}👋 Saindo... Até a próxima!${NC}"
