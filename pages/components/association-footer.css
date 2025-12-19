@@ -1,0 +1,162 @@
+/* RODAPÉ DE ASSOCIAÇÃO */
+.association-footer {
+  background: linear-gradient(135deg, #ff9500 0%, #f5a623 100%);
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.association-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.association-content {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.association-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.association-description {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  font-weight: 300;
+}
+
+.association-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.association-btn {
+  display: inline-block;
+  padding: 15px 30px;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.association-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.association-btn:hover::before {
+  left: 100%;
+}
+
+.association-btn.primary {
+  background: white;
+  color: #ff9500;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.association-btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  color: #e6850e;
+}
+
+.association-btn.secondary {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+}
+
+.association-btn.secondary:hover {
+  background: white;
+  color: #ff9500;
+  transform: translateY(-3px);
+}
+
+.association-note {
+  font-size: 1rem;
+  font-style: italic;
+  opacity: 0.9;
+  margin-top: 15px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .association-footer {
+    padding: 30px 15px;
+  }
+  
+  .association-title {
+    font-size: 1.8rem;
+  }
+  
+  .association-description {
+    font-size: 1rem;
+  }
+  
+  .association-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .association-btn {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .association-title {
+    font-size: 1.5rem;
+  }
+  
+  .association-description {
+    font-size: 0.9rem;
+  }
+  
+  .association-btn {
+    font-size: 1rem;
+    padding: 12px 25px;
+  }
+}

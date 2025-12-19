@@ -1,0 +1,18 @@
+[Unit]
+Description=BRLN-OS Aplicativos API
+After=network.target
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/root/brln-os/api/v1/aplicativos
+ExecStart=/home/admin/envflask/bin/python3 /root/brln-os/api/v1/aplicativos/app.py
+Restart=always
+RestartSec=10
+
+# Segurança
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

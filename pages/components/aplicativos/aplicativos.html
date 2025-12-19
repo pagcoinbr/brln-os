@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Carteira Lightning</title>
     <link rel="stylesheet" href="../../home/index.css" />
+    <link rel="stylesheet" href="../association-footer.css" />
     <style>
       #walletIframe {
         width: 100%;
@@ -75,7 +76,7 @@
 
       .service-grid {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         gap: 15px;
         margin: 20px 0;
       }
@@ -93,6 +94,35 @@
       .service-row label:first-child {
         font-weight: bold;
         color: #333;
+      }
+
+      /* Centralizar item ímpar na última linha */
+      .service-row:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        max-width: calc(50% - 7.5px);
+        min-width: calc(50% - 7.5px);
+        margin: 0 auto;
+      }
+
+      /* Responsivo para telas menores */
+      @media (max-width: 768px) {
+        .service-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .service-row:last-child:nth-child(odd) {
+          grid-column: 1;
+          max-width: 100%;
+        }
+      }
+
+      /* Centralizar todo o texto */
+      h2, h3, p {
+        text-align: center;
+      }
+
+      #cpu, #ram, #lnd, #bitcoind, #tor, #blockchain {
+        text-align: center;
       }
     </style>
   </head>
@@ -128,7 +158,7 @@
   <!-- Extra Tools Section -->
   <section class="content-section">
     <div class="content-wrapper">
-      <h2>🛠️ Ferramentas Extras</h2>
+      <h2>🛠️ FERRAMENTAS EXTERNAS</h2>
       <div class="services-container" style="margin-top: 20px;">
         <a href="https://amboss.space" class="service-card" target="_blank">
           <div class="service-title">🌐 AMBOSS</div>
@@ -141,9 +171,6 @@
         </a>
         <a href="https://unsafe.robosats.org/" class="service-card" target="_blank">
           <div class="service-title">🤖 RoboSats DEX</div>
-        </a>
-        <a href="https://tools.bitbo.io/fee-calculator/" class="service-card" target="_blank">
-          <div class="service-title">🔗 Fee Calculator</div>
         </a>
         <a href="https://bitcoin.clarkmoody.com/dashboard/" class="service-card" target="_blank">
           <div class="service-title">📊 Bitcoin Dashboard</div>
@@ -158,9 +185,9 @@
   <!-- Configuration Panel -->
   <section class="content-section">
     <div class="content-wrapper">
-      <h2>⚙️ Painel de Configurações</h2>
+      <h2>PAINEL DE CONFIGURAÇÕES</h2>
       
-      <h3>📊 Status do Sistema</h3>
+      <h3>STATUS DO SISTEMA</h3>
       <div id="cpu" style="padding: 10px; margin: 5px 0;">CPU: ...</div>
       <div id="ram" style="padding: 10px; margin: 5px 0;">RAM: ...</div>
       <div id="lnd" style="padding: 10px; margin: 5px 0;">LND: ...</div>
@@ -168,7 +195,7 @@
       <div id="tor" style="padding: 10px; margin: 5px 0;">Tor: ...</div>
       <div id="blockchain" style="padding: 10px; margin: 5px 0;">Blockchain: ...</div>
 
-      <h3 style="margin-top: 30px;">🖥️ Painel de Controle</h3>
+      <h3 style="margin-top: 30px;">PAINEL DE CONTROLE</h3>
       <div class="services-container" style="margin-top: 20px;">
         <button class="service-card" onclick="abrirApp(3131)">
           <div class="service-title">⚡ BRLN Node Manager</div>
@@ -190,7 +217,7 @@
         </button>
       </div>
 
-      <h3 style="margin-top: 30px;">Gerenciador de Serviços ⚡</h3>
+      <h3 style="margin-top: 30px;">GERENCIADOR DE SERVIÇOS ⚡</h3>
       <div class="service-grid">
           <div class="service-row">
             <label for="lnbits-button">LNBits</label>
@@ -265,13 +292,45 @@
           </div>    
         </div>
 
-      <h3 style="margin-top: 30px;">🙏 Apoie Nosso Projeto</h3>
-      <p>Considere fazer uma doação para apoiar o desenvolvimento da Lightning.</p>
-      <a href="lightning:brlnfullauto@wallet.br-ln.com" style="display: inline-block;">
-        <img src="imagens/donate.png" alt="QR Code para doação" style="max-width: 200px; width: 100%; height: auto; margin: 20px auto; display: block; cursor: pointer;">
-      </a>
+      <h3 style="margin-top: 10px; text-align: center;">🙏 APOIE NOSSO PROJETO</h3>
+      <p style="text-align: center;">Considere fazer uma doação que apoia o desenvolvimento de um mundo melhor.</p>
+      <div style="text-align: center;">
+        <a href="lightning:brlnfullauto@wallet.br-ln.com">
+          <img src="donate.png" alt="QR Code para doação" style="max-width: 200px; width: 100%; height: auto; margin: 20px auto; cursor: pointer;">
+        </a>
+      </div>
     </div>
   </section>
+
+  <!-- FOOTER DE ASSOCIAÇÃO -->
+  <footer class="association-footer">
+    <div class="association-content">
+      <h3 class="association-title">🚀 Junte-se ao Clube BR-LN!</h3>
+      <p class="association-description">
+        Faça parte da revolução Bitcoin no Brasil. Conecte-se com outros entusiastas, 
+        aprenda sobre Lightning Network e contribua para a descentralização financeira.
+      </p>
+      <div class="association-actions">
+        <a href="https://services.br-ln.com" target="_blank" class="association-btn primary">
+          Associar-se Agora
+        </a>
+        <a href="https://br-ln.com" target="_blank" class="association-btn secondary">
+          Saiba Mais
+        </a>
+      </div>
+      <p class="association-note">
+        💡 Construindo o futuro descentralizado, um satoshi por vez
+      </p>
+    </div>
+  </footer>
+
+  <!-- FOOTER ORIGINAL -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="location">Build With Descentralized Proof of Work</p>
+      <p class="since">Since 2023</p>
+    </div>
+  </footer>
 
   <script src="js/main.js"></script>
 </body>
