@@ -268,7 +268,7 @@ body {
 
 /* DIGITAL CLOCK SECTION */
 .digital-clock-section {
-  padding: 80px 20px;
+  padding: 10px 20px;
   text-align: center;
   background-color: var(--light-bg);
 }

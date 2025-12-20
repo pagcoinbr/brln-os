@@ -522,17 +522,37 @@ class LNDgRPCClient:
             
             utxos = []
             for utxo in response.utxos:
-                utxos.append({
-                    'address': utxo.address,
-                    'amount_sat': str(utxo.amount_sat),
-                    'pk_script': utxo.pk_script.hex(),
-                    'outpoint': {
-                        'txid_bytes': utxo.outpoint.txid_bytes.hex(),
-                        'txid_str': utxo.outpoint.txid_str,
-                        'output_index': utxo.outpoint.output_index
-                    },
-                    'confirmations': str(utxo.confirmations)
-                })
+                try:
+                    # Lidar com pk_script defensivamente
+                    pk_script = ""
+                    if hasattr(utxo, 'pk_script'):
+                        if hasattr(utxo.pk_script, 'hex'):
+                            pk_script = utxo.pk_script.hex()
+                        else:
+                            pk_script = str(utxo.pk_script)
+                    
+                    # Lidar com txid_bytes defensivamente
+                    txid_bytes = ""
+                    if hasattr(utxo.outpoint, 'txid_bytes'):
+                        if hasattr(utxo.outpoint.txid_bytes, 'hex'):
+                            txid_bytes = utxo.outpoint.txid_bytes.hex()
+                        else:
+                            txid_bytes = str(utxo.outpoint.txid_bytes)
+                    
+                    utxos.append({
+                        'address': utxo.address,
+                        'amount_sat': str(utxo.amount_sat),
+                        'pk_script': pk_script,
+                        'outpoint': {
+                            'txid_bytes': txid_bytes,
+                            'txid_str': utxo.outpoint.txid_str,
+                            'output_index': utxo.outpoint.output_index
+                        },
+                        'confirmations': str(utxo.confirmations)
+                    })
+                except Exception as utxo_error:
+                    print(f"Erro ao processar UTXO: {str(utxo_error)}")
+                    continue
             
             return {
                 'utxos': utxos
