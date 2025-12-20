@@ -28,6 +28,9 @@ Lightning Network:
 - POST /api/v1/lightning/invoices      - Criar invoice Lightning
 - POST /api/v1/lightning/payments      - Enviar pagamento Lightning
 - POST /api/v1/lightning/payments/keysend - Enviar keysend (pagamento espontâneo)
+
+Transaction Fees:
+- GET  /api/v1/fees                    - Obter estimativas de taxas de transação
 """
 
 from flask import Flask, jsonify, request
@@ -43,6 +46,7 @@ import datetime
 import hashlib
 from concurrent import futures
 import time
+import requests
 
 # Desabilitar warnings desnecessários
 import warnings
@@ -523,28 +527,12 @@ class LNDgRPCClient:
             utxos = []
             for utxo in response.utxos:
                 try:
-                    # Lidar com pk_script defensivamente
-                    pk_script = ""
-                    if hasattr(utxo, 'pk_script'):
-                        if hasattr(utxo.pk_script, 'hex'):
-                            pk_script = utxo.pk_script.hex()
-                        else:
-                            pk_script = str(utxo.pk_script)
-                    
-                    # Lidar com txid_bytes defensivamente
-                    txid_bytes = ""
-                    if hasattr(utxo.outpoint, 'txid_bytes'):
-                        if hasattr(utxo.outpoint.txid_bytes, 'hex'):
-                            txid_bytes = utxo.outpoint.txid_bytes.hex()
-                        else:
-                            txid_bytes = str(utxo.outpoint.txid_bytes)
-                    
                     utxos.append({
                         'address': utxo.address,
                         'amount_sat': str(utxo.amount_sat),
-                        'pk_script': pk_script,
+                        'pk_script': str(utxo.pk_script),  # pk_script já é string
                         'outpoint': {
-                            'txid_bytes': txid_bytes,
+                            'txid_bytes': utxo.outpoint.txid_bytes.hex(),  # txid_bytes são bytes
                             'txid_str': utxo.outpoint.txid_str,
                             'output_index': utxo.outpoint.output_index
                         },
@@ -1987,6 +1975,66 @@ def list_utxos():
             return jsonify(result), 500
         
         return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/fees', methods=['GET'])
+def get_fees():
+    """Endpoint para obter estimativas de taxas de transação"""
+    try:
+        # Tentar obter taxas do mempool.space para testnet
+        try:
+            response = requests.get('https://mempool.space/testnet/api/v1/fees/recommended', timeout=10)
+            if response.status_code == 200:
+                mempool_fees = response.json()
+                return jsonify({
+                    'status': 'success',
+                    'source': 'mempool.space',
+                    'network': 'testnet',
+                    'fees': {
+                        'economy': {
+                            'sat_per_vbyte': mempool_fees.get('economyFee', 1),
+                            'description': 'Low priority (>1 hour)'
+                        },
+                        'standard': {
+                            'sat_per_vbyte': mempool_fees.get('hourFee', 2), 
+                            'description': 'Medium priority (~1 hour)'
+                        },
+                        'priority': {
+                            'sat_per_vbyte': mempool_fees.get('fastestFee', 3),
+                            'description': 'High priority (<30 min)'
+                        }
+                    },
+                    'timestamp': datetime.datetime.utcnow().isoformat()
+                })
+        except Exception as mempool_error:
+            print(f"Mempool.space error: {mempool_error}")
+        
+        # Fallback: taxas fixas para testnet
+        return jsonify({
+            'status': 'success',
+            'source': 'fallback',
+            'network': 'testnet', 
+            'fees': {
+                'economy': {
+                    'sat_per_vbyte': 1,
+                    'description': 'Low priority (>1 hour)'
+                },
+                'standard': {
+                    'sat_per_vbyte': 2,
+                    'description': 'Medium priority (~1 hour)'
+                },
+                'priority': {
+                    'sat_per_vbyte': 5,
+                    'description': 'High priority (<30 min)'
+                }
+            },
+            'timestamp': datetime.datetime.utcnow().isoformat()
+        })
         
     except Exception as e:
         return jsonify({

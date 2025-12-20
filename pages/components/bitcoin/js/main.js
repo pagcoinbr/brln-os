@@ -14,6 +14,99 @@ let mempoolFees = {
   fast: 0
 };
 
+// === FUNÇÕES UTILITÁRIAS PARA CÁLCULO DE VBYTES ===
+function getInputVbytes(addressType) {
+  // Retorna vbytes precisos baseado no tipo de endereço da UTXO
+  switch (addressType?.toLowerCase()) {
+    case 'p2tr':
+    case 'witness_v1_taproot':
+      return 57.5; // Taproot input
+    case 'p2wpkh':
+    case 'witness_v0_keyhash':
+      return 68; // SegWit v0 P2WPKH
+    case 'p2wsh':
+    case 'witness_v0_scripthash':
+      return 104; // SegWit v0 P2WSH
+    case 'p2pkh':
+      return 148; // Legacy P2PKH
+    case 'p2sh':
+    case 'scripthash':
+      return 91; // Legacy P2SH
+    default:
+      return 68; // Default para P2WPKH (mais comum)
+  }
+}
+
+function getOutputVbytes(addressType) {
+  // Retorna vbytes precisos para outputs baseado no tipo
+  switch (addressType?.toLowerCase()) {
+    case 'p2tr':
+    case 'witness_v1_taproot':
+      return 43; // Taproot output
+    case 'p2wpkh':
+    case 'witness_v0_keyhash':
+      return 31; // SegWit v0 P2WPKH
+    case 'p2wsh':
+    case 'witness_v0_scripthash':
+      return 43; // SegWit v0 P2WSH
+    case 'p2pkh':
+      return 34; // Legacy P2PKH
+    case 'p2sh':
+    case 'scripthash':
+      return 32; // Legacy P2SH
+    default:
+      return 31; // Default para P2WPKH
+  }
+}
+
+function calculateTransactionVbytes(utxos, outputCount = 1, changeOutput = false) {
+  // Overhead base da transação
+  let totalVbytes = 10.5;
+  
+  // Somar vbytes de todos os inputs
+  utxos.forEach(utxo => {
+    const inputVbytes = getInputVbytes(utxo.address_type);
+    totalVbytes += inputVbytes;
+  });
+  
+  // Somar vbytes dos outputs
+  totalVbytes += outputCount * getOutputVbytes('p2tr'); // Output principal
+  if (changeOutput) {
+    totalVbytes += getOutputVbytes('p2wpkh'); // Output de troco
+  }
+  
+  return Math.ceil(totalVbytes);
+}
+
+function calculatePreciseFee(vbytes, feeRatePerVbyte) {
+  return Math.ceil(vbytes * feeRatePerVbyte);
+}
+
+function calculateChangeThreshold(feeRate) {
+  // Calcular threshold dinâmico para decidir se cria output de troco
+  // Baseado no custo real do output (31 vbytes) com margem de segurança 2x
+  // Sempre respeitando o dust limit mínimo de 546 sats
+  const changeOutputCost = Math.ceil(31 * feeRate * 2); // 2x margem de segurança
+  return Math.max(546, changeOutputCost); // dust limit ou custo com margem
+}
+
+function detectAddressType(address) {
+  // Detectar tipo de endereço baseado no prefixo
+  if (!address) return 'p2wpkh';
+  
+  if (address.startsWith('bc1p') || address.startsWith('tb1p')) {
+    return 'p2tr'; // Taproot
+  } else if (address.startsWith('bc1') || address.startsWith('tb1')) {
+    return address.length > 42 ? 'p2wsh' : 'p2wpkh'; // SegWit v0
+  } else if (address.startsWith('3') || address.startsWith('2')) {
+    return 'p2sh'; // Legacy P2SH
+  } else if (address.startsWith('1') || address.startsWith('m') || address.startsWith('n')) {
+    return 'p2pkh'; // Legacy P2PKH
+  }
+  
+  return 'p2wpkh'; // Default
+}
+
 // === INICIALIZAÇÃO ===
 document.addEventListener('DOMContentLoaded', function() {
   initializePage();
@@ -54,6 +147,12 @@ function setupEventListeners() {
     sendBtn.addEventListener('click', sendBitcoin);
   }
 
+  // Botão de copiar endereço
+  const copyBtn = document.getElementById('copyAddressButton');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', copyGeneratedAddress);
+  }
+
   // Opções de taxa da mempool (apenas quando em modo recomendado)
   const feeOptions = document.querySelectorAll('.fee-option');
   feeOptions.forEach(option => {
@@ -63,6 +162,17 @@ function setupEventListeners() {
       }
     });
   });
+
+  // Botões de consolidação
+  const consolidateBtn = document.getElementById('consolidateButton');
+  if (consolidateBtn) {
+    consolidateBtn.addEventListener('click', showConsolidateForm);
+  }
+
+  const consolidateSendBtn = document.getElementById('consolidateSendButton');
+  if (consolidateSendBtn) {
+    consolidateSendBtn.addEventListener('click', executeConsolidation);
+  }
 }
 
 // === ATUALIZAÇÃO DE DADOS ===
@@ -216,30 +326,58 @@ function displayTransactions(transactions) {
 // === TAXAS DA MEMPOOL ===
 async function loadMempoolFees() {
   try {
-    const response = await fetch('https://mempool.space/api/v1/fees/recommended');
+    const response = await fetch(`${API_BASE_URL}/fees`);
     const data = await response.json();
     
-    mempoolFees = {
-      slow: data.hourFee || 1,
-      normal: data.halfHourFee || 2, 
-      fast: data.fastestFee || 5
-    };
-    
-    // Atualizar display das taxas
-    document.getElementById('slowFee').textContent = `${mempoolFees.slow} sat/vB`;
-    document.getElementById('normalFee').textContent = `${mempoolFees.normal} sat/vB`;
-    document.getElementById('fastFee').textContent = `${mempoolFees.fast} sat/vB`;
-    
-    // Selecionar opção normal por padrão
-    selectFeeOption('normal');
+    if (data.status === 'success' && data.fees) {
+      mempoolFees = {
+        slow: data.fees.economy?.sat_per_vbyte || 1,
+        normal: data.fees.standard?.sat_per_vbyte || 2, 
+        fast: data.fees.priority?.sat_per_vbyte || 5
+      };
+      
+      // Atualizar display das taxas
+      document.getElementById('slowFee').textContent = `${mempoolFees.slow} sat/vB`;
+      document.getElementById('normalFee').textContent = `${mempoolFees.normal} sat/vB`;
+      document.getElementById('fastFee').textContent = `${mempoolFees.fast} sat/vB`;
+      
+      // Atualizar tempos estimados da API
+      const slowTimeElement = document.getElementById('slowFeeTime');
+      const normalTimeElement = document.getElementById('normalFeeTime');
+      const fastTimeElement = document.getElementById('fastFeeTime');
+      
+      if (slowTimeElement && data.fees.economy?.description) {
+        slowTimeElement.textContent = data.fees.economy.description;
+      }
+      if (normalTimeElement && data.fees.standard?.description) {
+        normalTimeElement.textContent = data.fees.standard.description;
+      }
+      if (fastTimeElement && data.fees.priority?.description) {
+        fastTimeElement.textContent = data.fees.priority.description;
+      }
+      
+      // Selecionar opção normal por padrão
+      selectFeeOption('normal');
+    } else {
+      throw new Error('Invalid API response');
+    }
     
   } catch (error) {
-    console.error('Erro ao carregar taxas da mempool:', error);
+    console.error('Erro ao carregar taxas da API local:', error);
     // Usar valores padrão em caso de erro
     mempoolFees = { slow: 1, normal: 2, fast: 5 };
     document.getElementById('slowFee').textContent = '1 sat/vB';
     document.getElementById('normalFee').textContent = '2 sat/vB';
     document.getElementById('fastFee').textContent = '5 sat/vB';
+    
+    // Tempos padrão de fallback
+    const slowTimeElement = document.getElementById('slowFeeTime');
+    const normalTimeElement = document.getElementById('normalFeeTime');
+    const fastTimeElement = document.getElementById('fastFeeTime');
+    
+    if (slowTimeElement) slowTimeElement.textContent = '~60 min';
+    if (normalTimeElement) normalTimeElement.textContent = '~30 min';
+    if (fastTimeElement) fastTimeElement.textContent = '~10 min';
   }
 }
 
@@ -261,10 +399,7 @@ function selectFeeOption(priority) {
   }
   
   // Atualizar campo de taxa personalizada (oculto)
-  const customFeeInput = document.getElementById('customFee');
-  if (customFeeInput) {
-    customFeeInput.value = mempoolFees[priority];
-  }
+  // (removido - usando manualFeeInput)
 }
 
 // === CONTROLE DE MODO DE TAXA ===
@@ -356,9 +491,10 @@ async function generateNewAddress() {
       document.getElementById('generatedAddressType').textContent = currentAddressType.toUpperCase();
       document.getElementById('generatedAddressText').textContent = data.address;
       
-      // Gerar QR Code (simulado - em produção usaria uma biblioteca de QR)
+      // Gerar QR Code real usando API externa
       const qrContainer = document.getElementById('qrCode');
-      qrContainer.innerHTML = `<div style="font-size: 10px; text-align: center;">QR para:<br/>${data.address.substring(0, 20)}...</div>`;
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.address)}`;
+      qrContainer.innerHTML = `<img src="${qrApiUrl}" alt="QR Code para ${data.address}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.parentElement.innerHTML='<div>Erro ao carregar QR Code</div>'">`;
       
       // Mostrar o display do endereço
       document.getElementById('addressDisplay').classList.add('show');
@@ -405,15 +541,89 @@ async function sendBitcoin() {
     return;
   }
   
-  // Confirmar envio
-  const feeText = feeMode === 'recommended' 
-    ? `taxa ${selectedFeeOption} (${feeRate} sat/vB)` 
-    : `taxa manual de ${feeRate} sat/vB`;
-  
-  const confirmed = confirm(`Confirma o envio de ${parseInt(amount).toLocaleString()} sats para ${address.substring(0, 20)}...?\n\nUsando ${feeText}`);
-  if (!confirmed) return;
-  
   try {
+    // Obter UTXOs para calcular taxa precisa
+    const utxosResponse = await fetch(`${API_BASE_URL}/wallet/utxos`);
+    const utxosData = await utxosResponse.json();
+    
+    if (utxosData.status !== 'success' || !utxosData.utxos) {
+      throw new Error('Erro ao obter UTXOs para cálculo de taxa');
+    }
+    
+    // Simular seleção de UTXOs necessárias para o valor solicitado
+    const targetAmount = parseInt(amount);
+    let selectedUtxos = [];
+    let accumulatedValue = 0;
+    
+    // Ordenar UTXOs do maior para o menor (estratégia de seleção simples)
+    const sortedUtxos = [...utxosData.utxos].sort((a, b) => 
+      parseInt(b.amount_sat) - parseInt(a.amount_sat)
+    );
+    
+    // Selecionar UTXOs suficientes
+    for (const utxo of sortedUtxos) {
+      selectedUtxos.push({
+        ...utxo,
+        address_type: detectAddressType(utxo.address || '')
+      });
+      accumulatedValue += parseInt(utxo.amount_sat);
+      
+      // Calcular threshold dinâmico para troco baseado na taxa atual
+      const changeThreshold = calculateChangeThreshold(parseFloat(feeRate));
+      
+      // Calcular vbytes com as UTXOs selecionadas até agora
+      const estimatedVbytes = calculateTransactionVbytes(
+        selectedUtxos, 
+        1, // 1 output para destino
+        accumulatedValue > targetAmount + changeThreshold // troco se sobrar mais que threshold dinâmico
+      );
+      
+      const estimatedFee = calculatePreciseFee(estimatedVbytes, parseFloat(feeRate));
+      const totalNeeded = targetAmount + estimatedFee;
+      
+      if (accumulatedValue >= totalNeeded) {
+        break;
+      }
+    }
+    
+    // Calcular threshold dinâmico para o cálculo final
+    const changeThreshold = calculateChangeThreshold(parseFloat(feeRate));
+    
+    // Calcular valores finais
+    const finalVbytes = calculateTransactionVbytes(
+      selectedUtxos,
+      1,
+      accumulatedValue > targetAmount + changeThreshold // usar threshold dinâmico
+    );
+    
+    const finalFee = calculatePreciseFee(finalVbytes, parseFloat(feeRate));
+    const totalRequired = targetAmount + finalFee;
+    
+    if (accumulatedValue < totalRequired) {
+      throw new Error(
+        `Saldo insuficiente. Necessário: ${totalRequired.toLocaleString()} sats ` +
+        `(${targetAmount.toLocaleString()} + ${finalFee.toLocaleString()} taxa), ` +
+        `Disponível: ${accumulatedValue.toLocaleString()} sats`
+      );
+    }
+    
+    // Confirmar envio com informações precisas
+    const feeText = feeMode === 'recommended' 
+      ? `taxa ${selectedFeeOption} (${feeRate} sat/vB)` 
+      : `taxa manual de ${feeRate} sat/vB`;
+    
+    const confirmed = confirm(
+      `Confirma o envio?\n\n` +
+      `Destino: ${address.substring(0, 30)}...\n` +
+      `Valor: ${targetAmount.toLocaleString()} sats\n` +
+      `Taxa: ${finalFee.toLocaleString()} sats (${finalVbytes} vbytes × ${feeRate} sat/vB)\n` +
+      `UTXOs usadas: ${selectedUtxos.length}\n` +
+      `Total: ${totalRequired.toLocaleString()} sats`
+    );
+    
+    if (!confirmed) return;
+    
+    // Enviar transação
     const response = await fetch(`${API_BASE_URL}/wallet/transactions/send`, {
       method: 'POST',
       headers: {
@@ -421,7 +631,7 @@ async function sendBitcoin() {
       },
       body: JSON.stringify({
         addr: address,
-        amount: parseInt(amount),
+        amount: targetAmount,
         sat_per_vbyte: parseInt(feeRate)
       })
     });
@@ -429,7 +639,13 @@ async function sendBitcoin() {
     const data = await response.json();
     
     if (data.status === 'success') {
-      showNotification('Transação enviada com sucesso!', 'success');
+      showNotification(
+        `Transação enviada com sucesso!\n\n` +
+        `Valor: ${targetAmount.toLocaleString()} sats\n` +
+        `Taxa: ${finalFee.toLocaleString()} sats\n` +
+        `TXID: ${data.txid ? data.txid.substring(0, 16) + '...' : 'N/A'}`,
+        'success'
+      );
       
       // Limpar formulário
       document.getElementById('sendAddress').value = '';
@@ -444,9 +660,10 @@ async function sendBitcoin() {
     } else {
       showNotification(`Erro ao enviar: ${data.error}`, 'error');
     }
+    
   } catch (error) {
     console.error('Erro ao enviar Bitcoin:', error);
-    showNotification('Erro de conexão ao enviar transação', 'error');
+    showNotification(`Erro: ${error.message}`, 'error');
   }
 }
 
@@ -457,6 +674,22 @@ function copyToClipboard(text) {
   }).catch(err => {
     console.error('Erro ao copiar:', err);
   });
+}
+
+function copyGeneratedAddress() {
+  const addressElement = document.getElementById('generatedAddressText');
+  const address = addressElement.textContent.trim();
+  
+  if (address && address !== 'Endereço será gerado aqui...') {
+    navigator.clipboard.writeText(address).then(() => {
+      showNotification('Endereço copiado para a área de transferência!', 'success');
+    }).catch(err => {
+      console.error('Erro ao copiar endereço:', err);
+      showNotification('Erro ao copiar endereço', 'error');
+    });
+  } else {
+    showNotification('Nenhum endereço para copiar', 'error');
+  }
 }
 
 function showNotification(message, type = 'info') {
@@ -483,6 +716,175 @@ function showNotification(message, type = 'info') {
   setTimeout(() => {
     notification.remove();
   }, 3000);
+}
+
+// === CONSOLIDAÇÃO DE UTXOS ===
+function showConsolidateForm() {
+  const form = document.getElementById('consolidateForm');
+  const feeInput = document.getElementById('consolidateFeeInput');
+  
+  if (form && feeInput) {
+    form.style.display = 'none';
+    feeInput.style.display = 'flex';
+    
+    // Focar no campo de taxa
+    const feeField = document.getElementById('consolidateFee');
+    if (feeField) {
+      setTimeout(() => feeField.focus(), 100);
+    }
+  }
+}
+
+function hideConsolidateForm() {
+  const form = document.getElementById('consolidateForm');
+  const feeInput = document.getElementById('consolidateFeeInput');
+  
+  if (form && feeInput) {
+    feeInput.style.display = 'none';
+    form.style.display = 'flex';
+    
+    // Limpar campo de taxa
+    const feeField = document.getElementById('consolidateFee');
+    if (feeField) {
+      feeField.value = '';
+    }
+  }
+}
+
+async function executeConsolidation() {
+  const feeRateInput = document.getElementById('consolidateFee');
+  const feeRate = parseFloat(feeRateInput.value);
+  
+  // Validações
+  if (!feeRate || feeRate <= 0) {
+    showNotification('Por favor, insira uma taxa válida', 'error');
+    return;
+  }
+  
+  try {
+    // Primeiro, obter UTXOs individuais para calcular valor e vbytes precisos
+    const utxosResponse = await fetch(`${API_BASE_URL}/wallet/utxos`);
+    const utxosData = await utxosResponse.json();
+    
+    if (utxosData.status !== 'success' || !utxosData.utxos) {
+      throw new Error('Erro ao obter UTXOs da carteira');
+    }
+    
+    if (utxosData.utxos.length === 0) {
+      throw new Error('Nenhuma UTXO disponível para consolidação');
+    }
+    
+    if (utxosData.utxos.length === 1) {
+      throw new Error('Apenas uma UTXO disponível, consolidação não necessária');
+    }
+    
+    // Enriquecer UTXOs com tipo de endereço detectado
+    const enrichedUtxos = utxosData.utxos.map(utxo => ({
+      ...utxo,
+      address_type: detectAddressType(utxo.address || '')
+    }));
+    
+    // Somar valor total de todas as UTXOs
+    const totalUtxosValue = enrichedUtxos.reduce((total, utxo) => {
+      return total + parseInt(utxo.amount_sat);
+    }, 0);
+    
+    // Calcular vbytes exatos para consolidação (N inputs -> 1 output P2TR)
+    const consolidationVbytes = calculateTransactionVbytes(enrichedUtxos, 1, false);
+    
+    // Calcular taxa exata
+    const exactFee = calculatePreciseFee(consolidationVbytes, feeRate);
+    
+    const consolidationAmount = totalUtxosValue - exactFee;
+    
+    // Validar se há valor suficiente (dust limit + margem)
+    if (consolidationAmount <= 546) {
+      throw new Error(
+        `Saldo insuficiente para consolidação após deduzir taxas.\n\n` +
+        `Valor total das UTXOs: ${totalUtxosValue.toLocaleString()} sats\n` +
+        `Taxa calculada: ${exactFee.toLocaleString()} sats (${consolidationVbytes} vbytes × ${feeRate} sat/vB)\n` +
+        `Valor resultante: ${consolidationAmount.toLocaleString()} sats`
+      );
+    }
+    
+    // Confirmar consolidação com informações precisas
+    const confirmed = confirm(
+      `Confirma a consolidação de UTXOs?\n\n` +
+      `UTXOs a consolidar: ${enrichedUtxos.length}\n` +
+      `Valor total: ${totalUtxosValue.toLocaleString()} sats\n` +
+      `Tamanho da transação: ${consolidationVbytes} vbytes\n` +
+      `Taxa: ${exactFee.toLocaleString()} sats (${feeRate} sat/vB)\n` +
+      `Valor final consolidado: ${consolidationAmount.toLocaleString()} sats\n\n` +
+      `Será criado um novo endereço P2TR para receber a UTXO consolidada.`
+    );
+    
+    if (!confirmed) {
+      hideConsolidateForm();
+      return;
+    }
+    
+    // Gerar novo endereço P2TR para a consolidação
+    const addressResponse = await fetch(`${API_BASE_URL}/wallet/addresses`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address_type: 'p2tr'
+      })
+    });
+    
+    const addressData = await addressResponse.json();
+    
+    if (addressData.status !== 'success') {
+      throw new Error(`Erro ao gerar endereço: ${addressData.error}`);
+    }
+    
+    const consolidationAddress = addressData.address;
+    
+    // Executar a transação de consolidação
+    const sendResponse = await fetch(`${API_BASE_URL}/wallet/transactions/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        addr: consolidationAddress,
+        amount: consolidationAmount,
+        sat_per_vbyte: feeRate
+      })
+    });
+    
+    const sendData = await sendResponse.json();
+    
+    if (sendData.status === 'success') {
+      showNotification(
+        `Consolidação executada com sucesso!\n\n` +
+        `UTXOs consolidadas: ${enrichedUtxos.length}\n` +
+        `Valor total original: ${totalUtxosValue.toLocaleString()} sats\n` +
+        `Taxa paga: ${exactFee.toLocaleString()} sats (${consolidationVbytes} vbytes)\n` +
+        `Valor consolidado: ${consolidationAmount.toLocaleString()} sats\n` +
+        `Novo endereço: ${consolidationAddress.substring(0, 20)}...\n` +
+        `TXID: ${sendData.txid ? sendData.txid.substring(0, 16) + '...' : 'N/A'}`,
+        'success'
+      );
+      
+      // Atualizar dados da interface
+      setTimeout(() => {
+        updateAllData();
+      }, 2000);
+      
+    } else {
+      throw new Error(sendData.error || 'Erro desconhecido na transação');
+    }
+    
+  } catch (error) {
+    console.error('Erro na consolidação:', error);
+    showNotification(`Erro na consolidação: ${error.message}`, 'error');
+  } finally {
+    // Esconder formulário de consolidação
+    hideConsolidateForm();
+  }
 }
 
 // === FUNÇÕES LEGADAS (manter compatibilidade) ===
