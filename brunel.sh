@@ -74,6 +74,9 @@ update_and_upgrade() {
     sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Next.js frontend from local network'
   fi
 
+  # Configurar Apache como alternativa (comentado por padrão - descomente se preferir Apache)
+  # setup_apache_web
+
   # Garante que o pacote python3-venv esteja instalado (still needed for control scripts)
   if ! dpkg -l | grep -q python3-venv; then
     sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
@@ -112,6 +115,75 @@ EOF
   else
     echo "⛔ Erro na validação! Arquivo inválido, removendo."
     sudo rm -f "$SUDOERS_TMP"
+    exit 1
+  fi
+}
+
+setup_apache_web() {
+  echo -e "${GREEN}🌐 Configurando servidor web Apache...${NC}"
+  
+  # Instalar Apache se não estiver instalado
+  if ! command -v apache2 &> /dev/null; then
+    echo "📦 Instalando Apache2..."
+    sudo apt update >> /dev/null 2>&1 # & spinner
+    sudo apt install apache2 -y >> /dev/null 2>&1 # & spinner
+  else
+    echo "✅ Apache2 já está instalado."
+  fi
+
+  # Parar e desabilitar Next.js frontend se estiver rodando
+  if sudo systemctl is-active --quiet brln-frontend; then
+    echo "⏹️ Parando serviço Next.js frontend..."
+    sudo systemctl stop brln-frontend
+    sudo systemctl disable brln-frontend
+  fi
+
+  # Habilitar módulos necessários do Apache
+  echo "🔌 Habilitando módulos Apache necessários..."
+  sudo a2enmod proxy >> /dev/null 2>&1
+  sudo a2enmod proxy_http >> /dev/null 2>&1
+  sudo a2enmod proxy_wstunnel >> /dev/null 2>&1
+  sudo a2enmod headers >> /dev/null 2>&1
+  sudo a2enmod rewrite >> /dev/null 2>&1
+  sudo a2enmod ssl >> /dev/null 2>&1
+
+  # Criar estrutura de diretórios no Apache
+  echo "📁 Criando estrutura de diretórios..."
+  sudo mkdir -p /var/www/html/pages >> /dev/null 2>&1
+
+  # Copiar arquivos do projeto para Apache mantendo estrutura
+  echo "📂 Copiando arquivos da interface web..."
+  sudo cp -r /root/brln-os/pages/* /var/www/html/pages/ >> /dev/null 2>&1
+  sudo cp /root/brln-os/main.html /var/www/html/index.html >> /dev/null 2>&1
+
+  # Ajustar permissões
+  echo "🔑 Ajustando permissões dos arquivos..."
+  sudo chown -R www-data:www-data /var/www/html/ >> /dev/null 2>&1
+  sudo chmod -R 755 /var/www/html/ >> /dev/null 2>&1
+
+  # Configurar proxy reverso se existir script de configuração
+  if [ -f /root/brln-os/conf_files/setup-apache-proxy.sh ]; then
+    echo "⚙️ Configurando proxy reverso Apache..."
+    sudo /root/brln-os/conf_files/setup-apache-proxy.sh >> /dev/null 2>&1 # & spinner
+  fi
+
+  # Verificar e reiniciar Apache
+  echo "✅ Verificando configuração Apache..."
+  if sudo apache2ctl configtest >> /dev/null 2>&1; then
+    echo "🔄 Reiniciando Apache..."
+    sudo systemctl enable apache2 >> /dev/null 2>&1
+    sudo systemctl restart apache2 >> /dev/null 2>&1 # & spinner
+    
+    # Abrir porta 80 no UFW se não estiver aberta
+    if ! sudo ufw status | grep -q "80/tcp"; then
+      sudo ufw allow from $subnet to any port 80 proto tcp comment 'allow Apache from local network' >> /dev/null 2>&1
+    fi
+    
+    echo -e "${GREEN}✅ Apache configurado com sucesso!${NC}"
+    echo -e "${YELLOW}🌐 Interface disponível em: http://$ip_local${NC}"
+  else
+    echo -e "${RED}❌ Erro na configuração do Apache!${NC}"
+    sudo apache2ctl configtest
     exit 1
   fi
 }
@@ -247,7 +319,7 @@ postgres_db () {
   sudo sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
   # Atualiza os pacotes e instala o PostgreSQL
-  sudo apt update && sudo apt install -y postgresql postgresql-contrib
+  sudo apt update && sudo apt install -y postgresql postgresql-contribpages
 
   echo -e "${GREEN}✅ PostgreSQL instalado com sucesso!${NC}"
   sleep 2
@@ -1299,6 +1371,7 @@ submenu_opcoes() {
   echo -e "   ${GREEN}3${NC}- 🔴 Atualizar e desinstalar programas."
   echo -e "   ${GREEN}4${NC}- 🔧 Ativar o Bos Telegram no boot do sistema."
   echo -e "   ${GREEN}5${NC}- 🔄 Atualizar interface gráfica."
+  echo -e "   ${GREEN}6${NC}- 🌐 Configurar servidor Apache (alternativa ao Next.js)."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
@@ -1334,6 +1407,16 @@ submenu_opcoes() {
       gui_update
       echo -e "\033[43m\033[30m ✅ Interface atualizada com sucesso! \033[0m"
       exit 0
+      ;;
+    6)
+      echo -e "${YELLOW}🌐 Configurando servidor Apache...${NC}"
+      app="Apache Web Server"
+      sudo -v
+      echo -e "${CYAN}🚀 Configurando Apache como servidor web...${NC}"
+      setup_apache_web
+      echo -e "\033[43m\033[30m ✅ Apache configurado com sucesso! \033[0m"
+      echo -e "${YELLOW}🌐 Acesse: http://$ip_local${NC}"
+      submenu_opcoes
       ;;
     0)
       menu

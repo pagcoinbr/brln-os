@@ -2,9 +2,16 @@
 // FERRAMENTAS - CONVERSOR E CALCULADORA P2P
 // ============================================
 
-// Abrir aplicativo na mesma página
+// Abrir aplicativo na mesma página usando proxy reverso
 function abrirApp(porta) {
-  const url = `http://${window.location.hostname}:${porta}`;
+  const proxyPaths = {
+    8889: '/lndg/',
+    3000: '/thunderhub/',
+    5000: '/lnbits/',
+    35671: '/simple-lnwallet/'
+  };
+  
+  const url = proxyPaths[porta] || `http://${window.location.hostname}:${porta}`;
   window.location.href = url;
 }
 
