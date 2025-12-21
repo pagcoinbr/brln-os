@@ -115,21 +115,57 @@ body {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  max-width: calc(100vw - 400px); /* Leave space for logo and radio controls */
+  overflow: hidden;
+}
+
+.nav-scroll-container {
+  display: flex;
+  gap: 12px; /* Increased gap for better spacing with fewer items */
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 5px 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  justify-content: center; /* Center the navigation items */
+}
+
+/* Hide scrollbar but keep functionality */
+.nav-scroll-container::-webkit-scrollbar {
+  height: 2px;
+}
+
+.nav-scroll-container::-webkit-scrollbar-track {
+  background: rgba(245, 166, 35, 0.1);
+  border-radius: 2px;
+}
+
+.nav-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(245, 166, 35, 0.5);
+  border-radius: 2px;
+}
+
+.nav-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-orange);
 }
 
 .nav-link {
   color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
-  font-size: 13px;
+  font-size: 14px; /* Slightly larger font since we have more space */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  padding: 10px 16px;
+  padding: 12px 18px; /* More generous padding */
   border-radius: 6px;
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  white-space: nowrap; /* Prevent text wrapping */
+  flex-shrink: 0; /* Prevent shrinking */
+  min-width: max-content; /* Ensure minimum width for content */
 }
 
 .nav-link::before {
@@ -208,13 +244,30 @@ body {
   }
 }
 
+/* Responsivo */
+@media (max-width: 1024px) {
+  .nav-menu {
+    max-width: calc(100vw - 350px);
+  }
+  
+  .nav-scroll-container {
+    gap: 8px; /* Reduced gap for medium screens */
+  }
+
+  .nav-link {
+    font-size: 12px; /* Adjusted font size */
+    padding: 10px 14px; /* Adjusted padding */
+  }
+}
+
 @media (max-width: 768px) {
   .navbar-container {
     padding: 0 10px;
+    gap: 10px;
   }
 
   .logo-text {
-    font-size: 18px;
+    display: none; /* Hide logo text on small screens to save space */
   }
 
   .logo {
@@ -222,30 +275,62 @@ body {
     height: 40px;
   }
 
-  .nav-menu {
-    display: none;
+  .logo-section {
+    flex-shrink: 0; /* Prevent logo from shrinking */
+    width: 50px; /* Fixed width for logo area */
   }
 
-  .search-btn {
-    width: 38px;
-    height: 38px;
+  .nav-menu {
+    position: static;
+    transform: none;
+    flex: 1;
+    max-width: none;
+    margin: 0 5px;
+    margin-left: 10px; /* Start navigation after logo area */
+  }
+  
+  .nav-scroll-container {
+    justify-content: flex-start; /* Align navigation to the left after logo */
+    gap: 6px; /* Slightly more gap since we have more space */
+  }
+
+  .nav-link {
+    font-size: 12px; /* Larger font since we have more space */
+    padding: 10px 14px; /* More generous padding */
+    letter-spacing: 0.6px;
   }
 
   .radio-controls {
-    gap: 5px;
-  }
-
-  .radio-btn,
-  .vol-control,
-  .novidades-btn {
-    font-size: 14px;
-    padding: 6px 10px;
-    min-width: 35px;
+    display: none !important; /* Hide radio controls on small screens to save space */
   }
 
   .marquee {
     font-size: 11px;
     padding: 3px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-container {
+    gap: 5px;
+  }
+  
+  .logo-section {
+    width: 45px; /* Slightly smaller on very small screens */
+  }
+
+  .nav-menu {
+    margin: 0 2px; /* Even more space for navigation */
+    margin-left: 8px; /* Start navigation after logo area */
+  }
+  
+  .nav-link {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  
+  .radio-controls {
+    display: none !important; /* Ensure radio controls are hidden on very small screens */
   }
 }
 

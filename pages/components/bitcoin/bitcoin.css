@@ -1,4 +1,8 @@
 /* Bitcoin Control Panel - seguindo padrão do site */
+* {
+  box-sizing: border-box;
+}
+
 .bitcoin-control {
   max-width: 1200px;
   margin: 0 auto;
@@ -612,6 +616,77 @@
 }
 
 @media (max-width: 768px) {
+  /* Fix mobile layout for bitcoin control */
+  .bitcoin-control {
+    padding: 10px;
+    max-width: 100%;
+  }
+  
+  .control-section {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  /* Send form responsive fixes */
+  .send-form {
+    max-width: 100%;
+    gap: 15px;
+  }
+  
+  .form-group {
+    width: 100%;
+  }
+  
+  .form-group input {
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  /* Fee mode selector responsive */
+  .fee-mode-selector {
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .fee-mode-slider {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Fee options responsive */
+  .fee-options {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .fee-option {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Transaction history responsive */
+  .transaction-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+    text-align: left;
+  }
+  
+  /* Buttons responsive */
+  .send-button, .refresh-button {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 15px;
+    font-size: 16px;
+  }
+  
+  /* UTXOS header fixes */
   .utxos-header {
     flex-direction: column;
     align-items: flex-start;

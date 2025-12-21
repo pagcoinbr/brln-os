@@ -2,10 +2,10 @@
 // FERRAMENTAS - CONVERSOR E CALCULADORA P2P
 // ============================================
 
-// Abrir aplicativo em nova janela
+// Abrir aplicativo na mesma página
 function abrirApp(porta) {
   const url = `http://${window.location.hostname}:${porta}`;
-  window.open(url, '_blank');
+  window.location.href = url;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
