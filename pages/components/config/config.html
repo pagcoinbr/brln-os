@@ -92,6 +92,14 @@
         margin: 0 auto;
       }
 
+      /* Centralizar status item ímpar na última linha */
+      .status-item:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        max-width: calc(50% - 7.5px);
+        min-width: calc(50% - 7.5px);
+        margin: 0 auto;
+      }
+
       /* Responsivo para telas menores */
       @media (max-width: 768px) {
         .service-grid {
@@ -99,6 +107,15 @@
         }
 
         .service-row:last-child:nth-child(odd) {
+          grid-column: 1;
+          max-width: 100%;
+        }
+
+        .system-status-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status-item:last-child:nth-child(odd) {
           grid-column: 1;
           max-width: 100%;
         }
@@ -158,33 +175,8 @@
           <div id="bitcoind">Bitcoind: ...</div>
         </div>
         <div class="status-item">
-          <div id="tor">Tor: ...</div>
-        </div>
-        <div class="status-item">
           <div id="blockchain">Blockchain: ...</div>
         </div>
-      </div>
-
-      <h3 style="margin-top: 30px;">PAINEL DE CONTROLE</h3>
-      <div class="services-container" style="margin-top: 20px;">
-        <button class="service-card" onclick="abrirApp(3131)">
-          <div class="service-title">⚡ BRLN Node Manager</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(3232)">
-          <div class="service-title">🖥️ Terminal Web</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(3535)">
-          <div class="service-title">⚡ Logs - LND</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(3434)">
-          <div class="service-title">🪙 Logs - Bitcoin</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(3333)">
-          <div class="service-title">✏️ Lnd.conf</div>
-        </button>
-        <button class="service-card" onclick="abrirApp(3636)">
-          <div class="service-title">✏️ Bitcoin.conf</div>
-        </button>
       </div>
 
       <h3 style="margin-top: 30px;">GERENCIADOR DE SERVIÇOS ⚡</h3>
@@ -214,7 +206,7 @@
           </div>
 
           <div class="service-row">
-            <label for="lnd-lndg-button">LNDg</label>
+            <label for="lndg-button">LNDg</label>
             <label class="switch">
               <input type="checkbox" id="lndg-button" onchange="toggleService('lndg')">
               <span class="slider"></span>

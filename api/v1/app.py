@@ -277,6 +277,19 @@ class LNDgRPCClient:
             
             peers = []
             for peer in response.peers:
+                # Serializar features de forma correta para JSON
+                features = {}
+                try:
+                    for key, value in peer.features.items():
+                        features[str(key)] = {
+                            'name': value.name if hasattr(value, 'name') else str(value),
+                            'is_required': value.is_required if hasattr(value, 'is_required') else False,
+                            'is_known': value.is_known if hasattr(value, 'is_known') else True
+                        }
+                except:
+                    # Se falhar, apenas converter para string
+                    features = {str(k): str(v) for k, v in peer.features.items()}
+                
                 peers.append({
                     'pub_key': peer.pub_key,
                     'address': peer.address,
@@ -287,7 +300,7 @@ class LNDgRPCClient:
                     'inbound': peer.inbound,
                     'ping_time': str(peer.ping_time),
                     'sync_type': peer.sync_type,
-                    'features': dict(peer.features),
+                    'features': features,
                     'errors': [{'error': str(e)} for e in peer.errors],
                     'flap_count': peer.flap_count,
                     'last_flap_ns': str(peer.last_flap_ns)
@@ -526,21 +539,17 @@ class LNDgRPCClient:
             
             utxos = []
             for utxo in response.utxos:
-                try:
-                    utxos.append({
-                        'address': utxo.address,
-                        'amount_sat': str(utxo.amount_sat),
-                        'pk_script': str(utxo.pk_script),  # pk_script já é string
-                        'outpoint': {
-                            'txid_bytes': utxo.outpoint.txid_bytes.hex(),  # txid_bytes são bytes
-                            'txid_str': utxo.outpoint.txid_str,
-                            'output_index': utxo.outpoint.output_index
-                        },
-                        'confirmations': str(utxo.confirmations)
-                    })
-                except Exception as utxo_error:
-                    print(f"Erro ao processar UTXO: {str(utxo_error)}")
-                    continue
+                utxos.append({
+                    'address': utxo.address,
+                    'amount_sat': str(utxo.amount_sat),
+                    'pk_script': str(utxo.pk_script),  # pk_script já é string
+                    'outpoint': {
+                        'txid_bytes': utxo.outpoint.txid_bytes.hex(),  # txid_bytes são bytes
+                        'txid_str': utxo.outpoint.txid_str,
+                        'output_index': utxo.outpoint.output_index
+                    },
+                    'confirmations': str(utxo.confirmations)
+                })
             
             return {
                 'utxos': utxos
@@ -636,38 +645,36 @@ def manage_systemd_service(service_name, action):
 
 def get_bitcoind_info():
     """Obtém informações do Bitcoin Core"""
+    if not get_service_status('bitcoind.service'):
+        raise RuntimeError("Serviço bitcoind não está rodando")
+        
+    output, code = run_command("bitcoin-cli getblockchaininfo 2>/dev/null")
+    if code != 0 or not output:
+        raise RuntimeError("Não foi possível obter informações do Bitcoin Core via RPC")
+        
     try:
-        output, code = run_command("bitcoin-cli getblockchaininfo 2>/dev/null")
-        if code == 0 and output:
-            info = json.loads(output)
-            return {
-                'status': 'running',
-                'blocks': info.get('blocks', 0),
-                'progress': round(info.get('verificationprogress', 0) * 100, 2)
-            }
-    except:
-        pass
-    return {
-        'status': 'stopped' if not get_service_status('bitcoind.service') else 'error',
-        'blocks': 0,
-        'progress': 0
-    }
+        info = json.loads(output)
+        return {
+            'status': 'running',
+            'blocks': info.get('blocks', 0),
+            'progress': round(info.get('verificationprogress', 0) * 100, 2)
+        }
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Resposta inválida do Bitcoin Core: {str(e)}")
 
 def get_blockchain_size():
     """Obtém o tamanho da blockchain usando pathlib"""
-    try:
-        bitcoin_dir = Path.home() / ".bitcoin"
-        if bitcoin_dir.exists():
-            total_size = sum(f.stat().st_size for f in bitcoin_dir.rglob('*') if f.is_file())
-            # Converter para formato legível
-            for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-                if total_size < 1024.0:
-                    return f"{total_size:.1f}{unit}"
-                total_size /= 1024.0
-            return f"{total_size:.1f}PB"
-    except Exception as e:
-        print(f"Error calculating blockchain size: {e}")
-    return "N/A"
+    bitcoin_dir = Path.home() / ".bitcoin"
+    if not bitcoin_dir.exists():
+        raise FileNotFoundError(f"Diretório Bitcoin não encontrado: {bitcoin_dir}")
+        
+    total_size = sum(f.stat().st_size for f in bitcoin_dir.rglob('*') if f.is_file())
+    # Converter para formato legível
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if total_size < 1024.0:
+            return f"{total_size:.1f}{unit}"
+        total_size /= 1024.0
+    return f"{total_size:.1f}PB"
 
 def get_macaroon_hex():
     """Lê o admin.macaroon e retorna em formato hex para gRPC"""
@@ -709,31 +716,24 @@ def get_blockchain_balance():
 
 def get_lnd_info():
     """Obtém informações do LND usando gRPC"""
-    try:
-        data, error = lnd_grpc_client.get_info_grpc()
-        if not error:
-            return {
-                'status': 'running',
-                'method': 'grpc',
-                'synced': data.get('synced_to_chain', False),
-                'block_height': data.get('block_height', 0),
-                'identity_pubkey': data.get('identity_pubkey', ''),
-                'alias': data.get('alias', ''),
-                'version': data.get('version', ''),
-                'num_peers': data.get('num_peers', 0),
-                'num_active_channels': data.get('num_active_channels', 0),
-                'chains': data.get('chains', [])
-            }
-        else:
-            print(f"gRPC error: {error}")
-    except Exception as e:
-        print(f"Error in get_lnd_info: {e}")
+    if not get_service_status('lnd.service'):
+        raise RuntimeError("Serviço LND não está rodando")
     
+    data, error = lnd_grpc_client.get_info_grpc()
+    if error:
+        raise RuntimeError(f"Erro ao conectar com LND via gRPC: {error}")
+        
     return {
-        'status': 'stopped' if not get_service_status('lnd.service') else 'error',
+        'status': 'running',
         'method': 'grpc',
-        'synced': False,
-        'block_height': 0
+        'synced': data.get('synced_to_chain', False),
+        'block_height': data.get('block_height', 0),
+        'identity_pubkey': data.get('identity_pubkey', ''),
+        'alias': data.get('alias', ''),
+        'version': data.get('version', ''),
+        'num_peers': data.get('num_peers', 0),
+        'num_active_channels': data.get('num_active_channels', 0),
+        'chains': data.get('chains', [])
     }
 
 def get_lightning_balance():
@@ -848,10 +848,10 @@ def get_transactions(start_height=None, end_height=None, account=None):
                 try:
                     timestamp = int(tx.get('time_stamp'))
                     formatted_tx['date'] = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                except:
-                    formatted_tx['date'] = 'N/A'
+                except Exception as date_error:
+                    return None, f"Erro ao processar timestamp da transação {tx.get('tx_hash', 'unknown')}: {str(date_error)}"
             else:
-                formatted_tx['date'] = 'N/A'
+                return None, f"Transação {tx.get('tx_hash', 'unknown')} não possui timestamp válido"
             
             # Determinar tipo de transação (entrada/saída)
             amount = int(tx.get('amount', '0'))
@@ -1341,19 +1341,34 @@ def system_status():
         # RAM
         ram = psutil.virtual_memory()
         
-        # LND Info
-        lnd_info = get_lnd_info()
+        # LND Info (pode gerar exceção)
+        try:
+            lnd_info = get_lnd_info()
+        except Exception as e:
+            lnd_info = {
+                'status': 'error',
+                'error': str(e)
+            }
         
-        # Bitcoin Info
-        bitcoin_info = get_bitcoind_info()
+        # Bitcoin Info (pode gerar exceção)
+        try:
+            bitcoin_info = get_bitcoind_info()
+        except Exception as e:
+            bitcoin_info = {
+                'status': 'error',
+                'error': str(e)
+            }
         
         # Tor Status
         tor_active = get_service_status('tor@default.service')
         
-        # Blockchain
-        blockchain_size = get_blockchain_size()
+        # Blockchain (pode gerar exceção)
+        try:
+            blockchain_size = get_blockchain_size()
+        except Exception as e:
+            blockchain_size = f"Error: {str(e)}"
         
-        return jsonify({
+        response_data = {
             'cpu': {
                 'usage': round(cpu_percent, 2),
                 'load': f"{load_avg[0]:.2f}, {load_avg[1]:.2f}, {load_avg[2]:.2f}"
@@ -1370,9 +1385,11 @@ def system_status():
             },
             'blockchain': {
                 'size': blockchain_size,
-                'progress': bitcoin_info.get('progress', 0)
+                'progress': bitcoin_info.get('progress', 0) if bitcoin_info.get('status') != 'error' else 0
             }
-        })
+        }
+        
+        return jsonify(response_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1390,37 +1407,47 @@ def services_status():
 
 @app.route('/api/v1/system/service', methods=['POST'])
 def manage_service():
-    """Gerencia um serviço (start/stop)"""
+    """Gerencia um serviço com toggle automático (start/stop baseado no status atual)"""
     try:
         data = request.get_json()
         service_key = data.get('service')
-        action = data.get('action')  # 'start' ou 'stop'
         
-        if not service_key or not action:
-            return jsonify({'error': 'Service e action são obrigatórios'}), 400
+        if not service_key:
+            return jsonify({'error': 'Service é obrigatório'}), 400
         
         if service_key not in SERVICE_MAPPING:
             return jsonify({'error': f'Serviço {service_key} não encontrado'}), 404
         
-        if action not in ['start', 'stop', 'restart']:
-            return jsonify({'error': 'Action deve ser start, stop ou restart'}), 400
-        
         service_name = SERVICE_MAPPING[service_key]
+        
+        # Verificar status atual do serviço
+        current_status = get_service_status(service_name)
+        
+        # Determinar ação baseada no status atual (toggle)
+        if current_status:
+            action = 'stop'  # Se está ativo, parar
+        else:
+            action = 'start'  # Se está inativo, iniciar
         
         # Gerencia o serviço usando D-Bus/systemd
         success, error_msg = manage_systemd_service(service_name, action)
         
         if success:
+            # Verificar novo status após a operação
+            new_status = get_service_status(service_name)
             return jsonify({
                 'success': True,
                 'service': service_key,
                 'action': action,
-                'status': get_service_status(service_name)
+                'previous_status': current_status,
+                'current_status': new_status,
+                'message': f'Serviço {service_key} {"iniciado" if action == "start" else "parado"} com sucesso'
             })
         else:
             return jsonify({
                 'error': f'Falha ao executar {action} em {service_key}',
-                'output': error_msg
+                'output': error_msg,
+                'current_status': current_status
             }), 500
             
     except Exception as e:
@@ -1986,62 +2013,43 @@ def list_utxos():
 def get_fees():
     """Endpoint para obter estimativas de taxas de transação"""
     try:
-        # Tentar obter taxas do mempool.space para testnet
-        try:
-            response = requests.get('https://mempool.space/testnet/api/v1/fees/recommended', timeout=10)
-            if response.status_code == 200:
-                mempool_fees = response.json()
-                return jsonify({
-                    'status': 'success',
-                    'source': 'mempool.space',
-                    'network': 'testnet',
-                    'fees': {
-                        'economy': {
-                            'sat_per_vbyte': mempool_fees.get('economyFee', 1),
-                            'description': 'Low priority (>1 hour)'
-                        },
-                        'standard': {
-                            'sat_per_vbyte': mempool_fees.get('hourFee', 2), 
-                            'description': 'Medium priority (~1 hour)'
-                        },
-                        'priority': {
-                            'sat_per_vbyte': mempool_fees.get('fastestFee', 3),
-                            'description': 'High priority (<30 min)'
-                        }
-                    },
-                    'timestamp': datetime.datetime.utcnow().isoformat()
-                })
-        except Exception as mempool_error:
-            print(f"Mempool.space error: {mempool_error}")
+        response = requests.get('https://mempool.space/api/v1/fees/recommended', timeout=10)
         
-        # Fallback: taxas fixas para testnet
+        if response.status_code != 200:
+            return jsonify({
+                'error': f'Erro de conexão com mempool.space. Status: {response.status_code}',
+                'status': 'error'
+            }), 502
+        
+        mempool_fees = response.json()
         return jsonify({
             'status': 'success',
-            'source': 'fallback',
-            'network': 'testnet', 
+            'source': 'mempool.space',
+            'network': 'mainnet',
             'fees': {
                 'economy': {
-                    'sat_per_vbyte': 1,
-                    'description': 'Low priority (>1 hour)'
+                    'sat_per_vbyte': mempool_fees.get('economyFee'),
                 },
                 'standard': {
-                    'sat_per_vbyte': 2,
-                    'description': 'Medium priority (~1 hour)'
+                    'sat_per_vbyte': mempool_fees.get('hourFee'), 
                 },
                 'priority': {
-                    'sat_per_vbyte': 5,
-                    'description': 'High priority (<30 min)'
+                    'sat_per_vbyte': mempool_fees.get('fastestFee'),
                 }
             },
             'timestamp': datetime.datetime.utcnow().isoformat()
         })
         
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            'error': f'Erro de conexão com mempool.space: {str(e)}',
+            'status': 'error'
+        }), 502
     except Exception as e:
         return jsonify({
-            'error': str(e),
+            'error': f'Erro interno: {str(e)}',
             'status': 'error'
         }), 500
 
 if __name__ == '__main__':
-    # Roda na porta 2121 (para não conflitar com LNBits que usa 5000)
     app.run(host='0.0.0.0', port=2121, debug=False)

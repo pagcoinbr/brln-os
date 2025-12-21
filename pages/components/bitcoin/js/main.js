@@ -14,82 +14,7 @@ let mempoolFees = {
   fast: 0
 };
 
-// === FUNÇÕES UTILITÁRIAS PARA CÁLCULO DE VBYTES ===
-function getInputVbytes(addressType) {
-  // Retorna vbytes precisos baseado no tipo de endereço da UTXO
-  switch (addressType?.toLowerCase()) {
-    case 'p2tr':
-    case 'witness_v1_taproot':
-      return 57.5; // Taproot input
-    case 'p2wpkh':
-    case 'witness_v0_keyhash':
-      return 68; // SegWit v0 P2WPKH
-    case 'p2wsh':
-    case 'witness_v0_scripthash':
-      return 104; // SegWit v0 P2WSH
-    case 'p2pkh':
-      return 148; // Legacy P2PKH
-    case 'p2sh':
-    case 'scripthash':
-      return 91; // Legacy P2SH
-    default:
-      return 68; // Default para P2WPKH (mais comum)
-  }
-}
-
-function getOutputVbytes(addressType) {
-  // Retorna vbytes precisos para outputs baseado no tipo
-  switch (addressType?.toLowerCase()) {
-    case 'p2tr':
-    case 'witness_v1_taproot':
-      return 43; // Taproot output
-    case 'p2wpkh':
-    case 'witness_v0_keyhash':
-      return 31; // SegWit v0 P2WPKH
-    case 'p2wsh':
-    case 'witness_v0_scripthash':
-      return 43; // SegWit v0 P2WSH
-    case 'p2pkh':
-      return 34; // Legacy P2PKH
-    case 'p2sh':
-    case 'scripthash':
-      return 32; // Legacy P2SH
-    default:
-      return 31; // Default para P2WPKH
-  }
-}
-
-function calculateTransactionVbytes(utxos, outputCount = 1, changeOutput = false) {
-  // Overhead base da transação
-  let totalVbytes = 10.5;
-  
-  // Somar vbytes de todos os inputs
-  utxos.forEach(utxo => {
-    const inputVbytes = getInputVbytes(utxo.address_type);
-    totalVbytes += inputVbytes;
-  });
-  
-  // Somar vbytes dos outputs
-  totalVbytes += outputCount * getOutputVbytes('p2tr'); // Output principal
-  if (changeOutput) {
-    totalVbytes += getOutputVbytes('p2wpkh'); // Output de troco
-  }
-  
-  return Math.ceil(totalVbytes);
-}
-
-function calculatePreciseFee(vbytes, feeRatePerVbyte) {
-  return Math.ceil(vbytes * feeRatePerVbyte);
-}
-
-function calculateChangeThreshold(feeRate) {
-  // Calcular threshold dinâmico para decidir se cria output de troco
-  // Baseado no custo real do output (31 vbytes) com margem de segurança 2x
-  // Sempre respeitando o dust limit mínimo de 546 sats
-  const changeOutputCost = Math.ceil(31 * feeRate * 2); // 2x margem de segurança
-  return Math.max(546, changeOutputCost); // dust limit ou custo com margem
-}
-
+// === FUNÇÕES UTILITÁRIAS (mantidas para compatibilidade com outras funcionalidades) ===
 function detectAddressType(address) {
   // Detectar tipo de endereço baseado no prefixo
   if (!address) return 'p2wpkh';
@@ -191,20 +116,24 @@ async function loadWalletBalance() {
     const data = await response.json();
     
     if (data.status === 'success') {
-      const totalSats = parseInt(data.confirmed_balance);
-      const totalBTC = (totalSats / 100000000).toFixed(8);
+      const confirmedSats = parseInt(data.confirmed_balance || 0);
+      const unconfirmedSats = parseInt(data.unconfirmed_balance || 0);
+      const totalSats = confirmedSats + unconfirmedSats;
       
-      document.getElementById('totalBalance').textContent = `${totalSats.toLocaleString()} sats`;
-      document.getElementById('totalBalanceBTC').textContent = `${totalBTC} BTC`;
+      document.getElementById('totalBalance').textContent = `Total: ${totalSats.toLocaleString()} sats`;
+      document.getElementById('confirmedBalance').textContent = `Confirmado: ${confirmedSats.toLocaleString()} sats`;
+      document.getElementById('unconfirmedBalance').textContent = `Não Confirmado: ${unconfirmedSats.toLocaleString()} sats`;
     } else {
       console.error('Erro ao carregar saldo:', data.error);
       document.getElementById('totalBalance').textContent = 'Erro ao carregar';
-      document.getElementById('totalBalanceBTC').textContent = 'N/A';
+      document.getElementById('confirmedBalance').textContent = 'N/A';
+      document.getElementById('unconfirmedBalance').textContent = 'N/A';
     }
   } catch (error) {
     console.error('Erro na requisição de saldo:', error);
     document.getElementById('totalBalance').textContent = 'Erro de conexão';
-    document.getElementById('totalBalanceBTC').textContent = 'N/A';
+    document.getElementById('confirmedBalance').textContent = 'N/A';
+    document.getElementById('unconfirmedBalance').textContent = 'N/A';
   }
 }
 
@@ -244,12 +173,18 @@ function displayUTXOs(utxos) {
     const utxoElement = document.createElement('div');
     utxoElement.className = `utxo-square ${sizeClass}`;
     utxoElement.innerHTML = `
-      <div class="utxo-amount">${btc} BTC</div>
-      <div class="utxo-sats">${sats.toLocaleString()} sats</div>
+      <div class="utxo-amount">${sats.toLocaleString()} sats</div>
+      <div class="utxo-sats">${utxo.confirmations} confs</div>
     `;
     
     // Adicionar tooltip com informações da UTXO
-    utxoElement.title = `TXID: ${utxo.outpoint.txid_str}\nOutput: ${utxo.outpoint.output_index}\nConfirmações: ${utxo.confirmations}`;
+    utxoElement.title = `TXID: ${utxo.outpoint.txid_str}\nOutput: ${utxo.outpoint.output_index}\nConfirmações: ${utxo.confirmations}\n\nClique para ver no mempool.space`;
+    
+    // Adicionar evento de clique para abrir no mempool.space
+    utxoElement.style.cursor = 'pointer';
+    utxoElement.addEventListener('click', () => {
+      openMempoolUtxo(utxo.outpoint.txid_str, utxo.outpoint.output_index);
+    });
     
     container.appendChild(utxoElement);
   });
@@ -284,7 +219,7 @@ function displayTransactions(transactions) {
   historyContainer.innerHTML = '';
   if (header) historyContainer.appendChild(header);
   
-  transactions.slice(0, 10).forEach(tx => { // Mostrar apenas as últimas 10
+  transactions.slice(0, 30).forEach(tx => { // Mostrar apenas as últimas 10
     const date = new Date(tx.time_stamp * 1000);
     const dateStr = date.toLocaleDateString('pt-BR');
     const timeStr = date.toLocaleTimeString('pt-BR');
@@ -292,7 +227,7 @@ function displayTransactions(transactions) {
     const amount = parseInt(tx.amount);
     const fee = parseInt(tx.total_fees);
     
-    const isReceived = amount > 0;
+    const isReceived = tx.type === 'received';
     
     const txElement = document.createElement('div');
     txElement.className = 'transaction-item';
@@ -301,16 +236,25 @@ function displayTransactions(transactions) {
         ${dateStr}<br/>
         ${timeStr}
       </div>
-      <div class="tx-id" title="${tx.tx_hash}" onclick="copyToClipboard('${tx.tx_hash}')">
+      <div class="tx-id" title="${tx.tx_hash}\n\nClique para ver no mempool.space" onclick="openMempoolTransaction('${tx.tx_hash}')">
         ${tx.tx_hash.substring(0, 16)}...
       </div>
       <div class="tx-amount ${isReceived ? 'received' : 'sent'}">
-        ${isReceived ? '+' : ''}${Math.abs(amount).toLocaleString()} sats
+        ${isReceived ? '+' : '-'}${Math.abs(amount).toLocaleString()} sats
       </div>
       <div class="tx-fee">
-        ${isReceived ? '-' : `${fee.toLocaleString()} sats`}
+        ${fee > 0 ? `${fee.toLocaleString()} sats` : '-'}
       </div>
     `;
+    
+    // Adicionar evento de clique para toda a transação também abrir no mempool.space
+    txElement.style.cursor = 'pointer';
+    txElement.addEventListener('click', (e) => {
+      // Se não clicou especificamente no TXID, também abrir o mempool
+      if (!e.target.classList.contains('tx-id')) {
+        openMempoolTransaction(tx.tx_hash);
+      }
+    });
     
     historyContainer.appendChild(txElement);
   });
@@ -331,30 +275,15 @@ async function loadMempoolFees() {
     
     if (data.status === 'success' && data.fees) {
       mempoolFees = {
-        slow: data.fees.economy?.sat_per_vbyte || 1,
-        normal: data.fees.standard?.sat_per_vbyte || 2, 
-        fast: data.fees.priority?.sat_per_vbyte || 5
+        slow: data.fees.economy?.sat_per_vbyte,
+        normal: data.fees.standard?.sat_per_vbyte, 
+        fast: data.fees.priority?.sat_per_vbyte
       };
       
       // Atualizar display das taxas
       document.getElementById('slowFee').textContent = `${mempoolFees.slow} sat/vB`;
       document.getElementById('normalFee').textContent = `${mempoolFees.normal} sat/vB`;
       document.getElementById('fastFee').textContent = `${mempoolFees.fast} sat/vB`;
-      
-      // Atualizar tempos estimados da API
-      const slowTimeElement = document.getElementById('slowFeeTime');
-      const normalTimeElement = document.getElementById('normalFeeTime');
-      const fastTimeElement = document.getElementById('fastFeeTime');
-      
-      if (slowTimeElement && data.fees.economy?.description) {
-        slowTimeElement.textContent = data.fees.economy.description;
-      }
-      if (normalTimeElement && data.fees.standard?.description) {
-        normalTimeElement.textContent = data.fees.standard.description;
-      }
-      if (fastTimeElement && data.fees.priority?.description) {
-        fastTimeElement.textContent = data.fees.priority.description;
-      }
       
       // Selecionar opção normal por padrão
       selectFeeOption('normal');
@@ -364,20 +293,6 @@ async function loadMempoolFees() {
     
   } catch (error) {
     console.error('Erro ao carregar taxas da API local:', error);
-    // Usar valores padrão em caso de erro
-    mempoolFees = { slow: 1, normal: 2, fast: 5 };
-    document.getElementById('slowFee').textContent = '1 sat/vB';
-    document.getElementById('normalFee').textContent = '2 sat/vB';
-    document.getElementById('fastFee').textContent = '5 sat/vB';
-    
-    // Tempos padrão de fallback
-    const slowTimeElement = document.getElementById('slowFeeTime');
-    const normalTimeElement = document.getElementById('normalFeeTime');
-    const fastTimeElement = document.getElementById('fastFeeTime');
-    
-    if (slowTimeElement) slowTimeElement.textContent = '~60 min';
-    if (normalTimeElement) normalTimeElement.textContent = '~30 min';
-    if (fastTimeElement) fastTimeElement.textContent = '~10 min';
   }
 }
 
@@ -398,8 +313,6 @@ function selectFeeOption(priority) {
     selectedElement.classList.add('selected');
   }
   
-  // Atualizar campo de taxa personalizada (oculto)
-  // (removido - usando manualFeeInput)
 }
 
 // === CONTROLE DE MODO DE TAXA ===
@@ -524,7 +437,7 @@ async function sendBitcoin() {
     feeRate = document.getElementById('manualFeeInput').value;
   }
   
-  // Validações
+  // Validações básicas
   if (!address) {
     showNotification('Por favor, insira um endereço de destino', 'error');
     return;
@@ -542,72 +455,9 @@ async function sendBitcoin() {
   }
   
   try {
-    // Obter UTXOs para calcular taxa precisa
-    const utxosResponse = await fetch(`${API_BASE_URL}/wallet/utxos`);
-    const utxosData = await utxosResponse.json();
-    
-    if (utxosData.status !== 'success' || !utxosData.utxos) {
-      throw new Error('Erro ao obter UTXOs para cálculo de taxa');
-    }
-    
-    // Simular seleção de UTXOs necessárias para o valor solicitado
     const targetAmount = parseInt(amount);
-    let selectedUtxos = [];
-    let accumulatedValue = 0;
     
-    // Ordenar UTXOs do maior para o menor (estratégia de seleção simples)
-    const sortedUtxos = [...utxosData.utxos].sort((a, b) => 
-      parseInt(b.amount_sat) - parseInt(a.amount_sat)
-    );
-    
-    // Selecionar UTXOs suficientes
-    for (const utxo of sortedUtxos) {
-      selectedUtxos.push({
-        ...utxo,
-        address_type: detectAddressType(utxo.address || '')
-      });
-      accumulatedValue += parseInt(utxo.amount_sat);
-      
-      // Calcular threshold dinâmico para troco baseado na taxa atual
-      const changeThreshold = calculateChangeThreshold(parseFloat(feeRate));
-      
-      // Calcular vbytes com as UTXOs selecionadas até agora
-      const estimatedVbytes = calculateTransactionVbytes(
-        selectedUtxos, 
-        1, // 1 output para destino
-        accumulatedValue > targetAmount + changeThreshold // troco se sobrar mais que threshold dinâmico
-      );
-      
-      const estimatedFee = calculatePreciseFee(estimatedVbytes, parseFloat(feeRate));
-      const totalNeeded = targetAmount + estimatedFee;
-      
-      if (accumulatedValue >= totalNeeded) {
-        break;
-      }
-    }
-    
-    // Calcular threshold dinâmico para o cálculo final
-    const changeThreshold = calculateChangeThreshold(parseFloat(feeRate));
-    
-    // Calcular valores finais
-    const finalVbytes = calculateTransactionVbytes(
-      selectedUtxos,
-      1,
-      accumulatedValue > targetAmount + changeThreshold // usar threshold dinâmico
-    );
-    
-    const finalFee = calculatePreciseFee(finalVbytes, parseFloat(feeRate));
-    const totalRequired = targetAmount + finalFee;
-    
-    if (accumulatedValue < totalRequired) {
-      throw new Error(
-        `Saldo insuficiente. Necessário: ${totalRequired.toLocaleString()} sats ` +
-        `(${targetAmount.toLocaleString()} + ${finalFee.toLocaleString()} taxa), ` +
-        `Disponível: ${accumulatedValue.toLocaleString()} sats`
-      );
-    }
-    
-    // Confirmar envio com informações precisas
+    // Confirmar envio
     const feeText = feeMode === 'recommended' 
       ? `taxa ${selectedFeeOption} (${feeRate} sat/vB)` 
       : `taxa manual de ${feeRate} sat/vB`;
@@ -616,14 +466,13 @@ async function sendBitcoin() {
       `Confirma o envio?\n\n` +
       `Destino: ${address.substring(0, 30)}...\n` +
       `Valor: ${targetAmount.toLocaleString()} sats\n` +
-      `Taxa: ${finalFee.toLocaleString()} sats (${finalVbytes} vbytes × ${feeRate} sat/vB)\n` +
-      `UTXOs usadas: ${selectedUtxos.length}\n` +
-      `Total: ${totalRequired.toLocaleString()} sats`
+      `Taxa: ${feeRate} sat/vB\n\n` +
+      `LND selecionará automaticamente as UTXOs e calculará as taxas precisas.`
     );
     
     if (!confirmed) return;
     
-    // Enviar transação
+    // Enviar transação usando a API
     const response = await fetch(`${API_BASE_URL}/wallet/transactions/send`, {
       method: 'POST',
       headers: {
@@ -642,7 +491,7 @@ async function sendBitcoin() {
       showNotification(
         `Transação enviada com sucesso!\n\n` +
         `Valor: ${targetAmount.toLocaleString()} sats\n` +
-        `Taxa: ${finalFee.toLocaleString()} sats\n` +
+        `Taxa: ${feeRate} sat/vB\n` +
         `TXID: ${data.txid ? data.txid.substring(0, 16) + '...' : 'N/A'}`,
         'success'
       );
@@ -674,6 +523,20 @@ function copyToClipboard(text) {
   }).catch(err => {
     console.error('Erro ao copiar:', err);
   });
+}
+
+// === MEMPOOL.SPACE INTEGRATION ===
+function openMempoolTransaction(txid) {
+  const mempoolUrl = `https://mempool.space/tx/${txid}`;
+  window.open(mempoolUrl, '_blank');
+  showNotification('Abrindo transação no mempool.space', 'info');
+}
+
+function openMempoolUtxo(txid, outputIndex) {
+  // Abrir a página da transação e destacar a saída específica
+  const mempoolUrl = `https://mempool.space/tx/${txid}#vout=${outputIndex}`;
+  window.open(mempoolUrl, '_blank');
+  showNotification(`Abrindo UTXO ${outputIndex} no mempool.space`, 'info');
 }
 
 function copyGeneratedAddress() {
@@ -755,14 +618,14 @@ async function executeConsolidation() {
   const feeRateInput = document.getElementById('consolidateFee');
   const feeRate = parseFloat(feeRateInput.value);
   
-  // Validações
+  // Validações básicas
   if (!feeRate || feeRate <= 0) {
     showNotification('Por favor, insira uma taxa válida', 'error');
     return;
   }
   
   try {
-    // Primeiro, obter UTXOs individuais para calcular valor e vbytes precisos
+    // Obter UTXOs para validação básica
     const utxosResponse = await fetch(`${API_BASE_URL}/wallet/utxos`);
     const utxosData = await utxosResponse.json();
     
@@ -778,44 +641,19 @@ async function executeConsolidation() {
       throw new Error('Apenas uma UTXO disponível, consolidação não necessária');
     }
     
-    // Enriquecer UTXOs com tipo de endereço detectado
-    const enrichedUtxos = utxosData.utxos.map(utxo => ({
-      ...utxo,
-      address_type: detectAddressType(utxo.address || '')
-    }));
-    
-    // Somar valor total de todas as UTXOs
-    const totalUtxosValue = enrichedUtxos.reduce((total, utxo) => {
+    // Somar valor total das UTXOs (apenas para exibição)
+    const totalUtxosValue = utxosData.utxos.reduce((total, utxo) => {
       return total + parseInt(utxo.amount_sat);
     }, 0);
     
-    // Calcular vbytes exatos para consolidação (N inputs -> 1 output P2TR)
-    const consolidationVbytes = calculateTransactionVbytes(enrichedUtxos, 1, false);
-    
-    // Calcular taxa exata
-    const exactFee = calculatePreciseFee(consolidationVbytes, feeRate);
-    
-    const consolidationAmount = totalUtxosValue - exactFee;
-    
-    // Validar se há valor suficiente (dust limit + margem)
-    if (consolidationAmount <= 546) {
-      throw new Error(
-        `Saldo insuficiente para consolidação após deduzir taxas.\n\n` +
-        `Valor total das UTXOs: ${totalUtxosValue.toLocaleString()} sats\n` +
-        `Taxa calculada: ${exactFee.toLocaleString()} sats (${consolidationVbytes} vbytes × ${feeRate} sat/vB)\n` +
-        `Valor resultante: ${consolidationAmount.toLocaleString()} sats`
-      );
-    }
-    
-    // Confirmar consolidação com informações precisas
+    // Confirmar consolidação 
     const confirmed = confirm(
       `Confirma a consolidação de UTXOs?\n\n` +
-      `UTXOs a consolidar: ${enrichedUtxos.length}\n` +
+      `UTXOs a consolidar: ${utxosData.utxos.length}\n` +
       `Valor total: ${totalUtxosValue.toLocaleString()} sats\n` +
-      `Tamanho da transação: ${consolidationVbytes} vbytes\n` +
-      `Taxa: ${exactFee.toLocaleString()} sats (${feeRate} sat/vB)\n` +
-      `Valor final consolidado: ${consolidationAmount.toLocaleString()} sats\n\n` +
-      `Será criado um novo endereço P2TR para receber a UTXO consolidada.`
+      `Taxa: ${feeRate} sat/vB\n\n` +
+      `Será criado um novo endereço P2TR para receber toda a consolidação.\n` +
+      `LND calculará automaticamente as taxas precisas.`
     );
     
     if (!confirmed) {
@@ -842,7 +680,7 @@ async function executeConsolidation() {
     
     const consolidationAddress = addressData.address;
     
-    // Executar a transação de consolidação
+    // Executar a transação de consolidação usando send_all (equivalente ao --sweepall do lncli)
     const sendResponse = await fetch(`${API_BASE_URL}/wallet/transactions/send`, {
       method: 'POST',
       headers: {
@@ -850,7 +688,7 @@ async function executeConsolidation() {
       },
       body: JSON.stringify({
         addr: consolidationAddress,
-        amount: consolidationAmount,
+        send_all: true,
         sat_per_vbyte: feeRate
       })
     });
@@ -860,12 +698,11 @@ async function executeConsolidation() {
     if (sendData.status === 'success') {
       showNotification(
         `Consolidação executada com sucesso!\n\n` +
-        `UTXOs consolidadas: ${enrichedUtxos.length}\n` +
+        `UTXOs consolidadas: ${utxosData.utxos.length}\n` +
         `Valor total original: ${totalUtxosValue.toLocaleString()} sats\n` +
-        `Taxa paga: ${exactFee.toLocaleString()} sats (${consolidationVbytes} vbytes)\n` +
-        `Valor consolidado: ${consolidationAmount.toLocaleString()} sats\n` +
         `Novo endereço: ${consolidationAddress.substring(0, 20)}...\n` +
-        `TXID: ${sendData.txid ? sendData.txid.substring(0, 16) + '...' : 'N/A'}`,
+        `TXID: ${sendData.txid ? sendData.txid.substring(0, 16) + '...' : 'N/A'}\n\n` +
+        `LND calculou automaticamente as taxas precisas.`,
         'success'
       );
       

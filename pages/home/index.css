@@ -227,19 +227,6 @@ body {
   cursor: pointer;
 }
 
-.price-container:hover {
-  background-color: #333;
-  color: #fff;
-  box-shadow: 4px 4px 0px 0px #000;
-  transform: translate(2px, 2px);
-}
-
-.price-container:hover .price-label,
-.price-container:hover .price-brl,
-.price-container:hover .price-usd {
-  color: #fff;
-}
-
 .price-label {
   font-size: 30px;
   font-weight: bold;
@@ -388,24 +375,6 @@ body {
   transition: all 0.2s ease;
   cursor: pointer;
   min-height: 80px;
-}
-
-.block-info:hover {
-  background-color: #333;
-  color: #fff;
-  box-shadow: 4px 4px 0px 0px #000;
-  transform: translate(2px, 2px);
-}
-
-.block-info:hover .block-label,
-.block-info:hover .block-number,
-.block-info:hover .block-fee,
-.block-info:hover .block-data {
-  color: #fff;
-}
-
-.block-info:hover .block-data strong {
-  color: #fff;
 }
 
 .block-label {

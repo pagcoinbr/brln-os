@@ -9,17 +9,15 @@ function abrirApp(porta) {
 // Toggle de serviços
 async function toggleService(serviceName) {
   const checkbox = document.getElementById(`${serviceName}-button`);
-  const action = checkbox.checked ? 'start' : 'stop';
   
   try {
-    const response = await fetch('/api/v1/system/service', {
+    const response = await fetch('http://localhost:2121/api/v1/system/service', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        service: serviceName,
-        action: action
+        service: serviceName
       })
     });
     
@@ -29,7 +27,11 @@ async function toggleService(serviceName) {
       console.error('Erro ao gerenciar serviço:', data.error);
       // Reverter o checkbox em caso de erro
       checkbox.checked = !checkbox.checked;
-      alert(`Erro ao ${action === 'start' ? 'iniciar' : 'parar'} ${serviceName}: ${data.error}`);
+      alert(`Erro ao gerenciar ${serviceName}: ${data.error}`);
+    } else {
+      // Atualizar checkbox com o novo status retornado pela API
+      checkbox.checked = data.current_status;
+      console.log(`Serviço ${serviceName}: ${data.message}`);
     }
   } catch (error) {
     console.error('Erro na requisição:', error);
@@ -41,15 +43,21 @@ async function toggleService(serviceName) {
 
 // Carregar status dos serviços
 async function loadServicesStatus() {
+  console.log('Carregando status dos serviços...');
   try {
-    const response = await fetch('/api/v1/system/services');
+    const response = await fetch('http://localhost:2121/api/v1/system/services');
+    console.log('Resposta da API services:', response.status);
     const data = await response.json();
+    console.log('Dados dos serviços:', data);
     
     if (data.services) {
       Object.keys(data.services).forEach(service => {
         const checkbox = document.getElementById(`${service}-button`);
         if (checkbox) {
+          console.log(`Atualizando ${service}: ${data.services[service]}`);
           checkbox.checked = data.services[service];
+        } else {
+          console.warn(`Checkbox não encontrado para o serviço: ${service}`);
         }
       });
     }
@@ -61,7 +69,7 @@ async function loadServicesStatus() {
 // Carregar status do sistema
 async function loadSystemStatus() {
   try {
-    const response = await fetch('/api/v1/system/status');
+    const response = await fetch('http://localhost:2121/api/v1/system/status');
     const data = await response.json();
     
     // Atualizar CPU
@@ -91,14 +99,7 @@ async function loadSystemStatus() {
       bitcoindElement.textContent = `Bitcoind: ${data.bitcoind.status} | Blocks: ${data.bitcoind.blocks}`;
       bitcoindElement.style.background = data.bitcoind.status === 'running' ? '#90EE90' : '#ff4444';
     }
-    
-    // Atualizar Tor
-    const torElement = document.getElementById('tor');
-    if (data.tor) {
-      torElement.textContent = `Tor: ${data.tor.status}`;
-      torElement.style.background = data.tor.status === 'running' ? '#90EE90' : '#ff4444';
-    }
-    
+
     // Atualizar Blockchain
     const blockchainElement = document.getElementById('blockchain');
     if (data.blockchain) {
@@ -112,7 +113,6 @@ async function loadSystemStatus() {
     document.getElementById('ram').textContent = 'RAM: Erro ao carregar';
     document.getElementById('lnd').textContent = 'LND: Erro ao carregar';
     document.getElementById('bitcoind').textContent = 'Bitcoind: Erro ao carregar';
-    document.getElementById('tor').textContent = 'Tor: Erro ao carregar';
     document.getElementById('blockchain').textContent = 'Blockchain: Erro ao carregar';
   }
 }

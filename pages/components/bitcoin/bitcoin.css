@@ -194,6 +194,25 @@
   border: 2px solid #ccc;
 }
 
+/* Send Button Specific Styling */
+#sendButton, #generateAddressButton {
+  background: #f7f7f7 !important;
+  color: black !important;
+  border: 2px solid black !important;
+  transition: all 0.3s ease !important;
+}
+
+#sendButton:hover, #generateAddressButton:hover {
+  background-color: #333 !important;
+  color: #fff !important;
+  box-shadow: 4px 4px 0px 0px #000;
+  transform: translate(2px, 2px);
+}
+
+#sendButton:hover .service-title, #generateAddressButton:hover .service-title {
+  color: #fff !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .bitcoin-control {

@@ -13,10 +13,11 @@
   <section class="services">
     <div class="services-container">
       <div class="price-container">
-        <div class="price-label">💰 Saldo da Carteira</div>
+        <div class="price-label">Saldo</div>
         <div class="price-values">
           <div class="price-brl" id="totalBalance">-- sats</div>
-          <div class="price-usd" id="totalBalanceBTC">-- BTC</div>
+          <div class="price-usd" id="confirmedBalance">-- sats</div>
+          <div class="price-usd" id="unconfirmedBalance">-- sats</div>
         </div>
       </div>
     </div>
@@ -27,7 +28,7 @@
   <!-- Seção de Envio de Bitcoin -->
   <section class="content-section">
     <div class="content-wrapper">
-      <h2>📤 Enviar Bitcoin</h2>
+      <h2>Enviar Bitcoin</h2>
       <div class="control-section">
         <div class="send-form">
           <div class="form-group">
@@ -47,8 +48,8 @@
             <div class="fee-mode-slider" id="feeModeSlider">
               <div class="fee-mode-track" id="feeModeTrack"></div>
               <div class="fee-mode-labels">
-                <span class="fee-mode-slider-label active" id="recommendedLabel">Auto</span>
-                <span class="fee-mode-slider-label inactive" id="manualLabel">Manual</span>
+                <span class="fee-mode-slider-label active" id="recommendedLabel"></span>
+                <span class="fee-mode-slider-label inactive" id="manualLabel"></span>
               </div>
             </div>
             
@@ -60,17 +61,14 @@
             <div class="fee-option" data-priority="slow">
               <div class="fee-label">🐌 Lenta</div>
               <div class="fee-value" id="slowFee">-- sat/vB</div>
-              <div class="fee-time" id="slowFeeTime">Carregando...</div>
             </div>
             <div class="fee-option" data-priority="normal">
               <div class="fee-label">⚡ Normal</div>
               <div class="fee-value" id="normalFee">-- sat/vB</div>
-              <div class="fee-time" id="normalFeeTime">Carregando...</div>
             </div>
             <div class="fee-option" data-priority="fast">
               <div class="fee-label">🚀 Rápida</div>
               <div class="fee-value" id="fastFee">-- sat/vB</div>
-              <div class="fee-time" id="fastFeeTime">Carregando...</div>
             </div>
           </div>
           
@@ -83,7 +81,7 @@
           </div>
           
           <button class="service-card" id="sendButton" style="border: 2px solid black; background: #f7f7f7; color: black; cursor: pointer;">
-            <div class="service-title">🚀 Enviar Bitcoin</div>
+            <div class="service-title">Enviar</div>
           </button>
         </div>
       </div>
@@ -93,10 +91,10 @@
   <!-- Seção de Geração de Endereços -->
   <section class="content-section">
     <div class="content-wrapper">
-      <h2>📍 Gerar Novo Endereço</h2>
+      <h2>Gerar Novo Endereço</h2>
       <div class="control-section">
         <div class="address-type-selector">
-          <div class="address-type-label">P2TR</div>
+          <div class="address-type-label"></div>
           
           <div class="slider-container" id="addressTypeSlider">
             <div class="slider-track" id="sliderTrack"></div>
@@ -106,12 +104,12 @@
             </div>
           </div>
           
-          <div class="address-type-label">P2WSH</div>
+          <div class="address-type-label"></div>
         </div>
         
         <div class="generate-button-container">
-          <button class="service-card" id="generateAddressButton" style="border: 2px solid black; background: #f7f7f7; color: black; cursor: pointer;">
-            <div class="service-title">🔗 Gerar Endereço</div>
+          <button class="amboss-link" id="generateAddressButton" style="border: 2px solid black; background: #f7f7f7; color: black; cursor: pointer;">
+            <div class="service-title">Gerar Endereço</div>
           </button>
         </div>
         
@@ -119,7 +117,7 @@
           <h3 style="margin-bottom: 15px; color: #333;">Endereço Gerado:</h3>
           <div class="address-info">
             <div class="address-text">
-              <div style="font-weight: bold; margin-bottom: 5px;">Tipo: <span id="generatedAddressType">P2TR</span></div>
+              <div style="font-weight: bold; margin-bottom: 5px;">Tipo: <span id="generatedAddressType"></span></div>
               <div class="generated-address-container">
                 <div class="generated-address" id="generatedAddressText">
                   Endereço será gerado aqui...
@@ -144,11 +142,11 @@
   <section class="content-section">
     <div class="content-wrapper">
       <div class="utxos-header">
-        <h2>🎯 UTXOs Disponíveis</h2>
+        <h2>UTXOs</h2>
         <div class="consolidate-section">
           <div class="consolidate-form" id="consolidateForm">
             <button class="consolidate-button" id="consolidateButton">
-              <div class="consolidate-title">🔧 Consolidar</div>
+              <div class="consolidate-title">Consolidar</div>
             </button>
           </div>
           <div class="consolidate-fee-input" id="consolidateFeeInput" style="display: none;">
@@ -157,7 +155,7 @@
               <input type="number" id="consolidateFee" placeholder="10" min="1" />
             </div>
             <button class="consolidate-send-button" id="consolidateSendButton">
-              <div class="consolidate-title">🚀 Enviar</div>
+              <div class="consolidate-title">Enviar</div>
             </button>
           </div>
         </div>
@@ -176,7 +174,7 @@
   <!-- Seção de Histórico de Transações -->
   <section class="content-section">
     <div class="content-wrapper">
-      <h2>📋 Histórico de Transações</h2>
+      <h2>Histórico</h2>
       <div class="control-section">
         <div class="transactions-history">
           <div class="transaction-header">
@@ -194,28 +192,6 @@
     </div>
   </section>
   </div>
-
-  <!-- FOOTER DE ASSOCIAÇÃO -->
-  <footer class="association-footer">
-    <div class="association-content">
-      <h3 class="association-title">🚀 Junte-se ao Clube BR-LN!</h3>
-      <p class="association-description">
-        Faça parte da revolução Bitcoin no Brasil. Conecte-se com outros entusiastas, 
-        aprenda sobre Lightning Network e contribua para a descentralização financeira.
-      </p>
-      <div class="association-actions">
-        <a href="https://services.br-ln.com" target="_blank" class="association-btn primary">
-          Associar-se Agora
-        </a>
-        <a href="https://br-ln.com" target="_blank" class="association-btn secondary">
-          Saiba Mais
-        </a>
-      </div>
-      <p class="association-note">
-        💡 Construindo o futuro descentralizado, um satoshi por vez
-      </p>
-    </div>
-  </footer>
 
   <!-- FOOTER ORIGINAL -->
   <footer class="footer">
