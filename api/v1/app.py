@@ -47,6 +47,10 @@ import hashlib
 from concurrent import futures
 import time
 import requests
+import sqlite3
+import threading
+import base64
+import warnings
 
 # Desabilitar warnings desnecessários
 import warnings
@@ -489,9 +493,19 @@ class LNDgRPCClient:
             
             # Configurar custom records
             for key, value in custom_records.items():
+                # Converter chave para inteiro se for string
+                if isinstance(key, str):
+                    record_key = int(key)
+                else:
+                    record_key = key
+                
+                # Converter valor para bytes se necessário
                 if isinstance(value, str):
-                    value = value.encode('utf-8')
-                request.dest_custom_records[key] = value
+                    record_value = value.encode('utf-8')
+                else:
+                    record_value = value
+                
+                request.dest_custom_records[record_key] = record_value
             
             if fee_limit_sat:
                 request.fee_limit.fixed = int(fee_limit_sat)
@@ -569,6 +583,183 @@ class LNDgRPCClient:
 
 # Singleton para reusar conexão gRPC
 lnd_grpc_client = LNDgRPCClient()
+
+# === SISTEMA DE CHAT LIGHTNING ===
+
+# Configuração do banco SQLite
+CHAT_DB_PATH = "/data/lightning_chat.db"
+
+def init_chat_database():
+    """Inicializa o banco de dados SQLite para o chat"""
+    conn = sqlite3.connect(CHAT_DB_PATH)
+    cursor = conn.cursor()
+    
+    # Tabela para mensagens de chat
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            node_id TEXT NOT NULL,
+            message TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            type TEXT NOT NULL, -- 'sent' ou 'received'
+            payment_hash TEXT,
+            status TEXT DEFAULT 'confirmed', -- 'pending', 'confirmed', 'failed'
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Tabela para tracking de keysends recebidos
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS keysend_tracking (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            payment_hash TEXT UNIQUE NOT NULL,
+            sender_node_id TEXT NOT NULL,
+            amount_sat INTEGER NOT NULL,
+            message TEXT,
+            timestamp INTEGER NOT NULL,
+            processed BOOLEAN DEFAULT FALSE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # Índices para melhor performance
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_chat_node_id ON chat_messages(node_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_chat_timestamp ON chat_messages(timestamp)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_keysend_processed ON keysend_tracking(processed)')
+    
+    conn.commit()
+    conn.close()
+
+def save_chat_message(node_id, message, msg_type, payment_hash=None, status='confirmed'):
+    """Salva uma mensagem de chat no banco"""
+    conn = sqlite3.connect(CHAT_DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO chat_messages (node_id, message, timestamp, type, payment_hash, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (node_id, message, int(time.time() * 1000), msg_type, payment_hash, status))
+    
+    conn.commit()
+    conn.close()
+
+def get_chat_messages(node_id, limit=100):
+    """Recupera mensagens de chat com um node específico"""
+    conn = sqlite3.connect(CHAT_DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT message, timestamp, type, status, payment_hash
+        FROM chat_messages 
+        WHERE node_id = ?
+        ORDER BY timestamp ASC
+        LIMIT ?
+    ''', (node_id, limit))
+    
+    messages = []
+    for row in cursor.fetchall():
+        messages.append({
+            'message': row[0],
+            'timestamp': row[1],
+            'type': row[2],
+            'status': row[3],
+            'payment_hash': row[4]
+        })
+    
+    conn.close()
+    return messages
+
+def get_all_conversations():
+    """Recupera todas as conversas ativas"""
+    conn = sqlite3.connect(CHAT_DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT 
+            node_id,
+            MAX(timestamp) as last_activity,
+            COUNT(*) as message_count,
+            (SELECT message FROM chat_messages c2 
+             WHERE c2.node_id = c1.node_id 
+             ORDER BY timestamp DESC LIMIT 1) as last_message
+        FROM chat_messages c1
+        GROUP BY node_id
+        ORDER BY last_activity DESC
+    ''')
+    
+    conversations = []
+    for row in cursor.fetchall():
+        conversations.append({
+            'node_id': row[0],
+            'last_activity': row[1],
+            'message_count': row[2],
+            'last_message': row[3]
+        })
+    
+    conn.close()
+    return conversations
+
+def process_received_keysend(payment_hash, sender_node_id, amount_sat, custom_records=None):
+    """Processa um keysend recebido e extrai mensagem se houver"""
+    message = None
+    
+    # Tentar extrair mensagem do TLV record 34349334
+    if custom_records and '34349334' in custom_records:
+        try:
+            # Decodificar mensagem do base64
+            message_bytes = base64.b64decode(custom_records['34349334'])
+            message = message_bytes.decode('utf-8')
+        except Exception as e:
+            print(f"Erro ao decodificar mensagem do keysend: {e}")
+    
+    # Salvar no tracking
+    conn = sqlite3.connect(CHAT_DB_PATH)
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            INSERT INTO keysend_tracking 
+            (payment_hash, sender_node_id, amount_sat, message, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (payment_hash, sender_node_id, amount_sat, message, int(time.time() * 1000)))
+        
+        # Se tem mensagem, salvar como mensagem de chat
+        if message:
+            save_chat_message(sender_node_id, message, 'received')
+            
+        conn.commit()
+        return True
+        
+    except sqlite3.IntegrityError:
+        # Já processado
+        return False
+    finally:
+        conn.close()
+
+# Variável global para notificações
+new_messages_count = 0
+new_messages_lock = threading.Lock()
+
+def increment_new_messages():
+    """Incrementa contador de novas mensagens"""
+    global new_messages_count
+    with new_messages_lock:
+        new_messages_count += 1
+
+def reset_new_messages():
+    """Reseta contador de novas mensagens"""
+    global new_messages_count
+    with new_messages_lock:
+        new_messages_count = 0
+
+def get_new_messages_count():
+    """Retorna contador de novas mensagens"""
+    global new_messages_count
+    with new_messages_lock:
+        return new_messages_count
+
+# Inicializar banco na inicialização da aplicação
+init_chat_database()
 
 # Mapeamento de serviços
 SERVICE_MAPPING = {
@@ -1474,6 +1665,23 @@ def blockchain_balance():
             'error': str(e),
             'status': 'error'
         }), 500
+
+@app.route('/api/v1/wallet/balance/lightning', methods=['GET'])
+def lightning_balance():
+    """Endpoint para obter saldo Lightning do LND"""
+    try:
+        balance_info = get_lightning_balance()
+        
+        if balance_info.get('status') == 'error':
+            return jsonify(balance_info), 500
+        
+        return jsonify(balance_info)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
 @app.route('/api/v1/wallet/transactions', methods=['GET'])
 def transactions():
     """Endpoint para listar transações on-chain"""
@@ -2048,6 +2256,167 @@ def get_fees():
     except Exception as e:
         return jsonify({
             'error': f'Erro interno: {str(e)}',
+            'status': 'error'
+        }), 500
+
+# === ENDPOINTS DO CHAT LIGHTNING ===
+
+@app.route('/api/v1/lightning/chat/conversations', methods=['GET'])
+def get_conversations():
+    """Endpoint para listar todas as conversas de chat"""
+    try:
+        conversations = get_all_conversations()
+        
+        return jsonify({
+            'status': 'success',
+            'conversations': conversations
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lightning/chat/messages/<node_id>', methods=['GET'])
+def get_messages(node_id):
+    """Endpoint para obter mensagens de uma conversa específica"""
+    try:
+        limit = request.args.get('limit', 100, type=int)
+        messages = get_chat_messages(node_id, limit)
+        
+        return jsonify({
+            'status': 'success',
+            'node_id': node_id,
+            'messages': messages
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lightning/chat/send', methods=['POST'])
+def send_chat_message():
+    """Endpoint para enviar mensagem via keysend"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'error': 'Dados JSON obrigatórios',
+                'status': 'error'
+            }), 400
+        
+        node_id = data.get('node_id')
+        message = data.get('message')
+        
+        if not node_id or not message:
+            return jsonify({
+                'error': 'node_id e message são obrigatórios',
+                'status': 'error'
+            }), 400
+        
+        if len(message) > 500:
+            return jsonify({
+                'error': 'Mensagem muito longa (máximo 500 caracteres)',
+                'status': 'error'
+            }), 400
+        
+        # Enviar keysend com mensagem
+        custom_records = {
+            '34349334': base64.b64encode(message.encode('utf-8')).decode('ascii')
+        }
+        
+        result = send_keysend(node_id, 1, custom_records=custom_records)
+        
+        if result.get('status') == 'success':
+            # Salvar mensagem no banco
+            save_chat_message(node_id, message, 'sent', 
+                            result.get('payment_hash'), 'confirmed')
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lightning/chat/notifications', methods=['GET'])
+def get_chat_notifications():
+    """Endpoint para obter número de mensagens não lidas"""
+    try:
+        count = get_new_messages_count()
+        
+        return jsonify({
+            'status': 'success',
+            'unread_count': count
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lightning/chat/notifications', methods=['POST'])
+def reset_chat_notifications():
+    """Endpoint para resetar contador de mensagens não lidas"""
+    try:
+        reset_new_messages()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Notificações resetadas'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lightning/chat/keysends/check', methods=['POST'])
+def check_received_keysends():
+    """Endpoint para processar keysends recebidos (chamado externamente)"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'error': 'Dados JSON obrigatórios',
+                'status': 'error'
+            }), 400
+        
+        payment_hash = data.get('payment_hash')
+        sender_node_id = data.get('sender_node_id')
+        amount_sat = data.get('amount_sat')
+        custom_records = data.get('custom_records', {})
+        
+        if not payment_hash or not sender_node_id or amount_sat is None:
+            return jsonify({
+                'error': 'payment_hash, sender_node_id e amount_sat são obrigatórios',
+                'status': 'error'
+            }), 400
+        
+        # Processar keysend recebido
+        is_new = process_received_keysend(payment_hash, sender_node_id, 
+                                        amount_sat, custom_records)
+        
+        if is_new:
+            increment_new_messages()
+        
+        return jsonify({
+            'status': 'success',
+            'processed': is_new,
+            'message': 'Keysend processado' if is_new else 'Keysend já processado'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
             'status': 'error'
         }), 500
 

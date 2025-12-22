@@ -2,7 +2,7 @@
 // Integração com API local para funcionalidades Bitcoin
 
 // Base URL da API
-const API_BASE_URL = `http://${window.location.hostname}:2121/api/v1`;
+const API_BASE_URL = '/api/v1';
 
 // Variáveis globais
 let currentAddressType = 'p2tr';

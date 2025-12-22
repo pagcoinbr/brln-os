@@ -205,6 +205,44 @@ body {
   width: 80%;
 }
 
+/* Notification badge para Lightning */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4444;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 2s infinite;
+  z-index: 10;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.nav-link {
+  position: relative; /* Necessário para o positioning do badge */
+}
+
 .search-btn {
   background: rgba(245, 166, 35, 0.1);
   border: 2px solid rgba(245, 166, 35, 0.3);

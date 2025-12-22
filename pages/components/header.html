@@ -43,9 +43,10 @@
             <a
               href="#"
               class="nav-link"
-              data-page="/simple-lnwallet/"
-              onclick="navigateTo('/simple-lnwallet/', this); return false;"
-              >LIGHTNING</a
+              data-page="pages/components/lightning/lightning.html"
+              onclick="navigateTo('pages/components/lightning/lightning.html', this); return false;"
+              id="lightning-nav-link"
+              >LIGHTNING<span class="notification-badge" id="lightning-notifications" style="display: none;"></span></a
             >
             <a
               href="#"
@@ -99,6 +100,11 @@
     <audio id="radio-player" src="https://dc1.serverse.com/proxy/dnutqhxl/stream"></audio>
 
     <script>
+      function abrirApp(porta) {
+        const ip = window.location.hostname;
+        window.open(`http://${ip}:${porta}`, '_blank');
+      }
+
       function navigateTo(page, linkElement) {
         // Muda o conteúdo do iframe inferior
         parent.document.getElementById("contentFrame").src = page;
@@ -224,6 +230,60 @@
       novidadesBtn.addEventListener('click', () => {
         alert('Sem novidades no momento!');
       });
+
+      // === SISTEMA DE NOTIFICAÇÕES LIGHTNING ===
+      
+      // Função para verificar notificações Lightning
+      async function checkLightningNotifications() {
+        try {
+          const response = await fetch('/api/v1/lightning/chat/notifications');
+          if (!response.ok) return;
+          
+          const data = await response.json();
+          const badge = document.getElementById('lightning-notifications');
+          
+          if (data.status === 'success' && data.unread_count > 0) {
+            badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        } catch (error) {
+          console.log('Erro ao verificar notificações Lightning:', error);
+        }
+      }
+      
+      // Função chamada quando há nova mensagem Lightning (chamada pelo iframe)
+      function notifyLightningMessage() {
+        checkLightningNotifications();
+      }
+      
+      // Função para resetar notificações quando usuário visita Lightning
+      function resetLightningNotifications() {
+        fetch('/api/v1/lightning/chat/notifications', {
+          method: 'POST'
+        }).then(() => {
+          checkLightningNotifications();
+        }).catch(err => {
+          console.log('Erro ao resetar notificações:', err);
+        });
+      }
+      
+      // Override da função navigateTo para detectar quando visita Lightning
+      const originalNavigateTo = window.navigateTo;
+      window.navigateTo = function(page, linkElement) {
+        // Se está navegando para Lightning, resetar notificações
+        if (page === 'pages/components/lightning/lightning.html') {
+          resetLightningNotifications();
+        }
+        
+        // Chamar função original
+        return originalNavigateTo.call(this, page, linkElement);
+      };
+      
+      // Verificar notificações a cada 10 segundos
+      checkLightningNotifications();
+      setInterval(checkLightningNotifications, 10000);
     </script>
   </body>
 </html>

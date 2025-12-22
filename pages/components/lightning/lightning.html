@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Central de Controle Lightning</title>
+    <link rel="stylesheet" href="../../home/index.css" />
+    <link rel="stylesheet" href="../association-footer.css" />
+    <link rel="stylesheet" href="lightning.css" />
+  </head>
+<body>
+  <!-- Seção Services para o saldo Lightning -->
+  <section class="services">
+    <div class="services-container">
+      <div class="price-container">
+        <div class="price-label">Saldo Lightning</div>
+        <div class="price-values">
+          <div class="price-brl" id="lightningBalance">-- sats</div>
+          <div class="price-usd" id="pendingBalance">-- sats pendente</div>
+          <div class="price-usd" id="peersConnected">-- peers</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Botão para abrir Lightning Wallet -->
+  <section class="services">
+    <div class="services-container">
+      <button class="service-card" onclick="abrirApp(35671)" style="width: 50%; margin: 0;">
+        <div class="service-title">Abrir Lightning Wallet</div>
+      </button>
+    </div>
+  </section>
+
+  <div class="lightning-control">
+
+  <!-- Seção de Chat Lightning (Keysend) -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <div class="chat-header">
+        <h2>Chat Lightning</h2>
+        <div class="chat-controls">
+          <input type="text" id="newChatNode" placeholder="Node ID para novo chat..." />
+          <button class="new-chat-button" id="newChatButton">Nova Conversa</button>
+          <button class="notification-button" id="notificationButton">🔔 Notificações</button>
+        </div>
+      </div>
+      
+      <div class="control-section">
+        <div class="chat-container">
+          <!-- Lista de conversas -->
+          <div class="chat-sidebar" id="chatSidebar">
+            <div class="conversation-list" id="conversationList">
+              <div style="text-align: center; padding: 20px; color: #666; font-style: italic;">
+                Nenhuma conversa ativa
+              </div>
+            </div>
+          </div>
+          
+          <!-- Área da conversa atual -->
+          <div class="chat-main" id="chatMain">
+            <div class="chat-messages" id="chatMessages">
+              <div style="text-align: center; padding: 40px; color: #666; font-style: italic;">
+                Selecione uma conversa para começar
+              </div>
+            </div>
+            
+            <div class="chat-input-container" id="chatInputContainer" style="display: none;">
+              <div class="chat-input-area">
+                <input type="text" id="messageInput" placeholder="Digite sua mensagem..." maxlength="500" />
+                <button class="send-message-button" id="sendMessageButton">Enviar</button>
+              </div>
+              <div class="chat-info">
+                <span>Custo: 1 sat por mensagem</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seção de Peers Conectados -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <h2>Peers Conectados</h2>
+      <div class="control-section">
+        <div class="peers-container" id="peersContainer">
+          <!-- Peers serão adicionados dinamicamente aqui -->
+          <div style="width: 100%; text-align: center; padding: 40px; color: #666; font-style: italic;">
+            Carregando peers...
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seção de Canais Lightning -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <h2>Canais Lightning</h2>
+      <div class="control-section">
+        <div class="channels-container" id="channelsContainer">
+          <!-- Canais serão adicionados dinamicamente aqui -->
+          <div style="width: 100%; text-align: center; padding: 40px; color: #666; font-style: italic;">
+            Carregando canais...
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- FOOTER ORIGINAL -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="location">Build With Descentralized Proof of Work</p>
+      <p class="since">Since 2023</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

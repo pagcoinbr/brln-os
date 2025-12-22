@@ -156,6 +156,25 @@ setup_apache_web() {
   sudo cp -r /root/brln-os/pages/* /var/www/html/pages/ >> /dev/null 2>&1
   sudo cp /root/brln-os/main.html /var/www/html/index.html >> /dev/null 2>&1
 
+  # Copiar simple-lnwallet se existir
+  if [ -d "/root/brln-os/simple-lnwallet" ]; then
+    echo "📱 Copiando simple-lnwallet..."
+    sudo cp -r /root/brln-os/simple-lnwallet /var/www/html/ >> /dev/null 2>&1
+  fi
+
+  # Copiar favicon e outros assets estáticos
+  echo "📄 Copiando assets estáticos..."
+  if [ -f "/root/brln-os/favicon.ico" ]; then
+    sudo cp -f /root/brln-os/favicon.ico /var/www/html/ >> /dev/null 2>&1
+  fi
+  
+  # Copiar arquivos CSS, JS, imagens adicionais
+  for ext in css js png jpg jpeg gif svg webp; do
+    if ls /root/brln-os/*.$ext 1> /dev/null 2>&1; then
+      sudo cp -f /root/brln-os/*.$ext /var/www/html/ 2>/dev/null || true
+    fi
+  done
+
   # Ajustar permissões
   echo "🔑 Ajustando permissões dos arquivos..."
   sudo chown -R www-data:www-data /var/www/html/ >> /dev/null 2>&1
@@ -186,6 +205,115 @@ setup_apache_web() {
     sudo apache2ctl configtest
     exit 1
   fi
+}
+
+deploy_to_apache() {
+  echo -e "${YELLOW}🚀 BRLN-OS Deployment Script${NC}"
+  echo "=============================="
+
+  # Configuration
+  local SOURCE_DIR="/root/brln-os"
+  local APACHE_DIR="/var/www/html"
+  local BACKUP_DIR="/var/backups/brln-os-$(date +%Y%m%d-%H%M%S)"
+
+  # Check if running as root
+  if [[ $EUID -ne 0 ]]; then
+     echo -e "${RED}Este script deve ser executado como root${NC}"
+     return 1
+  fi
+
+  # Create backup of current Apache directory
+  echo -e "${YELLOW}💾 Criando backup...${NC}"
+  sudo mkdir -p "$BACKUP_DIR"
+  sudo cp -r "$APACHE_DIR"/* "$BACKUP_DIR" 2>/dev/null || true
+  echo -e "${GREEN}✅ Backup criado em: $BACKUP_DIR${NC}"
+
+  # Copy main files
+  echo -e "${YELLOW}📂 Copiando arquivos principais...${NC}"
+  sudo cp -f "$SOURCE_DIR/main.html" "$APACHE_DIR/index.html"
+
+  # Copy favicon and static assets
+  echo -e "${YELLOW}📄 Copiando assets estáticos...${NC}"
+  if [ -f "$SOURCE_DIR/favicon.ico" ]; then
+      sudo cp -f "$SOURCE_DIR/favicon.ico" "$APACHE_DIR/"
+  fi
+
+  # Copy pages directory
+  echo -e "${YELLOW}📁 Copiando diretório pages...${NC}"
+  sudo cp -r "$SOURCE_DIR/pages" "$APACHE_DIR/"
+
+  # Copy simple-lnwallet if exists
+  if [ -d "$SOURCE_DIR/simple-lnwallet" ]; then
+      echo -e "${YELLOW}📱 Copiando simple-lnwallet...${NC}"
+      sudo cp -r "$SOURCE_DIR/simple-lnwallet" "$APACHE_DIR/"
+  fi
+
+  # Copy any additional static assets (css, js, images in root)
+  echo -e "${YELLOW}🎨 Copiando assets adicionais...${NC}"
+  for ext in css js png jpg jpeg gif svg webp; do
+      if ls "$SOURCE_DIR"/*.$ext 1> /dev/null 2>&1; then
+          sudo cp -f "$SOURCE_DIR"/*.$ext "$APACHE_DIR/" 2>/dev/null || true
+      fi
+  done
+
+  # Set correct permissions
+  echo -e "${YELLOW}🔑 Definindo permissões...${NC}"
+  sudo chown -R www-data:www-data "$APACHE_DIR"
+  sudo chmod -R 755 "$APACHE_DIR"
+
+  # Enable required Apache modules
+  echo -e "${YELLOW}🔌 Verificando módulos Apache...${NC}"
+  sudo a2enmod rewrite proxy proxy_http headers 2>/dev/null
+
+  # Test Apache configuration
+  echo -e "${YELLOW}✅ Testando configuração Apache...${NC}"
+  if sudo apache2ctl configtest >> /dev/null 2>&1; then
+      echo -e "${GREEN}✅ Teste de configuração Apache passou${NC}"
+      
+      # Restart Apache
+      echo -e "${YELLOW}🔄 Reiniciando Apache...${NC}"
+      sudo systemctl restart apache2
+      
+      if sudo systemctl is-active --quiet apache2; then
+          echo -e "${GREEN}✅ Apache reiniciado com sucesso${NC}"
+      else
+          echo -e "${RED}❌ Falha ao reiniciar Apache${NC}"
+          return 1
+      fi
+  else
+      echo -e "${RED}❌ Teste de configuração Apache falhou${NC}"
+      sudo apache2ctl configtest
+      return 1
+  fi
+
+  # Check if services are running
+  echo -e "${YELLOW}🔍 Verificando serviços...${NC}"
+  local services=("lnd" "bitcoind" "simple-lnwallet" "thunderhub" "lnbits" "lndg")
+
+  for service in "${services[@]}"; do
+      if sudo systemctl is-enabled --quiet "$service" 2>/dev/null; then
+          if sudo systemctl is-active --quiet "$service"; then
+              echo -e "${GREEN}✓ $service está rodando${NC}"
+          else
+              echo -e "${YELLOW}⚠ $service está habilitado mas não rodando${NC}"
+              echo -e "${YELLOW}  Iniciando $service...${NC}"
+              sudo systemctl start "$service" 2>/dev/null || echo -e "${RED}  Falha ao iniciar $service${NC}"
+          fi
+      else
+          echo -e "${YELLOW}- $service não está habilitado${NC}"
+      fi
+  done
+
+  # Final status
+  echo ""
+  echo -e "${GREEN}🎉 Deployment concluído com sucesso!${NC}"
+  echo -e "${GREEN}🌐 Interface web disponível em: http://$ip_local${NC}"
+  echo -e "${YELLOW}💾 Backup armazenado em: $BACKUP_DIR${NC}"
+
+  # Show listening ports
+  echo ""
+  echo -e "${YELLOW}📊 Serviços e portas ativas:${NC}"
+  ss -tlnp | grep -E ':(80|3000|5000|8889|35671)\s' | awk '{print $4, $7}' | sort 2>/dev/null || true
 }
 
 gotty_do () {
@@ -276,6 +404,214 @@ terminal_web() {
   fi
 }
 
+setup_https_proxy() {
+  echo -e "${CYAN}🔒 Configurando proxy HTTPS com nginx...${NC}"
+  
+  # Instalar nginx se não estiver instalado
+  if ! command -v nginx &> /dev/null; then
+    echo "📦 Instalando nginx..."
+    sudo apt update >> /dev/null 2>&1
+    sudo apt install -y nginx >> /dev/null 2>&1 & spinner
+  else
+    echo "✅ nginx já está instalado."
+  fi
+  
+  # Criar diretório para certificados SSL
+  echo "🔐 Configurando certificados SSL..."
+  sudo mkdir -p /etc/nginx/ssl
+  
+  # Obter IP do servidor
+  SERVER_IP=$(hostname -I | awk '{print $1}')
+  
+  # Gerar certificado SSL auto-assinado
+  sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout /etc/nginx/ssl/brln-os.key \
+    -out /etc/nginx/ssl/brln-os.crt \
+    -subj "/C=BR/ST=Local/L=Local/O=BRLN-OS/OU=Development/CN=${SERVER_IP}" \
+    -extensions v3_req \
+    -config <(cat /etc/ssl/openssl.cnf <(printf "[v3_req]\nsubjectAltName=DNS:localhost,DNS:127.0.0.1,IP:${SERVER_IP}")) >> /dev/null 2>&1 & spinner
+  
+  # Criar configuração nginx para HTTPS proxy
+  echo "⚙️ Configurando nginx..."
+  sudo tee /etc/nginx/sites-available/brln-os-https > /dev/null << EOF
+server {
+    listen 0.0.0.0:8443 ssl http2;
+    listen [::]:8443 ssl http2;
+    server_name localhost 127.0.0.1 ${SERVER_IP};
+
+    # SSL Configuration
+    ssl_certificate /etc/nginx/ssl/brln-os.crt;
+    ssl_certificate_key /etc/nginx/ssl/brln-os.key;
+    
+    # Modern SSL configuration
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Proxy settings
+    proxy_buffering off;
+    proxy_set_header Host \$http_host;
+    proxy_set_header X-Real-IP \$remote_addr;
+    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto \$scheme;
+    proxy_set_header X-Forwarded-Host \$host;
+    proxy_set_header X-Forwarded-Port \$server_port;
+
+    # WebSocket support
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade \$http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    # Proxy all requests to Apache on port 80
+    location / {
+        proxy_pass http://127.0.0.1:80;
+        proxy_redirect http://127.0.0.1:80 https://\$host:8443;
+    }
+
+    # Specific proxy for API requests
+    location /api/ {
+        proxy_pass http://127.0.0.1:2121;
+        proxy_redirect off;
+    }
+
+    # Error and access logs
+    error_log /var/log/nginx/brln-os-https_error.log warn;
+    access_log /var/log/nginx/brln-os-https_access.log;
+}
+
+# Redirect HTTP to HTTPS (optional)
+server {
+    listen 0.0.0.0:8081;
+    listen [::]:8081;
+    server_name localhost 127.0.0.1 ${SERVER_IP};
+    return 301 https://\$host:8443\$request_uri;
+}
+EOF
+
+  # Desabilitar site padrão e ativar nosso site
+  sudo rm -f /etc/nginx/sites-enabled/default
+  sudo rm -f /etc/nginx/sites-enabled/brln-os
+  sudo rm -f /etc/nginx/sites-enabled/*.backup
+  sudo ln -sf /etc/nginx/sites-available/brln-os-https /etc/nginx/sites-enabled/
+  
+  # Testar configuração nginx
+  if sudo nginx -t >> /dev/null 2>&1; then
+    echo "✅ Configuração nginx válida"
+  else
+    echo -e "${RED}❌ Erro na configuração nginx${NC}"
+    return 1
+  fi
+  
+  # Configurar firewall para HTTPS
+  echo "🔥 Configurando firewall..."
+  if ! sudo ufw status | grep -q "8443/tcp"; then
+    sudo ufw allow 8443/tcp comment "nginx HTTPS proxy for BRLN-OS" >> /dev/null 2>&1
+  fi
+  if ! sudo ufw status | grep -q "8081/tcp"; then
+    sudo ufw allow 8081/tcp comment "nginx HTTP to HTTPS redirect" >> /dev/null 2>&1
+  fi
+  
+  # Habilitar e iniciar nginx
+  echo "🚀 Iniciando nginx..."
+  sudo systemctl enable nginx >> /dev/null 2>&1
+  sudo systemctl restart nginx >> /dev/null 2>&1 & spinner
+  
+  # Verificar se nginx está rodando
+  if sudo systemctl is-active --quiet nginx; then
+    echo -e "${GREEN}✅ Proxy HTTPS configurado com sucesso!${NC}"
+    echo -e "${GREEN}🌐 Acesse via HTTPS: https://${SERVER_IP}:8443${NC}"
+    echo -e "${YELLOW}📝 Nota: Aceite o certificado auto-assinado no navegador${NC}"
+    echo -e "${CYAN}🔄 Redirecionamento HTTP: http://${SERVER_IP}:8081 → HTTPS${NC}"
+  else
+    echo -e "${RED}❌ Erro ao iniciar nginx${NC}"
+    return 1
+  fi
+}
+
+setup_lightning_monitor() {
+  echo -e "${CYAN}⚡ Configurando monitor de Lightning keysends...${NC}"
+  
+  # Verificar se o arquivo lightning_monitor.py existe
+  if [[ ! -f "$REPO_DIR/api/v1/lightning_monitor.py" ]]; then
+    echo -e "${RED}❌ Arquivo lightning_monitor.py não encontrado em $REPO_DIR/api/v1/${NC}"
+    return 1
+  fi
+  
+  # Verificar se o serviço já está instalado
+  if [[ -f /etc/systemd/system/lightning-monitor.service ]]; then
+    echo "✅ Serviço lightning-monitor já está instalado."
+    
+    # Verificar se está rodando
+    if sudo systemctl is-active --quiet lightning-monitor; then
+      echo -e "${GREEN}✅ Lightning monitor já está rodando${NC}"
+      return 0
+    else
+      echo "🔄 Reiniciando lightning monitor..."
+      sudo systemctl start lightning-monitor >> /dev/null 2>&1 & spinner
+    fi
+  else
+    # Instalar o serviço
+    echo "📝 Instalando serviço systemd..."
+    
+    # Copiar arquivo de serviço se existir no repositório
+    if [[ -f "$REPO_DIR/services/lightning-monitor.service" ]]; then
+      sudo cp "$REPO_DIR/services/lightning-monitor.service" /etc/systemd/system/
+    else
+      # Criar arquivo de serviço
+      sudo tee /etc/systemd/system/lightning-monitor.service > /dev/null << EOF
+[Unit]
+Description=Lightning Chat Monitor - BRLN-OS
+After=lnd.service
+Requires=lnd.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=$REPO_DIR/api/v1
+ExecStart=/usr/bin/python3 $REPO_DIR/api/v1/lightning_monitor.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Variáveis de ambiente
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+    
+    # Recarregar systemd e ativar serviço
+    echo "🔄 Ativando serviço..."
+    sudo systemctl daemon-reload >> /dev/null 2>&1
+    sudo systemctl enable lightning-monitor >> /dev/null 2>&1
+    sudo systemctl start lightning-monitor >> /dev/null 2>&1 & spinner
+  fi
+  
+  # Verificar se está rodando
+  if sudo systemctl is-active --quiet lightning-monitor; then
+    echo -e "${GREEN}✅ Lightning monitor configurado e rodando!${NC}"
+    echo -e "${CYAN}📊 Monitor detectará keysends e mensagens Lightning automaticamente${NC}"
+    echo -e "${YELLOW}📝 Logs: journalctl -u lightning-monitor -f${NC}"
+  else
+    echo -e "${RED}❌ Erro ao iniciar lightning monitor${NC}"
+    echo "Verifique os logs: journalctl -u lightning-monitor -n 20"
+    return 1
+  fi
+}
+
 create_main_dir() {
   sudo mkdir /data
   sudo chown admin:admin /data
@@ -286,6 +622,34 @@ configure_ufw() {
   sudo ufw logging off
   sudo ufw allow from $subnet to any port 22 proto tcp comment 'allow SSH from local network'
   sudo ufw --force enable
+}
+
+close_ports_except_ssh() {
+  echo -e "${YELLOW}🔒 Fechando todas as portas UFW exceto SSH...${NC}"
+  echo "Isso fechará todas as portas exceto SSH (porta 22)"
+
+  # Reset UFW to clear all existing rules
+  echo "🔄 Resetando UFW..."
+  sudo ufw --force reset >> /dev/null 2>&1
+
+  # Set default policies
+  echo "📋 Definindo políticas padrão..."
+  sudo ufw default deny incoming >> /dev/null 2>&1
+  sudo ufw default allow outgoing >> /dev/null 2>&1
+
+  # Allow SSH (port 22) - critical to maintain access
+  echo "🔑 Permitindo SSH (porta 22)..."
+  sudo ufw allow 22/tcp comment 'SSH access both directions' >> /dev/null 2>&1
+
+  # Enable UFW
+  echo "✅ Habilitando UFW..."
+  sudo ufw --force enable >> /dev/null 2>&1
+
+  # Show final status
+  echo -e "${GREEN}✅ Configuração UFW concluída!${NC}"
+  echo -e "${YELLOW}📊 Status atual:${NC}"
+  sudo ufw status verbose
+  echo -e "${GREEN}Apenas SSH (porta 22) está aberto para conexões de entrada.${NC}"
 }
 
 install_tor() {
@@ -1372,6 +1736,8 @@ submenu_opcoes() {
   echo -e "   ${GREEN}4${NC}- 🔧 Ativar o Bos Telegram no boot do sistema."
   echo -e "   ${GREEN}5${NC}- 🔄 Atualizar interface gráfica."
   echo -e "   ${GREEN}6${NC}- 🌐 Configurar servidor Apache (alternativa ao Next.js)."
+  echo -e "   ${GREEN}7${NC}- 🔒 Configurar proxy HTTPS (nginx) para acesso seguro."
+  echo -e "   ${GREEN}8${NC}- ⚡ Configurar monitor Lightning para chat/keysends."
   echo -e "   ${RED}0${NC}- Voltar ao menu principal"
   echo
 
@@ -1416,6 +1782,35 @@ submenu_opcoes() {
       setup_apache_web
       echo -e "\033[43m\033[30m ✅ Apache configurado com sucesso! \033[0m"
       echo -e "${YELLOW}🌐 Acesse: http://$ip_local${NC}"
+      submenu_opcoes
+      ;;
+    7)
+      echo -e "${YELLOW}🔒 Configurando proxy HTTPS...${NC}"
+      app="HTTPS Nginx Proxy"
+      sudo -v
+      ip_finder
+      echo -e "${CYAN}🚀 Configurando nginx como proxy HTTPS...${NC}"
+      if setup_https_proxy; then
+        echo -e "\033[43m\033[30m ✅ Proxy HTTPS configurado com sucesso! \033[0m"
+        echo -e "${GREEN}🌐 Acesse via HTTPS: https://$ip_local:8443${NC}"
+        echo -e "${CYAN}🔄 Redirecionamento HTTP: http://$ip_local:8081${NC}"
+        echo -e "${YELLOW}📝 Nota: Aceite o certificado auto-assinado no navegador${NC}"
+      else
+        echo -e "${RED}❌ Erro ao configurar proxy HTTPS${NC}"
+      fi
+      submenu_opcoes
+      ;;
+    8)
+      echo -e "${YELLOW}⚡ Configurando monitor Lightning...${NC}"
+      app="Lightning Monitor"
+      sudo -v
+      echo -e "${CYAN}🚀 Configurando monitor para keysends Lightning...${NC}"
+      if setup_lightning_monitor; then
+        echo -e "\033[43m\033[30m ✅ Monitor Lightning configurado com sucesso! \033[0m"
+        echo -e "${GREEN}⚡ Monitor detectará automaticamente keysends e mensagens${NC}"
+      else
+        echo -e "${RED}❌ Erro ao configurar monitor Lightning${NC}"
+      fi
       submenu_opcoes
       ;;
     0)
