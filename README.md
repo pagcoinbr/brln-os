@@ -1,6 +1,8 @@
-# BRLN-OS v1.0 – Bitcoin Lightning Node OS
+# BRLN-OS v2.0 – Bitcoin Lightning Node OS
 
 BRLN-OS é uma distribuição voltada a transformar qualquer servidor Ubuntu em um nó Bitcoin + Lightning completo, com foco em soberania individual, privacidade financeira e usabilidade para o público brasileiro.
+
+<img width="1541" height="915" alt="image" src="https://github.com/user-attachments/assets/530a8642-38b6-4f77-85c9-1f53ced2aa7a" />
 
 Ele automatiza a instalação, configuração e integração de Bitcoin Core, LND e um conjunto de ferramentas Lightning e de monitoramento, expondo tudo através de uma interface web própria e serviços locais, sem depender de terceiros.
 
@@ -35,6 +37,9 @@ No alto nível, o BRLN-OS provê:
 - **Terminal web (Gotty)** para acesso ao shell via navegador, se habilitado.
 - **Serviços gerenciados por systemd**, com arquivos de unidade em `services/`.
 
+  
+<img width="1487" height="912" alt="image" src="https://github.com/user-attachments/assets/b1c1eb9b-49b4-40bb-864f-aab7b89d97d2" />
+
 Tudo é pensado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a necessidade de abrir portas diretamente para a Internet.
 
 ---
@@ -55,6 +60,9 @@ Tudo é pensado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a neces
   - Integração via gRPC com a API BRLN (ver `api/v1/`).
 
 ### 3.2 Aplicações Lightning
+
+<img width="1463" height="908" alt="image" src="https://github.com/user-attachments/assets/e231791c-67d4-4f33-a85f-9fab1848a5c7" />
+
 
 Instaladas e gerenciadas por `scripts/lightning.sh` e menu interativo em `scripts/menu.sh`:
 
@@ -102,6 +110,9 @@ Instaladas e gerenciadas por `scripts/lightning.sh` e menu interativo em `script
 ---
 
 ## 4. Requisitos
+
+<img width="1513" height="912" alt="image" src="https://github.com/user-attachments/assets/e5300d16-a11a-40e0-bf3e-3674ef21e1d0" />
+
 
 ### 4.1 Sistema operacional
 
@@ -378,6 +389,9 @@ Recomenda-se estudar a documentação oficial de cada projeto para entender limi
 ---
 
 ## 12. Contato e contribuição
+
+<img width="842" height="332" alt="image" src="https://github.com/user-attachments/assets/9a7369ec-438d-40ea-bf91-41dc717d9d96" />
+
 
 - Telegram: https://t.me/pagcoinbr
 - E-mail: suporte.brln@gmail.com | suporte@pagcoin.org
