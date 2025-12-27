@@ -1,4 +1,4 @@
-# BRLN-OS v2.0 – Bitcoin Lightning Node OS
+# BRLN-OS v2.0 – Bitcoin Multi-Node OS
 
 BRLN-OS é uma distribuição voltada a transformar qualquer servidor Ubuntu em um nó Bitcoin + Lightning completo, com foco em soberania individual, privacidade financeira e usabilidade para o público brasileiro.
 

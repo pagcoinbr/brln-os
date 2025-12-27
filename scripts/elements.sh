@@ -4,8 +4,8 @@
 # Based on: https://brlnbtc.substack.com/p/elements-peerswap-e-psweb-guia-pratico
 
 # Source required configurations
-source "$(dirname "$0")/config.sh"
-source "$(dirname "$0")/utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
 # Elements version
 ELEMENTS_VERSION="23.2.1"

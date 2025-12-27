@@ -3,8 +3,8 @@
 # BRLN-OS PeerSwap Configuration and Management
 
 # Source required configurations
-source "$(dirname "$0")/config.sh"
-source "$(dirname "$0")/utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
 # PeerSwap versions
 PEERSWAP_VERSION="4.0"

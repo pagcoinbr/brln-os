@@ -259,4 +259,3 @@ EOF
   echo -e "${GREEN}✅ SSL configurado com sucesso!${NC}"
   echo -e "${YELLOW}🔐 Interface SSL disponível em: https://$ip_local${NC}"
 }
-}

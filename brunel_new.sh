@@ -29,21 +29,6 @@ source "$SCRIPTS_DIR/peerswap.sh"
 source "$SCRIPTS_DIR/system.sh"
 source "$SCRIPTS_DIR/menu.sh"
 
-# Display banner
-show_banner() {
-    clear
-    echo -e "${CYAN}"
-    echo "╔══════════════════════════════════════════════════════════════════════╗"
-    echo "║                          🇧🇷 BRLN-OS 🇧🇷                          ║"
-    echo "║                      Bitcoin Lightning Node OS                       ║"
-    echo "║                        Version: $SCRIPT_VERSION                        ║"
-    echo "║                                                                      ║"
-    echo "║               Modularized Bitcoin & Lightning Stack                  ║"
-    echo "╚══════════════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
-    echo ""
-}
-
 # Main function
 main() {
     # Show banner
@@ -59,7 +44,7 @@ main() {
             menu
             ;;
         "install")
-            echo -e "${GREEN}🚀 Instalação rápida...${NC}"
+            echo -e "${GREEN}Iniciando instalação...${NC}"
             submenu_opcoes
             ;;
         "help"|"--help"|"-h")
