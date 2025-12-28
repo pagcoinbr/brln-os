@@ -1,5 +1,20 @@
 #!/usr/bin/env python3
 
+# Environment Virtual Check for BRLN-Tools
+import sys
+import os
+
+# Ensure we're using the correct virtual environment
+EXPECTED_VENV = "/root/brln-os-envs/brln-tools"
+if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+    current_venv = sys.prefix
+    if current_venv != EXPECTED_VENV:
+        print(f"Warning: Expected venv {EXPECTED_VENV}, but using {current_venv}")
+        print("Run: source /root/brln-os-envs/brln-tools/bin/activate")
+else:
+    print("Warning: Not running in a virtual environment!")
+    print("Run: bash /root/brln-os/scripts/setup-tools-env.sh")
+
 import requests
 import subprocess
 import logging

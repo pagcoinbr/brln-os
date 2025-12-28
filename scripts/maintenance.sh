@@ -115,6 +115,10 @@ install_and_configure_apache_complete() {
     if [[ -f "$MAINTENANCE_SCRIPT_DIR/apache.sh" ]]; then
         source "$MAINTENANCE_SCRIPT_DIR/apache.sh"
         configure_ssl_complete
+        
+        # Update network configuration for localhost and Tailscale only
+        echo -e "${BLUE}🌐 Configurando acesso local...${NC}"
+        update_apache_network_config
     else
         echo -e "${RED}❌ Arquivo apache.sh não encontrado em $MAINTENANCE_SCRIPT_DIR${NC}"
         return 1

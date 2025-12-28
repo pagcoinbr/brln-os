@@ -4,12 +4,13 @@ After=network.target lnd.service
 
 [Service]
 Type=simple
-User=admin
-WorkingDirectory=/home/admin/brln-api
-ExecStart=/home/admin/envflask/bin/python3 /home/admin/brln-api/app.py
+User=root
+WorkingDirectory=/root/brln-os/api/v1
+ExecStartPre=/bin/bash /root/brln-os/scripts/setup-api-env.sh
+ExecStart=/root/brln-os-envs/api-v1/bin/python3 /root/brln-os/api/v1/app.py
 Restart=always
 RestartSec=10
-Environment=PYTHONPATH=/home/admin/brln-api
+Environment=PYTHONPATH=/root/brln-os/api/v1
 
 # Segurança
 NoNewPrivileges=true

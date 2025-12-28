@@ -151,6 +151,116 @@
           grid-template-columns: 1fr;
         }
       }
+
+      /* Estilos para o botão Terminal Web */
+      .terminal-web-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7f7f7;
+        border: 2px solid black;
+        border-radius: 12px;
+        min-height: 60px;
+        text-align: center;
+        cursor: pointer;
+        box-shadow: 8px 8px 0px 0px #444;
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: bold;
+        color: black;
+        transition: all 0.2s ease;
+        margin: 20px auto;
+        max-width: 300px;
+        padding: 15px 30px;
+      }
+
+      .terminal-web-btn:hover {
+        background-color: #333;
+        color: #fff;
+        box-shadow: 4px 4px 0px 0px #000;
+        transform: translate(2px, 2px);
+      }
+
+      .terminal-web-btn:active {
+        background-color: #111;
+        box-shadow: none;
+        transform: translate(8px, 8px);
+      }
+
+      /* Estilos para o modal do terminal */
+      .terminal-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+      }
+
+      .terminal-modal-content {
+        position: relative;
+        background-color: #1e1e1e;
+        margin: 2% auto;
+        width: 95%;
+        height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .terminal-modal-header {
+        background-color: #2d2d2d;
+        padding: 10px 20px;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+      }
+
+      .terminal-modal-title {
+        color: #fff;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .terminal-close {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .terminal-close:hover {
+        background-color: #c0392b;
+      }
+
+      .terminal-iframe {
+        flex: 1;
+        border: none;
+        border-radius: 0 0 8px 8px;
+        background-color: #000;
+      }
+
+      @media (max-width: 768px) {
+        .terminal-modal-content {
+          margin: 1% auto;
+          width: 98%;
+          height: 95%;
+        }
+      }
     </style>
   </head>
 <body>
@@ -251,8 +361,23 @@
               <input type="checkbox" id="tor-button" onchange="toggleService('tor')">
               <span class="slider"></span>
             </label>
-          </div>    
+          </div>
+
+          <div class="service-row">
+            <label for="gotty-fullauto-button">Terminal Web</label>
+            <label class="switch">
+              <input type="checkbox" id="gotty-fullauto-button" onchange="toggleService('gotty-fullauto')">
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
+
+      <!-- Botão Terminal Web -->
+      <div style="text-align: center; margin-top: 30px;">
+        <button class="terminal-web-btn">
+          🖥️ Terminal Web
+        </button>
+      </div>
 
       <h3 style="margin-top: 10px; text-align: center;">🙏 APOIE NOSSO PROJETO</h3>
       <p style="text-align: center;">Considere fazer uma doação que apoia o desenvolvimento de um mundo melhor.</p>
@@ -271,6 +396,17 @@
       <p class="since">Since 2023</p>
     </div>
   </footer>
+
+  <!-- Modal do Terminal -->
+  <div id="terminalModal" class="terminal-modal">
+    <div class="terminal-modal-content">
+      <div class="terminal-modal-header">
+        <span class="terminal-modal-title">🖥️ Terminal Web BRLN-OS</span>
+        <button class="terminal-close">&times;</button>
+      </div>
+      <iframe id="terminalIframe" class="terminal-iframe" src=""></iframe>
+    </div>
+  </div>
 
   <script src="js/main.js"></script>
 </body>

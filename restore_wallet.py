@@ -2,11 +2,25 @@
 """
 Script to restore LND and Elements wallets from the unified BRLN wallet
 """
+
+# Environment Virtual Check for Wallet Tools
+import sys
+import os
+
+# Ensure we're using the correct virtual environment
+EXPECTED_VENV = "/root/brln-os-envs/wallet-tools"
+if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+    current_venv = sys.prefix
+    if current_venv != EXPECTED_VENV:
+        print(f"Warning: Expected venv {EXPECTED_VENV}, but using {current_venv}")
+        print("Run: source /root/brln-os-envs/wallet-tools/bin/activate")
+else:
+    print("Warning: Not running in a virtual environment!")
+    print("Run: bash /root/brln-os/scripts/setup-wallet-env.sh")
+
 import sqlite3
 import getpass
 import subprocess
-import os
-import sys
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC

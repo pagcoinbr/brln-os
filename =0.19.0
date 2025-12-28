@@ -1,0 +1,2 @@
+Requirement already satisfied: ecdsa in /root/brln-os-envs/wallet-tools/lib/python3.12/site-packages (0.19.1)
+Requirement already satisfied: six>=1.9.0 in /root/brln-os-envs/wallet-tools/lib/python3.12/site-packages (from ecdsa) (1.17.0)

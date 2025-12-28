@@ -3,10 +3,10 @@ Description=Terminal Web para BRLN FullAuto
 After=network.target
 
 [Service]
-User=admin
-WorkingDirectory=/home/admin
+User=root
+WorkingDirectory=/root/brln-os/scripts
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/admin/brlnfullauto/brunel.sh
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /root/brln-os/scripts/menu.sh
 Restart=always
 
 [Install]

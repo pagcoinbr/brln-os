@@ -6,20 +6,80 @@ function abrirApp(porta) {
   window.open(url, '_blank');
 }
 
+// Função para abrir modal do terminal
+function openTerminalModal() {
+  const modal = document.getElementById('terminalModal');
+  const iframe = document.getElementById('terminalIframe');
+  const url = '/terminal/';
+  
+  // Definir a URL do iframe
+  iframe.src = url;
+  
+  // Mostrar o modal
+  modal.style.display = 'block';
+  
+  // Prevenir scroll do body
+  document.body.style.overflow = 'hidden';
+}
+
+// Função para fechar modal do terminal
+function closeTerminalModal() {
+  const modal = document.getElementById('terminalModal');
+  const iframe = document.getElementById('terminalIframe');
+  
+  // Esconder o modal
+  modal.style.display = 'none';
+  
+  // Limpar o iframe
+  iframe.src = '';
+  
+  // Restaurar scroll do body
+  document.body.style.overflow = 'auto';
+}
+
+// Make functions globally accessible
+window.openTerminalModal = openTerminalModal;
+window.closeTerminalModal = closeTerminalModal;
+
+// Fechar modal ao clicar fora dele
+window.onclick = function(event) {
+  const modal = document.getElementById('terminalModal');
+  if (event.target == modal) {
+    closeTerminalModal();
+  }
+}
+
+// Fechar modal com tecla ESC
+document.addEventListener('keydown', function(event) {
+  if (event.key === 'Escape') {
+    const modal = document.getElementById('terminalModal');
+    if (modal.style.display === 'block') {
+      closeTerminalModal();
+    }
+  }
+});
+
 // Toggle de serviços
 async function toggleService(serviceName) {
   const checkbox = document.getElementById(`${serviceName}-button`);
   
   try {
-    const response = await fetch('http://localhost:2121/api/v1/system/service', {
+    console.log(`Toggling service: ${serviceName}`);
+    const response = await fetch('/api/v1/system/service', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
+      credentials: 'same-origin',
       body: JSON.stringify({
         service: serviceName
       })
     });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     
     const data = await response.json();
     
@@ -45,8 +105,19 @@ async function toggleService(serviceName) {
 async function loadServicesStatus() {
   console.log('Carregando status dos serviços...');
   try {
-    const response = await fetch('http://localhost:2121/api/v1/system/services');
+    console.log('Fazendo fetch para: https://brln-os.pagcoin.org/api/v1/system/services');
+    const response = await fetch('https://brln-os.pagcoin.org/api/v1/system/services', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
     console.log('Resposta da API services:', response.status);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     console.log('Dados dos serviços:', data);
     
@@ -69,7 +140,18 @@ async function loadServicesStatus() {
 // Carregar status do sistema
 async function loadSystemStatus() {
   try {
-    const response = await fetch('http://localhost:2121/api/v1/system/status');
+    console.log('Fazendo fetch para: https://brln-os.pagcoin.org/api/v1/system/status');
+    const response = await fetch('https://brln-os.pagcoin.org/api/v1/system/status', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const data = await response.json();
     
     // Atualizar CPU
@@ -128,4 +210,19 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Atualizar status dos serviços a cada 5 segundos
   setInterval(loadServicesStatus, 5000);
+  
+  // Add click handler for terminal web button
+  const terminalBtn = document.querySelector('.terminal-web-btn');
+  if (terminalBtn) {
+    terminalBtn.addEventListener('click', openTerminalModal);
+  }
+  
+  // Add click handler for close button
+  const closeBtn = document.querySelector('.terminal-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeTerminalModal);
+  }
 });
+
+// Debug log to verify script loading
+console.log('BRLN-OS Config script loaded successfully');

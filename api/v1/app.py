@@ -65,11 +65,25 @@ Advanced Lightning Features:
 - POST /api/v1/lightning/backup        - Backup do channel.backup
 """
 
+# Environment Virtual Check
+import sys
+import os
+
+# Ensure we're using the correct virtual environment
+EXPECTED_VENV = "/root/brln-os-envs/api-v1"
+if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+    current_venv = sys.prefix
+    if current_venv != EXPECTED_VENV:
+        print(f"Warning: Expected venv {EXPECTED_VENV}, but using {current_venv}")
+        print("Run: source /root/brln-os-envs/api-v1/bin/activate")
+else:
+    print("Warning: Not running in a virtual environment!")
+    print("Run: bash /root/brln-os/scripts/setup-api-env.sh")
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import subprocess
 import psutil
-import os
 import uuid
 import requests
 import json
@@ -1863,7 +1877,8 @@ SERVICE_MAPPING = {
     'bitcoind': 'bitcoind.service',
     'elementsd': 'elementsd.service',
     'bos-telegram': 'bos-telegram.service',
-    'tor': 'tor@default.service'
+    'tor': 'tor@default.service',
+    'gotty-fullauto': 'gotty-fullauto.service'
 }
 
 def run_command(command):

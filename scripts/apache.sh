@@ -4,6 +4,59 @@
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
+# Get dynamic Tailscale IP
+get_tailscale_ip() {
+  # Try to get Tailscale IP from interface
+  local tailscale_ip=$(ip addr show tailscale0 2>/dev/null | grep -oP 'inet \K[^/]+' | head -1)
+  if [[ -n "$tailscale_ip" && "$tailscale_ip" != "127.0.0.1" ]]; then
+    echo "$tailscale_ip"
+  else
+    # Fallback: try to get from tailscale status
+    local ts_ip=$(tailscale ip -4 2>/dev/null || echo "")
+    if [[ -n "$ts_ip" && "$ts_ip" != "127.0.0.1" ]]; then
+      echo "$ts_ip"
+    fi
+  fi
+}
+
+# Configure Apache ports for localhost and Tailscale only
+configure_apache_local_ports() {
+  local tailscale_ip=$(get_tailscale_ip)
+  
+  echo "🌐 Configurando Apache para acesso local apenas..."
+  echo "   • Localhost: 127.0.0.1"
+  if [[ -n "$tailscale_ip" ]]; then
+    echo "   • Tailscale: $tailscale_ip"
+  fi
+  
+  # Update ports.conf to listen only on localhost and Tailscale
+  sudo tee /etc/apache2/ports.conf > /dev/null << EOF
+# Apache ports configuration - Local access only
+# Generated automatically by BRLN-OS
+
+# Port 80 disabled to avoid conflict with Docker
+# Listen 80
+
+<IfModule mod_ssl.c>
+    # Listen on localhost IPv4 and IPv6
+    Listen 127.0.0.1:443
+    Listen [::1]:443
+    
+    # Listen on Tailscale IP if available
+$(if [[ -n "$tailscale_ip" ]]; then echo "    Listen $tailscale_ip:443"; fi)
+</IfModule>
+
+<IfModule mod_gnutls.c>
+    # Listen on localhost IPv4 and IPv6  
+    Listen 127.0.0.1:443
+    Listen [::1]:443
+    
+    # Listen on Tailscale IP if available
+$(if [[ -n "$tailscale_ip" ]]; then echo "    Listen $tailscale_ip:443"; fi)
+</IfModule>
+EOF
+}
+
 setup_apache_web() {
   echo -e "${GREEN}🌐 Configurando servidor web Apache...${NC}"
 
@@ -160,6 +213,9 @@ setup_https_proxy() {
 setup_ssl_proxy_config() {
   echo "⚙️ Configurando proxy SSL com API para BRLN-OS..."
   
+  # Configure Apache for local access only
+  configure_apache_local_ports
+  
   # Verificar e habilitar módulos necessários
   echo "🔌 Verificando módulos Apache..."
   sudo a2enmod ssl >> /dev/null 2>&1
@@ -213,6 +269,19 @@ setup_ssl_proxy_config() {
     # Additional proxy for potential services
     ProxyPass /lightning/ http://localhost:5000/
     ProxyPassReverse /lightning/ http://localhost:5000/
+
+    # Terminal Web Proxy - Gotty on port 3131
+    <Location "/terminal/">
+        ProxyPass http://localhost:3131/
+        ProxyPassReverse http://localhost:3131/
+        Header always unset X-Frame-Options
+        Header always set X-Frame-Options "SAMEORIGIN"
+    </Location>
+    
+    # WebSocket support for terminal
+    RewriteCond %{HTTP:UPGRADE} websocket [NC]
+    RewriteCond %{HTTP:CONNECTION} upgrade [NC]
+    RewriteRule ^/terminal/(.*) "ws://localhost:3131/\$1" [P,L]
 
     # Error and Access Logs
     ErrorLog \${APACHE_LOG_DIR}/brln_error.log
@@ -520,4 +589,53 @@ apache_maintenance() {
     echo -e "${RED}❌ Erro na manutenção - Apache não está rodando${NC}"
     return 1
   fi
+}
+
+# Update Apache configuration for current network setup
+update_apache_network_config() {
+  echo -e "${GREEN}🔄 Atualizando configuração de rede do Apache...${NC}"
+  
+  local current_tailscale_ip=$(get_tailscale_ip)
+  
+  if [[ -n "$current_tailscale_ip" ]]; then
+    echo "🌐 IP Tailscale atual: $current_tailscale_ip"
+  else
+    echo "⚠️ Tailscale não detectado, configurando apenas localhost"
+  fi
+  
+  # Reconfigure ports
+  configure_apache_local_ports
+  
+  # Test Apache configuration
+  if sudo apache2ctl configtest >> /dev/null 2>&1; then
+    echo "✅ Configuração Apache válida"
+    sudo systemctl reload apache2
+    echo "✅ Apache recarregado com nova configuração de rede"
+  else
+    echo -e "${RED}❌ Erro na configuração Apache${NC}"
+    sudo apache2ctl configtest
+    return 1
+  fi
+}
+
+# Show current Apache network configuration
+show_apache_network_status() {
+  echo -e "${BLUE}📊 Status da configuração de rede Apache:${NC}"
+  
+  local tailscale_ip=$(get_tailscale_ip)
+  
+  echo "🌐 IPs configurados:"
+  echo "   • Localhost: 127.0.0.1:443"
+  echo "   • IPv6 Local: [::1]:443"
+  
+  if [[ -n "$tailscale_ip" ]]; then
+    echo "   • Tailscale: $tailscale_ip:443"
+    echo "✅ Tailscale ativo"
+  else
+    echo "❌ Tailscale não detectado"
+  fi
+  
+  echo ""
+  echo "🔍 Portas Apache ativas:"
+  sudo netstat -tlnp 2>/dev/null | grep apache2 | grep :443 || echo "❌ Apache não está ouvindo na porta 443"
 }
