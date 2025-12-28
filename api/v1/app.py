@@ -4489,7 +4489,7 @@ def integrate_system_wallet():
         try:
             import sys
             import threading
-            sys.path.append('/root/brln-os')
+            sys.path.append('/root/brln-os/scripts')
             from auto_wallet_integration import auto_integrate_wallet, check_integration_dependencies
             
             # Check dependencies

@@ -10,6 +10,7 @@ This script demonstrates how to:
 4. Verify the integration works
 
 Usage:
+    cd /root/brln-os/scripts
     python3 integrate_wallets.py --wallet-id <wallet_id> --password <password>
 """
 
