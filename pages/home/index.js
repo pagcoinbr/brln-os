@@ -593,15 +593,346 @@ function updateDigitalClock() {
 }
 
 // ============================================
+// WALLET STATUS CHECKER
+// ============================================
+class WalletStatusChecker {
+  constructor() {
+    this.apiBase = '/api/v1';
+  }
+
+  /**
+   * Check if there's a system default wallet configured
+   */
+  async checkSystemWallet() {
+    try {
+      const response = await fetch(`${this.apiBase}/wallet/system-default`);
+      const data = await response.json();
+      
+      if (response.ok && data.status === 'success') {
+        console.log('System wallet found:', data.wallet_id);
+        return {
+          hasWallet: true,
+          walletId: data.wallet_id,
+          metadata: data.metadata
+        };
+      } else {
+        console.log('No system wallet configured');
+        return {
+          hasWallet: false,
+          error: data.error
+        };
+      }
+    } catch (error) {
+      console.error('Error checking wallet status:', error);
+      return {
+        hasWallet: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Check LND wallet status
+   */
+  async checkLNDStatus() {
+    try {
+      const response = await fetch(`${this.apiBase}/lnd/info`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        return {
+          isUnlocked: true,
+          nodeInfo: data
+        };
+      } else {
+        return {
+          isUnlocked: false,
+          error: data.error
+        };
+      }
+    } catch (error) {
+      console.error('LND status check failed:', error);
+      return {
+        isUnlocked: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Initialize wallet on system startup
+   */
+  async initializeSystemWallet(walletId) {
+    try {
+      console.log(`Initializing system wallet: ${walletId}`);
+      
+      // Check if main.html is already handling wallet initialization
+      if (window.walletInitializationInProgress) {
+        console.log('Wallet initialization already in progress from main.html, skipping...');
+        return {
+          success: true,
+          message: 'Wallet initialization handled by main.html'
+        };
+      }
+      
+      // Set flag to prevent duplicate initialization
+      window.walletInitializationInProgress = true;
+      
+      // First try to load the wallet without password (for unencrypted wallets)
+      const loadResponse = await fetch(`${this.apiBase}/wallet/load`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          wallet_id: walletId,
+          password: ''
+        })
+      });
+      
+      const loadData = await loadResponse.json();
+      
+      if (loadResponse.ok) {
+        console.log('System wallet loaded successfully');
+        
+        // Try to integrate with LND if not already done
+        await this.integrateWithLND(walletId);
+        
+        return {
+          success: true,
+          message: 'Wallet initialized successfully'
+        };
+      } else if (loadResponse.status === 401 && loadData.error && loadData.error.includes('Invalid password')) {
+        // Wallet is encrypted, use the existing password prompt from main.html
+        console.log('Wallet is encrypted, using existing password prompt...');
+        
+        // Check if window.mainWalletManager exists (from main.html)
+        if (window.mainWalletManager && typeof window.mainWalletManager.promptForPassword === 'function') {
+          try {
+            const password = await window.mainWalletManager.promptForPassword(walletId, 1);
+            
+            // Try loading with the password
+            const retryResponse = await fetch(`${this.apiBase}/wallet/load`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                wallet_id: walletId,
+                password: password
+              })
+            });
+            
+            const retryData = await retryResponse.json();
+            
+            if (retryResponse.ok) {
+              console.log('System wallet loaded successfully with password');
+              await this.integrateWithLND(walletId);
+              return {
+                success: true,
+                message: 'Wallet initialized successfully with password'
+              };
+            } else {
+              return {
+                success: false,
+                error: retryData.error
+              };
+            }
+          } catch (error) {
+            return {
+              success: false,
+              error: error.message
+            };
+          }
+        } else {
+          // If main.html modal not available, just return error - no fallback modal
+          console.log('Password prompt not available, wallet is encrypted but main.html not loaded yet');
+          return {
+            success: false,
+            error: 'Wallet is encrypted - please wait for page to fully load'
+          };
+        }
+      } else {
+        console.error('Failed to load wallet:', loadData.error);
+        return {
+          success: false,
+          error: loadData.error
+        };
+      }
+    } catch (error) {
+      console.error('Wallet initialization failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Integrate wallet with LND
+   */
+  async integrateWithLND(walletId) {
+    try {
+      const response = await fetch(`${this.apiBase}/wallet/integrate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          wallet_id: walletId,
+          integration_type: 'lnd_auto'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('LND integration successful');
+        return true;
+      } else {
+        console.log('LND integration skipped or failed:', data.error);
+        return false;
+      }
+    } catch (error) {
+      console.log('LND integration error:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Redirect to wallet creation page
+   */
+  redirectToWalletCreation() {
+    console.log('Redirecting to wallet creation page...');
+    window.location.href = '../components/wallet/wallet.html';
+  }
+
+  /**
+   * Show wallet status in UI
+   */
+  showWalletStatus(status) {
+    // Create a temporary status indicator
+    const statusDiv = document.createElement('div');
+    statusDiv.id = 'wallet-status';
+    statusDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${status.success ? '#28a745' : '#dc3545'};
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      z-index: 1000;
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    `;
+    statusDiv.textContent = status.message || (status.success ? 'Sistema Wallet Ativo' : 'Erro no Sistema Wallet');
+    
+    document.body.appendChild(statusDiv);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+      if (statusDiv.parentNode) {
+        statusDiv.parentNode.removeChild(statusDiv);
+      }
+    }, 5000);
+  }
+}
+
+// ============================================
 // INITIALIZE APP ON DOM READY
 // ============================================
-document.addEventListener("DOMContentLoaded", () => {
-  // Initialize digital clock
-  updateDigitalClock();
-  setInterval(updateDigitalClock, 1000);
+document.addEventListener("DOMContentLoaded", async () => {
+  // Check if we're in an iframe and if parent is handling wallet initialization
+  const isInIframe = window !== window.top;
   
-  // Create and initialize the application
-  window.pagCoinApp = new PagCoinApp();
+  if (isInIframe) {
+    // We're in an iframe - let the parent handle wallet initialization
+    console.log('Running in iframe - letting parent handle wallet initialization');
+    
+    // Initialize only the non-wallet parts of the app
+    const priceFetcher = new BitcoinPriceFetcher();
+    const blockFetcher = new BlockchainDataFetcher();
+
+    // Start periodic updates
+    priceFetcher.updatePriceDisplay();
+    setInterval(() => priceFetcher.updatePriceDisplay(), CONFIG.PRICE_REFRESH_INTERVAL);
+    
+    blockFetcher.updateBlockDisplay();
+    setInterval(() => blockFetcher.updateBlockDisplay(), CONFIG.BLOCK_REFRESH_INTERVAL);
+
+    // Initialize digital clock
+    setInterval(updateDigitalClock, 1000);
+    updateDigitalClock();
+
+    console.log('PagCoin Application initialized successfully');
+    return;
+  }
+
+  // Only initialize wallet system if we're not in an iframe
+  // Initialize wallet status checker
+  const walletChecker = new WalletStatusChecker();
+  
+  // Check wallet configuration
+  console.log('Checking system wallet configuration...');
+  const walletStatus = await walletChecker.checkSystemWallet();
+  
+  if (walletStatus.hasWallet) {
+    // Found a default wallet - initialize it
+    console.log(`Found system wallet: ${walletStatus.walletId}`);
+    
+    // Show loading indicator
+    walletChecker.showWalletStatus({
+      success: true,
+      message: `Inicializando wallet ${walletStatus.walletId}...`
+    });
+    
+    // Initialize the system wallet
+    const initResult = await walletChecker.initializeSystemWallet(walletStatus.walletId);
+    
+    if (initResult.success) {
+      walletChecker.showWalletStatus({
+        success: true,
+        message: 'Sistema wallet ativo'
+      });
+    } else {
+      walletChecker.showWalletStatus({
+        success: false,
+        message: 'Erro ao inicializar wallet'
+      });
+      console.error('Wallet initialization failed:', initResult.error);
+    }
+    
+    // Continue with normal app initialization
+    updateDigitalClock();
+    setInterval(updateDigitalClock, 1000);
+    window.pagCoinApp = new PagCoinApp();
+    
+  } else {
+    // No default wallet found - redirect to wallet creation
+    console.log('No system wallet configured, redirecting to wallet creation...');
+    
+    walletChecker.showWalletStatus({
+      success: false,
+      message: 'Configuração de wallet necessária - redirecionando...'
+    });
+    
+    // Wait a moment for user to see the message, then redirect
+    setTimeout(() => {
+      walletChecker.redirectToWalletCreation();
+    }, 2000);
+  }
+
+  // Initialize all other app components for standalone mode
+  const priceFetcher = new BitcoinPriceFetcher();
+  const blockFetcher = new BlockchainDataFetcher();
+  
+  priceFetcher.updatePriceDisplay();
+  setInterval(() => priceFetcher.updatePriceDisplay(), CONFIG.PRICE_REFRESH_INTERVAL);
+  
+  blockFetcher.updateBlockDisplay();
+  setInterval(() => blockFetcher.updateBlockDisplay(), CONFIG.BLOCK_REFRESH_INTERVAL);
 });
 
 // ============================================

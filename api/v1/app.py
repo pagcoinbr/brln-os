@@ -70,14 +70,13 @@ from flask_cors import CORS
 import subprocess
 import psutil
 import os
-from datetime import datetime
 import uuid
 import requests
 import json
 from pathlib import Path
 import grpc
 import codecs
-import datetime
+from datetime import datetime
 import hashlib
 from concurrent import futures
 import time
@@ -246,6 +245,14 @@ class WalletManager:
         if cursor.fetchone()[0] == 0:
             cursor.execute('ALTER TABLE wallets ADD COLUMN encrypted_private_keys BLOB')
             print("Added encrypted_private_keys column to existing wallets table")
+        
+        # Add is_system_default column if it doesn't exist
+        cursor.execute('''
+            SELECT COUNT(*) as CNTREC FROM pragma_table_info('wallets') WHERE name='is_system_default'
+        ''')
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('ALTER TABLE wallets ADD COLUMN is_system_default BOOLEAN DEFAULT FALSE')
+            print("Added is_system_default column to existing wallets table")
         
         # Tabela para cache de endereços derivados
         cursor.execute('''
@@ -499,7 +506,7 @@ class WalletManager:
                     
                 except Exception as e:
                     private_keys[chain_id] = {
-                        'error': f"Failed to derive private key for {chain_id}: {str(e)}",
+                        'error': f"Failed to derive {chain_id}: {str(e)}",
                         'path': chain_config['path'],
                         'chain': chain_config['name'],
                         'symbol': chain_config['symbol']
@@ -509,6 +516,96 @@ class WalletManager:
             
         except Exception as e:
             return {}, f"Error deriving private keys: {str(e)}"
+    
+    def bip39_to_extended_master_key(self, seed_phrase, passphrase="", network="mainnet"):
+        """Converte BIP39 seed para extended master root key (xprv/tprv) para LND"""
+        if not HAS_WALLET_LIBS:
+            return None, "Wallet libraries not available"
+        
+        try:
+            import base58
+            
+            # Gerar seed da mnemonic
+            mnemo = mnemonic.Mnemonic("english")
+            seed = mnemo.to_seed(seed_phrase, passphrase)
+            
+            # Criar BIP32 master key
+            bip32 = BIP32.from_seed(seed)
+            
+            # Get extended private key components
+            private_key, chain_code = bip32.get_extended_privkey_from_path('m')
+            
+            # Network-specific version bytes
+            if network.lower() == "testnet":
+                version = b'\x04\x35\x83\x94'  # testnet tprv version
+                prefix = "tprv"
+            else:
+                version = b'\x04\x88\xad\xe4'  # mainnet xprv version
+                prefix = "xprv"
+            
+            # Construct extended key components
+            depth = b'\x00'                      # depth 0 for master key
+            parent_fingerprint = b'\x00\x00\x00\x00'  # no parent for master key
+            child_number = b'\x00\x00\x00\x00'        # child number 0
+            
+            # Build extended key: version + depth + parent_fp + child_num + chain_code + 0x00 + private_key
+            extended_key = version + depth + parent_fingerprint + child_number + chain_code + b'\x00' + private_key
+            
+            # Encode with base58check
+            extended_master_key = base58.b58encode_check(extended_key).decode('utf-8')
+            
+            return {
+                'extended_master_key': extended_master_key,
+                'network': network,
+                'prefix': prefix,
+                'private_key_hex': private_key.hex(),
+                'chain_code_hex': chain_code.hex(),
+                'seed_hex': seed.hex()
+            }, None
+            
+        except ImportError:
+            return None, "base58 library not available"
+        except Exception as e:
+            return None, f"Error converting to extended master key: {str(e)}"
+    
+    def generate_universal_wallet(self, seed_phrase, passphrase=""):
+        """Gera carteira universal com derivações para todas as chains E chaves mestras para LND"""
+        if not HAS_WALLET_LIBS:
+            return {}, "Wallet libraries not available"
+        
+        try:
+            # Derivar endereços para todas as chains
+            addresses, addr_error = self.derive_addresses(seed_phrase, passphrase)
+            if addr_error:
+                return {}, addr_error
+            
+            # Derivar chaves privadas para todas as chains
+            private_keys, privkey_error = self.derive_private_keys(seed_phrase, passphrase)
+            if privkey_error:
+                return {}, privkey_error
+            
+            # Gerar extended master keys para LND (mainnet e testnet)
+            mainnet_key, mainnet_error = self.bip39_to_extended_master_key(seed_phrase, passphrase, "mainnet")
+            testnet_key, testnet_error = self.bip39_to_extended_master_key(seed_phrase, passphrase, "testnet")
+            
+            # Compilar resultado universal
+            result = {
+                'seed_phrase': seed_phrase,
+                'has_passphrase': bool(passphrase),
+                'addresses': addresses,
+                'private_keys': private_keys,
+                'lnd_keys': {
+                    'mainnet': mainnet_key if not mainnet_error else {'error': mainnet_error},
+                    'testnet': testnet_key if not testnet_error else {'error': testnet_error}
+                },
+                'supported_chains': list(SUPPORTED_CHAINS.keys()),
+                'lnd_compatible': not (mainnet_error and testnet_error)
+            }
+            
+            return result, None
+            
+        except Exception as e:
+            return {}, f"Error generating universal wallet: {str(e)}"
     
     def _generate_address_for_chain(self, chain_id, public_key, private_key):
         """Gera endereço específico para cada blockchain"""
@@ -666,20 +763,26 @@ class WalletManager:
         except Exception as e:
             return f"Solana address error: {str(e)}"
     
-    def save_wallet(self, wallet_id, encrypted_mnemonic, salt, metadata=None, has_password=True, encrypted_private_keys=None):
+    def save_wallet(self, wallet_id, encrypted_mnemonic, salt, metadata=None, has_password=True, encrypted_private_keys=None, is_system_default=False):
         """Salva wallet criptografada no banco"""
         try:
             conn = sqlite3.connect(WALLET_DB_PATH)
             cursor = conn.cursor()
             
+            # If this wallet is being set as system default, unset others
+            if is_system_default:
+                cursor.execute('''
+                    UPDATE wallets SET is_system_default = FALSE WHERE wallet_id != ?
+                ''', (wallet_id,))
+            
             cursor.execute('''
                 INSERT OR REPLACE INTO wallets 
-                (wallet_id, encrypted_mnemonic, salt, has_password, metadata, encrypted_private_keys, last_used)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (wallet_id, encrypted_mnemonic, salt, has_password, metadata, encrypted_private_keys, is_system_default, last_used)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (wallet_id, encrypted_mnemonic, salt, has_password, 
                   json.dumps(metadata) if metadata else None,
-                  encrypted_private_keys,
-                  datetime.datetime.now()))
+                  encrypted_private_keys, is_system_default,
+                  datetime.now()))
             
             conn.commit()
             conn.close()
@@ -736,6 +839,61 @@ class WalletManager:
             
         except Exception as e:
             return False, f"Error caching addresses: {str(e)}"
+    
+    def get_system_default_wallet(self):
+        """Get the system default wallet"""
+        try:
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT wallet_id, encrypted_mnemonic, salt, metadata, has_password 
+                FROM wallets WHERE is_system_default = TRUE LIMIT 1
+            ''')
+            
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                wallet_id, encrypted_mnemonic, salt, metadata, has_password = result
+                metadata_dict = json.loads(metadata) if metadata else {}
+                return {
+                    'wallet_id': wallet_id,
+                    'encrypted_mnemonic': encrypted_mnemonic,
+                    'salt': salt,
+                    'metadata': metadata_dict,
+                    'has_password': bool(has_password)
+                }, None
+            else:
+                return None, "No system default wallet found"
+                
+        except Exception as e:
+            return None, f"Error loading system default wallet: {str(e)}"
+    
+    def set_system_default_wallet(self, wallet_id):
+        """Set a wallet as the system default"""
+        try:
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            # Check if wallet exists
+            cursor.execute('SELECT COUNT(*) FROM wallets WHERE wallet_id = ?', (wallet_id,))
+            if cursor.fetchone()[0] == 0:
+                conn.close()
+                return False, "Wallet not found"
+            
+            # Unset all other defaults
+            cursor.execute('UPDATE wallets SET is_system_default = FALSE')
+            
+            # Set this wallet as default
+            cursor.execute('UPDATE wallets SET is_system_default = TRUE WHERE wallet_id = ?', (wallet_id,))
+            
+            conn.commit()
+            conn.close()
+            return True, None
+            
+        except Exception as e:
+            return False, f"Error setting system default wallet: {str(e)}"
     
     def get_cached_addresses(self, wallet_id):
         """Recupera endereços do cache (temporário ou banco)"""
@@ -1271,6 +1429,88 @@ class LNDgRPCClient:
             return None, f"gRPC Error: {e.details()}"
         except Exception as e:
             return None, f"Erro inesperado: {str(e)}"
+    
+    def gen_seed_grpc(self):
+        """Gerar seed phrase via gRPC"""
+        try:
+            # Para gerar seed, não precisamos de autenticação
+            # Criar canal inseguro para operações de inicialização
+            channel = grpc.insecure_channel(self.host)
+            stub = lnrpcstub.LightningStub(channel)
+            
+            request = lnrpc.GenSeedRequest()
+            response = stub.GenSeed(request, timeout=30)
+            
+            return {
+                'cipher_seed_mnemonic': list(response.cipher_seed_mnemonic),
+                'enciphered_seed': response.enciphered_seed.hex() if response.enciphered_seed else None
+            }, None
+            
+        except grpc.RpcError as e:
+            return None, f"gRPC Error: {e.details()}"
+        except Exception as e:
+            return None, f"Erro ao gerar seed: {str(e)}"
+    
+    def init_wallet_grpc(self, wallet_password, cipher_seed_mnemonic, aezeed_passphrase="", recovery_window=250, channel_backups=None, stateless_init=False):
+        """Inicializar wallet LND via gRPC"""
+        try:
+            # Para inicializar wallet, não precisamos de autenticação ainda
+            channel = grpc.insecure_channel(self.host)
+            stub = lnrpcstub.LightningStub(channel)
+            
+            request = lnrpc.InitWalletRequest()
+            request.wallet_password = wallet_password.encode('utf-8')
+            request.cipher_seed_mnemonic[:] = cipher_seed_mnemonic
+            if aezeed_passphrase:
+                request.aezeed_passphrase = aezeed_passphrase.encode('utf-8')
+            request.recovery_window = recovery_window
+            request.stateless_init = stateless_init
+            
+            if channel_backups:
+                request.channel_backups = channel_backups
+            
+            response = stub.InitWallet(request, timeout=120)
+            
+            return {
+                'success': True,
+                'message': 'Wallet initialized successfully',
+                'admin_macaroon': response.admin_macaroon.hex() if hasattr(response, 'admin_macaroon') else None
+            }, None
+            
+        except grpc.RpcError as e:
+            return None, f"gRPC Error: {e.details()}"
+        except Exception as e:
+            return None, f"Erro ao inicializar wallet: {str(e)}"
+    
+    def unlock_wallet_grpc(self, wallet_password, recovery_window=250, channel_backups=None, stateless_init=False):
+        """Desbloquear wallet LND via gRPC"""
+        try:
+            # Para desbloquear wallet, não precisamos de autenticação
+            channel = grpc.insecure_channel(self.host)
+            stub = lnrpcstub.LightningStub(channel)
+            
+            request = lnrpc.UnlockWalletRequest()
+            request.wallet_password = wallet_password.encode('utf-8')
+            request.recovery_window = recovery_window
+            request.stateless_init = stateless_init
+            
+            if channel_backups:
+                request.channel_backups = channel_backups
+            
+            response = stub.UnlockWallet(request, timeout=120)
+            
+            # Depois de desbloquear, resetar conexão para usar credenciais
+            self._connected = False
+            
+            return {
+                'success': True,
+                'message': 'Wallet unlocked successfully'
+            }, None
+            
+        except grpc.RpcError as e:
+            return None, f"gRPC Error: {e.details()}"
+        except Exception as e:
+            return None, f"Erro ao desbloquear wallet: {str(e)}"
     
     def close(self):
         """Fechar conexão gRPC"""
@@ -1827,7 +2067,7 @@ def get_transactions(start_height=None, end_height=None, account=None):
             if tx.get('time_stamp'):
                 try:
                     timestamp = int(tx.get('time_stamp'))
-                    formatted_tx['date'] = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                    formatted_tx['date'] = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
                 except Exception as date_error:
                     return None, f"Erro ao processar timestamp da transação {tx.get('tx_hash', 'unknown')}: {str(date_error)}"
             else:
@@ -3034,7 +3274,7 @@ def get_fees():
                     'sat_per_vbyte': mempool_fees.get('fastestFee'),
                 }
             },
-            'timestamp': datetime.datetime.utcnow().isoformat()
+            'timestamp': datetime.utcnow().isoformat()
         })
         
     except requests.exceptions.RequestException as e:
@@ -3698,6 +3938,14 @@ def generate_wallet():
                 'status': 'error'
             }), 500
         
+        # Gerar carteira universal (inclui LND keys)
+        universal_wallet, universal_error = wallet_manager.generate_universal_wallet(seed_phrase, bip39_passphrase)
+        if universal_error:
+            return jsonify({
+                'error': universal_error,
+                'status': 'error'
+            }), 500
+        
         # Gerar ID único da carteira se não fornecido
         import uuid
         if wallet_id_input:
@@ -3710,12 +3958,42 @@ def generate_wallet():
             wallet_manager.temp_wallets = {}
             
         wallet_manager.temp_wallets[wallet_id] = {
+            'seed_phrase': seed_phrase,
+            'addresses': addresses,
+            'private_keys': private_keys,
+            'universal_wallet': universal_wallet,
+            'has_bip39_passphrase': bool(bip39_passphrase),
+            'word_count': word_count,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Universal wallet generated successfully',
+            'wallet_id': wallet_id,
+            'mnemonic': seed_phrase,
+            'seed_phrase': seed_phrase,
+            'word_count': word_count,
+            'has_bip39_passphrase': bool(bip39_passphrase),
+            'addresses': addresses,
+            'private_keys': private_keys,
+            'lnd_keys': universal_wallet.get('lnd_keys', {}),
+            'lnd_compatible': universal_wallet.get('lnd_compatible', False),
+            'supported_chains': universal_wallet.get('supported_chains', []),
+            'usage_instructions': {
+                'lnd_mainnet': 'Use lnd_keys.mainnet.extended_master_key with lncli create option "x"',
+                'lnd_testnet': 'Use lnd_keys.testnet.extended_master_key with lncli create option "x"',
+                'other_chains': 'Use addresses and private_keys for respective blockchain networks'
+            }
+        })
+            
+        wallet_manager.temp_wallets[wallet_id] = {
             'mnemonic': seed_phrase,
             'addresses': addresses,
             'private_keys': private_keys,
             'bip39_passphrase': bip39_passphrase,
             'word_count': word_count,
-            'created_at': datetime.datetime.now()
+            'created_at': datetime.now()
         }
         
         return jsonify({
@@ -3835,9 +4113,19 @@ def save_wallet():
                     'status': 'error'
                 }), 500
         
+        # Check if this should be set as system default (if it's the first wallet or explicitly requested)
+        is_system_default = data.get('is_system_default', False)
+        
+        # If no system default exists yet, make this the default
+        if not is_system_default:
+            default_wallet, _ = wallet_manager.get_system_default_wallet()
+            if not default_wallet:
+                is_system_default = True
+        
         # Salvar no banco
         save_success, save_error = wallet_manager.save_wallet(
-            wallet_id, encrypted_mnemonic, salt, metadata, has_password=bool(db_password), encrypted_private_keys=encrypted_private_keys
+            wallet_id, encrypted_mnemonic, salt, metadata, has_password=bool(db_password), 
+            encrypted_private_keys=encrypted_private_keys, is_system_default=is_system_default
         )
         if not save_success:
             return jsonify({
@@ -3854,12 +4142,97 @@ def save_wallet():
         if hasattr(wallet_manager, 'temp_wallets') and wallet_id in wallet_manager.temp_wallets:
             del wallet_manager.temp_wallets[wallet_id]
         
-        return jsonify({
+        message = 'Wallet encrypted and saved successfully'
+        integration_result = None
+        
+        # Auto-integrate with LND using expect script if this is the system default
+        if is_system_default:
+            message += ' and set as system default'
+            
+            try:
+                print(f"🔄 Starting LND integration for wallet '{wallet_id}' using expect script...")
+                message += ' - LND integration started in background'
+                
+                # Run LND integration in background thread using expect script
+                def background_lnd_integration():
+                    try:
+                        # Convert BIP39 to LND extended master key
+                        result, error = wallet_manager.bip39_to_extended_master_key(mnemonic, bip39_passphrase or '', 'testnet')
+                        if error:
+                            print(f"❌ Failed to convert BIP39 to LND master key: {error}")
+                            return
+                        
+                        extended_master_key = result['extended_master_key']
+                        print(f"✅ Generated LND extended master key for wallet '{wallet_id}'")
+                        
+                        # Stop LND service first
+                        subprocess.run(['sudo', 'systemctl', 'stop', 'lnd'], capture_output=True, timeout=30)
+                        print("⏹️ LND service stopped")
+                        
+                        # Create password file for expect script using wallet password
+                        password_file = '/root/brln-os/scripts/password.txt'
+                        with open(password_file, 'w') as f:
+                            f.write(db_password)  # Use wallet password for LND
+                        print("🔐 Password file created with wallet password")
+                        
+                        # Start LND service
+                        subprocess.run(['sudo', 'systemctl', 'start', 'lnd'], capture_output=True, timeout=30)
+                        print("▶️ LND service started")
+                        
+                        # Wait for LND to be ready
+                        import time
+                        time.sleep(5)
+                        
+                        # Run expect script to create wallet
+                        script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                        result = subprocess.run(
+                            [script_path, extended_master_key],
+                            cwd='/root/brln-os/scripts',
+                            capture_output=True,
+                            text=True,
+                            timeout=120
+                        )
+                        
+                        if result.returncode == 0:
+                            print(f"✅ LND wallet created successfully for wallet '{wallet_id}'")
+                            print("🔍 Checking for admin.macaroon...")
+                            
+                            # Check if admin.macaroon was created
+                            import time
+                            time.sleep(3)
+                            if os.path.exists('/data/lnd/data/chain/bitcoin/testnet/admin.macaroon'):
+                                print(f"✅ Admin macaroon created - LND integration complete for wallet '{wallet_id}'")
+                            else:
+                                print(f"⚠️ Admin macaroon not found - LND may still be initializing for wallet '{wallet_id}'")
+                        else:
+                            print(f"❌ LND wallet creation failed for wallet '{wallet_id}': {result.stderr}")
+                            
+                        # Clean up password file
+                        try:
+                            os.remove(password_file)
+                        except:
+                            pass
+                            
+                    except Exception as e:
+                        print(f"❌ LND integration failed for wallet '{wallet_id}': {str(e)}")
+                
+                # Start integration in background
+                integration_thread = threading.Thread(target=background_lnd_integration, daemon=True)
+                integration_thread.start()
+                    
+            except Exception as e:
+                print(f"⚠️ LND integration setup error: {str(e)}")
+                message += ' - LND integration setup failed'
+        
+        response_data = {
             'status': 'success',
             'wallet_id': wallet_id,
-            'message': 'Wallet encrypted and saved successfully',
+            'message': message,
+            'is_system_default': is_system_default,
             'addresses': addresses if not derive_error else {}
-        })
+        }
+        
+        return jsonify(response_data)
         
     except Exception as e:
         return jsonify({
@@ -3875,15 +4248,15 @@ def list_wallets():
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT wallet_id, metadata, last_used, created_at, has_password
-            FROM wallets ORDER BY last_used DESC
+            SELECT wallet_id, metadata, last_used, created_at, has_password, is_system_default
+            FROM wallets ORDER BY is_system_default DESC, last_used DESC
         ''')
         
         results = cursor.fetchall()
         conn.close()
         
         wallets = []
-        for wallet_id, metadata_json, last_used, created_at, has_password in results:
+        for wallet_id, metadata_json, last_used, created_at, has_password, is_system_default in results:
             try:
                 metadata = json.loads(metadata_json) if metadata_json else {}
             except:
@@ -3894,7 +4267,8 @@ def list_wallets():
                 'metadata': metadata,
                 'last_used': last_used,
                 'created_at': created_at,
-                'encrypted': bool(has_password)  # True apenas se tem senha real
+                'encrypted': bool(has_password),  # True apenas se tem senha real
+                'is_system_default': bool(is_system_default)
             })
         
         return jsonify({
@@ -3902,6 +4276,237 @@ def list_wallets():
             'wallets': wallets,
             'count': len(wallets)
         })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/system-default', methods=['GET'])
+def get_system_default():
+    """Get the system default wallet"""
+    try:
+        wallet_data, error = wallet_manager.get_system_default_wallet()
+        
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 404
+        
+        # Don't return sensitive data, just wallet info
+        return jsonify({
+            'status': 'success',
+            'wallet_id': wallet_data['wallet_id'],
+            'metadata': wallet_data['metadata'],
+            'has_password': wallet_data['has_password']
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/system-default', methods=['POST'])
+def set_system_default():
+    """Set a wallet as the system default"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        wallet_id = data.get('wallet_id')
+        if not wallet_id:
+            return jsonify({
+                'error': 'wallet_id is required',
+                'status': 'error'
+            }), 400
+        
+        success, error = wallet_manager.set_system_default_wallet(wallet_id)
+        if not success:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 400
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Wallet {wallet_id} set as system default',
+            'wallet_id': wallet_id
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/integrate', methods=['POST'])
+def integrate_system_wallet():
+    """Manually integrate the system default wallet with LND and Elements"""
+    try:
+        data = request.get_json()
+        wallet_id = data.get('wallet_id') if data else None
+        password = data.get('password') if data else None
+        
+        # If no wallet_id provided, get the system default
+        if not wallet_id:
+            default_wallet, error = wallet_manager.get_system_default_wallet()
+            if error or not default_wallet:
+                return jsonify({
+                    'error': 'No system default wallet found',
+                    'status': 'error'
+                }), 404
+            
+            wallet_id = default_wallet['wallet_id']
+        
+        # Load the wallet data from database
+        wallet_data, error = wallet_manager.load_wallet(wallet_id)
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 404
+        
+        # Check if we need to decrypt the mnemonic
+        mnemonic = None
+        
+        # Try to get from temporary wallets first (if recently loaded)
+        if hasattr(wallet_manager, 'temp_wallets') and wallet_id in wallet_manager.temp_wallets:
+            mnemonic = wallet_manager.temp_wallets[wallet_id].get('mnemonic')
+        
+        # If not in temp storage and wallet is encrypted, require password
+        if not mnemonic and wallet_data.get('encrypted_mnemonic'):
+            if not password:
+                return jsonify({
+                    'error': 'Password required for wallet decryption',
+                    'status': 'error'
+                }), 400
+            
+            # Decrypt the mnemonic
+            mnemonic, decrypt_error = wallet_manager.decrypt_mnemonic(
+                wallet_data['encrypted_mnemonic'],
+                wallet_data['salt'],
+                password
+            )
+            if decrypt_error:
+                return jsonify({
+                    'error': 'Invalid password or corrupted wallet data',
+                    'status': 'error'
+                }), 401
+        
+        # If we still don't have a mnemonic (unencrypted wallet), get it from wallet data  
+        if not mnemonic and not wallet_data.get('encrypted_mnemonic'):
+            return jsonify({
+                'error': 'Wallet data not found or corrupted',
+                'status': 'error'
+            }), 400
+        
+        # Start background integration
+        try:
+            import sys
+            import threading
+            sys.path.append('/root/brln-os')
+            from auto_wallet_integration import auto_integrate_wallet, check_integration_dependencies
+            
+            # Check dependencies
+            if not check_integration_dependencies():
+                return jsonify({
+                    'error': 'Integration dependencies not available',
+                    'status': 'error'
+                }), 500
+            
+            # Store mnemonic temporarily for integration
+            if hasattr(wallet_manager, 'temp_wallets'):
+                if wallet_id not in wallet_manager.temp_wallets:
+                    wallet_manager.temp_wallets[wallet_id] = {}
+                wallet_manager.temp_wallets[wallet_id]['mnemonic'] = mnemonic
+            
+            print(f"🔄 Starting manual LND integration for wallet '{wallet_id}' using expect script...")
+            
+            # Run integration in background thread using expect script
+            def background_lnd_integration():
+                try:
+                    # Convert BIP39 to LND extended master key
+                    result, error = wallet_manager.bip39_to_extended_master_key(mnemonic, '', 'testnet')
+                    if error:
+                        print(f"❌ Failed to convert BIP39 to LND master key: {error}")
+                        return
+                    
+                    extended_master_key = result['extended_master_key']
+                    print(f"✅ Generated LND extended master key for manual integration '{wallet_id}'")
+                    
+                    # Stop LND service first
+                    subprocess.run(['sudo', 'systemctl', 'stop', 'lnd'], capture_output=True, timeout=30)
+                    print("⏹️ LND service stopped for manual integration")
+                    
+                    # Create password file for expect script
+                    password_file = '/root/brln-os/scripts/password.txt'
+                    with open(password_file, 'w') as f:
+                        f.write(password)  # Use wallet password for LND
+                    print("🔐 Password file created for manual integration")
+                    
+                    # Start LND service
+                    subprocess.run(['sudo', 'systemctl', 'start', 'lnd'], capture_output=True, timeout=30)
+                    print("▶️ LND service started for manual integration")
+                    
+                    # Wait for LND to be ready
+                    import time
+                    time.sleep(5)
+                    
+                    # Run expect script to create wallet
+                    script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                    result = subprocess.run(
+                        [script_path, extended_master_key],
+                        cwd='/root/brln-os/scripts',
+                        capture_output=True,
+                        text=True,
+                        timeout=120
+                    )
+                    
+                    if result.returncode == 0:
+                        print(f"✅ LND wallet created successfully for manual integration '{wallet_id}'")
+                        print("🔍 Checking for admin.macaroon...")
+                        
+                        # Check if admin.macaroon was created
+                        import time
+                        time.sleep(3)
+                        if os.path.exists('/data/lnd/data/chain/bitcoin/testnet/admin.macaroon'):
+                            print(f"✅ Admin macaroon created - Manual LND integration complete for wallet '{wallet_id}'")
+                        else:
+                            print(f"⚠️ Admin macaroon not found - LND may still be initializing for manual integration '{wallet_id}'")
+                    else:
+                        print(f"❌ LND wallet creation failed for manual integration '{wallet_id}': {result.stderr}")
+                        
+                    # Clean up password file
+                    try:
+                        os.remove(password_file)
+                    except:
+                        pass
+                        
+                except Exception as e:
+                    print(f"❌ Manual LND integration failed for wallet '{wallet_id}': {str(e)}")
+            
+            # Start integration in background
+            integration_thread = threading.Thread(target=background_lnd_integration, daemon=True)
+            integration_thread.start()
+            
+            return jsonify({
+                'status': 'success',
+                'message': f'Integration started in background for wallet {wallet_id}',
+                'wallet_id': wallet_id
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'error': f'Integration setup failed: {str(e)}',
+                'status': 'error'
+            }), 500
         
     except Exception as e:
         return jsonify({
@@ -3960,12 +4565,132 @@ def load_wallet():
             if not derive_error:
                 wallet_manager.cache_addresses(wallet_id, addresses)
         
+        # Automatically set this wallet as the system default when loaded
+        try:
+            # Update the wallet to be system default
+            success, error = wallet_manager.set_system_default_wallet(wallet_id)
+            if success:
+                message = 'Wallet loaded and set as system default'
+                
+                # Try to unlock LND using expect script with wallet password
+                try:
+                    print(f"🔓 Attempting to unlock LND for loaded wallet '{wallet_id}' using wallet password...")
+                    
+                    # Create password file for expect script using the wallet password
+                    password_file = '/root/brln-os/scripts/password.txt'
+                    with open(password_file, 'w') as f:
+                        f.write(password)  # Use the wallet password from the modal
+                    
+                    # Run expect script to unlock wallet
+                    script_path = '/root/brln-os/scripts/auto-lnd-unlock.exp'
+                    unlock_result = subprocess.run(
+                        [script_path],
+                        cwd='/root/brln-os/scripts',
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+                    
+                    # Clean up password file
+                    try:
+                        os.remove(password_file)
+                    except:
+                        pass
+                    
+                    if unlock_result.returncode == 0:
+                        print(f"✅ LND unlocked successfully for wallet '{wallet_id}' using wallet password")
+                        message += ' - LND unlocked successfully'
+                    else:
+                        print(f"⚠️ LND unlock failed for wallet '{wallet_id}': {unlock_result.stderr}")
+                        message += ' - LND unlock failed, may need manual unlock'
+                        
+                except Exception as e:
+                    print(f"⚠️ Error unlocking LND for loaded wallet '{wallet_id}': {str(e)}")
+                    message += ' - LND unlock error'
+                
+                # Start background LND integration using expect script if needed
+                try:
+                    # Check if admin.macaroon exists
+                    if not os.path.exists('/data/lnd/data/chain/bitcoin/testnet/admin.macaroon'):
+                        print(f"🔄 Admin macaroon not found, starting LND integration for loaded wallet '{wallet_id}'...")
+                        
+                        def background_lnd_integration():
+                            try:
+                                # Convert BIP39 to LND extended master key
+                                result, error = wallet_manager.bip39_to_extended_master_key(mnemonic, '', 'testnet')
+                                if error:
+                                    print(f"❌ Failed to convert BIP39 to LND master key: {error}")
+                                    return
+                                
+                                extended_master_key = result['extended_master_key']
+                                print(f"✅ Generated LND extended master key for loaded wallet '{wallet_id}'")
+                                
+                                # Stop LND service first
+                                subprocess.run(['sudo', 'systemctl', 'stop', 'lnd'], capture_output=True, timeout=30)
+                                print("⏹️ LND service stopped")
+                                
+                                # Create password file for expect script
+                                password_file = '/root/brln-os/scripts/password.txt'
+                                with open(password_file, 'w') as f:
+                                    f.write(unlock_password)  # Use provided password for LND
+                                print("🔐 Password file created")
+                                
+                                # Start LND service
+                                subprocess.run(['sudo', 'systemctl', 'start', 'lnd'], capture_output=True, timeout=30)
+                                print("▶️ LND service started")
+                                
+                                # Wait for LND to be ready
+                                import time
+                                time.sleep(5)
+                                
+                                # Run expect script to create wallet
+                                script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                                result = subprocess.run(
+                                    [script_path, extended_master_key],
+                                    cwd='/root/brln-os/scripts',
+                                    capture_output=True,
+                                    text=True,
+                                    timeout=120
+                                )
+                                
+                                if result.returncode == 0:
+                                    print(f"✅ LND wallet created successfully for loaded wallet '{wallet_id}'")
+                                else:
+                                    print(f"❌ LND wallet creation failed for loaded wallet '{wallet_id}': {result.stderr}")
+                                    
+                                # Clean up password file
+                                try:
+                                    os.remove(password_file)
+                                except:
+                                    pass
+                                    
+                            except Exception as e:
+                                print(f"❌ LND integration failed for loaded wallet '{wallet_id}': {str(e)}")
+                        
+                        # Start integration in background
+                        integration_thread = threading.Thread(target=background_lnd_integration, daemon=True)
+                        integration_thread.start()
+                        message += ' - LND integration started in background'
+                    else:
+                        print(f"✅ Admin macaroon exists, LND already integrated for wallet '{wallet_id}'")
+                        message += ' - LND already integrated'
+                        
+                except Exception as e:
+                    print(f"⚠️ LND integration setup error for loaded wallet: {str(e)}")
+                    message += ' - LND integration setup failed'
+            else:
+                message = 'Wallet loaded successfully (could not set as default)'
+        except Exception as e:
+            print(f"⚠️ Error setting wallet as default: {str(e)}")
+            message = 'Wallet loaded successfully (default setting failed)'
+        
         return jsonify({
             'status': 'success',
             'wallet_id': wallet_id,
             'addresses': addresses,
             'metadata': wallet_data.get('metadata', {}),
-            'message': 'Wallet loaded successfully'
+            'message': message,
+            'is_system_default': True
         })
         
     except Exception as e:
@@ -4191,7 +4916,6 @@ def validate_mnemonic():
 def wallet_status():
     """Get wallet system status"""
     try:
-        from datetime import datetime
         return jsonify({
             'status': 'online',
             'message': 'Wallet API is running',
@@ -4199,6 +4923,336 @@ def wallet_status():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# === LND WALLET INITIALIZATION ENDPOINTS ===
+
+@app.route('/api/v1/wallet/bip39-to-lnd', methods=['POST'])
+def convert_bip39_to_lnd():
+    """Convert BIP39 mnemonic to LND extended master root key"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        seed_phrase = data.get('seed_phrase', '').strip()
+        passphrase = data.get('passphrase', '')
+        network = data.get('network', 'testnet').lower()
+        
+        if not seed_phrase:
+            return jsonify({
+                'error': 'seed_phrase is required',
+                'status': 'error'
+            }), 400
+        
+        # Validate network
+        if network not in ['mainnet', 'testnet']:
+            return jsonify({
+                'error': 'network must be "mainnet" or "testnet"',
+                'status': 'error'
+            }), 400
+        
+        # Convert to extended master key
+        result, error = wallet_manager.bip39_to_extended_master_key(seed_phrase, passphrase, network)
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        # Also generate universal wallet info
+        universal_wallet, universal_error = wallet_manager.generate_universal_wallet(seed_phrase, passphrase)
+        
+        response = {
+            'status': 'success',
+            'seed_phrase': seed_phrase,
+            'network': network,
+            'extended_master_key': result['extended_master_key'],
+            'prefix': result['prefix'],
+            'lnd_import_instructions': {
+                'command': 'lncli create',
+                'option': 'x (extended master root key)',
+                'input': result['extended_master_key'],
+                'description': f'Use this {result["prefix"]} key when prompted for extended master root key'
+            }
+        }
+        
+        # Add universal wallet info if available
+        if not universal_error and universal_wallet:
+            response['universal_wallet'] = {
+                'addresses': universal_wallet.get('addresses', {}),
+                'lnd_keys': universal_wallet.get('lnd_keys', {}),
+                'supported_chains': universal_wallet.get('supported_chains', [])
+            }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lnd/wallet/unlock', methods=['POST'])
+def unlock_lnd_wallet():
+    """Unlock LND wallet using expect script"""
+    try:
+        data = request.get_json()
+        unlock_password = data.get('password') if data else None
+        
+        # If no password provided, try to get from system default wallet
+        if not unlock_password:
+            default_wallet, error = wallet_manager.get_system_default_wallet()
+            if error or not default_wallet:
+                return jsonify({
+                    'error': 'No password provided and no system default wallet found',
+                    'status': 'error'
+                }), 400
+            
+            # For now, return error asking for password since we can't decrypt without it
+            return jsonify({
+                'error': 'Password required for LND unlock',
+                'status': 'error'
+            }), 400
+        
+        print("🔓 Manual LND unlock requested via API with password...")
+        
+        # Create password file for expect script
+        password_file = '/root/brln-os/scripts/password.txt'
+        with open(password_file, 'w') as f:
+            f.write(unlock_password)  # Use provided password
+        
+        # Run expect script to unlock wallet
+        script_path = '/root/brln-os/scripts/auto-lnd-unlock.exp'
+        unlock_result = subprocess.run(
+            [script_path],
+            cwd='/root/brln-os/scripts',
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        
+        # Clean up password file
+        try:
+            os.remove(password_file)
+        except:
+            pass
+        
+        if unlock_result.returncode == 0:
+            print("✅ LND unlocked successfully via manual API call")
+            return jsonify({
+                'status': 'success',
+                'message': 'LND wallet unlocked successfully'
+            })
+        else:
+            print(f"❌ LND unlock failed via manual API call: {unlock_result.stderr}")
+            return jsonify({
+                'status': 'error',
+                'error': f'LND unlock failed: {unlock_result.stderr}'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lnd/wallet/genseed', methods=['POST'])
+def lnd_gen_seed():
+    """Generate LND seed phrase via gRPC"""
+    try:
+        result, error = lnd_grpc_client.gen_seed_grpc()
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'status': 'success',
+            'seed_mnemonic': result['cipher_seed_mnemonic'],
+            'enciphered_seed': result['enciphered_seed']
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lnd/wallet/init', methods=['POST'])
+def lnd_init_wallet():
+    """Initialize LND wallet with seed phrase via gRPC"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        wallet_password = data.get('wallet_password')
+        seed_mnemonic = data.get('seed_mnemonic')
+        aezeed_passphrase = data.get('aezeed_passphrase', '')
+        recovery_window = data.get('recovery_window', 250)
+        
+        if not wallet_password:
+            return jsonify({
+                'error': 'wallet_password is required',
+                'status': 'error'
+            }), 400
+        
+        if not seed_mnemonic:
+            return jsonify({
+                'error': 'seed_mnemonic is required',
+                'status': 'error'
+            }), 400
+        
+        # Convert seed to list if it's a string
+        if isinstance(seed_mnemonic, str):
+            seed_mnemonic = seed_mnemonic.strip().split()
+        
+        result, error = lnd_grpc_client.init_wallet_grpc(
+            wallet_password=wallet_password,
+            cipher_seed_mnemonic=seed_mnemonic,
+            aezeed_passphrase=aezeed_passphrase,
+            recovery_window=recovery_window
+        )
+        
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'status': 'success',
+            'message': result['message'],
+            'admin_macaroon': result.get('admin_macaroon')
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lnd/wallet/unlock', methods=['POST'])
+def lnd_unlock_wallet():
+    """Unlock LND wallet via gRPC"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        wallet_password = data.get('wallet_password')
+        recovery_window = data.get('recovery_window', 250)
+        
+        if not wallet_password:
+            return jsonify({
+                'error': 'wallet_password is required',
+                'status': 'error'
+            }), 400
+        
+        result, error = lnd_grpc_client.unlock_wallet_grpc(
+            wallet_password=wallet_password,
+            recovery_window=recovery_window
+        )
+        
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'status': 'success',
+            'message': result['message']
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/lnd/wallet/create-from-api', methods=['POST'])
+def lnd_create_from_api_seed():
+    """Generate BIP39 seed via API and create LND wallet automatically"""
+    try:
+        data = request.get_json()
+        if not data:
+            data = {}
+        
+        wallet_password = data.get('wallet_password')
+        word_count = data.get('word_count', 24)
+        bip39_passphrase = data.get('bip39_passphrase', '')
+        network = data.get('network', 'testnet')
+        
+        if not wallet_password:
+            return jsonify({
+                'error': 'wallet_password is required',
+                'status': 'error'
+            }), 400
+        
+        # Generate BIP39 seed
+        seed_phrase, error = wallet_manager.generate_mnemonic(word_count)
+        if error:
+            return jsonify({
+                'error': f'Failed to generate seed: {error}',
+                'status': 'error'
+            }), 500
+        
+        # Convert to LND extended master key
+        lnd_key_result, lnd_error = wallet_manager.bip39_to_extended_master_key(
+            seed_phrase, bip39_passphrase, network
+        )
+        if lnd_error:
+            return jsonify({
+                'error': f'Failed to convert to LND key: {lnd_error}',
+                'status': 'error'
+            }), 500
+        
+        # Generate universal wallet info
+        universal_wallet, universal_error = wallet_manager.generate_universal_wallet(seed_phrase, bip39_passphrase)
+        
+        # Store password for expect script
+        import tempfile
+        import os
+        password_file = '/root/brln-os/scripts/password.txt'
+        with open(password_file, 'w') as f:
+            f.write(wallet_password)
+        os.chmod(password_file, 0o600)
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Universal seed generated successfully',
+            'seed_phrase': seed_phrase,
+            'word_count': word_count,
+            'network': network,
+            'lnd_extended_master_key': lnd_key_result['extended_master_key'],
+            'universal_wallet': universal_wallet if not universal_error else None,
+            'automation_ready': True,
+            'next_steps': {
+                'automated_lnd_creation': f'cd /root/brln-os/scripts && ./auto-lnd-create-masterkey.exp "{lnd_key_result["extended_master_key"]}"',
+                'manual_lnd_creation': {
+                    'command': 'lncli create',
+                    'option': 'x (extended master root key)',
+                    'extended_key': lnd_key_result['extended_master_key']
+                }
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=2121, debug=False)

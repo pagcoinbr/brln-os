@@ -138,6 +138,65 @@
       <div class="seed-display" id="seedDisplay">
         <!-- Seed words will be displayed here -->
       </div>
+
+      <!-- Universal Wallet Information -->
+      <div class="universal-wallet-info" id="universalWalletInfo" style="display: none;">
+        <h3>🌐 Universal Wallet Generated</h3>
+        <div class="wallet-features">
+          <div class="feature-badge">✅ Multi-Chain Addresses</div>
+          <div class="feature-badge">⚡ LND Compatible</div>
+          <div class="feature-badge">🔑 Single Seed Phrase</div>
+        </div>
+        
+        <!-- Chain Addresses -->
+        <div class="chain-addresses">
+          <h4>Generated Addresses</h4>
+          <div id="chainAddressesList" class="addresses-grid">
+            <!-- Chain addresses will be populated here -->
+          </div>
+        </div>
+        
+        <!-- LND Configuration -->
+        <div class="lnd-configuration">
+          <h4>⚡ Lightning Network (LND) Configuration</h4>
+          <div class="lnd-keys-section">
+            <div class="network-selector">
+              <label>Network:</label>
+              <select id="lndNetworkSelect">
+                <option value="testnet">Testnet (Testing)</option>
+                <option value="mainnet">Mainnet (Live)</option>
+              </select>
+            </div>
+            <div class="lnd-key-display">
+              <label>Extended Master Key:</label>
+              <div class="key-container">
+                <code id="lndExtendedKey" class="extended-key">-</code>
+                <button class="copy-btn" id="copyLndKeyBtn" title="Copy LND key">📋</button>
+              </div>
+            </div>
+            <div class="lnd-instructions">
+              <h5>💡 How to use with LND:</h5>
+              <ol>
+                <li>Run: <code>lncli create</code></li>
+                <li>Choose option: <strong>x</strong> (extended master root key)</li>
+                <li>Paste the extended key shown above</li>
+                <li>Or use automated setup below ⬇️</li>
+              </ol>
+            </div>
+            <div class="lnd-automation">
+              <button class="action-button lnd-button" id="autoConfigureLndBtn">
+                ⚡ Auto-Configure LND Wallet
+              </button>
+              <div class="automation-status" id="lndAutomationStatus" style="display: none;">
+                <div class="status-message" id="lndStatusMessage">Configuring LND...</div>
+                <div class="status-progress">
+                  <div class="progress-bar" id="lndProgressBar"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <div class="seed-actions">
         <button class="action-button copy-button" id="copySeedBtn">

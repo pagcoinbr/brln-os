@@ -1,0 +1,60 @@
+#!/usr/bin/expect -f
+
+# BRLN-OS Automated LND Wallet Unlock Script
+# Uses expect to automate lncli unlock
+# Reads password from password.txt file for security
+
+set timeout 30
+
+# Read password from file
+set password_file "password.txt"
+if {![file exists $password_file]} {
+    puts "❌ Error: password.txt file not found"
+    exit 1
+}
+
+set fp [open $password_file r]
+set wallet_password [string trim [read $fp]]
+close $fp
+
+if {$wallet_password eq ""} {
+    puts "❌ Error: password.txt is empty"
+    exit 1
+}
+
+puts "🔓 Starting automated LND wallet unlock..."
+puts "🔐 Reading password from password.txt"
+
+# Start lncli unlock
+spawn lncli unlock
+
+# Handle the interactive prompts
+expect {
+    "Input wallet password:" {
+        send "$wallet_password\r"
+        exp_continue
+    }
+    "*successfully unlocked*" {
+        puts "\n✅ LND wallet successfully unlocked!"
+        exit 0
+    }
+    "*invalid passphrase*" {
+        puts "\n❌ Invalid password for LND wallet"
+        exit 1
+    }
+    "*wallet not found*" {
+        puts "\n❌ LND wallet not found - need to create wallet first"
+        exit 1
+    }
+    timeout {
+        puts "\n❌ Timeout waiting for lncli unlock"
+        exit 1
+    }
+    eof {
+        puts "\n✅ Unlock process completed"
+        exit 0
+    }
+}
+
+# Wait a bit more for any final output
+sleep 2

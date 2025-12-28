@@ -184,6 +184,18 @@ class WalletService {
       notification.remove();
     }, 4000);
   }
+
+  // Integrate wallet with system services (LND and Elements)
+  async integrateWallet(walletId, password) {
+    const data = await this.makeApiRequest('/wallet/integrate', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet_id: walletId,
+        password: password
+      })
+    });
+    return data;
+  }
 }
 
 // Instanciar o serviço de carteira
@@ -600,34 +612,40 @@ async function generateNewWallet() {
     const password = document.getElementById('generatePassword').value.trim();
     const walletId = document.getElementById('generateWalletId').value.trim();
     
-    // Usar API para gerar carteira
-    console.log(`Calling API to generate ${wordCount}-word wallet...`);
+    // Usar API para gerar carteira universal
+    console.log(`Calling API to generate ${wordCount}-word universal wallet...`);
     const result = await walletService.generateWallet(walletId || null, password || null, wordCount);
     console.log('API response:', result);
     
     if (result && result.mnemonic) {
-      console.log('Wallet generated successfully, displaying mnemonic...');
+      console.log('Universal wallet generated successfully, displaying mnemonic and chains...');
       // Store the generated data globally for verification
       currentWallet = {
         mnemonic: result.mnemonic,
         addresses: result.addresses || {},
+        private_keys: result.private_keys || {},
+        lnd_keys: result.lnd_keys || {},
         walletId: result.wallet_id,
         wordCount: wordCount,
-        bip39Passphrase: password  // This is the BIP39 passphrase (13th/25th word)
+        bip39Passphrase: password,  // This is the BIP39 passphrase (13th/25th word)
+        lnd_compatible: result.lnd_compatible || false,
+        supported_chains: result.supported_chains || []
       };
       currentWalletId = result.wallet_id;
       
-      // Show mnemonic for user to save
-      showMnemonic(result.mnemonic);
+      // Show mnemonic and universal wallet info for user to save
+      showUniversalWallet(result);
       
       // Clear form fields
       document.getElementById('wordCount').value = '12';
       document.getElementById('generatePassword').value = '';
       document.getElementById('generateWalletId').value = '';
       
+      const chainCount = result.supported_chains ? result.supported_chains.length : 0;
+      const lndStatus = result.lnd_compatible ? ' + LND Compatible' : '';
       const message = password ? 
-        `New encrypted ${wordCount}-word wallet generated successfully! ID: ${result.wallet_id}` : 
-        `New ${wordCount}-word wallet generated successfully! Remember to encrypt it for security.`;
+        `New encrypted ${wordCount}-word universal wallet generated successfully! Supports ${chainCount} chains${lndStatus}. ID: ${result.wallet_id}` : 
+        `New ${wordCount}-word universal wallet generated successfully! Supports ${chainCount} chains${lndStatus}. Remember to encrypt it for security.`;
       
       walletService.showNotification(message, 'success');
     } else {
@@ -666,30 +684,37 @@ async function importExistingWallet() {
     // Importar carteira usando API
     const result = await walletService.importWallet(mnemonic, passphrase);
     
-    if (result && result.wallet_id) {
+    if (result && result.status === 'success' && result.addresses) {
+      let savedWalletId = walletId;
+      
       // If password provided, save encrypted wallet
       if (password) {
         try {
-          await walletService.saveWallet(mnemonic, password, walletId || result.wallet_id);
+          const saveResult = await walletService.saveWallet(mnemonic, password, walletId);
+          if (saveResult && saveResult.wallet_id) {
+            savedWalletId = saveResult.wallet_id;
+          }
         } catch (saveError) {
           console.warn('Failed to save encrypted wallet:', saveError);
           walletService.showNotification('Wallet imported but encryption failed', 'warning');
         }
       }
       
-      // Obter endereços da carteira
-      const addresses = await walletService.getWalletAddresses(result.wallet_id);
+      // Generate a temporary wallet ID if none provided/saved
+      if (!savedWalletId) {
+        savedWalletId = `imported_${Date.now()}`;
+      }
       
       // Armazenar dados da carteira atual
       currentWallet = {
         mnemonic: mnemonic,
-        addresses: addresses,
-        walletId: result.wallet_id
+        addresses: result.addresses,
+        walletId: savedWalletId
       };
-      currentWalletId = result.wallet_id;
+      currentWalletId = savedWalletId;
       
       // Mostrar endereços
-      showAddresses(addresses);
+      showAddresses(result.addresses);
       
       // Limpar campos
       document.getElementById('importMnemonic').value = '';
@@ -698,10 +723,25 @@ async function importExistingWallet() {
       document.getElementById('importWalletId').value = '';
       
       const message = password ? 
-        `Wallet imported and encrypted successfully! ID: ${result.wallet_id}` : 
+        `Wallet imported and encrypted successfully! ID: ${savedWalletId}` : 
         'Wallet imported successfully! Remember to encrypt it for security.';
       
       walletService.showNotification(message, 'success');
+      
+      // Notify parent window that wallet is configured
+      notifyWalletConfigured(savedWalletId);
+      
+      // Check if integration was performed
+      if (result.integration) {
+        const integration = result.integration;
+        let integrationMessage = '🔧 System Integration: ';
+        if (integration.success) {
+          integrationMessage += 'LND and Elements successfully integrated!';
+        } else {
+          integrationMessage += `LND: ${integration.lnd_integrated ? '✅' : '❌'}, Elements: ${integration.elements_integrated ? '✅' : '❌'}`;
+        }
+        walletService.showNotification(integrationMessage, integration.success ? 'success' : 'warning');
+      }
     } else {
       throw new Error('Resposta inválida da API');
     }
@@ -757,6 +797,9 @@ async function saveWalletWithPassword() {
       document.getElementById('confirm-password').value = '';
       
       walletService.showNotification(`Carteira salva com ID: ${result.wallet_id}`, 'success');
+      
+      // Notify parent window that wallet is configured
+      notifyWalletConfigured(result.wallet_id);
     } else {
       throw new Error('Resposta inválida da API');
     }
@@ -805,6 +848,9 @@ async function loadExistingWallet() {
       document.getElementById('load-password').value = '';
       
       walletService.showNotification('Carteira carregada com sucesso!', 'success');
+      
+      // Notify parent window that wallet is configured
+      notifyWalletConfigured(currentWalletId);
       
       // Atualizar saldos
       setTimeout(() => updateAllBalances(), 1000);
@@ -1200,6 +1246,243 @@ function showMnemonic(mnemonic) {
   }
 }
 
+// Show universal wallet information
+function showUniversalWallet(walletData) {
+  console.log('Displaying universal wallet:', walletData);
+  
+  // First show the seed phrase
+  showMnemonic(walletData.mnemonic);
+  
+  // Show universal wallet info section
+  const universalWalletInfo = document.getElementById('universalWalletInfo');
+  if (universalWalletInfo) {
+    universalWalletInfo.style.display = 'block';
+    
+    // Display chain addresses
+    displayChainAddresses(walletData.addresses);
+    
+    // Display LND configuration
+    displayLNDConfiguration(walletData.lnd_keys);
+    
+    // Setup event listeners for universal wallet actions
+    setupUniversalWalletEventListeners();
+  }
+}
+
+// Display addresses for all supported chains
+function displayChainAddresses(addresses) {
+  const chainAddressesList = document.getElementById('chainAddressesList');
+  if (!chainAddressesList || !addresses) return;
+  
+  chainAddressesList.innerHTML = '';
+  
+  // Chain icons mapping
+  const chainIcons = {
+    'bitcoin': '₿',
+    'ethereum': 'Ξ',
+    'liquid': '💧',
+    'tron': '⚡',
+    'solana': '◎'
+  };
+  
+  Object.entries(addresses).forEach(([chainId, addressData]) => {
+    if (addressData.address) {
+      const addressItem = document.createElement('div');
+      addressItem.className = 'address-item';
+      
+      addressItem.innerHTML = `
+        <div class="address-info">
+          <div class="chain-name">
+            <span class="chain-icon">${chainIcons[chainId] || '🔗'}</span>
+            ${addressData.chain || chainId}
+            <span class="chain-symbol">${addressData.symbol || chainId.toUpperCase()}</span>
+          </div>
+          <div class="chain-address" title="${addressData.address}">${addressData.address}</div>
+        </div>
+        <button class="copy-address-btn" onclick="copyAddress('${addressData.address}', '${chainId}')">
+          📋 Copy
+        </button>
+      `;
+      
+      chainAddressesList.appendChild(addressItem);
+    }
+  });
+}
+
+// Display LND configuration options
+function displayLNDConfiguration(lndKeys) {
+  const lndExtendedKey = document.getElementById('lndExtendedKey');
+  const lndNetworkSelect = document.getElementById('lndNetworkSelect');
+  
+  if (!lndExtendedKey || !lndKeys) return;
+  
+  // Store LND keys globally for network switching
+  window.currentLNDKeys = lndKeys;
+  
+  // Set initial network and key display
+  const initialNetwork = lndNetworkSelect.value;
+  updateLNDKeyDisplay(initialNetwork);
+}
+
+// Update LND key display based on selected network
+function updateLNDKeyDisplay(network) {
+  const lndExtendedKey = document.getElementById('lndExtendedKey');
+  const lndKeys = window.currentLNDKeys;
+  
+  if (!lndKeys || !lndExtendedKey) return;
+  
+  const networkKey = lndKeys[network];
+  if (networkKey && networkKey.extended_master_key) {
+    lndExtendedKey.textContent = networkKey.extended_master_key;
+  } else {
+    lndExtendedKey.textContent = 'Key not available for this network';
+  }
+}
+
+// Setup event listeners for universal wallet functionality
+function setupUniversalWalletEventListeners() {
+  // Network selector change
+  const lndNetworkSelect = document.getElementById('lndNetworkSelect');
+  if (lndNetworkSelect) {
+    lndNetworkSelect.addEventListener('change', (e) => {
+      updateLNDKeyDisplay(e.target.value);
+    });
+  }
+  
+  // Copy LND key button
+  const copyLndKeyBtn = document.getElementById('copyLndKeyBtn');
+  if (copyLndKeyBtn) {
+    copyLndKeyBtn.addEventListener('click', copyLNDKey);
+  }
+  
+  // Auto-configure LND button
+  const autoConfigureLndBtn = document.getElementById('autoConfigureLndBtn');
+  if (autoConfigureLndBtn) {
+    autoConfigureLndBtn.addEventListener('click', autoConfigureLND);
+  }
+}
+
+// Copy address to clipboard
+function copyAddress(address, chainId) {
+  navigator.clipboard.writeText(address).then(() => {
+    walletService.showNotification(`${chainId.toUpperCase()} address copied!`, 'success');
+    
+    // Visual feedback
+    const buttons = document.querySelectorAll('.copy-address-btn');
+    buttons.forEach(btn => {
+      if (btn.onclick && btn.onclick.toString().includes(address)) {
+        btn.classList.add('copied');
+        btn.textContent = '✅ Copied';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = '📋 Copy';
+        }, 2000);
+      }
+    });
+  }).catch(error => {
+    console.error('Error copying address:', error);
+    walletService.showNotification('Error copying address', 'error');
+  });
+}
+
+// Copy LND extended master key
+function copyLNDKey() {
+  const lndExtendedKey = document.getElementById('lndExtendedKey');
+  const copyBtn = document.getElementById('copyLndKeyBtn');
+  
+  if (!lndExtendedKey) return;
+  
+  const keyText = lndExtendedKey.textContent;
+  if (keyText && keyText !== 'Key not available for this network') {
+    navigator.clipboard.writeText(keyText).then(() => {
+      walletService.showNotification('LND extended key copied!', 'success');
+      
+      // Visual feedback
+      copyBtn.classList.add('copied');
+      copyBtn.textContent = '✅';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.textContent = '📋';
+      }, 2000);
+    }).catch(error => {
+      console.error('Error copying LND key:', error);
+      walletService.showNotification('Error copying LND key', 'error');
+    });
+  }
+}
+
+// Auto-configure LND with the generated key
+async function autoConfigureLND() {
+  try {
+    const lndNetworkSelect = document.getElementById('lndNetworkSelect');
+    const automationStatus = document.getElementById('lndAutomationStatus');
+    const statusMessage = document.getElementById('lndStatusMessage');
+    const progressBar = document.getElementById('lndProgressBar');
+    const autoConfigureBtn = document.getElementById('autoConfigureLndBtn');
+    
+    const network = lndNetworkSelect.value;
+    const lndKeys = window.currentLNDKeys;
+    
+    if (!lndKeys || !lndKeys[network]) {
+      walletService.showNotification('LND key not available for selected network', 'error');
+      return;
+    }
+    
+    // Show automation status
+    automationStatus.style.display = 'block';
+    autoConfigureBtn.disabled = true;
+    statusMessage.textContent = 'Preparing LND wallet creation...';
+    progressBar.style.width = '20%';
+    
+    // Call the automated LND creation API
+    statusMessage.textContent = 'Creating LND wallet...';
+    progressBar.style.width = '60%';
+    
+    const response = await fetch(`${API_BASE_URL}/lnd/wallet/create-from-api`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        wallet_password: 'auto_generated_password', // You might want to ask for this
+        seed_phrase: currentWallet.mnemonic,
+        network: network
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (response.ok && result.status === 'success') {
+      statusMessage.textContent = 'LND wallet configured successfully!';
+      progressBar.style.width = '100%';
+      
+      setTimeout(() => {
+        automationStatus.style.display = 'none';
+        autoConfigureBtn.disabled = false;
+        walletService.showNotification('LND wallet configured successfully!', 'success');
+      }, 2000);
+      
+    } else {
+      throw new Error(result.error || 'Failed to configure LND');
+    }
+    
+  } catch (error) {
+    console.error('Error auto-configuring LND:', error);
+    
+    const automationStatus = document.getElementById('lndAutomationStatus');
+    const statusMessage = document.getElementById('lndStatusMessage');
+    const autoConfigureBtn = document.getElementById('autoConfigureLndBtn');
+    
+    statusMessage.textContent = 'Error configuring LND: ' + error.message;
+    setTimeout(() => {
+      automationStatus.style.display = 'none';
+      autoConfigureBtn.disabled = false;
+    }, 3000);
+    
+    walletService.showNotification('Error configuring LND: ' + error.message, 'error');
+  }
+}
+
 // Copiar mnemônico para clipboard
 function copyMnemonic() {
   if (!currentWallet || !currentWallet.mnemonic) {
@@ -1462,6 +1745,93 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(error => {
       console.error('API connection failed:', error);
-      walletService.showNotification('Erro ao conectar com API', 'error');
+      walletService.showNotification('Erro ao conectar com a API', 'error');
+    });
+});
+
+// ============================================
+// PARENT WINDOW COMMUNICATION
+// ============================================
+
+/**
+ * Notify parent window that wallet has been configured
+ */
+function notifyWalletConfigured(walletId) {
+  try {
+    // Set this wallet as system default
+    setAsSystemDefault(walletId);
+    
+    // Check if we're in an iframe
+    if (window.parent && window.parent !== window) {
+      console.log('Notifying parent window of wallet configuration:', walletId);
+      
+      // Send message to parent window
+      window.parent.postMessage({
+        type: 'WALLET_CONFIGURED',
+        walletId: walletId,
+        timestamp: new Date().toISOString()
+      }, '*');
+      
+      // Also store flag in sessionStorage for main window
+      sessionStorage.setItem('walletJustConfigured', 'true');
+      sessionStorage.setItem('lastConfiguredWallet', walletId);
+      
+      console.log('Parent notification sent successfully');
+    } else {
+      console.log('Not in iframe, storing wallet configuration flag');
+      sessionStorage.setItem('walletJustConfigured', 'true');
+      sessionStorage.setItem('lastConfiguredWallet', walletId);
+    }
+  } catch (error) {
+    console.error('Error notifying parent window:', error);
+  }
+}
+
+/**
+ * Set a wallet as the system default
+ */
+async function setAsSystemDefault(walletId) {
+  try {
+    console.log('Setting wallet as system default:', walletId);
+    
+    const response = await fetch(`${API_BASE_URL}/wallet/system-default`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        wallet_id: walletId
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log('Wallet set as system default successfully');
+      walletService.showNotification(`Wallet ${walletId} definido como padrão do sistema`, 'info');
+    } else {
+      console.error('Failed to set as system default:', data.error);
+    }
+  } catch (error) {
+    console.error('Error setting wallet as system default:', error);
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // ... existing initialization code ...
+  
+  // Verificar se a API está acessível
+  walletService.makeApiRequest('/wallet/status')
+    .then(response => {
+      console.log('API connection successful:', response);
+      walletService.showNotification('Sistema inicializado com sucesso', 'success');
+      
+      // Verificar se há carteiras existentes
+      checkForExistingWallets();
+    })
+    .catch(error => {
+      console.error('API connection failed:', error);
+      walletService.showNotification('Erro ao conectar com a API', 'error');
     });
 });
