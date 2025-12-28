@@ -117,6 +117,25 @@ install_tor() {
   echo -e "${GREEN}✅ Tor instalado e iniciado!${NC}"
 }
 
+install_i2p() {
+  echo -e "${GREEN}🧅 Instalando I2P...${NC}"
+  
+  # Add I2P repository using their helper script
+  echo -e "${BLUE}📦 Adicionando repositório I2P...${NC}"
+  wget -q -O - $I2P_REPO_HELPER | sudo bash -s -
+  
+  # Install I2P
+  echo -e "${BLUE}📦 Instalando i2pd...${NC}"
+  sudo apt update && sudo apt install -y i2pd
+  
+  # Enable and start I2P
+  sudo systemctl enable i2pd
+  sudo systemctl start i2pd
+  
+  echo -e "${GREEN}✅ I2P instalado e iniciado!${NC}"
+  echo -e "${BLUE}💡 I2P está rodando na porta 7070 (HTTP Proxy) e 4444 (SOCKS Proxy)${NC}"
+}
+
 tailscale_vpn() {
   echo -e "${GREEN}🔒 Instalando Tailscale VPN...${NC}"
   
