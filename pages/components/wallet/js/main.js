@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Verification section event listeners
   const backToSeedBtn = document.getElementById('backToSeedBtn');
   const verifyWordsBtn = document.getElementById('verifyWordsBtn');
+  const skipVerificationBtn = document.getElementById('skipVerificationBtn');
   
   if (backToSeedBtn) {
     backToSeedBtn.addEventListener('click', function() {
@@ -39,6 +40,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (verifyWordsBtn) {
     verifyWordsBtn.addEventListener('click', validateMnemonicWords);
+  }
+  
+  if (skipVerificationBtn) {
+    skipVerificationBtn.addEventListener('click', function() {
+      // Skip verification and go directly to password prompt
+      walletService.showNotification('Skipping verification - proceeding to save wallet...', 'info');
+      promptPasswordAndSaveWallet();
+    });
   }
 });
 
@@ -1419,6 +1428,8 @@ async function autoConfigureLND() {
     const statusMessage = document.getElementById('lndStatusMessage');
     const progressBar = document.getElementById('lndProgressBar');
     const autoConfigureBtn = document.getElementById('autoConfigureLndBtn');
+    const lndOutputContainer = document.getElementById('lndOutputContainer');
+    const lndScriptOutput = document.getElementById('lndScriptOutput');
     
     const network = lndNetworkSelect.value;
     const lndKeys = window.currentLNDKeys;
@@ -1428,39 +1439,85 @@ async function autoConfigureLND() {
       return;
     }
     
-    // Show automation status
+    // Prompt for wallet password
+    const walletPassword = prompt('Enter a password for the LND wallet (minimum 8 characters):');
+    if (!walletPassword || walletPassword.length < 8) {
+      walletService.showNotification('Password must be at least 8 characters', 'error');
+      return;
+    }
+    
+    // Show automation status and output container
     automationStatus.style.display = 'block';
+    lndOutputContainer.style.display = 'block';
     autoConfigureBtn.disabled = true;
     statusMessage.textContent = 'Preparing LND wallet creation...';
     progressBar.style.width = '20%';
     
-    // Call the automated LND creation API
-    statusMessage.textContent = 'Creating LND wallet...';
-    progressBar.style.width = '60%';
+    // Clear and initialize output
+    lndScriptOutput.value = '';
+    lndScriptOutput.value += '╔════════════════════════════════════════════════════════════╗\n';
+    lndScriptOutput.value += '║     BRLN-OS LND WALLET AUTO-CONFIGURATION SYSTEM          ║\n';
+    lndScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+    lndScriptOutput.value += '🚀 Starting LND wallet creation with expect script...\n';
+    lndScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
     
-    const response = await fetch(`${API_BASE_URL}/lnd/wallet/create-from-api`, {
+    // Scroll output into view
+    lndOutputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Add delay to show initial output
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Call API endpoint to run expect script
+    statusMessage.textContent = 'Running expect script to configure LND...';
+    progressBar.style.width = '40%';
+    
+    const extendedKey = lndKeys[network];
+    lndScriptOutput.value += `📋 Network: ${network}\n`;
+    lndScriptOutput.value += `🔑 Extended Master Key:\n    ${extendedKey}\n\n`;
+    lndScriptOutput.value += '⏳ Executing: /root/brln-os/scripts/auto-lnd-create-masterkey.exp\n';
+    lndScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    lndScriptOutput.scrollTop = lndScriptOutput.scrollHeight;
+    
+    // Add delay to show progress
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const response = await fetch(`${API_BASE_URL}/lnd/wallet/create-expect`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        wallet_password: 'auto_generated_password', // You might want to ask for this
-        seed_phrase: currentWallet.mnemonic,
+        wallet_password: walletPassword,
+        extended_master_key: extendedKey,
         network: network
       })
     });
     
     const result = await response.json();
     
+    progressBar.style.width = '80%';
+    
     if (response.ok && result.status === 'success') {
       statusMessage.textContent = 'LND wallet configured successfully!';
       progressBar.style.width = '100%';
+      
+      // Display script output
+      lndScriptOutput.value += '\n╔════════════════════════════════════════════════════════════╗\n';
+      lndScriptOutput.value += '║              EXPECT SCRIPT OUTPUT                          ║\n';
+      lndScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+      lndScriptOutput.value += result.output || 'Script executed successfully';
+      lndScriptOutput.value += '\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      lndScriptOutput.value += '✅ SUCCESS: LND wallet created and configured!\n';
+      lndScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      
+      // Auto-scroll to bottom
+      lndScriptOutput.scrollTop = lndScriptOutput.scrollHeight;
       
       setTimeout(() => {
         automationStatus.style.display = 'none';
         autoConfigureBtn.disabled = false;
         walletService.showNotification('LND wallet configured successfully!', 'success');
-      }, 2000);
+      }, 3000);
       
     } else {
       throw new Error(result.error || 'Failed to configure LND');
@@ -1472,8 +1529,18 @@ async function autoConfigureLND() {
     const automationStatus = document.getElementById('lndAutomationStatus');
     const statusMessage = document.getElementById('lndStatusMessage');
     const autoConfigureBtn = document.getElementById('autoConfigureLndBtn');
+    const lndScriptOutput = document.getElementById('lndScriptOutput');
     
     statusMessage.textContent = 'Error configuring LND: ' + error.message;
+    if (lndScriptOutput) {
+      lndScriptOutput.value += '\n\n╔════════════════════════════════════════════════════════════╗\n';
+      lndScriptOutput.value += '║                     ERROR OCCURRED                         ║\n';
+      lndScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+      lndScriptOutput.value += '❌ ERROR: ' + error.message + '\n';
+      lndScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      lndScriptOutput.scrollTop = lndScriptOutput.scrollHeight;
+    }
+    
     setTimeout(() => {
       automationStatus.style.display = 'none';
       autoConfigureBtn.disabled = false;
@@ -1520,6 +1587,8 @@ function showCurrentWalletInfo(addresses) {
   const walletNameElement = document.getElementById('currentWalletName');
   const walletIdElement = document.getElementById('currentWalletId');
   const walletCreatedElement = document.getElementById('currentWalletCreated');
+  const walletMnemonicElement = document.getElementById('currentWalletMnemonic');
+  const walletMnemonicRow = document.getElementById('walletMnemonicRow');
   
   if (walletNameElement && currentWalletId) {
     walletNameElement.textContent = `Wallet ${currentWalletId}`;
@@ -1531,6 +1600,14 @@ function showCurrentWalletInfo(addresses) {
   
   if (walletCreatedElement) {
     walletCreatedElement.textContent = new Date().toLocaleString('pt-BR');
+  }
+  
+  // Display mnemonic if available
+  if (walletMnemonicElement && currentWallet && currentWallet.mnemonic && currentWallet.mnemonic !== '[PROTEGIDO]') {
+    walletMnemonicElement.textContent = currentWallet.mnemonic;
+    if (walletMnemonicRow) walletMnemonicRow.style.display = 'block';
+  } else {
+    if (walletMnemonicRow) walletMnemonicRow.style.display = 'none';
   }
   
   // Scroll to current wallet section
@@ -1713,6 +1790,35 @@ document.addEventListener('DOMContentLoaded', function() {
       walletService.showNotification('Ready to load another wallet', 'info');
     });
     console.log('Load another wallet button event listener attached');
+  }
+  
+  // Copy current mnemonic button
+  const copyCurrentMnemonicBtn = document.getElementById('copyCurrentMnemonicBtn');
+  if (copyCurrentMnemonicBtn) {
+    copyCurrentMnemonicBtn.addEventListener('click', () => {
+      const mnemonicText = document.getElementById('currentWalletMnemonic').textContent;
+      if (mnemonicText && mnemonicText !== '-') {
+        navigator.clipboard.writeText(mnemonicText).then(() => {
+          walletService.showNotification('Seed phrase copied to clipboard!', 'success');
+        }).catch(error => {
+          console.error('Error copying mnemonic:', error);
+          walletService.showNotification('Error copying seed phrase', 'error');
+        });
+      }
+    });
+  }
+  
+  // Go to Home button
+  const goToHomeBtn = document.getElementById('goToHomeBtn');
+  if (goToHomeBtn) {
+    goToHomeBtn.addEventListener('click', () => {
+      // Navigate to main.html in parent window
+      if (window.parent && window.parent !== window) {
+        window.parent.location.href = '/main.html';
+      } else {
+        window.location.href = '/main.html';
+      }
+    });
   }
 
   if (loadAnotherWalletBtn) {

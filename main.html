@@ -362,13 +362,14 @@
             
             modalContent.innerHTML = `
               <h3 style="margin-bottom: 20px; color: #007bff; font-size: 24px;">🔐 Wallet Protegida</h3>
-              <p style="margin-bottom: 20px; color: #666; font-size: 16px;">A wallet <strong>${walletId}</strong> está protegida por senha.</p>
+              <p style="margin-bottom: 20px; color: #666; font-size: 16px;">A wallet <strong>${walletId}</strong> está encriptada. Desbloqueie-a ou escolha outra carteira.</p>
               ${attempt > 1 ? `<p style="color: #dc3545; margin-bottom: 15px; font-weight: bold;">❌ Senha incorreta (tentativa ${attempt}/3)</p>` : ''}
               <input type="password" id="wallet-password" placeholder="Digite a senha da wallet" 
                 style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px; font-size: 16px; box-sizing: border-box;" autofocus>
-              <div style="display: flex; gap: 15px; justify-content: center;">
-                <button id="unlock-btn" style="background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">🔓 Desbloquear</button>
-                <button id="cancel-btn" style="background: #dc3545; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">❌ Cancelar</button>
+              <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button id="unlock-btn" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">🔓 Desbloquear</button>
+                <button id="wallet-select-btn" style="background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;"> Wallets ➡️</button>
+                <button id="cancel-btn" style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold;">❌ Cancelar</button>
               </div>
             `;
             
@@ -377,6 +378,7 @@
             
             const passwordInput = modal.querySelector('#wallet-password');
             const unlockBtn = modal.querySelector('#unlock-btn');
+            const walletSelectBtn = modal.querySelector('#wallet-select-btn');
             const cancelBtn = modal.querySelector('#cancel-btn');
             
             const cleanup = () => {
@@ -395,6 +397,15 @@
                 passwordInput.placeholder = 'Senha é obrigatória';
                 passwordInput.focus();
               }
+            };
+            
+            walletSelectBtn.onclick = () => {
+              cleanup();
+              // Redirect to wallet selection page
+              document.getElementById('contentFrame').src = 'pages/components/wallet/wallet.html';
+              sessionStorage.setItem('currentPage', 'pages/components/wallet/wallet.html');
+              sessionStorage.setItem('requireWalletSetup', 'true');
+              reject(new Error('User chose to select different wallet'));
             };
             
             cancelBtn.onclick = () => {

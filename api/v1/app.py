@@ -5317,6 +5317,105 @@ def lnd_create_from_api_seed():
             'status': 'error'
         }), 500
 
+@app.route('/api/v1/lnd/wallet/create-expect', methods=['POST'])
+def lnd_create_wallet_expect():
+    """Run expect script to create LND wallet with extended master key"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        wallet_password = data.get('wallet_password')
+        extended_master_key = data.get('extended_master_key')
+        network = data.get('network', 'testnet')
+        
+        if not wallet_password or not extended_master_key:
+            return jsonify({
+                'error': 'wallet_password and extended_master_key are required',
+                'status': 'error'
+            }), 400
+        
+        # Validate password length
+        if len(wallet_password) < 8:
+            return jsonify({
+                'error': 'Password must be at least 8 characters',
+                'status': 'error'
+            }), 400
+        
+        # Write password to file for expect script
+        import os
+        import subprocess
+        
+        password_file = '/root/brln-os/scripts/password.txt'
+        with open(password_file, 'w') as f:
+            f.write(wallet_password)
+        os.chmod(password_file, 0o600)
+        
+        # Run expect script
+        expect_script = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+        
+        if not os.path.exists(expect_script):
+            return jsonify({
+                'error': f'Expect script not found: {expect_script}',
+                'status': 'error'
+            }), 500
+        
+        # Make script executable
+        os.chmod(expect_script, 0o755)
+        
+        # Execute expect script
+        try:
+            result = subprocess.run(
+                [expect_script, extended_master_key],
+                cwd='/root/brln-os/scripts',
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            # Clean up password file
+            if os.path.exists(password_file):
+                os.remove(password_file)
+            
+            output = result.stdout + result.stderr
+            
+            if result.returncode == 0:
+                return jsonify({
+                    'status': 'success',
+                    'message': 'LND wallet created successfully',
+                    'output': output,
+                    'network': network
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'error': f'Expect script failed with exit code {result.returncode}',
+                    'output': output
+                }), 500
+                
+        except subprocess.TimeoutExpired:
+            # Clean up password file on timeout
+            if os.path.exists(password_file):
+                os.remove(password_file)
+            return jsonify({
+                'error': 'Expect script timed out after 60 seconds',
+                'status': 'error'
+            }), 500
+        except Exception as script_error:
+            # Clean up password file on error
+            if os.path.exists(password_file):
+                os.remove(password_file)
+            raise script_error
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
 # ============================================================================
 # TRON GAS-FREE WALLET ENDPOINTS
 # ============================================================================
