@@ -3,6 +3,20 @@
   box-sizing: border-box;
 }
 
+/* Lightning Wallet Button Centering */
+.wallet-button-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  grid-template-columns: none !important;
+}
+
+.wallet-button {
+  width: 50%;
+  max-width: 400px;
+  margin: 0 !important;
+}
+
 .lightning-control {
   max-width: 1200px;
   margin: 0 auto;

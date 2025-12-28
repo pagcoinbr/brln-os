@@ -9,5 +9,11 @@ grpcio==1.59.0
 grpcio-tools==1.59.0
 protobuf==4.24.4
 
-# Para decodificação de mensagens
-base64
+# Wallet management dependencies
+mnemonic==0.21
+bip32==5.0.0
+cryptography==41.0.7
+base58==2.1.1
+ecdsa==0.19.0
+eth-hash[pycryptodome]==0.5.2
+pycryptodome==3.20.0

@@ -96,7 +96,7 @@ class LNDGRPCClient:
     def list_invoices(self, index_offset=0, num_max_invoices=50, reversed=True):
         """Lista invoices"""
         try:
-            request = lightning.ListInvoicesRequest(
+            request = lightning.ListInvoiceRequest(
                 index_offset=index_offset,
                 num_max_invoices=num_max_invoices,
                 reversed=reversed

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Central de Controle Elements/Liquid</title>
+    <link rel="stylesheet" href="../../home/index.css" />
+    <link rel="stylesheet" href="../association-footer.css" />
+    <link rel="stylesheet" href="elements.css" />
+  </head>
+<body>
+  <!-- Seção Services para os saldos dos assets -->
+  <section class="services">
+    <div class="services-container">
+      <div class="assets-balance-container">
+        <div class="asset-balance-item">
+          <div class="asset-label">Bitcoin (L-BTC)</div>
+          <div class="asset-values">
+            <div class="asset-balance" id="lbtcBalance">-- BTC</div>
+          </div>
+        </div>
+        <div class="asset-balance-item">
+          <div class="asset-label">DePix</div>
+          <div class="asset-values">
+            <div class="asset-balance" id="depixBalance">-- DePix</div>
+          </div>
+        </div>
+        <div class="asset-balance-item">
+          <div class="asset-label">Tether (USDT)</div>
+          <div class="asset-values">
+            <div class="asset-balance" id="usdtBalance">-- USDT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="elements-control">
+
+  <!-- Seção de Envio de Assets -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <h2>Enviar Assets Liquid</h2>
+      <div class="control-section">
+        <div class="send-form">
+          <div class="form-group">
+            <label for="sendAddress">Endereço de Destino Liquid:</label>
+            <input type="text" id="sendAddress" placeholder="VJL... (endereço Liquid)" />
+          </div>
+          
+          <!-- Seletor de Asset -->
+          <div class="form-group">
+            <label for="assetSelector">Asset para Enviar:</label>
+            <div class="asset-selector">
+              <div class="asset-option active" data-asset="lbtc">
+                <div class="asset-name">Bitcoin (L-BTC)</div>
+                <div class="asset-available" id="lbtcAvailable">Disponível: -- BTC</div>
+              </div>
+              <div class="asset-option" data-asset="depix">
+                <div class="asset-name">DePix</div>
+                <div class="asset-available" id="depixAvailable">Disponível: -- DePix</div>
+              </div>
+              <div class="asset-option" data-asset="usdt">
+                <div class="asset-name">Tether (USDT)</div>
+                <div class="asset-available" id="usdtAvailable">Disponível: -- USDT</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="sendAmount">Quantidade:</label>
+            <input type="number" id="sendAmount" placeholder="0.00000001" step="0.00000001" min="0.00000001" />
+          </div>
+          
+          <!-- Seção de Taxa (Liquid normalmente tem taxas baixas fixas) -->
+          <div class="form-group">
+            <label for="liquidFee">Taxa (BTC):</label>
+            <input type="number" id="liquidFee" placeholder="0.00000100" step="0.00000001" value="0.00000100" />
+            <small style="color: #666; margin-top: 5px;">Taxa padrão Liquid: 0.00000100 BTC</small>
+          </div>
+          
+          <button class="service-card" id="sendButton" style="border: 2px solid black; background: #f7f7f7; color: black; cursor: pointer;">
+            <div class="service-title">Enviar Asset</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seção de Geração de Endereços Liquid -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <h2>Gerar Novo Endereço Liquid</h2>
+      <div class="control-section">
+        <div class="address-type-selector">
+          <div class="address-type-label">Confidencial</div>
+          
+          <div class="slider-container" id="addressTypeSlider">
+            <div class="slider-track" id="sliderTrack"></div>
+          </div>
+          
+          <div class="address-type-label">Legacy</div>
+        </div>
+        
+        <div class="generate-button-container">
+          <button class="amboss-link" id="generateAddressButton" style="border: 2px solid black; background: #f7f7f7; color: black; cursor: pointer;">
+            <div class="service-title">Gerar Endereço Liquid</div>
+          </button>
+        </div>
+        
+        <div class="address-display" id="addressDisplay">
+          <h3 style="margin-bottom: 15px; color: #333;">Endereço Gerado:</h3>
+          <div class="address-info">
+            <div class="address-text">
+              <div style="font-weight: bold; margin-bottom: 5px;">Tipo: <span id="generatedAddressType"></span></div>
+              <div class="generated-address-container">
+                <div class="generated-address" id="generatedAddressText">
+                  Endereço será gerado aqui...
+                </div>
+                <button class="copy-button" id="copyAddressButton" title="Copiar endereço">
+                  📋
+                </button>
+              </div>
+            </div>
+            <div class="qr-container">
+              <div class="qr-code" id="qrCode">
+                QR Code será gerado aqui
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seção de UTXOs por Asset -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <div class="utxos-header">
+        <h2>UTXOs por Asset</h2>
+        <div class="asset-filter-section">
+          <div class="asset-filter-tabs">
+            <button class="asset-tab active" data-filter="all">Todos</button>
+            <button class="asset-tab" data-filter="lbtc">L-BTC</button>
+            <button class="asset-tab" data-filter="depix">DePix</button>
+            <button class="asset-tab" data-filter="usdt">USDT</button>
+          </div>
+        </div>
+      </div>
+      <div class="control-section">
+        <div class="utxos-container" id="utxosContainer">
+          <!-- UTXOs serão adicionadas dinamicamente aqui -->
+          <div style="width: 100%; text-align: center; padding: 40px; color: #666; font-style: italic;">
+            Carregando UTXOs...
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seção de Histórico de Transações Liquid -->
+  <section class="content-section">
+    <div class="content-wrapper">
+      <h2>Histórico Liquid (Últimas 30)</h2>
+      <div class="control-section">
+        <div class="transactions-history">
+          <div class="transaction-header">
+            <div>Data/Hora</div>
+            <div>TXID</div>
+            <div>Asset</div>
+            <div>Quantidade</div>
+            <div>Taxa</div>
+          </div>
+          
+          <div class="transactions-container" id="transactionsContainer">
+            <div style="width: 100%; text-align: center; padding: 40px; color: #666; font-style: italic;">
+              Nenhuma transação encontrada ou carregando...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <!-- FOOTER ORIGINAL -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p class="location">Build With Liquid Network</p>
+      <p class="since">Since 2023</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

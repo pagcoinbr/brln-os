@@ -51,16 +51,9 @@
             <a
               href="#"
               class="nav-link"
-              data-page="pages/components/liquid/liquid.html"
-              onclick="navigateTo('pages/components/liquid/liquid.html', this); return false;"
+              data-page="pages/components/elements/elements.html"
+              onclick="navigateTo('pages/components/elements/elements.html', this); return false;"
               >LIQUID</a
-            >
-            <a
-              href="#"
-              class="nav-link"
-              data-page="pages/components/liquid/liquid.html"
-              onclick="navigateTo('pages/components/liquid/liquid.html', this); return false;"
-              >SWAPS</a
             >
             <a
               href="#"
@@ -103,6 +96,22 @@
       function abrirApp(porta) {
         const ip = window.location.hostname;
         window.open(`http://${ip}:${porta}`, '_blank');
+      }
+
+      function navigateToService(porta, linkElement) {
+        const ip = window.location.hostname;
+        const serviceUrl = `http://${ip}:${porta}`;
+        
+        // Muda o conteúdo do iframe inferior para o serviço
+        parent.document.getElementById("contentFrame").src = serviceUrl;
+
+        // Atualiza classe active
+        const links = document.querySelectorAll(".nav-link");
+        links.forEach((link) => link.classList.remove("active"));
+        linkElement.classList.add("active");
+
+        // Armazena a URL do serviço no sessionStorage
+        sessionStorage.setItem("currentPage", serviceUrl);
       }
 
       function navigateTo(page, linkElement) {

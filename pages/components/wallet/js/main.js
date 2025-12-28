@@ -1,0 +1,1467 @@
+// Central de Controle Carteira Multichain BRLN-OS
+// Usando API backend para operações de carteira seguras
+
+console.log('Main.js loading...');
+
+// Base URL da API (using proxy path)
+const API_BASE_URL = '/api/v1';
+
+console.log('API_BASE_URL set to:', API_BASE_URL);
+
+// Variáveis globais para a carteira
+let currentWallet = null;
+let walletAddresses = {};
+let currentWalletId = null;
+let currentMnemonicWords = [];
+let verificationChallenges = [];
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Word count selector buttons
+  document.querySelectorAll('.word-count-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.word-count-btn').forEach(b => b.classList.remove('selected'));
+      this.classList.add('selected');
+    });
+  });
+  
+  // Verification section event listeners
+  const backToSeedBtn = document.getElementById('backToSeedBtn');
+  const verifyWordsBtn = document.getElementById('verifyWordsBtn');
+  
+  if (backToSeedBtn) {
+    backToSeedBtn.addEventListener('click', function() {
+      document.getElementById('verificationSection').style.display = 'none';
+      document.getElementById('seedSection').style.display = 'block';
+      document.getElementById('seedSection').scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+  
+  if (verifyWordsBtn) {
+    verifyWordsBtn.addEventListener('click', validateMnemonicWords);
+  }
+});
+
+// Classe principal do serviço de carteira (API-based)
+class WalletService {
+  constructor() {
+    console.log('WalletService constructor called');
+    this.apiBaseUrl = API_BASE_URL;
+    console.log('WalletService initialized with API base URL:', this.apiBaseUrl);
+  }
+
+  // Fazer requisição para API
+  async makeApiRequest(endpoint, options = {}) {
+    try {
+      const url = `${this.apiBaseUrl}${endpoint}`;
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      const response = await fetch(url, {
+        ...defaultOptions,
+        ...options
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || `API request failed: ${response.status}`);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
+  }
+
+  // Gerar nova carteira
+  async generateWallet(walletId = null, password = null, wordCount = 12) {
+    const requestBody = {};
+    if (walletId) requestBody.wallet_id = walletId;
+    if (password !== null) requestBody.password = password;
+    if (wordCount) requestBody.word_count = wordCount;
+    
+    const data = await this.makeApiRequest('/wallet/generate', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+    return data;
+  }
+
+  // Importar carteira existente
+  async importWallet(mnemonic, passphrase = '') {
+    const data = await this.makeApiRequest('/wallet/import', {
+      method: 'POST',
+      body: JSON.stringify({
+        mnemonic: mnemonic.trim(),
+        passphrase
+      })
+    });
+    return data;
+  }
+
+  // Validar mnemonic
+  async validateMnemonic(mnemonic) {
+    const data = await this.makeApiRequest('/wallet/validate', {
+      method: 'POST',
+      body: JSON.stringify({
+        mnemonic: mnemonic.trim()
+      })
+    });
+    return data.valid;
+  }
+
+  // Salvar carteira criptografada
+  async saveWallet(mnemonic, password, walletId = null, metadata = {}) {
+    const data = await this.makeApiRequest('/wallet/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        mnemonic: mnemonic.trim(),
+        password,
+        wallet_id: walletId,
+        metadata
+      })
+    });
+    return data;
+  }
+
+  // Carregar carteira
+  async loadWallet(walletId, password) {
+    const requestBody = {
+      wallet_id: walletId,
+      // Always send password field - empty string for unencrypted wallets
+      password: password || ''
+    };
+    
+    const data = await this.makeApiRequest('/wallet/load', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+    return data;
+  }
+
+  // Obter endereços de uma carteira
+  async getWalletAddresses(walletId) {
+    const data = await this.makeApiRequest(`/wallet/addresses/${walletId}`);
+    return data;
+  }
+
+  // Obter saldo de uma chain
+  async getBalance(chainId, address) {
+    try {
+      const data = await this.makeApiRequest(`/wallet/balance/${chainId}/${address}`);
+      return data.balance;
+    } catch (error) {
+      console.error(`Error getting ${chainId} balance:`, error);
+      return '0.00000000';
+    }
+  }
+
+  // Listar carteiras salvas
+  async listSavedWallets() {
+    const data = await this.makeApiRequest('/wallet/list');
+    return data.wallets || [];
+  }
+
+  // Verificar status de uma carteira específica
+  async getWalletStatus(walletId) {
+    const data = await this.makeApiRequest(`/wallet/status/${walletId}`);
+    return data;
+  }
+
+  // Mostrar notificação
+  showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.remove();
+    }, 4000);
+  }
+}
+
+// Instanciar o serviço de carteira
+console.log('Creating walletService instance...');
+const walletService = new WalletService();
+console.log('WalletService instance created:', walletService);
+
+// Verificar carteiras existentes no sistema
+async function checkForExistingWallets() {
+  try {
+    console.log('Checking for existing wallets...');
+    
+    // Verificar se há carteiras salvas no localStorage (método antigo)
+    const localWallets = JSON.parse(localStorage.getItem('brln_wallets') || '{}');
+    const localWalletIds = Object.keys(localWallets);
+    
+    // Tentar listar carteiras da API (método novo)
+    let apiWallets = [];
+    try {
+      const response = await walletService.listSavedWallets();
+      apiWallets = response || [];
+    } catch (error) {
+      console.log('No API wallet list available:', error.message);
+    }
+    
+    console.log('Local wallets found:', localWalletIds.length);
+    console.log('API wallets found:', apiWallets.length);
+    
+    // Se houver carteiras, mostrar opções de carregamento
+    if (localWalletIds.length > 0 || apiWallets.length > 0) {
+      showWalletLoadingOptions(localWalletIds, apiWallets);
+    } else {
+      console.log('No existing wallets found');
+      updateWalletStatus('Nenhuma carteira encontrada', 'Gere uma nova carteira ou importe uma existente');
+      
+      // Mostrar create/import section diretamente
+      const walletSelectionSection = document.getElementById('walletSelectionSection');
+      const createImportSection = document.getElementById('createImportSection');
+      
+      if (walletSelectionSection) walletSelectionSection.style.display = 'none';
+      if (createImportSection) createImportSection.style.display = 'block';
+    }
+    
+  } catch (error) {
+    console.error('Error checking for existing wallets:', error);
+    updateWalletStatus('Erro na verificação', 'Não foi possível verificar carteiras existentes');
+  }
+}
+
+// Mostrar opções de carregamento de carteiras
+function showWalletLoadingOptions(localWalletIds, apiWallets) {
+  updateWalletStatus('Carteiras encontradas', 'Selecione uma carteira para carregar');
+  
+  // Mostrar seção de seleção e esconder create/import
+  const walletSelectionSection = document.getElementById('walletSelectionSection');
+  const createImportSection = document.getElementById('createImportSection');
+  const backBtn = document.getElementById('backToSelectionBtn');
+  
+  if (walletSelectionSection) walletSelectionSection.style.display = 'block';
+  if (createImportSection) createImportSection.style.display = 'none';
+  if (backBtn) backBtn.style.display = 'inline-block';
+  
+  // Usar o container de seleção ao invés de walletsSection
+  const container = document.getElementById('walletSelectionContainer');
+  if (!container) return;
+  
+  // Limpar container anterior
+  container.innerHTML = '';
+  
+  // Se há carteiras da API, mostrar lista da API
+  if (apiWallets.length > 0) {
+    showApiWalletsInContainer(apiWallets, container);
+  }
+  // Se há apenas carteiras locais, mostrar lista local
+  else if (localWalletIds.length > 0) {
+    showLocalWalletsInContainer(localWalletIds, container);
+  }
+}
+
+// Mostrar lista de carteiras da API no container
+function showApiWalletsInContainer(wallets, container) {
+  const walletList = document.createElement('div');
+  walletList.className = 'wallet-selection-list';
+  walletList.innerHTML = `
+    <h3>Carteiras Salvas no Sistema:</h3>
+    <div class="wallet-selection-items">
+      ${wallets.map(wallet => `
+        <div class="wallet-selection-item">
+          <div class="wallet-info">
+            <div class="wallet-id-display">
+              <strong>ID: ${wallet.wallet_id}</strong>
+              <span class="wallet-status-badge ${wallet.encrypted ? 'encrypted' : 'unencrypted'}">
+                ${wallet.encrypted ? '🔒 Encrypted' : '🔓 Unencrypted'}
+              </span>
+            </div>
+            <small class="wallet-date">Last used: ${new Date(wallet.last_used).toLocaleString()}</small>
+          </div>
+          <div class="wallet-selection-actions">
+            <button class="action-button load-wallet-btn" data-wallet-id="${wallet.wallet_id}" data-encrypted="${wallet.encrypted}">
+              ${wallet.encrypted ? '🔐 Load (Password Required)' : '📂 Load Wallet'}
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  container.appendChild(walletList);
+  
+  // Adicionar event listeners
+  walletList.querySelectorAll('.load-wallet-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const walletId = e.target.dataset.walletId;
+      const isEncrypted = e.target.dataset.encrypted === 'true';
+      
+      if (isEncrypted) {
+        // Show password modal for encrypted wallets
+        showPasswordModal(walletId);
+      } else {
+        // Load directly for unencrypted wallets with empty password
+        console.log(`Loading unencrypted wallet: ${walletId}`);
+        loadWalletById(walletId, '');
+      }
+    });
+  });
+}
+
+// Função legado para compatibilidade
+function showApiWalletsList(wallets) {
+  const walletsSection = document.getElementById('walletsSection');
+  if (!walletsSection) return;
+  
+  const walletList = document.createElement('div');
+  walletList.className = 'wallet-list';
+  walletList.innerHTML = `
+    <h3>Carteiras Encontradas no Sistema:</h3>
+    <div class="wallet-items">
+      ${wallets.map(wallet => `
+        <div class="wallet-item">
+          <div class="wallet-info">
+            <span class="wallet-id">${wallet.wallet_id}</span>
+            <small class="wallet-date">Último uso: ${new Date(wallet.last_used).toLocaleString('pt-BR')}</small>
+          </div>
+          <div class="wallet-actions">
+            <span class="wallet-status">${wallet.encrypted ? '🔒 Criptografada' : '🔓 Não criptografada'}</span>
+            <button class="load-wallet-btn" data-wallet-id="${wallet.wallet_id}" data-encrypted="${wallet.encrypted}">Carregar</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  walletsSection.appendChild(walletList);
+  
+  // Adicionar event listeners
+  walletList.querySelectorAll('.load-wallet-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const walletId = e.target.dataset.walletId;
+      const isEncrypted = e.target.dataset.encrypted === 'true';
+      promptForWalletPassword(walletId, isEncrypted);
+    });
+  });
+  
+  walletsSection.style.display = 'block';
+}
+
+// Mostrar lista de carteiras locais no container
+function showLocalWalletsInContainer(walletIds, container) {
+  const walletList = document.createElement('div');
+  walletList.className = 'wallet-selection-list';
+  walletList.innerHTML = `
+    <h3>Carteiras Locais Encontradas:</h3>
+    <div class="wallet-selection-items">
+      ${walletIds.map(id => `
+        <div class="wallet-selection-item">
+          <div class="wallet-info">
+            <div class="wallet-id-display">
+              <strong>ID: ${id}</strong>
+              <span class="wallet-status-badge encrypted">🔒 Criptografada</span>
+            </div>
+            <small class="wallet-date">Armazenada localmente</small>
+          </div>
+          <div class="wallet-selection-actions">
+            <button class="action-button load-wallet-btn" data-wallet-id="${id}">
+              🔐 Carregar Carteira
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  container.appendChild(walletList);
+  
+  // Adicionar event listeners
+  walletList.querySelectorAll('.load-wallet-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const walletId = e.target.dataset.walletId;
+      promptForWalletPassword(walletId, true); // Assumir que carteiras locais são criptografadas
+    });
+  });
+}
+
+// Função legado para compatibilidade
+function showLocalWalletsList(walletIds) {
+  const walletsSection = document.getElementById('walletsSection');
+  if (!walletsSection) return;
+  
+  const walletList = document.createElement('div');
+  walletList.className = 'wallet-list';
+  walletList.innerHTML = `
+    <h3>Carteiras Locais Encontradas:</h3>
+    <div class="wallet-items">
+      ${walletIds.map(id => `
+        <div class="wallet-item">
+          <span class="wallet-id">${id}</span>
+          <button class="load-wallet-btn" data-wallet-id="${id}">Carregar</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  
+  walletsSection.appendChild(walletList);
+  
+  // Adicionar event listeners
+  walletList.querySelectorAll('.load-wallet-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const walletId = e.target.dataset.walletId;
+      promptForWalletPassword(walletId, true); // Assumir que carteiras locais são criptografadas
+    });
+  });
+  
+  walletsSection.style.display = 'block';
+}
+
+// Solicitar senha da carteira
+function promptForWalletPassword(walletId, isEncrypted) {
+  // Always treat wallets as potentially encrypted and show password modal
+  // The API will handle whether password is actually needed
+  showPasswordModal(walletId);
+}
+
+// Mostrar modal de senha
+function showPasswordModal(walletId) {
+  const modal = document.getElementById('passwordModal');
+  const modalWalletId = document.getElementById('modalWalletId');
+  const passwordInput = document.getElementById('modalPassword');
+  const confirmBtn = document.getElementById('confirmPasswordBtn');
+  const cancelBtn = document.getElementById('cancelPasswordBtn');
+  
+  // Set wallet ID in modal
+  if (modalWalletId) {
+    modalWalletId.textContent = walletId;
+  }
+  
+  // Clear previous password
+  if (passwordInput) {
+    passwordInput.value = '';
+    passwordInput.focus();
+  }
+  
+  // Show modal
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+  
+  // Handle confirm button
+  const handleConfirm = () => {
+    const password = passwordInput.value.trim();
+    hidePasswordModal();
+    
+    if (password) {
+      console.log(`Loading wallet: ${walletId} with password`);
+      loadWalletById(walletId, password);
+    } else {
+      console.log(`Loading wallet: ${walletId} without password`);
+      loadWalletById(walletId, null);
+    }
+  };
+  
+  // Handle cancel button
+  const handleCancel = () => {
+    hidePasswordModal();
+    walletService.showNotification('Wallet loading cancelled', 'info');
+  };
+  
+  // Handle Enter key
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleConfirm();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
+  };
+  
+  // Remove old event listeners
+  confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+  cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+  passwordInput.removeEventListener('keypress', handleKeyPress);
+  
+  // Add new event listeners
+  const newConfirmBtn = document.getElementById('confirmPasswordBtn');
+  const newCancelBtn = document.getElementById('cancelPasswordBtn');
+  
+  newConfirmBtn.addEventListener('click', handleConfirm);
+  newCancelBtn.addEventListener('click', handleCancel);
+  passwordInput.addEventListener('keypress', handleKeyPress);
+}
+
+// Esconder modal de senha
+function hidePasswordModal() {
+  const modal = document.getElementById('passwordModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Carregar carteira por ID
+async function loadWalletById(walletId, password) {
+  try {
+    showLoading(true);
+    console.log(`Loading wallet ${walletId} with password: ${password ? '[PROVIDED]' : '[EMPTY]'}...`);
+    
+    // Tentar carregar da API primeiro
+    let result = null;
+    try {
+      // For unencrypted wallets, we need to send empty string password
+      // For encrypted wallets, we send the provided password
+      result = await walletService.loadWallet(walletId, password || '');
+      console.log('Wallet loaded from API:', result);
+    } catch (error) {
+      console.log('API load failed:', error.message);
+      
+      // Se o erro indica que é necessária senha e não foi fornecida, mostrar modal
+      if (error.message.includes('password') || error.message.includes('required')) {
+        if (!password || password.trim() === '') {
+          // First attempt without password failed, ask for password
+          walletService.showNotification('This wallet requires a password. Please enter it.', 'warning');
+          setTimeout(() => showPasswordModal(walletId), 500);
+          return;
+        } else {
+          // Password was provided but incorrect
+          walletService.showNotification('Incorrect password. Please try again.', 'error');
+          setTimeout(() => showPasswordModal(walletId), 500);
+          return;
+        }
+      }
+      
+      // For other errors, throw them
+      throw error;
+    }
+    
+    if (result && result.addresses) {
+      // Armazenar dados da carteira atual
+      currentWallet = {
+        mnemonic: result.mnemonic || '[PROTEGIDO]',
+        addresses: result.addresses,
+        walletId: walletId
+      };
+      currentWalletId = walletId;
+      
+      // Mostrar endereços
+      showAddresses(result.addresses);
+      
+      walletService.showNotification('Wallet loaded successfully!', 'success');
+      
+      // Limpar lista de carteiras se existir
+      const walletList = document.querySelector('.wallet-list');
+      if (walletList) {
+        walletList.remove();
+      }
+      
+    } else {
+      throw new Error('Dados da carteira inválidos');
+    }
+    
+  } catch (error) {
+    console.error('Error loading wallet:', error);
+    walletService.showNotification('Erro ao carregar carteira: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Atualizar status da carteira na interface
+function updateWalletStatus(title, info) {
+  const walletStatusCard = document.querySelector('.wallet-status');
+  const titleElement = walletStatusCard?.querySelector('.service-title');
+  const infoElement = walletStatusCard?.querySelector('.service-info');
+  
+  if (titleElement) titleElement.textContent = title;
+  if (infoElement) infoElement.textContent = info;
+  
+  // Atualizar classe do status
+  if (walletStatusCard) {
+    if (title.includes('carregada') || title.includes('ativa')) {
+      walletStatusCard.classList.add('active');
+    } else {
+      walletStatusCard.classList.remove('active');
+    }
+  }
+}
+
+// Funções de Gerenciamento de Carteira
+
+// Gerar nova carteira
+async function generateNewWallet() {
+  try {
+    console.log('Generate wallet button clicked');
+    showLoading(true);
+    
+    // Get parameters from form
+    const wordCount = parseInt(document.getElementById('wordCount').value) || 12;
+    const password = document.getElementById('generatePassword').value.trim();
+    const walletId = document.getElementById('generateWalletId').value.trim();
+    
+    // Usar API para gerar carteira
+    console.log(`Calling API to generate ${wordCount}-word wallet...`);
+    const result = await walletService.generateWallet(walletId || null, password || null, wordCount);
+    console.log('API response:', result);
+    
+    if (result && result.mnemonic) {
+      console.log('Wallet generated successfully, displaying mnemonic...');
+      // Store the generated data globally for verification
+      currentWallet = {
+        mnemonic: result.mnemonic,
+        addresses: result.addresses || {},
+        walletId: result.wallet_id,
+        wordCount: wordCount,
+        bip39Passphrase: password  // This is the BIP39 passphrase (13th/25th word)
+      };
+      currentWalletId = result.wallet_id;
+      
+      // Show mnemonic for user to save
+      showMnemonic(result.mnemonic);
+      
+      // Clear form fields
+      document.getElementById('wordCount').value = '12';
+      document.getElementById('generatePassword').value = '';
+      document.getElementById('generateWalletId').value = '';
+      
+      const message = password ? 
+        `New encrypted ${wordCount}-word wallet generated successfully! ID: ${result.wallet_id}` : 
+        `New ${wordCount}-word wallet generated successfully! Remember to encrypt it for security.`;
+      
+      walletService.showNotification(message, 'success');
+    } else {
+      throw new Error('Resposta inválida da API');
+    }
+    
+  } catch (error) {
+    console.error('Error generating wallet:', error);
+    walletService.showNotification('Erro ao gerar carteira: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Importar carteira existente
+async function importExistingWallet() {
+  const mnemonic = document.getElementById('importMnemonic').value.trim();
+  const passphrase = document.getElementById('importPassphrase').value || '';
+  const password = document.getElementById('importPassword').value.trim();
+  const walletId = document.getElementById('importWalletId').value.trim();
+  
+  if (!mnemonic) {
+    walletService.showNotification('Por favor, insira o mnemônico', 'warning');
+    return;
+  }
+  
+  try {
+    showLoading(true);
+    
+    // Validar mnemônico usando API
+    const isValid = await walletService.validateMnemonic(mnemonic);
+    if (!isValid) {
+      throw new Error('Mnemônico inválido');
+    }
+    
+    // Importar carteira usando API
+    const result = await walletService.importWallet(mnemonic, passphrase);
+    
+    if (result && result.wallet_id) {
+      // If password provided, save encrypted wallet
+      if (password) {
+        try {
+          await walletService.saveWallet(mnemonic, password, walletId || result.wallet_id);
+        } catch (saveError) {
+          console.warn('Failed to save encrypted wallet:', saveError);
+          walletService.showNotification('Wallet imported but encryption failed', 'warning');
+        }
+      }
+      
+      // Obter endereços da carteira
+      const addresses = await walletService.getWalletAddresses(result.wallet_id);
+      
+      // Armazenar dados da carteira atual
+      currentWallet = {
+        mnemonic: mnemonic,
+        addresses: addresses,
+        walletId: result.wallet_id
+      };
+      currentWalletId = result.wallet_id;
+      
+      // Mostrar endereços
+      showAddresses(addresses);
+      
+      // Limpar campos
+      document.getElementById('importMnemonic').value = '';
+      document.getElementById('importPassphrase').value = '';
+      document.getElementById('importPassword').value = '';
+      document.getElementById('importWalletId').value = '';
+      
+      const message = password ? 
+        `Wallet imported and encrypted successfully! ID: ${result.wallet_id}` : 
+        'Wallet imported successfully! Remember to encrypt it for security.';
+      
+      walletService.showNotification(message, 'success');
+    } else {
+      throw new Error('Resposta inválida da API');
+    }
+    
+  } catch (error) {
+    console.error('Error importing wallet:', error);
+    walletService.showNotification('Erro ao importar carteira: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Salvar carteira com senha
+async function saveWalletWithPassword() {
+  if (!currentWallet || !currentWallet.mnemonic) {
+    walletService.showNotification('Nenhuma carteira para salvar', 'warning');
+    return;
+  }
+  
+  const password = document.getElementById('save-password').value;
+  const confirmPassword = document.getElementById('confirm-password').value;
+  
+  if (!password) {
+    walletService.showNotification('Por favor, insira uma senha', 'warning');
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    walletService.showNotification('Senhas não coincidem', 'warning');
+    return;
+  }
+  
+  if (password.length < 8) {
+    walletService.showNotification('Senha deve ter pelo menos 8 caracteres', 'warning');
+    return;
+  }
+  
+  try {
+    showLoading(true);
+    
+    // Salvar carteira usando API
+    const result = await walletService.saveWallet(
+      currentWallet.mnemonic, 
+      password, 
+      currentWalletId
+    );
+    
+    if (result && result.wallet_id) {
+      currentWalletId = result.wallet_id;
+      
+      // Limpar campos de senha
+      document.getElementById('save-password').value = '';
+      document.getElementById('confirm-password').value = '';
+      
+      walletService.showNotification(`Carteira salva com ID: ${result.wallet_id}`, 'success');
+    } else {
+      throw new Error('Resposta inválida da API');
+    }
+    
+  } catch (error) {
+    console.error('Error saving wallet:', error);
+    walletService.showNotification('Erro ao salvar carteira: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Carregar carteira existente
+async function loadExistingWallet() {
+  const walletId = document.getElementById('load-wallet-id').value.trim();
+  const password = document.getElementById('load-password').value;
+  
+  if (!walletId || !password) {
+    walletService.showNotification('Por favor, insira o ID da carteira e a senha', 'warning');
+    return;
+  }
+  
+  try {
+    showLoading(true);
+    
+    // Carregar carteira usando API
+    const result = await walletService.loadWallet(walletId, password);
+    
+    if (result && result.mnemonic) {
+      // Obter endereços da carteira
+      const addresses = await walletService.getWalletAddresses(walletId);
+      
+      // Armazenar dados da carteira atual
+      currentWallet = {
+        mnemonic: result.mnemonic,
+        addresses: addresses,
+        walletId: walletId
+      };
+      currentWalletId = walletId;
+      
+      // Mostrar endereços
+      showAddresses(addresses);
+      
+      // Limpar campos
+      document.getElementById('load-wallet-id').value = '';
+      document.getElementById('load-password').value = '';
+      
+      walletService.showNotification('Carteira carregada com sucesso!', 'success');
+      
+      // Atualizar saldos
+      setTimeout(() => updateAllBalances(), 1000);
+    } else {
+      throw new Error('Dados da carteira inválidos');
+    }
+    
+  } catch (error) {
+    console.error('Error loading wallet:', error);
+    walletService.showNotification('Erro ao carregar carteira: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Confirmar seed phrase e continuar
+function confirmSeed() {
+  const seedSection = document.getElementById('seedSection');
+  const verificationSection = document.getElementById('verificationSection');
+  
+  if (seedSection) {
+    seedSection.style.display = 'none';
+  }
+  
+  if (verificationSection) {
+    verificationSection.style.display = 'block';
+    verificationSection.scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  // Generate verification challenges
+  generateVerificationChallenges();
+  
+  walletService.showNotification('Please verify your seed phrase to continue', 'info');
+}
+
+
+
+
+
+// Funções de Verificação de Mnemônico
+
+// Generate verification challenges for mnemonic confirmation
+function generateVerificationChallenges() {
+  if (!currentWallet || !currentWallet.mnemonic) {
+    walletService.showNotification('No mnemonic available for verification', 'error');
+    return;
+  }
+  
+  const words = currentWallet.mnemonic.split(' ');
+  const totalWords = words.length;
+  const challengeCount = Math.ceil(totalWords / 4); // 1/4 of words as specified
+  
+  // Store the words for later validation
+  currentMnemonicWords = words;
+  
+  // Generate random positions for challenges
+  const challengePositions = [];
+  while (challengePositions.length < challengeCount) {
+    const randomIndex = Math.floor(Math.random() * totalWords);
+    if (!challengePositions.includes(randomIndex)) {
+      challengePositions.push(randomIndex);
+    }
+  }
+  
+  // Sort positions in ascending order
+  challengePositions.sort((a, b) => a - b);
+  
+  // Store challenges globally
+  verificationChallenges = challengePositions.map(position => ({
+    position: position + 1, // 1-based indexing for display
+    index: position,       // 0-based indexing for validation
+    expectedWord: words[position]
+  }));
+  
+  // Generate the verification UI
+  generateVerificationUI(verificationChallenges);
+}
+
+// Generate verification UI elements
+function generateVerificationUI(challenges) {
+  const challengeContainer = document.getElementById('verificationContainer');
+  
+  if (!challengeContainer) {
+    walletService.showNotification('Verification UI container not found', 'error');
+    return;
+  }
+  
+  // Clear existing challenges
+  challengeContainer.innerHTML = '';
+  
+  challenges.forEach((challenge, index) => {
+    const challengeElement = document.createElement('div');
+    challengeElement.className = 'verification-challenge';
+    challengeElement.innerHTML = `
+      <label for="word-${challenge.position}">
+        Word #${challenge.position}:
+      </label>
+      <input 
+        type="text" 
+        id="word-${challenge.position}" 
+        class="verification-input" 
+        placeholder="Enter word ${challenge.position}"
+        data-position="${challenge.position}"
+        data-index="${challenge.index}"
+        autocomplete="off"
+        spellcheck="false"
+      />
+    `;
+    challengeContainer.appendChild(challengeElement);
+  });
+  
+  // Focus on first input
+  const firstInput = challengeContainer.querySelector('.verification-input');
+  if (firstInput) {
+    setTimeout(() => firstInput.focus(), 100);
+  }
+}
+
+// Validate mnemonic words entered by user
+function validateMnemonicWords() {
+  if (!verificationChallenges || verificationChallenges.length === 0) {
+    walletService.showNotification('No verification challenges available', 'error');
+    return;
+  }
+  
+  let allCorrect = true;
+  const incorrectWords = [];
+  
+  // Validate each challenge
+  verificationChallenges.forEach(challenge => {
+    const input = document.getElementById(`word-${challenge.position}`);
+    if (!input) {
+      allCorrect = false;
+      return;
+    }
+    
+    const userWord = input.value.trim().toLowerCase();
+    const expectedWord = challenge.expectedWord.toLowerCase();
+    
+    // Remove any previous error styling
+    input.classList.remove('error', 'success');
+    
+    if (userWord !== expectedWord) {
+      allCorrect = false;
+      incorrectWords.push({
+        position: challenge.position,
+        entered: userWord,
+        expected: expectedWord
+      });
+      input.classList.add('error');
+    } else {
+      input.classList.add('success');
+    }
+  });
+  
+  if (allCorrect) {
+    walletService.showNotification('Mnemonic verification successful! Now enter a password to secure your wallet.', 'success');
+    
+    // Instead of showing security section, show password prompt and save wallet directly
+    promptPasswordAndSaveWallet();
+    
+    // Clear verification data for security
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('.verification-input');
+      inputs.forEach(input => {
+        input.value = '';
+        input.classList.remove('error', 'success');
+      });
+    }, 2000);
+    
+  } else {
+    // Show specific error messages
+    const errorMsg = incorrectWords.length === 1 
+      ? `Incorrect word at position ${incorrectWords[0].position}. Please try again.`
+      : `Incorrect words at positions: ${incorrectWords.map(w => w.position).join(', ')}. Please try again.`;
+    
+    walletService.showNotification(errorMsg, 'error');
+    
+    // Focus on first incorrect input
+    const firstErrorInput = document.querySelector('.verification-input.error');
+    if (firstErrorInput) {
+      firstErrorInput.focus();
+      firstErrorInput.select();
+    }
+  }
+}
+
+// Prompt for password and save wallet after verification
+function promptPasswordAndSaveWallet() {
+  // Create a custom password prompt for wallet saving
+  const passwordPrompt = document.createElement('div');
+  passwordPrompt.className = 'password-modal';
+  passwordPrompt.id = 'saveWalletModal';
+  passwordPrompt.style.display = 'block';
+  
+  passwordPrompt.innerHTML = `
+    <div class="password-modal-content">
+      <h3>🔐 Secure Your Wallet</h3>
+      <div class="password-modal-body">
+        <p><strong>Database Encryption Password</strong></p>
+        <p>Enter a password to encrypt and securely store your wallet in the database.</p>
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #28a745;">
+          <small><strong>Note:</strong> This is different from your BIP39 passphrase${currentWallet.bip39Passphrase ? ' (which you entered earlier)' : ''}. This password encrypts your wallet data in storage.</small>
+        </div>
+        <div class="wallet-id-info">
+          <strong>Wallet ID:</strong> ${currentWalletId || 'Auto-generated'}
+        </div>
+        
+        <div style="margin: 20px 0;">
+          <label for="saveWalletPassword">Database Encryption Password:</label>
+          <input 
+            type="password" 
+            id="saveWalletPassword" 
+            placeholder="Enter encryption password (min 8 characters)"
+            autocomplete="new-password"
+          />
+        </div>
+        
+        <div style="margin: 15px 0;">
+          <label for="confirmWalletPassword">Confirm Encryption Password:</label>
+          <input 
+            type="password" 
+            id="confirmWalletPassword" 
+            placeholder="Confirm your encryption password"
+            autocomplete="new-password"
+          />
+        </div>
+      </div>
+      
+      <div class="password-modal-actions">
+        <button class="secondary-button" onclick="cancelWalletSave()">
+          Cancel
+        </button>
+        <button class="primary-button" onclick="saveWalletWithPassword()">
+          💾 Save Wallet
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(passwordPrompt);
+  
+  // Focus on password input
+  setTimeout(() => {
+    document.getElementById('saveWalletPassword').focus();
+  }, 100);
+  
+  // Add enter key listener
+  document.getElementById('saveWalletPassword').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.getElementById('confirmWalletPassword').focus();
+    }
+  });
+  
+  document.getElementById('confirmWalletPassword').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      saveWalletWithPassword();
+    }
+  });
+}
+
+// Cancel wallet save and return to verification
+function cancelWalletSave() {
+  const modal = document.getElementById('saveWalletModal');
+  if (modal) {
+    modal.remove();
+  }
+  
+  // Show verification section again
+  const verificationSection = document.getElementById('verificationSection');
+  if (verificationSection) {
+    verificationSection.style.display = 'block';
+  }
+}
+
+// Save wallet with entered password
+async function saveWalletWithPassword() {
+  const password = document.getElementById('saveWalletPassword').value;
+  const confirmPassword = document.getElementById('confirmWalletPassword').value;
+  
+  // Validate passwords
+  if (!password) {
+    walletService.showNotification('Please enter a password', 'warning');
+    document.getElementById('saveWalletPassword').focus();
+    return;
+  }
+  
+  if (password.length < 8) {
+    walletService.showNotification('Password must be at least 8 characters long', 'warning');
+    document.getElementById('saveWalletPassword').focus();
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    walletService.showNotification('Passwords do not match', 'warning');
+    document.getElementById('confirmWalletPassword').focus();
+    return;
+  }
+  
+  if (!currentWallet || !currentWallet.mnemonic) {
+    walletService.showNotification('No wallet data to save', 'error');
+    return;
+  }
+  
+  try {
+    showLoading(true);
+    
+    // Save wallet using API
+    const metadata = {
+      wordCount: currentWallet.wordCount,
+      hasBip39Passphrase: !!currentWallet.bip39Passphrase,
+      createdAt: new Date().toISOString()
+    };
+    
+    const result = await walletService.saveWallet(
+      currentWallet.mnemonic, 
+      password,  // This is the database encryption password
+      currentWalletId,
+      metadata
+    );
+    
+    if (result && result.wallet_id) {
+      currentWalletId = result.wallet_id;
+      
+      // Remove password modal
+      const modal = document.getElementById('saveWalletModal');
+      if (modal) {
+        modal.remove();
+      }
+      
+      // Hide verification section
+      const verificationSection = document.getElementById('verificationSection');
+      if (verificationSection) {
+        verificationSection.style.display = 'none';
+      }
+      
+      // Show current wallet section with the generated addresses
+      showCurrentWalletInfo(currentWallet.addresses);
+      
+      walletService.showNotification(`Wallet saved successfully with ID: ${result.wallet_id}`, 'success');
+      
+      // Update balances
+      setTimeout(() => updateAllBalances(), 1000);
+    } else {
+      throw new Error('Invalid response from API');
+    }
+    
+  } catch (error) {
+    console.error('Error saving wallet:', error);
+    walletService.showNotification('Error saving wallet: ' + error.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Funções de Interface do Usuário
+
+// Mostrar indicador de carregamento
+function showLoading(show) {
+  const loadingElement = document.querySelector('.loading');
+  if (loadingElement) {
+    loadingElement.style.display = show ? 'block' : 'none';
+  }
+  
+  // Desabilitar/habilitar botões durante carregamento
+  const buttons = document.querySelectorAll('button');
+  buttons.forEach(button => {
+    button.disabled = show;
+  });
+}
+
+// Exibir mnemônico gerado
+function showMnemonic(mnemonic) {
+  const seedSection = document.getElementById('seedSection');
+  const seedDisplay = document.getElementById('seedDisplay');
+  
+  if (seedSection && seedDisplay) {
+    // Create seed words display
+    const words = mnemonic.split(' ');
+    seedDisplay.innerHTML = '';
+    
+    words.forEach((word, index) => {
+      const wordElement = document.createElement('span');
+      wordElement.className = 'seed-word';
+      wordElement.innerHTML = `<span class="word-number">${index + 1}</span>${word}`;
+      seedDisplay.appendChild(wordElement);
+    });
+    
+    seedSection.style.display = 'block';
+    
+    // Scroll até a seção
+    seedSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+// Copiar mnemônico para clipboard
+function copyMnemonic() {
+  if (!currentWallet || !currentWallet.mnemonic) {
+    walletService.showNotification('Nenhuma seed phrase para copiar', 'warning');
+    return;
+  }
+  
+  navigator.clipboard.writeText(currentWallet.mnemonic).then(() => {
+    walletService.showNotification('Mnemônico copiado para o clipboard!', 'success');
+  }).catch(error => {
+    console.error('Error copying mnemonic:', error);
+    walletService.showNotification('Erro ao copiar mnemônico', 'error');
+  });
+}
+
+// Mostrar endereços da carteira
+function showAddresses(addresses) {
+  // Show current wallet section instead of balance wallets section
+  showCurrentWalletInfo(addresses);
+  
+  // Hide wallet selection section and show current wallet
+  const walletSelectionSection = document.getElementById('walletSelectionSection');
+  const createImportSection = document.getElementById('createImportSection');  
+  const seedSection = document.getElementById('seedSection');
+  const currentWalletSection = document.getElementById('currentWalletSection');
+  
+  if (walletSelectionSection) walletSelectionSection.style.display = 'none';
+  if (createImportSection) createImportSection.style.display = 'none';
+  if (seedSection) seedSection.style.display = 'none';
+  if (currentWalletSection) currentWalletSection.style.display = 'block';
+}
+
+function showCurrentWalletInfo(addresses) {
+  // Update current wallet info display
+  const walletNameElement = document.getElementById('currentWalletName');
+  const walletIdElement = document.getElementById('currentWalletId');
+  const walletCreatedElement = document.getElementById('currentWalletCreated');
+  
+  if (walletNameElement && currentWalletId) {
+    walletNameElement.textContent = `Wallet ${currentWalletId}`;
+  }
+  
+  if (walletIdElement && currentWalletId) {
+    walletIdElement.textContent = currentWalletId;
+  }
+  
+  if (walletCreatedElement) {
+    walletCreatedElement.textContent = new Date().toLocaleString('pt-BR');
+  }
+  
+  // Scroll to current wallet section
+  const currentWalletSection = document.getElementById('currentWalletSection');
+  if (currentWalletSection) {
+    currentWalletSection.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+// Copiar endereço para clipboard
+function copyAddress(chain) {
+  const chainElements = {
+    'bitcoin': 'bitcoin-address',
+    'ethereum': 'ethereum-address',
+    'liquid': 'liquid-address', 
+    'tron': 'tron-address',
+    'solana': 'solana-address'
+  };
+  
+  const elementId = chainElements[chain];
+  if (!elementId) return;
+  
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  
+  const address = element.textContent.trim();
+  if (address && address !== 'N/A') {
+    navigator.clipboard.writeText(address).then(() => {
+      walletService.showNotification(`Endereço ${chain} copiado!`, 'success');
+    }).catch(error => {
+      console.error('Error copying address:', error);
+      walletService.showNotification('Erro ao copiar endereço', 'error');
+    });
+  }
+}
+
+// Atualizar todos os saldos
+async function updateAllBalances() {
+  if (!currentWallet || !currentWallet.addresses) {
+    console.log('No wallet loaded');
+    return;
+  }
+  
+  console.log('Updating all balances...');
+  
+  const balanceElements = {
+    'bitcoin': 'btcBalance',
+    'ethereum': 'ethBalance',
+    'liquid': 'liquidBalance',
+    'tron': 'trxBalance',
+    'solana': 'solBalance'
+  };
+  
+  // Atualizar cada saldo usando a API
+  const updatePromises = Object.entries(currentWallet.addresses).map(async ([chain, data]) => {
+    try {
+      if (data.address && data.address !== 'Error') {
+        const balance = await walletService.getBalance(chain, data.address);
+        
+        const elementId = balanceElements[chain];
+        if (elementId) {
+          const element = document.getElementById(elementId);
+          if (element) {
+            element.textContent = balance;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error updating ${chain} balance:`, error);
+      const elementId = balanceElements[chain];
+      if (elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+          element.textContent = 'Erro';
+        }
+      }
+    }
+  });
+  
+  try {
+    await Promise.all(updatePromises);
+    console.log('✓ All balances updated');
+    walletService.showNotification('Saldos atualizados com sucesso', 'success');
+  } catch (error) {
+    console.error('Error updating balances:', error);
+    walletService.showNotification('Erro ao atualizar alguns saldos', 'warning');
+  }
+}
+
+// Alternar visibilidade de seções
+function toggleSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  if (section) {
+    const isVisible = section.style.display !== 'none';
+    section.style.display = isVisible ? 'none' : 'block';
+    
+    if (!isVisible) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}
+
+// Event Listeners para inicializar a aplicação
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Wallet interface loaded');
+  
+  // Adicionar event listeners para os botões
+  const generateBtn = document.getElementById('generateWalletBtn');
+  const importBtn = document.getElementById('importWalletBtn');
+  const copySeedBtn = document.getElementById('copySeedBtn');
+  const confirmSeedBtn = document.getElementById('confirmSeedBtn');
+  const refreshAllBtn = document.getElementById('refreshAllBalancesBtn');
+  
+  if (generateBtn) {
+    generateBtn.addEventListener('click', generateNewWallet);
+    console.log('Generate button event listener attached');
+  }
+  
+  if (importBtn) {
+    importBtn.addEventListener('click', importExistingWallet);
+    console.log('Import button event listener attached');
+  }
+  
+  if (copySeedBtn) {
+    copySeedBtn.addEventListener('click', copyMnemonic);
+    console.log('Copy seed button event listener attached');
+  }
+  
+  if (confirmSeedBtn) {
+    confirmSeedBtn.addEventListener('click', confirmSeed);
+    console.log('Confirm seed button event listener attached');
+  }
+  
+  // Balance refresh removed - not needed in admin wallet view
+  
+  // Event listeners para navegação entre seções
+  const showCreateOptionsBtn = document.getElementById('showCreateOptionsBtn');
+  const backToSelectionBtn = document.getElementById('backToSelectionBtn');
+  const loadAnotherWalletBtn = document.getElementById('loadAnotherWalletBtn');
+  
+  if (showCreateOptionsBtn) {
+    showCreateOptionsBtn.addEventListener('click', () => {
+      const walletSelectionSection = document.getElementById('walletSelectionSection');
+      const createImportSection = document.getElementById('createImportSection');
+      
+      if (walletSelectionSection) walletSelectionSection.style.display = 'none';
+      if (createImportSection) createImportSection.style.display = 'block';
+    });
+    console.log('Show create options button event listener attached');
+  }
+  
+  if (backToSelectionBtn) {
+    backToSelectionBtn.addEventListener('click', () => {
+      const walletSelectionSection = document.getElementById('walletSelectionSection');
+      const createImportSection = document.getElementById('createImportSection');
+      
+      if (walletSelectionSection) walletSelectionSection.style.display = 'block';
+      if (createImportSection) createImportSection.style.display = 'none';
+    });
+    console.log('Back to selection button event listener attached');
+  }
+  
+  if (loadAnotherWalletBtn) {
+    loadAnotherWalletBtn.addEventListener('click', () => {
+      // Clear current wallet data
+      currentWallet = null;
+      currentWalletId = null;
+      
+      // Hide current wallet section
+      const currentWalletSection = document.getElementById('currentWalletSection');
+      if (currentWalletSection) currentWalletSection.style.display = 'none';
+      
+      // Show wallet selection section and reload wallet list
+      const walletSelectionSection = document.getElementById('walletSelectionSection');
+      if (walletSelectionSection) walletSelectionSection.style.display = 'block';
+      
+      // Reload existing wallets
+      checkForExistingWallets();
+      
+      walletService.showNotification('Ready to load another wallet', 'info');
+    });
+    console.log('Load another wallet button event listener attached');
+  }
+
+  if (loadAnotherWalletBtn) {
+    loadAnotherWalletBtn.addEventListener('click', () => {
+      // Hide current wallet section and show wallet selection
+      const currentWalletSection = document.getElementById('currentWalletSection');
+      const walletSelectionSection = document.getElementById('walletSelectionSection');
+      
+      if (currentWalletSection) currentWalletSection.style.display = 'none';
+      if (walletSelectionSection) walletSelectionSection.style.display = 'block';
+      
+      // Clear current wallet data
+      currentWallet = null;
+      currentWalletId = null;
+      
+      // Check for existing wallets to reload the list
+      checkForExistingWallets();
+    });
+    console.log('Load another wallet button event listener attached');
+  }
+  
+  // Verificar se a API está acessível
+  walletService.makeApiRequest('/wallet/status')
+    .then(response => {
+      console.log('API connection successful:', response);
+      walletService.showNotification('Sistema inicializado com sucesso', 'success');
+      
+      // Verificar se há carteiras existentes
+      checkForExistingWallets();
+    })
+    .catch(error => {
+      console.error('API connection failed:', error);
+      walletService.showNotification('Erro ao conectar com API', 'error');
+    });
+});

@@ -31,6 +31,38 @@ Lightning Network:
 
 Transaction Fees:
 - GET  /api/v1/fees                    - Obter estimativas de taxas de transação
+
+HD Wallet Management:
+- POST /api/v1/wallet/hd/generate      - Gerar nova seed phrase BIP39
+- POST /api/v1/wallet/hd/import        - Importar wallet existente
+- POST /api/v1/wallet/hd/derive        - Derivar endereços para todas as chains
+- GET  /api/v1/wallet/hd/addresses     - Obter endereços derivados em cache
+- POST /api/v1/wallet/hd/unlock        - Desbloquear wallet com senha
+- GET  /api/v1/wallet/hd/chains        - Listar chains suportadas
+- DELETE /api/v1/wallet/hd/remove      - Remover wallet do sistema
+
+Elements/Liquid Network:
+- GET  /api/v1/elements/balances       - Obter saldos de todos os assets
+- GET  /api/v1/elements/assets         - Listar assets conhecidos
+- POST /api/v1/elements/addresses      - Gerar novo endereço Liquid
+- POST /api/v1/elements/send           - Enviar asset para endereço
+- GET  /api/v1/elements/utxos          - Listar UTXOs Liquid não gastos
+- GET  /api/v1/elements/transactions   - Listar transações Liquid recentes
+- GET  /api/v1/elements/info           - Informações da blockchain Liquid
+
+Lightning Chat System:
+- GET  /api/v1/chat/conversations      - Listar todas as conversas ativas
+- GET  /api/v1/chat/messages           - Obter mensagens de uma conversa
+- POST /api/v1/chat/send               - Enviar mensagem via keysend
+- GET  /api/v1/chat/notifications      - Contador de novas mensagens
+- POST /api/v1/chat/reset              - Resetar contador de mensagens
+
+Advanced Lightning Features:
+- GET  /api/v1/lightning/balance       - Saldo dos canais Lightning
+- GET  /api/v1/lightning/info          - Informações detalhadas do node
+- POST /api/v1/lightning/decode        - Decodificar payment request
+- GET  /api/v1/lightning/forwarding    - Histórico de forwarding
+- POST /api/v1/lightning/backup        - Backup do channel.backup
 """
 
 from flask import Flask, jsonify, request
@@ -38,6 +70,9 @@ from flask_cors import CORS
 import subprocess
 import psutil
 import os
+from datetime import datetime
+import uuid
+import requests
 import json
 from pathlib import Path
 import grpc
@@ -51,9 +86,26 @@ import sqlite3
 import threading
 import base64
 import warnings
+import secrets
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+
+# Wallet management imports
+try:
+    import mnemonic
+    from bip32 import BIP32
+    import hashlib
+    import hmac
+    HAS_WALLET_LIBS = True
+    print("Wallet crypto libraries loaded successfully")
+except ImportError as e:
+    HAS_WALLET_LIBS = False
+    print(f"Warning: Wallet crypto libraries not available: {e}")
+    print("Install with: pip install mnemonic bip32utils")
 
 # Desabilitar warnings desnecessários
-import warnings
 warnings.filterwarnings("ignore")
 
 # Configurações LND
@@ -61,6 +113,76 @@ LND_HOST = "localhost"
 LND_GRPC_PORT = "10009"
 MACAROON_PATH = "/data/lnd/data/chain/bitcoin/testnet/admin.macaroon"
 TLS_CERT_PATH = "/data/lnd/tls.cert"
+
+# Configurações Elements/Liquid
+ELEMENTS_RPC_HOST = "localhost"
+ELEMENTS_RPC_PORT = "7041"
+ELEMENTS_RPC_USER = "test"
+ELEMENTS_RPC_PASSWORD = "test"
+
+# Configurações do Wallet HD
+WALLET_DATA_DIR = "/data/brln-wallet"
+WALLET_DB_PATH = os.path.join(WALLET_DATA_DIR, "wallets.db")
+
+# Criar diretório de dados do wallet se não existir
+os.makedirs(WALLET_DATA_DIR, exist_ok=True)
+
+# Configuração das blockchains suportadas
+SUPPORTED_CHAINS = {
+    'bitcoin': {
+        'name': 'Bitcoin',
+        'symbol': 'BTC',
+        'coin_type': 0,
+        'path': "m/44'/0'/0'/0/0",
+        'api_urls': [
+            'https://mempool.space/api/address/',
+            'https://blockstream.info/api/address/',
+            'https://blockchain.info/q/addressbalance/'
+        ]
+    },
+    'ethereum': {
+        'name': 'Ethereum',
+        'symbol': 'ETH',
+        'coin_type': 60,
+        'path': "m/44'/60'/0'/0/0",
+        'api_urls': [
+            'https://api.etherscan.io/api',
+            'https://eth-mainnet.g.alchemy.com/v2/demo',
+            'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
+        ]
+    },
+    'liquid': {
+        'name': 'Liquid Network',
+        'symbol': 'L-BTC',
+        'coin_type': 1776,
+        'path': "m/44'/1776'/0'/0/0",
+        'api_urls': [
+            'https://liquid.network/api/address/',
+            'https://blockstream.info/liquid/api/address/'
+        ]
+    },
+    'tron': {
+        'name': 'TRON',
+        'symbol': 'TRX',
+        'coin_type': 195,
+        'path': "m/44'/195'/0'/0/0",
+        'api_urls': [
+            'https://api.trongrid.io/wallet/getaccount',
+            'https://apilist.tronscanapi.com/api/account'
+        ]
+    },
+    'solana': {
+        'name': 'Solana',
+        'symbol': 'SOL',
+        'coin_type': 501,
+        'path': "m/44'/501'/0'/0'",
+        'api_urls': [
+            'https://api.mainnet-beta.solana.com',
+            'https://rpc.helius.xyz/?api-key=demo'
+        ]
+    }
+}
+
 try:
     from pydbus import SystemBus
     PYDBUS_AVAILABLE = True
@@ -81,6 +203,581 @@ except ImportError:
 
 app = Flask(__name__)
 CORS(app)
+
+# === WALLET MANAGEMENT SYSTEM ===
+
+class WalletManager:
+    """Gerenciador de carteiras HD com criptografia e derivação de chaves"""
+    
+    def __init__(self):
+        self.init_database()
+    
+    def init_database(self):
+        """Inicializa o banco de dados SQLite para wallets"""
+        conn = sqlite3.connect(WALLET_DB_PATH)
+        cursor = conn.cursor()
+        
+        # Tabela para armazenar wallets criptografadas
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS wallets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                wallet_id TEXT UNIQUE NOT NULL,
+                encrypted_mnemonic BLOB NOT NULL,
+                salt BLOB NOT NULL,
+                has_password BOOLEAN DEFAULT FALSE,
+                metadata TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                last_used DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Add has_password column if it doesn't exist (for existing databases)
+        cursor.execute('''
+            SELECT COUNT(*) as CNTREC FROM pragma_table_info('wallets') WHERE name='has_password'
+        ''')
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('ALTER TABLE wallets ADD COLUMN has_password BOOLEAN DEFAULT FALSE')
+            print("Added has_password column to existing wallets table")
+        
+        # Add encrypted_private_keys column if it doesn't exist
+        cursor.execute('''
+            SELECT COUNT(*) as CNTREC FROM pragma_table_info('wallets') WHERE name='encrypted_private_keys'
+        ''')
+        if cursor.fetchone()[0] == 0:
+            cursor.execute('ALTER TABLE wallets ADD COLUMN encrypted_private_keys BLOB')
+            print("Added encrypted_private_keys column to existing wallets table")
+        
+        # Tabela para cache de endereços derivados
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS derived_addresses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                wallet_id TEXT NOT NULL,
+                chain_id TEXT NOT NULL,
+                address TEXT NOT NULL,
+                derivation_path TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(wallet_id, chain_id)
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def generate_secure_entropy(self, word_count=12):
+        """Gera entropia segura usando múltiplas fontes"""
+        try:
+            # Determine entropy size based on word count
+            # 12 words = 128 bits, 24 words = 256 bits
+            entropy_size = 16 if word_count == 12 else 32
+            
+            # Base entropy
+            entropy = secrets.token_bytes(entropy_size)
+            
+            # Add system-specific entropy
+            import platform
+            import time
+            system_info = f"{platform.node()}{platform.processor()}{time.time()}"
+            system_hash = hashlib.sha256(system_info.encode()).digest()[:entropy_size//2]
+            
+            # Combine entropy sources
+            combined = bytes(a ^ b for a, b in zip(entropy[:entropy_size//2], system_hash))
+            combined += entropy[entropy_size//2:]
+            
+            return combined
+        except Exception as e:
+            print(f"Error generating entropy: {e}")
+            return secrets.token_bytes(entropy_size)
+    
+    def generate_mnemonic(self, word_count=12):
+        """Gera uma nova seed phrase BIP39 com 12 ou 24 palavras"""
+        if not HAS_WALLET_LIBS:
+            return None, "Wallet libraries not available"
+        
+        if word_count not in [12, 24]:
+            return None, "Word count must be 12 or 24"
+        
+        try:
+            entropy = self.generate_secure_entropy(word_count)
+            mnemo = mnemonic.Mnemonic("english")
+            seed_phrase = mnemo.to_mnemonic(entropy)
+            
+            # Verify word count
+            words = seed_phrase.split()
+            if len(words) != word_count:
+                return None, f"Generated mnemonic has {len(words)} words, expected {word_count}"
+            
+            if not mnemo.check(seed_phrase):
+                return None, "Generated mnemonic failed validation"
+            
+            return seed_phrase, None
+        except Exception as e:
+            return None, f"Error generating mnemonic: {str(e)}"
+    
+    def validate_mnemonic(self, seed_phrase):
+        """Valida uma seed phrase BIP39"""
+        if not HAS_WALLET_LIBS:
+            return False, "Wallet libraries not available"
+        
+        try:
+            mnemo = mnemonic.Mnemonic("english")
+            return mnemo.check(seed_phrase.strip()), None
+        except Exception as e:
+            return False, f"Error validating mnemonic: {str(e)}"
+    
+    def encrypt_mnemonic(self, seed_phrase, password):
+        """Criptografa uma seed phrase usando AES-256 com salt SHA256"""
+        try:
+            import hashlib
+            import os
+            
+            # Gerar salt aleatório (32 bytes)
+            salt = os.urandom(32)
+            
+            # Criar hash SHA256 da senha + salt
+            password_salt = password.encode() + salt
+            password_hash = hashlib.sha256(password_salt).digest()
+            
+            # Usar PBKDF2 com o hash SHA256 como entrada
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,  # 256 bits para AES-256
+                salt=salt,
+                iterations=200000,  # Aumentar iterações para maior segurança
+                backend=default_backend()
+            )
+            key = base64.urlsafe_b64encode(kdf.derive(password_hash))
+            
+            # Criptografar mnemonic com AES-256
+            fernet = Fernet(key)
+            encrypted_mnemonic = fernet.encrypt(seed_phrase.encode())
+            
+            return encrypted_mnemonic, salt, None
+        except Exception as e:
+            return None, None, f"Error encrypting mnemonic: {str(e)}"
+    
+    def encrypt_private_keys(self, private_keys_dict, password):
+        """Criptografa as chaves privadas usando AES-256 com salt SHA256"""
+        try:
+            import json
+            import hashlib
+            import os
+            
+            # Convert private keys dict to JSON string
+            private_keys_json = json.dumps(private_keys_dict)
+            
+            # Generate salt
+            salt = os.urandom(32)
+            
+            # Create password hash with salt
+            password_salt = password.encode() + salt
+            password_hash = hashlib.sha256(password_salt).digest()
+            
+            # Derive key using PBKDF2 with SHA256 hash
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=salt,
+                iterations=200000,
+                backend=default_backend()
+            )
+            key = base64.urlsafe_b64encode(kdf.derive(password_hash))
+            
+            # Encrypt private keys
+            fernet = Fernet(key)
+            encrypted_private_keys = fernet.encrypt(private_keys_json.encode())
+            
+            return encrypted_private_keys, salt, None
+        except Exception as e:
+            return None, None, f"Error encrypting private keys: {str(e)}"
+    
+    def decrypt_mnemonic(self, encrypted_mnemonic, salt, password):
+        """Descriptografa uma seed phrase usando AES-256 com salt SHA256"""
+        try:
+            import hashlib
+            
+            # Recriar hash SHA256 da senha + salt
+            password_salt = password.encode() + salt
+            password_hash = hashlib.sha256(password_salt).digest()
+            
+            # Derivar chave usando PBKDF2 com o hash SHA256
+            kdf = PBKDF2HMAC(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=salt,
+                iterations=200000,  # Mesmas iterações da criptografia
+                backend=default_backend()
+            )
+            key = base64.urlsafe_b64encode(kdf.derive(password_hash))
+            
+            # Descriptografar mnemonic
+            fernet = Fernet(key)
+            decrypted_mnemonic = fernet.decrypt(encrypted_mnemonic).decode()
+            
+            return decrypted_mnemonic, None
+        except Exception as e:
+            return None, f"Error decrypting mnemonic: {str(e)}"
+    
+    def derive_addresses(self, seed_phrase, passphrase=""):
+        """Deriva endereços para todas as chains suportadas"""
+        if not HAS_WALLET_LIBS:
+            return {}, "Wallet libraries not available"
+        
+        try:
+            # Gerar seed da mnemonic
+            mnemo = mnemonic.Mnemonic("english")
+            seed = mnemo.to_seed(seed_phrase, passphrase)
+            
+            # Criar BIP32 master key
+            bip32 = BIP32.from_seed(seed)
+            
+            addresses = {}
+            
+            for chain_id, chain_config in SUPPORTED_CHAINS.items():
+                try:
+                    # Derivar chave para a chain específica
+                    path = chain_config['path']
+                    derived_key = bip32.get_privkey_from_path(path)
+                    public_key = bip32.get_pubkey_from_path(path)
+                    
+                    # Gerar endereço baseado na chain
+                    address = self._generate_address_for_chain(
+                        chain_id, 
+                        public_key, 
+                        derived_key
+                    )
+                    
+                    addresses[chain_id] = {
+                        'address': address,
+                        'path': path,
+                        'chain': chain_config['name'],
+                        'symbol': chain_config['symbol']
+                    }
+                    
+                except Exception as e:
+                    addresses[chain_id] = {
+                        'error': f"Failed to derive {chain_id}: {str(e)}",
+                        'path': chain_config['path'],
+                        'chain': chain_config['name'],
+                        'symbol': chain_config['symbol']
+                    }
+            
+            return addresses, None
+            
+        except Exception as e:
+            return {}, f"Error deriving addresses: {str(e)}"
+    
+    def derive_private_keys(self, seed_phrase, passphrase=""):
+        """Deriva chaves privadas para todas as chains suportadas"""
+        if not HAS_WALLET_LIBS:
+            return {}, "Wallet libraries not available"
+        
+        try:
+            # Gerar seed da mnemonic
+            mnemo = mnemonic.Mnemonic("english")
+            seed = mnemo.to_seed(seed_phrase, passphrase)
+            
+            # Criar BIP32 master key
+            bip32 = BIP32.from_seed(seed)
+            
+            private_keys = {}
+            
+            for chain_id, chain_config in SUPPORTED_CHAINS.items():
+                try:
+                    # Derivar chave para a chain específica
+                    path = chain_config['path']
+                    derived_key = bip32.get_privkey_from_path(path)
+                    
+                    # Convert to hex string
+                    private_key_hex = derived_key.hex()
+                    
+                    private_keys[chain_id] = {
+                        'private_key': private_key_hex,
+                        'path': path,
+                        'chain': chain_config['name'],
+                        'symbol': chain_config['symbol']
+                    }
+                    
+                except Exception as e:
+                    private_keys[chain_id] = {
+                        'error': f"Failed to derive private key for {chain_id}: {str(e)}",
+                        'path': chain_config['path'],
+                        'chain': chain_config['name'],
+                        'symbol': chain_config['symbol']
+                    }
+            
+            return private_keys, None
+            
+        except Exception as e:
+            return {}, f"Error deriving private keys: {str(e)}"
+    
+    def _generate_address_for_chain(self, chain_id, public_key, private_key):
+        """Gera endereço específico para cada blockchain"""
+        try:
+            if chain_id == 'bitcoin':
+                return self._generate_bitcoin_address(public_key)
+            
+            elif chain_id == 'ethereum':
+                return self._generate_ethereum_address(public_key)
+            
+            elif chain_id == 'liquid':
+                return self._generate_liquid_address(public_key)
+            
+            elif chain_id == 'tron':
+                return self._generate_tron_address(public_key)
+            
+            elif chain_id == 'solana':
+                return self._generate_solana_address(public_key)
+            
+            else:
+                return f"Unsupported chain: {chain_id}"
+                
+        except Exception as e:
+            return f"Error generating {chain_id} address: {str(e)}"
+    
+    def _generate_bitcoin_address(self, public_key):
+        """Gera endereço Bitcoin (Bech32/P2WPKH)"""
+        try:
+            import hashlib
+            import base58
+            
+            # SHA256 hash do public key
+            sha256_hash = hashlib.sha256(public_key).digest()
+            
+            # RIPEMD160 hash do SHA256
+            ripe = hashlib.new('ripemd160')
+            ripe.update(sha256_hash)
+            ripemd160_hash = ripe.digest()
+            
+            # Para Bech32 (versão simplificada)
+            # Em produção usar biblioteca específica como python-bitcoinlib
+            
+            # Legacy P2PKH para simplicidade (versão 0x00)
+            versioned_payload = b'\x00' + ripemd160_hash
+            
+            # Checksum SHA256 duplo
+            checksum = hashlib.sha256(hashlib.sha256(versioned_payload).digest()).digest()[:4]
+            
+            # Endereço final
+            address_bytes = versioned_payload + checksum
+            address = base58.b58encode(address_bytes).decode('ascii')
+            
+            return address
+            
+        except Exception as e:
+            return f"Bitcoin address error: {str(e)}"
+    
+    def _generate_ethereum_address(self, public_key):
+        """Gera endereço Ethereum"""
+        try:
+            import hashlib
+            
+            # Remover primeiro byte (0x04) se presente (formato não comprimido)
+            if len(public_key) == 65 and public_key[0] == 0x04:
+                public_key = public_key[1:]
+            
+            # Keccak256 hash do public key
+            keccak = hashlib.sha3_256(public_key)
+            hash_bytes = keccak.digest()
+            
+            # Pegar últimos 20 bytes e adicionar 0x
+            address = '0x' + hash_bytes[-20:].hex()
+            
+            return address
+            
+        except Exception as e:
+            return f"Ethereum address error: {str(e)}"
+    
+    def _generate_liquid_address(self, public_key):
+        """Gera endereço Liquid (similar ao Bitcoin mas com prefixo diferente)"""
+        try:
+            import hashlib
+            import base58
+            
+            # SHA256 hash do public key
+            sha256_hash = hashlib.sha256(public_key).digest()
+            
+            # RIPEMD160 hash do SHA256
+            ripe = hashlib.new('ripemd160')
+            ripe.update(sha256_hash)
+            ripemd160_hash = ripe.digest()
+            
+            # Liquid usa versão diferente (0x39 para mainnet)
+            versioned_payload = b'\x39' + ripemd160_hash
+            
+            # Checksum SHA256 duplo
+            checksum = hashlib.sha256(hashlib.sha256(versioned_payload).digest()).digest()[:4]
+            
+            # Endereço final
+            address_bytes = versioned_payload + checksum
+            address = base58.b58encode(address_bytes).decode('ascii')
+            
+            return address
+            
+        except Exception as e:
+            return f"Liquid address error: {str(e)}"
+    
+    def _generate_tron_address(self, public_key):
+        """Gera endereço TRON"""
+        try:
+            import hashlib
+            import base58
+            
+            # Remover primeiro byte se presente
+            if len(public_key) == 65 and public_key[0] == 0x04:
+                public_key = public_key[1:]
+            
+            # Keccak256 hash do public key
+            keccak = hashlib.sha3_256(public_key)
+            hash_bytes = keccak.digest()
+            
+            # Pegar últimos 20 bytes
+            address_bytes = hash_bytes[-20:]
+            
+            # Adicionar prefixo TRON (0x41)
+            tron_address = b'\x41' + address_bytes
+            
+            # Checksum SHA256 duplo
+            checksum = hashlib.sha256(hashlib.sha256(tron_address).digest()).digest()[:4]
+            
+            # Endereço final com checksum
+            final_address = tron_address + checksum
+            address = base58.b58encode(final_address).decode('ascii')
+            
+            return address
+            
+        except Exception as e:
+            return f"TRON address error: {str(e)}"
+    
+    def _generate_solana_address(self, public_key):
+        """Gera endereço Solana"""
+        try:
+            import base58
+            
+            # Para Solana, o public key É o endereço
+            # Usar apenas os primeiros 32 bytes se necessário
+            if len(public_key) > 32:
+                public_key = public_key[:32]
+            
+            # Codificar em Base58
+            address = base58.b58encode(public_key).decode('ascii')
+            
+            return address
+            
+        except Exception as e:
+            return f"Solana address error: {str(e)}"
+    
+    def save_wallet(self, wallet_id, encrypted_mnemonic, salt, metadata=None, has_password=True, encrypted_private_keys=None):
+        """Salva wallet criptografada no banco"""
+        try:
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO wallets 
+                (wallet_id, encrypted_mnemonic, salt, has_password, metadata, encrypted_private_keys, last_used)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (wallet_id, encrypted_mnemonic, salt, has_password, 
+                  json.dumps(metadata) if metadata else None,
+                  encrypted_private_keys,
+                  datetime.datetime.now()))
+            
+            conn.commit()
+            conn.close()
+            return True, None
+            
+        except Exception as e:
+            return False, f"Error saving wallet: {str(e)}"
+    
+    def load_wallet(self, wallet_id):
+        """Carrega wallet do banco"""
+        try:
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT encrypted_mnemonic, salt, metadata 
+                FROM wallets WHERE wallet_id = ?
+            ''', (wallet_id,))
+            
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                encrypted_mnemonic, salt, metadata = result
+                metadata_dict = json.loads(metadata) if metadata else {}
+                return {
+                    'encrypted_mnemonic': encrypted_mnemonic,
+                    'salt': salt,
+                    'metadata': metadata_dict
+                }, None
+            else:
+                return None, "Wallet not found"
+                
+        except Exception as e:
+            return None, f"Error loading wallet: {str(e)}"
+    
+    def cache_addresses(self, wallet_id, addresses):
+        """Cache endereços derivados"""
+        try:
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            for chain_id, address_data in addresses.items():
+                if 'error' not in address_data:
+                    cursor.execute('''
+                        INSERT OR REPLACE INTO derived_addresses
+                        (wallet_id, chain_id, address, derivation_path)
+                        VALUES (?, ?, ?, ?)
+                    ''', (wallet_id, chain_id, address_data['address'], address_data['path']))
+            
+            conn.commit()
+            conn.close()
+            return True, None
+            
+        except Exception as e:
+            return False, f"Error caching addresses: {str(e)}"
+    
+    def get_cached_addresses(self, wallet_id):
+        """Recupera endereços do cache (temporário ou banco)"""
+        try:
+            # Primeiro, verificar se existe no cache temporário
+            if hasattr(self, 'temp_wallets') and wallet_id in self.temp_wallets:
+                temp_wallet = self.temp_wallets[wallet_id]
+                return temp_wallet['addresses'], None
+            
+            # Caso contrário, buscar no banco de dados
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT chain_id, address, derivation_path
+                FROM derived_addresses WHERE wallet_id = ?
+            ''', (wallet_id,))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            addresses = {}
+            for chain_id, address, derivation_path in results:
+                if chain_id in SUPPORTED_CHAINS:
+                    chain_config = SUPPORTED_CHAINS[chain_id]
+                    addresses[chain_id] = {
+                        'address': address,
+                        'path': derivation_path,
+                        'chain': chain_config['name'],
+                        'symbol': chain_config['symbol']
+                    }
+            
+            if not addresses:
+                return {}, "Wallet not found in cache or database"
+            
+            return addresses, None
+            
+        except Exception as e:
+            return {}, f"Error getting cached addresses: {str(e)}"
+
+# Singleton para o gerenciador de carteiras
+wallet_manager = WalletManager()
 
 class LNDgRPCClient:
     """Cliente gRPC para LND usando protocolo Lightning Network"""
@@ -584,6 +1281,97 @@ class LNDgRPCClient:
 # Singleton para reusar conexão gRPC
 lnd_grpc_client = LNDgRPCClient()
 
+# === CLIENTE RPC ELEMENTS/LIQUID ===
+
+class ElementsRPCClient:
+    """Cliente RPC para Elements/Liquid daemon"""
+    
+    def __init__(self):
+        self.host = ELEMENTS_RPC_HOST
+        self.port = ELEMENTS_RPC_PORT
+        self.user = ELEMENTS_RPC_USER
+        self.password = ELEMENTS_RPC_PASSWORD
+        self.auth = base64.b64encode(f"{self.user}:{self.password}".encode()).decode()
+        
+    def _call_rpc(self, method, params=None):
+        """Faz chamada RPC para Elements daemon"""
+        if params is None:
+            params = []
+            
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Basic {self.auth}'
+        }
+        
+        payload = {
+            "jsonrpc": "1.0",
+            "id": "python-elements-rpc",
+            "method": method,
+            "params": params
+        }
+        
+        try:
+            import requests
+            response = requests.post(
+                f"http://{self.host}:{self.port}/",
+                json=payload,
+                headers=headers,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if 'error' in result and result['error'] is not None:
+                    return None, f"Elements RPC Error: {result['error']}"
+                return result.get('result'), None
+            else:
+                return None, f"HTTP Error {response.status_code}: {response.text}"
+                
+        except requests.exceptions.RequestException as e:
+            return None, f"Connection Error: {str(e)}"
+        except Exception as e:
+            return None, f"Unexpected Error: {str(e)}"
+    
+    def get_balances(self):
+        """Obtém saldos de todos os assets"""
+        return self._call_rpc("getbalances")
+    
+    def get_asset_labels(self):
+        """Obtém labels/nomes dos assets conhecidos"""
+        return self._call_rpc("dumpassetlabels")
+    
+    def get_new_address(self, label="", address_type="bech32"):
+        """Gera novo endereço Liquid"""
+        return self._call_rpc("getnewaddress", [label, address_type])
+    
+    def send_to_address(self, address, amount, asset_label=None, subtract_fee=False):
+        """Envia asset para endereço"""
+        params = [address, amount]
+        if asset_label:
+            # Adicionar parâmetros opcionais até chegar no assetlabel
+            params.extend(["", "", subtract_fee, True, None, "unset", True, asset_label])
+        return self._call_rpc("sendtoaddress", params)
+    
+    def list_unspent(self, minconf=1, maxconf=9999999, asset=None):
+        """Lista UTXOs não gastos"""
+        params = [minconf, maxconf]
+        if asset:
+            params.append([])  # addresses
+            params.append(True)  # include_unsafe
+            params.append({"asset": asset})  # query_options
+        return self._call_rpc("listunspent", params)
+    
+    def list_transactions(self, count=30, skip=0):
+        """Lista transações recentes"""
+        return self._call_rpc("listtransactions", ["*", count, skip])
+    
+    def get_blockchain_info(self):
+        """Obtém informações da blockchain"""
+        return self._call_rpc("getblockchaininfo")
+
+# Singleton para reusar conexão Elements RPC
+elements_rpc_client = ElementsRPCClient()
+
 # === SISTEMA DE CHAT LIGHTNING ===
 
 # Configuração do banco SQLite
@@ -770,6 +1558,7 @@ SERVICE_MAPPING = {
     'lndg-controller': 'lndg-controller.service',
     'lnd': 'lnd.service',
     'bitcoind': 'bitcoind.service',
+    'elementsd': 'elementsd.service',
     'bos-telegram': 'bos-telegram.service',
     'tor': 'tor@default.service'
 }
@@ -2419,6 +3208,997 @@ def check_received_keysends():
             'error': str(e),
             'status': 'error'
         }), 500
+
+# === ENDPOINTS ELEMENTS/LIQUID ===
+
+@app.route('/api/v1/elements/balances', methods=['GET'])
+def get_elements_balances():
+    """Obter saldos de todos os assets Elements/Liquid"""
+    try:
+        # Obter saldos
+        balances_result, balances_error = elements_rpc_client.get_balances()
+        if balances_error:
+            return jsonify({
+                'error': f'Erro ao obter saldos: {balances_error}',
+                'status': 'error'
+            }), 500
+        
+        # Obter labels dos assets
+        labels_result, labels_error = elements_rpc_client.get_asset_labels()
+        if labels_error:
+            print(f"Warning: Não foi possível obter labels dos assets: {labels_error}")
+            labels_result = {}
+        
+        # Asset IDs conhecidos
+        known_assets = {
+            "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d": "L-BTC",
+            "02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189": "DePix", 
+            "ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2": "USDT"
+        }
+        
+        # Processar saldos
+        processed_balances = {}
+        if 'mine' in balances_result:
+            mine_balances = balances_result['mine']
+            
+            # Processar cada categoria (trusted, untrusted_pending, immature)
+            for category, assets in mine_balances.items():
+                if isinstance(assets, dict):
+                    for asset_name, amount in assets.items():
+                        # Determinar chave e informações do asset
+                        if asset_name == "bitcoin" or asset_name == "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d":
+                            key = 'lbtc'
+                            symbol = 'L-BTC'
+                            name = 'Liquid Bitcoin'
+                            asset_id = '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d'
+                        elif asset_name == "02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189":
+                            key = 'depix'
+                            symbol = 'DePix'
+                            name = labels_result.get(asset_name, 'DePix')
+                            asset_id = asset_name
+                        elif asset_name == "ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2":
+                            key = 'usdt'
+                            symbol = 'USDT'
+                            name = labels_result.get(asset_name, 'Tether')
+                            asset_id = asset_name
+                        else:
+                            key = asset_name[:8] if len(asset_name) > 8 else asset_name
+                            symbol = known_assets.get(asset_name, asset_name)
+                            name = labels_result.get(asset_name, symbol)
+                            asset_id = asset_name
+                        
+                        # Inicializar balance se não existir
+                        if key not in processed_balances:
+                            processed_balances[key] = {
+                                'asset_id': asset_id,
+                                'symbol': symbol,
+                                'name': name,
+                                'trusted': 0,
+                                'untrusted_pending': 0,
+                                'immature': 0
+                            }
+                        
+                        # Atualizar valor para a categoria
+                        processed_balances[key][category] = amount
+        
+        return jsonify({
+            'balances': processed_balances,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/elements/addresses', methods=['POST'])
+def generate_elements_address():
+    """Gerar novo endereço Elements/Liquid"""
+    try:
+        data = request.get_json() or {}
+        label = data.get('label', '')
+        address_type = data.get('type', 'bech32')  # 'bech32' para confidencial, outros para não-confidencial
+        
+        # Gerar endereço
+        result, error = elements_rpc_client.get_new_address(label, address_type)
+        if error:
+            return jsonify({
+                'error': f'Erro ao gerar endereço: {error}',
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'address': result,
+            'type': address_type,
+            'label': label,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/elements/send', methods=['POST'])
+def send_elements_asset():
+    """Enviar asset Elements/Liquid"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'Dados JSON requeridos',
+                'status': 'error'
+            }), 400
+        
+        address = data.get('address')
+        amount = data.get('amount')
+        asset = data.get('asset', 'lbtc')  # padrão L-BTC
+        subtract_fee = data.get('subtract_fee', False)
+        
+        if not address or not amount:
+            return jsonify({
+                'error': 'address e amount são requeridos',
+                'status': 'error'
+            }), 400
+        
+        # Mapear asset para label
+        asset_labels = {
+            'lbtc': None,  # Asset nativo, não precisa de label
+            'depix': 'DePix',
+            'usdt': 'USDT'
+        }
+        
+        asset_label = asset_labels.get(asset)
+        
+        # Enviar transação
+        result, error = elements_rpc_client.send_to_address(
+            address, amount, asset_label, subtract_fee
+        )
+        
+        if error:
+            return jsonify({
+                'error': f'Erro ao enviar transação: {error}',
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'txid': result,
+            'address': address,
+            'amount': amount,
+            'asset': asset,
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/elements/utxos', methods=['GET'])
+def get_elements_utxos():
+    """Listar UTXOs Elements/Liquid"""
+    try:
+        # Parâmetros de query
+        asset_filter = request.args.get('asset')  # 'lbtc', 'depix', 'usdt', ou asset_id
+        minconf = int(request.args.get('minconf', 1))
+        maxconf = int(request.args.get('maxconf', 9999999))
+        
+        # Mapear asset para ID se necessário
+        asset_ids = {
+            'lbtc': '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
+            'depix': '02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189',
+            'usdt': 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2'
+        }
+        
+        asset_id = asset_ids.get(asset_filter, asset_filter) if asset_filter else None
+        
+        # Listar UTXOs
+        result, error = elements_rpc_client.list_unspent(minconf, maxconf, asset_id)
+        if error:
+            return jsonify({
+                'error': f'Erro ao listar UTXOs: {error}',
+                'status': 'error'
+            }), 500
+        
+        # Processar UTXOs
+        processed_utxos = []
+        for utxo in result:
+            asset_id = utxo.get('asset', '')
+            
+            # Determinar tipo de asset
+            if asset_id == '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d':
+                asset_type = 'lbtc'
+                symbol = 'L-BTC'
+            elif asset_id == '02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189':
+                asset_type = 'depix'
+                symbol = 'DePix'
+            elif asset_id == 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2':
+                asset_type = 'usdt'
+                symbol = 'USDT'
+            else:
+                asset_type = 'unknown'
+                symbol = asset_id[:8] if asset_id else 'Unknown'
+            
+            processed_utxos.append({
+                'txid': utxo.get('txid'),
+                'vout': utxo.get('vout'),
+                'address': utxo.get('address'),
+                'amount': utxo.get('amount', 0),
+                'asset': asset_type,
+                'asset_id': asset_id,
+                'symbol': symbol,
+                'confirmations': utxo.get('confirmations', 0),
+                'spendable': utxo.get('spendable', False),
+                'safe': utxo.get('safe', False)
+            })
+        
+        return jsonify({
+            'utxos': processed_utxos,
+            'count': len(processed_utxos),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/elements/transactions', methods=['GET'])
+def get_elements_transactions():
+    """Listar transações Elements/Liquid"""
+    try:
+        # Parâmetros de query
+        count = int(request.args.get('limit', 30))
+        skip = int(request.args.get('skip', 0))
+        
+        # Listar transações
+        result, error = elements_rpc_client.list_transactions(count, skip)
+        if error:
+            return jsonify({
+                'error': f'Erro ao listar transações: {error}',
+                'status': 'error'
+            }), 500
+        
+        # Processar transações
+        processed_txs = []
+        for tx in result:
+            # Obter informações básicas
+            txid = tx.get('txid')
+            category = tx.get('category')
+            amount = tx.get('amount', 0)
+            fee = tx.get('fee', 0)
+            confirmations = tx.get('confirmations', 0)
+            time = tx.get('time', 0)
+            address = tx.get('address', '')
+            
+            # TODO: Elements pode não ter informações de asset em listtransactions
+            # Pode ser necessário usar getrawtransaction para mais detalhes
+            asset_type = 'lbtc'  # Assumir L-BTC por padrão
+            symbol = 'L-BTC'
+            
+            processed_txs.append({
+                'txid': txid,
+                'category': category,
+                'amount': amount,
+                'fee': fee,
+                'asset': asset_type,
+                'symbol': symbol,
+                'confirmations': confirmations,
+                'time': time,
+                'address': address
+            })
+        
+        return jsonify({
+            'transactions': processed_txs,
+            'count': len(processed_txs),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/elements/info', methods=['GET'])
+def get_elements_info():
+    """Obter informações da blockchain Elements/Liquid"""
+    try:
+        result, error = elements_rpc_client.get_blockchain_info()
+        if error:
+            return jsonify({
+                'error': f'Erro ao obter informações: {error}',
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'chain': result.get('chain'),
+            'blocks': result.get('blocks'),
+            'headers': result.get('headers'),
+            'bestblockhash': result.get('bestblockhash'),
+            'difficulty': result.get('difficulty'),
+            'mediantime': result.get('mediantime'),
+            'verificationprogress': result.get('verificationprogress'),
+            'chainwork': result.get('chainwork'),
+            'size_on_disk': result.get('size_on_disk'),
+            'pruned': result.get('pruned', False),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+# === BITCOIN CORE PROXY ENDPOINTS ===
+
+@app.route('/api/v1/bitcoin/info', methods=['GET'])
+def get_bitcoin_info():
+    """Proxy para obter informações do Bitcoin Core local"""
+    try:
+        bitcoin_info = get_bitcoind_info()
+        
+        return jsonify({
+            'status': 'success',
+            'blocks': bitcoin_info.get('blocks', 0),
+            'progress': bitcoin_info.get('progress', 0),
+            'service_status': bitcoin_info.get('status', 'unknown')
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/bitcoin/block/height', methods=['GET'])
+def get_bitcoin_block_height():
+    """Endpoint específico para obter altura do bloco atual do Bitcoin"""
+    try:
+        if not get_service_status('bitcoind.service'):
+            return jsonify({
+                'error': 'Serviço bitcoind não está rodando',
+                'status': 'error'
+            }), 503
+        
+        # Obter apenas a altura do bloco
+        output, code = run_command("bitcoin-cli getblockcount 2>/dev/null")
+        if code != 0 or not output:
+            return jsonify({
+                'error': 'Não foi possível obter altura do bloco do Bitcoin Core',
+                'status': 'error'
+            }), 500
+        
+        try:
+            block_height = int(output.strip())
+            return jsonify({
+                'status': 'success',
+                'block_height': block_height,
+                'source': 'bitcoin-core-local'
+            })
+        except ValueError:
+            return jsonify({
+                'error': 'Resposta inválida do Bitcoin Core',
+                'status': 'error'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/bitcoin/block/<block_hash>', methods=['GET'])
+def get_bitcoin_block(block_hash):
+    """Obter informações de um bloco específico"""
+    try:
+        if not get_service_status('bitcoind.service'):
+            return jsonify({
+                'error': 'Serviço bitcoind não está rodando',
+                'status': 'error'
+            }), 503
+        
+        # Validação básica do hash
+        if len(block_hash) != 64 or not all(c in '0123456789abcdefABCDEF' for c in block_hash):
+            return jsonify({
+                'error': 'Hash de bloco inválido',
+                'status': 'error'
+            }), 400
+        
+        # Obter informações do bloco
+        output, code = run_command(f"bitcoin-cli getblock {block_hash} 1 2>/dev/null")
+        if code != 0 or not output:
+            return jsonify({
+                'error': 'Não foi possível obter informações do bloco',
+                'status': 'error'
+            }), 500
+        
+        try:
+            block_info = json.loads(output)
+            return jsonify({
+                'status': 'success',
+                'block': {
+                    'hash': block_info.get('hash'),
+                    'height': block_info.get('height'),
+                    'time': block_info.get('time'),
+                    'size': block_info.get('size'),
+                    'tx_count': len(block_info.get('tx', [])),
+                    'difficulty': block_info.get('difficulty'),
+                    'previousblockhash': block_info.get('previousblockhash'),
+                    'nextblockhash': block_info.get('nextblockhash')
+                },
+                'source': 'bitcoin-core-local'
+            })
+        except json.JSONDecodeError:
+            return jsonify({
+                'error': 'Resposta inválida do Bitcoin Core',
+                'status': 'error'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+# === WALLET MANAGEMENT ENDPOINTS ===
+
+@app.route('/api/v1/wallet/generate', methods=['POST'])
+def generate_wallet():
+    """Gerar nova carteira HD com mnemonic BIP39"""
+    try:
+        if not HAS_WALLET_LIBS:
+            return jsonify({
+                'error': 'Wallet libraries not available',
+                'status': 'error'
+            }), 500
+        
+        data = request.get_json()
+        if not data:
+            data = {}
+        
+        # Get word count (default to 12)
+        word_count = data.get('word_count', 12)
+        if word_count not in [12, 24]:
+            return jsonify({
+                'error': 'Word count must be 12 or 24',
+                'status': 'error'
+            }), 400
+        
+        # Gerar mnemonic
+        seed_phrase, error = wallet_manager.generate_mnemonic(word_count)
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        # Get data from request
+        wallet_id_input = data.get('wallet_id', '')
+        bip39_passphrase = data.get('password', '')  # This is the BIP39 passphrase (13th/25th word)
+        
+        # Derivar endereços usando a passphrase BIP39
+        addresses, derive_error = wallet_manager.derive_addresses(seed_phrase, bip39_passphrase)
+        if derive_error:
+            return jsonify({
+                'error': derive_error,
+                'status': 'error'
+            }), 500
+        
+        # Derivar chaves privadas usando a passphrase BIP39
+        private_keys, privkey_error = wallet_manager.derive_private_keys(seed_phrase, bip39_passphrase)
+        if privkey_error:
+            return jsonify({
+                'error': privkey_error,
+                'status': 'error'
+            }), 500
+        
+        # Gerar ID único da carteira se não fornecido
+        import uuid
+        if wallet_id_input:
+            wallet_id = wallet_id_input
+        else:
+            wallet_id = str(uuid.uuid4())
+        
+        # Store in temporary cache for later verification and saving
+        if not hasattr(wallet_manager, 'temp_wallets'):
+            wallet_manager.temp_wallets = {}
+            
+        wallet_manager.temp_wallets[wallet_id] = {
+            'mnemonic': seed_phrase,
+            'addresses': addresses,
+            'private_keys': private_keys,
+            'bip39_passphrase': bip39_passphrase,
+            'word_count': word_count,
+            'created_at': datetime.datetime.now()
+        }
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Wallet generated successfully',
+            'wallet_id': wallet_id,
+            'mnemonic': seed_phrase,
+            'addresses': addresses,
+            'word_count': word_count,
+            'has_bip39_passphrase': bool(bip39_passphrase)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/import', methods=['POST'])
+def import_wallet():
+    """Importar carteira existente usando mnemonic"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        mnemonic = data.get('mnemonic', '').strip()
+        passphrase = data.get('passphrase', '')
+        
+        if not mnemonic:
+            return jsonify({
+                'error': 'Mnemonic is required',
+                'status': 'error'
+            }), 400
+        
+        # Validar mnemonic
+        is_valid, validation_error = wallet_manager.validate_mnemonic(mnemonic)
+        if not is_valid:
+            return jsonify({
+                'error': f'Invalid mnemonic: {validation_error}',
+                'status': 'error'
+            }), 400
+        
+        # Derivar endereços
+        addresses, derive_error = wallet_manager.derive_addresses(mnemonic, passphrase)
+        if derive_error:
+            return jsonify({
+                'error': derive_error,
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'status': 'success',
+            'addresses': addresses,
+            'message': 'Wallet imported successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/save', methods=['POST'])
+def save_wallet():
+    """Salvar carteira criptografada com senha de banco de dados"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        mnemonic = data.get('mnemonic', '').strip()
+        db_password = data.get('password', '')  # Database encryption password
+        wallet_id = data.get('wallet_id', f'wallet_{int(time.time())}')
+        metadata = data.get('metadata', {})
+        
+        if not mnemonic or not db_password:
+            return jsonify({
+                'error': 'Mnemonic and database password are required',
+                'status': 'error'
+            }), 400
+        
+        # Get BIP39 passphrase and private keys from temporary storage
+        bip39_passphrase = ""
+        private_keys = {}
+        
+        if hasattr(wallet_manager, 'temp_wallets') and wallet_id in wallet_manager.temp_wallets:
+            temp_data = wallet_manager.temp_wallets[wallet_id]
+            bip39_passphrase = temp_data.get('bip39_passphrase', '')
+            private_keys = temp_data.get('private_keys', {})
+            
+            # Add BIP39 info to metadata
+            metadata['has_bip39_passphrase'] = bool(bip39_passphrase)
+            metadata['bip39_passphrase_hash'] = hashlib.sha256(bip39_passphrase.encode()).hexdigest() if bip39_passphrase else None
+        
+        # Criptografar mnemonic com senha do banco
+        encrypted_mnemonic, salt, encrypt_error = wallet_manager.encrypt_mnemonic(mnemonic, db_password)
+        if encrypt_error:
+            return jsonify({
+                'error': encrypt_error,
+                'status': 'error'
+            }), 500
+        
+        # Criptografar chaves privadas com senha do banco
+        encrypted_private_keys = None
+        if private_keys:
+            encrypted_private_keys, privkey_salt, privkey_encrypt_error = wallet_manager.encrypt_private_keys(private_keys, db_password)
+            if privkey_encrypt_error:
+                return jsonify({
+                    'error': privkey_encrypt_error,
+                    'status': 'error'
+                }), 500
+        
+        # Salvar no banco
+        save_success, save_error = wallet_manager.save_wallet(
+            wallet_id, encrypted_mnemonic, salt, metadata, has_password=bool(db_password), encrypted_private_keys=encrypted_private_keys
+        )
+        if not save_success:
+            return jsonify({
+                'error': save_error,
+                'status': 'error'
+            }), 500
+        
+        # Cache addresses usando a passphrase BIP39 correta
+        addresses, derive_error = wallet_manager.derive_addresses(mnemonic, bip39_passphrase)
+        if not derive_error:
+            wallet_manager.cache_addresses(wallet_id, addresses)
+        
+        # Clean up temporary data
+        if hasattr(wallet_manager, 'temp_wallets') and wallet_id in wallet_manager.temp_wallets:
+            del wallet_manager.temp_wallets[wallet_id]
+        
+        return jsonify({
+            'status': 'success',
+            'wallet_id': wallet_id,
+            'message': 'Wallet encrypted and saved successfully',
+            'addresses': addresses if not derive_error else {}
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/list', methods=['GET'])
+def list_wallets():
+    """Listar carteiras salvas no banco"""
+    try:
+        conn = sqlite3.connect(WALLET_DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT wallet_id, metadata, last_used, created_at, has_password
+            FROM wallets ORDER BY last_used DESC
+        ''')
+        
+        results = cursor.fetchall()
+        conn.close()
+        
+        wallets = []
+        for wallet_id, metadata_json, last_used, created_at, has_password in results:
+            try:
+                metadata = json.loads(metadata_json) if metadata_json else {}
+            except:
+                metadata = {}
+            
+            wallets.append({
+                'wallet_id': wallet_id,
+                'metadata': metadata,
+                'last_used': last_used,
+                'created_at': created_at,
+                'encrypted': bool(has_password)  # True apenas se tem senha real
+            })
+        
+        return jsonify({
+            'status': 'success',
+            'wallets': wallets,
+            'count': len(wallets)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/load', methods=['POST'])
+def load_wallet():
+    """Carregar e descriptografar carteira salva"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        wallet_id = data.get('wallet_id', '')
+        password = data.get('password', '')
+        
+        if not wallet_id:
+            return jsonify({
+                'error': 'Wallet ID is required',
+                'status': 'error'
+            }), 400
+            
+        # Password is optional for unencrypted wallets (empty string is valid)
+        
+        # Carregar wallet do banco
+        wallet_data, load_error = wallet_manager.load_wallet(wallet_id)
+        if load_error:
+            return jsonify({
+                'error': load_error,
+                'status': 'error'
+            }), 404
+        
+        # Descriptografar mnemonic
+        mnemonic, decrypt_error = wallet_manager.decrypt_mnemonic(
+            wallet_data['encrypted_mnemonic'],
+            wallet_data['salt'],
+            password
+        )
+        if decrypt_error:
+            return jsonify({
+                'error': 'Invalid password or corrupted wallet data',
+                'status': 'error'
+            }), 401
+        
+        # Tentar obter endereços do cache primeiro
+        addresses, cache_error = wallet_manager.get_cached_addresses(wallet_id)
+        
+        # Se não tiver no cache, derivar novamente
+        if cache_error or not addresses:
+            addresses, derive_error = wallet_manager.derive_addresses(mnemonic)
+            if not derive_error:
+                wallet_manager.cache_addresses(wallet_id, addresses)
+        
+        return jsonify({
+            'status': 'success',
+            'wallet_id': wallet_id,
+            'addresses': addresses,
+            'metadata': wallet_data.get('metadata', {}),
+            'message': 'Wallet loaded successfully'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/addresses/<wallet_id>', methods=['GET'])
+def get_wallet_addresses(wallet_id):
+    """Obter endereços derivados de uma carteira"""
+    try:
+        # Tentar obter do cache
+        addresses, error = wallet_manager.get_cached_addresses(wallet_id)
+        
+        if error and "not found" not in error.lower():
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        if not addresses:
+            return jsonify({
+                'error': 'No addresses found for this wallet ID',
+                'status': 'error'
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'wallet_id': wallet_id,
+            'addresses': addresses
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/balance/<chain_id>/<address>', methods=['GET'])
+def get_chain_balance(chain_id, address):
+    """Obter saldo de uma chain específica usando APIs públicas"""
+    try:
+        if chain_id not in SUPPORTED_CHAINS:
+            return jsonify({
+                'error': f'Unsupported chain: {chain_id}',
+                'status': 'error'
+            }), 400
+        
+        # Para Bitcoin, tentar API local primeiro
+        if chain_id == 'bitcoin':
+            try:
+                balance_data = get_blockchain_balance()
+                if balance_data and 'confirmed_balance' in balance_data:
+                    balance_btc = balance_data['confirmed_balance'] / 100000000
+                    return jsonify({
+                        'status': 'success',
+                        'chain': chain_id,
+                        'address': address,
+                        'balance': f"{balance_btc:.8f}",
+                        'symbol': 'BTC',
+                        'source': 'local_api'
+                    })
+            except:
+                pass
+        
+        # Para Liquid, tentar API local primeiro
+        elif chain_id == 'liquid':
+            try:
+                balances_result, _ = elements_rpc_client.get_balances()
+                if balances_result and 'mine' in balances_result:
+                    mine_balances = balances_result['mine']
+                    if 'trusted' in mine_balances:
+                        for asset_name, amount in mine_balances['trusted'].items():
+                            if asset_name == "bitcoin" or "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d" in asset_name:
+                                return jsonify({
+                                    'status': 'success',
+                                    'chain': chain_id,
+                                    'address': address,
+                                    'balance': f"{amount:.8f}",
+                                    'symbol': 'L-BTC',
+                                    'source': 'local_api'
+                                })
+            except:
+                pass
+        
+        # Fallback para APIs públicas
+        chain_config = SUPPORTED_CHAINS[chain_id]
+        
+        for api_url in chain_config['api_urls']:
+            try:
+                if chain_id == 'bitcoin':
+                    if 'mempool.space' in api_url:
+                        response = requests.get(f"{api_url}{address}", timeout=10)
+                        if response.status_code == 200:
+                            data = response.json()
+                            balance = (data['chain_stats']['funded_txo_sum'] - data['chain_stats']['spent_txo_sum']) / 100000000
+                            return jsonify({
+                                'status': 'success',
+                                'chain': chain_id,
+                                'address': address,
+                                'balance': f"{balance:.8f}",
+                                'symbol': 'BTC',
+                                'source': 'mempool_space'
+                            })
+                
+                elif chain_id == 'ethereum':
+                    if 'etherscan' in api_url:
+                        response = requests.get(f"{api_url}?module=account&action=balance&address={address}&tag=latest&apikey=YourApiKeyToken", timeout=10)
+                        if response.status_code == 200:
+                            data = response.json()
+                            if data['status'] == '1':
+                                balance_wei = int(data['result'])
+                                balance_eth = balance_wei / 10**18
+                                return jsonify({
+                                    'status': 'success',
+                                    'chain': chain_id,
+                                    'address': address,
+                                    'balance': f"{balance_eth:.18f}",
+                                    'symbol': 'ETH',
+                                    'source': 'etherscan'
+                                })
+                
+                elif chain_id == 'tron':
+                    if 'trongrid' in api_url:
+                        response = requests.post(api_url, 
+                            json={"address": address, "visible": True}, 
+                            timeout=10)
+                        if response.status_code == 200:
+                            data = response.json()
+                            if not data.get('Error'):
+                                balance_sun = data.get('balance', 0)
+                                balance_trx = balance_sun / 1000000
+                                return jsonify({
+                                    'status': 'success',
+                                    'chain': chain_id,
+                                    'address': address,
+                                    'balance': f"{balance_trx:.6f}",
+                                    'symbol': 'TRX',
+                                    'source': 'trongrid'
+                                })
+                
+                elif chain_id == 'solana':
+                    if 'mainnet-beta' in api_url:
+                        response = requests.post(api_url,
+                            json={
+                                "jsonrpc": "2.0",
+                                "id": 1,
+                                "method": "getBalance",
+                                "params": [address]
+                            },
+                            timeout=10)
+                        if response.status_code == 200:
+                            data = response.json()
+                            if 'result' in data:
+                                balance_lamports = data['result']['value']
+                                balance_sol = balance_lamports / 10**9
+                                return jsonify({
+                                    'status': 'success',
+                                    'chain': chain_id,
+                                    'address': address,
+                                    'balance': f"{balance_sol:.9f}",
+                                    'symbol': 'SOL',
+                                    'source': 'solana_rpc'
+                                })
+                
+            except Exception as e:
+                print(f"API {api_url} failed: {str(e)}")
+                continue
+        
+        # Se todas as APIs falharam
+        return jsonify({
+            'status': 'success',
+            'chain': chain_id,
+            'address': address,
+            'balance': '0.00000000',
+            'symbol': chain_config['symbol'],
+            'source': 'fallback',
+            'message': 'All APIs failed, returning zero balance'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/validate', methods=['POST'])
+def validate_mnemonic():
+    """Validar uma seed phrase BIP39"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        mnemonic = data.get('mnemonic', '').strip()
+        
+        if not mnemonic:
+            return jsonify({
+                'error': 'Mnemonic is required',
+                'status': 'error'
+            }), 400
+        
+        is_valid, error = wallet_manager.validate_mnemonic(mnemonic)
+        
+        return jsonify({
+            'status': 'success',
+            'valid': is_valid,
+            'error': error if not is_valid else None
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+# Status endpoint for API health check
+@app.route('/api/v1/wallet/status', methods=['GET'])
+def wallet_status():
+    """Get wallet system status"""
+    try:
+        from datetime import datetime
+        return jsonify({
+            'status': 'online',
+            'message': 'Wallet API is running',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=2121, debug=False)

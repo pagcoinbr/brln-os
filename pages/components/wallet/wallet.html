@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Wallet - BRLN-OS</title>
+    <link rel="stylesheet" href="../../home/index.css" />
+    <link rel="stylesheet" href="../pages-style.css" />
+    <link rel="stylesheet" href="../association-footer.css" />
+    <link rel="stylesheet" href="wallet.css" />
+    <!-- Note: Crypto libraries removed - now using secure API backend -->
+  </head>
+<body>
+
+  <div class="wallet-control">
+
+  <!-- Current Wallet Status -->
+  <section class="content-section" id="currentWalletSection" style="display: none;">
+    <div class="content-wrapper">
+      <h2>Current Loaded Wallet</h2>
+      <div class="current-wallet-card">
+        <div class="wallet-info-display">
+          <div class="wallet-name-row">
+            <span class="wallet-label">Wallet Name:</span>
+            <span id="currentWalletName" class="wallet-value">-</span>
+          </div>
+          <div class="wallet-id-row">
+            <span class="wallet-label">Wallet ID:</span>
+            <span id="currentWalletId" class="wallet-value">-</span>
+          </div>
+          <div class="wallet-created-row">
+            <span class="wallet-label">Created:</span>
+            <span id="currentWalletCreated" class="wallet-value">-</span>
+          </div>
+          <div class="wallet-networks-row">
+            <span class="wallet-label">Available Networks:</span>
+            <div id="currentWalletNetworks" class="wallet-networks">
+              <span class="network-badge">Bitcoin</span>
+              <span class="network-badge">Lightning</span>
+              <span class="network-badge">Liquid</span>
+            </div>
+          </div>
+        </div>
+        <div class="wallet-actions-row">
+          <button class="action-button secondary-button" id="loadAnotherWalletBtn">
+            🔄 Load Another Wallet
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wallet Selection Section -->
+  <section class="content-section" id="walletSelectionSection">
+    <div class="content-wrapper">
+      <h2>Select Wallet</h2>
+      <div id="walletSelectionContainer">
+        <!-- Wallet list will be populated here by JavaScript -->
+      </div>
+      <div class="create-new-section">
+        <button class="action-button secondary-button" id="showCreateOptionsBtn">
+          ➕ Create New Wallet or Import
+        </button>
+      </div>
+    </div>
+  </section>
+  <!-- Create/Import Wallet Section -->
+  <section class="content-section" id="createImportSection" style="display: none;">
+    <div class="content-wrapper">
+      <h2>Manage HD Wallet</h2>
+      <div class="back-to-selection">
+        <button class="action-button secondary-button" id="backToSelectionBtn" style="display: none;">
+          ← Back to Selection
+        </button>
+      </div>
+      <div class="wallet-actions">
+        <div class="action-group">
+          <h3>Create New Wallet</h3>
+          <p>Generate a new seed phrase with secure entropy based on current Bitcoin block.</p>
+          <div class="form-group">
+            <label for="wordCount">Seed Phrase Length:</label>
+            <select id="wordCount">
+              <option value="12" selected>12 words (recommended)</option>
+              <option value="24">24 words (extra security)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="generatePassword">BIP39 Passphrase (13th/25th word - optional):</label>
+            <input type="password" id="generatePassword" placeholder="Leave empty for standard wallet" />
+            <small style="color: #6c757d; display: block; margin-top: 5px;">
+              This passphrase extends your seed phrase for additional security. Different passphrases create different wallets from the same seed.
+            </small>
+          </div>
+          <div class="form-group">
+            <label for="generateWalletId">Wallet ID (optional):</label>
+            <input type="text" id="generateWalletId" placeholder="Auto-generated if left empty" />
+          </div>
+          <button class="action-button generate-button" id="generateWalletBtn">
+            🔄 Generate New Wallet
+          </button>
+        </div>
+        
+        <div class="action-group">
+          <h3>Import Existing Wallet</h3>
+          <div class="form-group">
+            <label for="importMnemonic">Seed Phrase (12 words):</label>
+            <textarea id="importMnemonic" placeholder="word1 word2 word3..." rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="importPassphrase">Passphrase (optional):</label>
+            <input type="password" id="importPassphrase" placeholder="Additional passphrase (BIP39)" />
+          </div>
+          <div class="form-group">
+            <label for="importPassword">Encryption Password (optional):</label>
+            <input type="password" id="importPassword" placeholder="Leave empty to save unencrypted" />
+          </div>
+          <div class="form-group">
+            <label for="importWalletId">Wallet ID (optional):</label>
+            <input type="text" id="importWalletId" placeholder="Auto-generated if left empty" />
+          </div>
+          <button class="action-button import-button" id="importWalletBtn">
+            📥 Import Wallet
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seed Display Section -->
+  <section class="content-section" id="seedSection" style="display: none;">
+    <div class="content-wrapper warning-section">
+      <h2>⚠️ Generated Seed Phrase</h2>
+      <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #ffeaa7;">
+        <p><strong>ATTENTION:</strong> This is your seed phrase. Keep it safe and NEVER share it.</p>
+        <p>Without it, you will permanently lose access to your funds!</p>
+      </div>
+      
+      <div class="seed-display" id="seedDisplay">
+        <!-- Seed words will be displayed here -->
+      </div>
+      
+      <div class="seed-actions">
+        <button class="action-button copy-button" id="copySeedBtn">
+          📋 Copy Seed
+        </button>
+        <button class="action-button confirm-button" id="confirmSeedBtn">
+          ✅ I've Saved It Securely - Continue
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Mnemonic Verification Section -->
+  <section class="content-section" id="verificationSection" style="display: none;">
+    <div class="content-wrapper">
+      <h2>🔍 Verify Your Seed Phrase</h2>
+      <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #90caf9;">
+        <p><strong>Security Check:</strong> Please confirm some words from your seed phrase in the correct positions.</p>
+        <p>This ensures you have properly saved your seed phrase.</p>
+      </div>
+      
+      <div class="verification-container" id="verificationContainer">
+        <!-- Verification inputs will be populated here -->
+      </div>
+      
+      <div class="verification-actions">
+        <button class="action-button secondary-button" id="backToSeedBtn">
+          ← Back to Seed
+        </button>
+        <button class="action-button confirm-button" id="verifyWordsBtn">
+          ✅ Verify and Save Wallet
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Password Input Modal -->
+  <div id="passwordModal" class="password-modal" style="display: none;">
+    <div class="password-modal-content">
+      <h3>🔐 Load Wallet</h3>
+      <div class="password-modal-body">
+        <p>If this wallet is encrypted, enter the password. If not encrypted, leave blank and click Load.</p>
+        <div class="form-group">
+          <label for="modalPassword">Password (if encrypted):</label>
+          <input type="password" id="modalPassword" placeholder="Enter password or leave blank" autocomplete="off" />
+        </div>
+        <div class="wallet-id-info">
+          <span>Wallet ID: </span>
+          <span id="modalWalletId">-</span>
+        </div>
+      </div>
+      <div class="password-modal-actions">
+        <button class="action-button secondary-button" id="cancelPasswordBtn">Cancel</button>
+        <button class="action-button primary-button" id="confirmPasswordBtn">Load Wallet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer da Associação -->
+  <div class="association-footer-placeholder"></div>
+  
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Carregar footer da associação
+    fetch('../association-footer.html')
+      .then(response => response.text())
+      .then(data => {
+        document.querySelector('.association-footer-placeholder').innerHTML = data;
+      })
+      .catch(error => console.error('Erro ao carregar footer:', error));
+  </script>
+  <script src="js/main.js"></script>
+</body>
+</html>

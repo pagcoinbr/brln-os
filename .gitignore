@@ -190,3 +190,98 @@ api/v1/walletrpc
 api/v1/routerrpc
 api/v1/signrpc
 api/v1/proto
+
+# Sensitive Bitcoin/Lightning data
+# LND data directories and files
+/data/lnd/
+lnd/data/
+.lnd/
+admin.macaroon
+readonly.macaroon
+invoice.macaroon
+tls.cert
+tls.key
+channel.backup
+channel.db
+wallet.db
+
+# Bitcoin Core data
+/data/bitcoin/
+.bitcoin/
+bitcoin.conf
+wallet.dat
+blocks/
+chainstate/
+testnet3/
+regtest/
+signet/
+
+# Elements/Liquid data
+/data/elements/
+.elements/
+elements.conf
+
+# Wallet files and seeds
+wallets.db
+*.mnemonic
+*.seed
+private_keys.txt
+seed_phrases.txt
+
+# SSH and SSL certificates
+*.pem
+*.crt
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ecdsa
+id_ed25519
+known_hosts
+authorized_keys
+
+# Tor configuration
+/var/lib/tor/
+torrc
+hostname
+private_key
+
+# Configuration files with secrets
+config.ini
+.env*
+*credentials*
+*secrets*
+*password*
+*token*
+
+# Chat database (contains private conversations)
+lightning_chat.db
+chat_history.db
+
+# API keys and authentication
+api_keys.txt
+auth_tokens.txt
+session_keys.txt
+
+# Development and testing data
+test_data/
+mock_data/
+*.testnet
+*.regtest
+
+# Backup files
+*.bak
+*.backup
+*~
+.#*
+
+# Personal development notes
+TODO.md
+NOTES.md
+PERSONAL.md
+dev_notes.txt
+
+# IDE-specific configuration that might contain paths
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
