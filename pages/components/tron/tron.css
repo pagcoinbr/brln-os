@@ -1,0 +1,486 @@
+/* TRON Gas-Free Wallet - Using site standard design */
+* {
+  box-sizing: border-box;
+}
+
+.tron-control {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Using standard site classes */
+.control-section {
+  background: #f7f7f7;
+  border: 2px solid black;
+  border-radius: 12px;
+  padding: 30px;
+  margin: 20px 0;
+  box-shadow: 8px 8px 0px 0px #444;
+}
+
+/* Wallet Address Display */
+.wallet-address-container {
+  margin: 20px 0;
+}
+
+.address-display {
+  padding: 20px;
+  background: white;
+  border: 2px solid #333;
+  border-radius: 8px;
+}
+
+.address-display.show {
+  display: block;
+}
+
+.address-info {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.generated-address-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.generated-address {
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #333;
+  word-break: break-all;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  flex: 1;
+}
+
+.copy-button {
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 15px 18px;
+  cursor: pointer;
+  font-size: 1.2em;
+  transition: all 0.2s ease;
+  min-width: 50px;
+  height: 50px;
+}
+
+.copy-button:hover {
+  background: #555;
+  transform: scale(1.1);
+}
+
+.copy-button:active {
+  transform: scale(0.95);
+}
+
+/* Balance Display */
+.balance-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  padding: 15px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  border: 2px solid #ddd;
+}
+
+.balance-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.balance-label {
+  font-size: 0.9em;
+  color: #666;
+  font-weight: bold;
+}
+
+.balance-value {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  font-family: monospace;
+}
+
+/* QR Code */
+.qr-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.qr-code {
+  max-width: 200px;
+  max-height: 200px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  margin: 0 auto;
+  display: block;
+}
+
+/* Send Form */
+.send-form {
+  display: grid;
+  gap: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 16px;
+}
+
+.form-group input {
+  padding: 15px;
+  border: 2px solid black;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #333;
+}
+
+.form-group small {
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.form-group small a {
+  color: #333;
+  text-decoration: underline;
+}
+
+.fee-note {
+  color: #d32f2f !important;
+  font-weight: bold;
+}
+
+/* Info Box */
+.info-box {
+  margin-top: 20px;
+  padding: 20px;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+}
+
+.info-box h3 {
+  margin-top: 0;
+  color: #856404;
+}
+
+.info-box ul {
+  margin: 10px 0 0 20px;
+  color: #856404;
+}
+
+.info-box li {
+  margin: 5px 0;
+}
+
+/* Send Button */
+.send-button, .action-btn {
+  background: #f7f7f7 !important;
+  color: black !important;
+  border: 2px solid black !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 4px 4px 0px 0px #444;
+}
+
+.send-button:hover, .action-btn:hover {
+  background-color: #333 !important;
+  color: #fff !important;
+  box-shadow: 2px 2px 0px 0px #000;
+  transform: translate(1px, 1px);
+}
+
+.send-button .service-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.send-button .service-title {
+  color: inherit;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Transaction History */
+.transactions-history {
+  max-height: 500px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.transaction-header {
+  display: grid;
+  grid-template-columns: 150px 100px 1fr 120px 100px;
+  gap: 15px;
+  padding: 15px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  border: 2px solid #ccc;
+}
+
+.transaction-item {
+  display: grid;
+  grid-template-columns: 150px 100px 1fr 120px 100px;
+  gap: 15px;
+  padding: 15px;
+  border-bottom: 2px solid #ddd;
+  align-items: center;
+  background: white;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+  background: #f9f9f9;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.tx-datetime {
+  font-size: 0.85em;
+  color: #666;
+}
+
+.tx-type {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+.tx-type.sent {
+  color: #d32f2f;
+}
+
+.tx-type.received {
+  color: #388e3c;
+}
+
+.tx-address {
+  font-family: monospace;
+  font-size: 0.75em;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-amount {
+  font-weight: bold;
+  text-align: right;
+  font-family: monospace;
+}
+
+.tx-amount.sent {
+  color: #d32f2f;
+}
+
+.tx-amount.received {
+  color: #388e3c;
+}
+
+.tx-status {
+  font-size: 0.85em;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.tx-status.confirmed {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.tx-status.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.tx-status.failed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.loading-message, .empty-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Configuration Section */
+.config-section {
+  background: #e3f2fd;
+}
+
+.config-form {
+  display: grid;
+  gap: 25px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.config-group {
+  padding: 20px;
+  background: white;
+  border: 2px solid #333;
+  border-radius: 8px;
+}
+
+.config-group h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.config-save-btn {
+  background: #4caf50 !important;
+  color: white !important;
+  border-color: #2e7d32 !important;
+}
+
+.config-save-btn:hover {
+  background: #388e3c !important;
+}
+
+/* Status Messages */
+.status-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+.status-message.success {
+  background: #c8e6c9;
+  color: #2e7d32;
+  border: 2px solid #2e7d32;
+}
+
+.status-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 2px solid #721c24;
+}
+
+.status-message.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 2px solid #0c5460;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tron-control {
+    padding: 10px;
+  }
+  
+  .control-section {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .send-form, .config-form {
+    max-width: 100%;
+    gap: 15px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  .balance-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .transaction-header, .transaction-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .tx-address {
+    white-space: normal;
+    word-break: break-all;
+  }
+  
+  .generated-address-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .copy-button {
+    width: 100%;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .qr-code {
+    max-width: 150px;
+    max-height: 150px;
+  }
+}

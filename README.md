@@ -222,6 +222,7 @@ Você verá o menu principal com opções como:
 - Bitcoin & Lightning Stack
 - Lightning Applications
 - Elements/Liquid
+- TRON Gas-Free Wallet
 - PeerSwap
 - Interface Web
 - Ferramentas do Sistema
@@ -394,7 +395,7 @@ Recomenda-se estudar a documentação oficial de cada projeto para entender limi
 
 
 - Telegram: https://t.me/pagcoinbr
-- E-mail: suporte.brln@gmail.com | suporte@pagcoin.org
+- E-mail: suporte.brln@gmail.com | suporte@brln-os
 - Site do projeto: https://services.br-ln.com
 
 Contribuições são bem-vindas:
