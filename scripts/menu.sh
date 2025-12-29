@@ -255,12 +255,24 @@ install_complete_system() {
   echo -e "${GREEN}🚀 Iniciando instalação completa do sistema...${NC}"
   echo -e "${BLUE}📋 Executando scripts na ordem correta...${NC}"
   
+  # Detect if running from web terminal (GoTTY)
+  SKIP_WEB_SERVICES=false
+  if [[ -n "$GOTTY_CLIENT_ADDRESS" ]] || pgrep -f "gotty.*menu.sh" > /dev/null 2>&1; then
+    SKIP_WEB_SERVICES=true
+    echo -e "${YELLOW}⚠️  Detectado terminal web - Apache e GoTTY serão ignorados para evitar desconexão${NC}"
+    sleep 2
+  fi
+  
   # Execute installation scripts in order
   echo -e "${YELLOW}⚙️ Configurando sistema...${NC}"
   update_and_upgrade
   
-  echo -e "${YELLOW}🌐 Configurando Apache...${NC}"
-  setup_apache_web
+  if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
+    echo -e "${YELLOW}🌐 Configurando Apache...${NC}"
+    setup_apache_web
+  else
+    echo -e "${BLUE}⏭️  Pulando configuração do Apache (já em execução)${NC}"
+  fi
   
   echo -e "${YELLOW}₿ Instalando Bitcoin & Lightning...${NC}"
   install_complete_stack
@@ -273,8 +285,12 @@ install_complete_system() {
     bash "$SCRIPT_DIR/scripts/generate-protobuf.sh"
   fi
   
-  echo -e "${YELLOW}💻 Configurando terminal web...${NC}"
-  terminal_web
+  if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
+    echo -e "${YELLOW}💻 Configurando terminal web...${NC}"
+    terminal_web
+  else
+    echo -e "${BLUE}⏭️  Pulando configuração do terminal web (já em execução)${NC}"
+  fi
   
   echo -e "${YELLOW}🔥 Instalando Elements...${NC}"
   install_elements

@@ -137,6 +137,131 @@ async function loadServicesStatus() {
   }
 }
 
+// Check LND installation status
+async function checkLNDInstallation() {
+  try {
+    const response = await fetch('/api/v1/system/check-lnd-installation', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('LND Installation Status:', data);
+    
+    return {
+      hasLNDDirectory: data.has_lnd_directory || false,
+      lndInSystemPath: data.lnd_in_system_path || false,
+      lndInstalled: data.lnd_installed || false
+    };
+  } catch (error) {
+    console.error('Error checking LND installation:', error);
+    return {
+      hasLNDDirectory: false,
+      lndInSystemPath: false,
+      lndInstalled: false
+    };
+  }
+}
+
+// Check wallet configuration status
+async function checkWalletStatus() {
+  try {
+    const response = await fetch('/api/v1/wallet/system-default', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.status === 'success') {
+      return {
+        hasWallet: true,
+        walletId: data.wallet_id
+      };
+    } else {
+      return {
+        hasWallet: false
+      };
+    }
+  } catch (error) {
+    console.error('Error checking wallet status:', error);
+    return {
+      hasWallet: false
+    };
+  }
+}
+
+// Perform initial setup check and redirect if needed
+async function checkInitialSetup() {
+  console.log('Checking initial setup status...');
+  
+  // Check LND installation
+  const lndStatus = await checkLNDInstallation();
+  
+  // Scenario 1: Fresh installation - no LND directory and lnd not in system
+  if (!lndStatus.hasLNDDirectory && !lndStatus.lndInSystemPath) {
+    console.log('Fresh installation detected - redirecting to terminal setup');
+    showSetupNotification('Sistema não configurado - redirecionando para setup inicial...', false);
+    setTimeout(() => {
+      window.top.location.href = '/terminal/?cmd=cd%20/root/brln-os%20%26%26%20bash%20scripts/menu.sh';
+    }, 2000);
+    return false;
+  }
+  
+  // Scenario 2: LND installed but no wallet configured
+  const walletStatus = await checkWalletStatus();
+  if (!walletStatus.hasWallet) {
+    console.log('LND installed but no wallet - redirecting to wallet setup');
+    showSetupNotification('LND instalado - configure sua wallet...', false);
+    setTimeout(() => {
+      if (window.top !== window.self) {
+        window.top.location.href = '/pages/components/wallet/wallet.html';
+      } else {
+        window.location.href = '/pages/components/wallet/wallet.html';
+      }
+    }, 2000);
+    return false;
+  }
+  
+  console.log('System is configured - loading normally');
+  return true;
+}
+
+// Show setup notification
+function showSetupNotification(message, isSuccess = false) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${isSuccess ? '#28a745' : '#ff9800'};
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    z-index: 10000;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    max-width: 90%;
+    text-align: center;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+}
+
 // Carregar status do sistema
 async function loadSystemStatus() {
   try {
@@ -200,7 +325,16 @@ async function loadSystemStatus() {
 }
 
 // Inicializar quando a página carregar
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+  // Perform initial setup check
+  const isConfigured = await checkInitialSetup();
+  
+  // Only load page content if system is configured
+  if (!isConfigured) {
+    console.log('System not configured - skipping page load');
+    return;
+  }
+  
   // Carregar status inicial
   loadServicesStatus();
   loadSystemStatus();

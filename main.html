@@ -440,6 +440,51 @@
         }
 
         /**
+         * Check if LND is installed on the system
+         */
+        async checkLNDInstalled() {
+          try {
+            const response = await fetch(`${this.apiBase}/system/check-lnd-installation`);
+            const data = await response.json();
+            
+            if (response.ok) {
+              return {
+                hasLNDDirectory: data.has_lnd_directory || false,
+                lndInSystemPath: data.lnd_in_system_path || false,
+                lndInstalled: data.lnd_installed || false
+              };
+            }
+            
+            // Fallback: check if /data/lnd exists via a simple API call
+            return {
+              hasLNDDirectory: false,
+              lndInSystemPath: false,
+              lndInstalled: false
+            };
+          } catch (error) {
+            console.error('Error checking LND installation:', error);
+            return {
+              hasLNDDirectory: false,
+              lndInSystemPath: false,
+              lndInstalled: false
+            };
+          }
+        }
+
+        /**
+         * Redirect to terminal web menu.sh
+         */
+        redirectToTerminalMenu() {
+          console.log('Main: Redirecting to terminal menu for initial setup...');
+          this.showWalletNotification('Sistema não configurado - abrindo terminal de configuração...', false);
+          
+          setTimeout(() => {
+            // Redirect to terminal running menu.sh
+            window.location.href = '/terminal/?cmd=cd%20/root/brln-os%20%26%26%20bash%20scripts/menu.sh';
+          }, 1500);
+        }
+
+        /**
          * Main wallet check and initialization
          */
         async performWalletCheck() {
@@ -460,7 +505,23 @@
             return;
           }
 
-          // Check for system wallet
+          // Check LND installation status
+          const lndStatus = await this.checkLNDInstalled();
+          console.log('Main: LND installation status:', lndStatus);
+
+          // Scenario 1: No /data/lnd directory and lnd not in system path
+          // This means fresh installation - redirect to terminal menu.sh
+          if (!lndStatus.hasLNDDirectory && !lndStatus.lndInSystemPath) {
+            console.log('Main: Fresh installation detected - no LND directory and lnd not in system');
+            this.showWalletNotification('Sistema não configurado - redirecionando para setup inicial...', false, 2000);
+            setTimeout(() => {
+              this.redirectToTerminalMenu();
+            }, 2000);
+            return;
+          }
+
+          // Scenario 2: /data/lnd exists but lnd may not be in system path
+          // Check for wallet configuration
           const walletStatus = await this.checkSystemWallet();
           
           if (walletStatus.hasWallet) {
@@ -477,7 +538,9 @@
             // Found configured wallet - initialize system
             await this.initializeWithWallet(walletStatus);
           } else {
-            // No wallet configured - redirect to setup
+            // LND directory exists but no wallet configured - redirect to wallet creation
+            console.log('Main: LND installed but no wallet configured - redirecting to wallet setup');
+            this.showWalletNotification('LND instalado - configure sua wallet...', false);
             this.redirectToWalletPage();
           }
         }

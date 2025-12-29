@@ -33,8 +33,12 @@ update_and_upgrade() {
     sudo systemctl disable brln-frontend 2>/dev/null || true
   fi
 
-  # Configurar Apache Web Server
-  setup_apache_web
+  # Configurar Apache Web Server (skip if already running from web terminal)
+  if type setup_apache_web &>/dev/null; then
+    setup_apache_web
+  else
+    echo "⏭️  Pulando configuração Apache (função não disponível ou já configurado)"
+  fi
 
   # Install/Update systemd service
   echo "Configurando serviço systemd..."

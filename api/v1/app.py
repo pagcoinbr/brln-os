@@ -2756,6 +2756,40 @@ def health():
     """Health check endpoint"""
     return jsonify({'status': 'ok', 'version': '1.0'})
 
+@app.route('/api/v1/system/check-lnd-installation', methods=['GET'])
+def check_lnd_installation():
+    """Check if LND is installed on the system"""
+    try:
+        # Check if /data/lnd directory exists
+        has_lnd_directory = os.path.exists('/data/lnd') and os.path.isdir('/data/lnd')
+        
+        # Check if lnd command is in system path
+        lnd_in_system_path = False
+        try:
+            subprocess.run(['which', 'lnd'], capture_output=True, text=True, check=True)
+            lnd_in_system_path = True
+        except subprocess.CalledProcessError:
+            lnd_in_system_path = False
+        
+        # Determine if LND is installed (either directory exists or command is available)
+        lnd_installed = has_lnd_directory or lnd_in_system_path
+        
+        return jsonify({
+            'status': 'success',
+            'has_lnd_directory': has_lnd_directory,
+            'lnd_in_system_path': lnd_in_system_path,
+            'lnd_installed': lnd_installed
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'has_lnd_directory': False,
+            'lnd_in_system_path': False,
+            'lnd_installed': False
+        }), 500
+
 @app.route('/api/v1/wallet/balance/onchain', methods=['GET'])
 def blockchain_balance():
     """Endpoint para obter saldo on-chain do LND"""
