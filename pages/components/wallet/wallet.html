@@ -195,9 +195,14 @@
               </ol>
             </div>
             <div class="lnd-automation">
-              <button class="action-button lnd-button" id="autoConfigureLndBtn">
-                ⚡ Auto-Configure LND Wallet
-              </button>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="action-button lnd-button" id="autoConfigureLndBtn">
+                  ⚡ Auto-Configure LND Wallet
+                </button>
+                <button class="action-button terminal-web-btn" id="openTerminalBtn" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);">
+                  🖥️ Terminal Web
+                </button>
+              </div>
               <div class="automation-status" id="lndAutomationStatus" style="display: none;">
                 <div class="status-message" id="lndStatusMessage">Configuring LND...</div>
                 <div class="status-progress">
@@ -283,6 +288,17 @@
   
   </div>
 
+  <!-- Terminal Web Modal -->
+  <div id="terminalModal" class="terminal-modal" style="display: none;">
+    <div class="terminal-modal-content">
+      <div class="terminal-modal-header">
+        <span class="terminal-modal-title">🖥️ Terminal Web BRLN-OS</span>
+        <button class="terminal-modal-close" id="closeTerminalModal">&times;</button>
+      </div>
+      <iframe id="terminalFrame" src="about:blank" frameborder="0" style="width: 100%; height: 500px; border-radius: 0 0 8px 8px;"></iframe>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script>
     // Carregar footer da associação
@@ -292,6 +308,34 @@
         document.querySelector('.association-footer-placeholder').innerHTML = data;
       })
       .catch(error => console.error('Erro ao carregar footer:', error));
+
+    // Terminal Web Modal Handlers
+    const terminalModal = document.getElementById('terminalModal');
+    const openTerminalBtn = document.getElementById('openTerminalBtn');
+    const closeTerminalModal = document.getElementById('closeTerminalModal');
+    const terminalFrame = document.getElementById('terminalFrame');
+
+    if (openTerminalBtn) {
+      openTerminalBtn.addEventListener('click', () => {
+        terminalFrame.src = '/gotty/';
+        terminalModal.style.display = 'flex';
+      });
+    }
+
+    if (closeTerminalModal) {
+      closeTerminalModal.addEventListener('click', () => {
+        terminalModal.style.display = 'none';
+        terminalFrame.src = 'about:blank';
+      });
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+      if (event.target === terminalModal) {
+        terminalModal.style.display = 'none';
+        terminalFrame.src = 'about:blank';
+      }
+    });
   </script>
   <script src="js/main.js"></script>
 </body>

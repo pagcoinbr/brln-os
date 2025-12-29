@@ -127,7 +127,7 @@ install_and_configure_apache_complete() {
     # Copy BRLN-OS files
     if [[ -f "$MAINTENANCE_SCRIPT_DIR/apache.sh" ]]; then
         source "$MAINTENANCE_SCRIPT_DIR/apache.sh"
-        copy_brln_files
+        copy_brln_files_to_apache
     else
         echo -e "${RED}❌ Arquivo apache.sh não encontrado em $MAINTENANCE_SCRIPT_DIR${NC}"
         return 1

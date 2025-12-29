@@ -148,7 +148,7 @@ update_and_upgrade() {
     
     # Install Apache and Python dependencies
     echo -e "${YELLOW}📦 Instalando Apache e dependências Python...${NC}"
-    sudo apt install apache2 curl wget python3-venv -y > /dev/null 2>&1
+    sudo apt install apache2 curl wget python3-venv expect -y > /dev/null 2>&1
     
     # Enable Apache modules
     echo -e "${YELLOW}⚙️ Habilitando módulos do Apache...${NC}"
