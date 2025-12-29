@@ -50,26 +50,26 @@ EOF
 }
 
 setup_apache_web() {
-  echo -e "${GREEN}🌐 Configurando servidor web Apache...${NC}"
+  echo -e "${GREEN}"
 
   # Instalar Apache se não estiver instalado
   if ! command -v apache2 &> /dev/null; then
-    echo "📦 Instalando Apache2..."
+    echo -e "${YELLOW}"
     sudo apt update >> /dev/null 2>&1
     sudo apt install apache2 -y >> /dev/null 2>&1 # & spinner
   else
-    echo "✅ Apache2 já está instalado."
+    echo -e "${GREEN}"
   fi
 
   # Parar e desabilitar Next.js frontend se estiver rodando
   if sudo systemctl is-active --quiet brln-frontend 2>/dev/null; then
-    echo "⏹️ Parando serviço Next.js frontend..."
+    echo -e "${YELLOW}"
     sudo systemctl stop brln-frontend 2>/dev/null || true
     sudo systemctl disable brln-frontend 2>/dev/null || true
   fi
 
   # Habilitar módulos necessários do Apache
-  echo "🔌 Habilitando módulos Apache necessários..."
+  echo -e "${YELLOW}"
   sudo a2enmod rewrite >> /dev/null 2>&1
   sudo a2enmod ssl >> /dev/null 2>&1
   sudo a2enmod proxy >> /dev/null 2>&1
@@ -78,22 +78,22 @@ setup_apache_web() {
   sudo a2enmod headers >> /dev/null 2>&1
 
   # Criar estrutura de diretórios no Apache
-  echo "📁 Criando estrutura de diretórios..."
+  echo -e "${YELLOW}"
   sudo mkdir -p /var/www/html/pages
 
   # Copiar arquivos do projeto para Apache mantendo estrutura
-  echo "📂 Copiando arquivos da interface web..."
+  echo -e "${YELLOW}"
   sudo cp -r "$SCRIPT_DIR/pages"/* /var/www/html/pages/ >> /dev/null 2>&1
   sudo cp "$SCRIPT_DIR/main.html" /var/www/html/index.html >> /dev/null 2>&1
 
   # Copiar simple-lnwallet se existir
   if [ -d "$SCRIPT_DIR/simple-lnwallet" ]; then
-    echo "📱 Copiando simple-lnwallet..."
+    echo -e "${YELLOW}"
     sudo cp -r "$SCRIPT_DIR/simple-lnwallet" /var/www/html/ >> /dev/null 2>&1
   fi
 
   # Copiar favicon e outros assets estáticos
-  echo "📄 Copiando assets estáticos..."
+  echo -e "${YELLOW}"
   if [ -f "$SCRIPT_DIR/favicon.ico" ]; then
     sudo cp -f "$SCRIPT_DIR/favicon.ico" /var/www/html/ >> /dev/null 2>&1
   fi
@@ -106,48 +106,48 @@ setup_apache_web() {
   done
 
   # Ajustar permissões dos arquivos
-  echo "🔑 Ajustando permissões dos arquivos..."
+  echo -e "${YELLOW}"
   sudo chown -R www-data:www-data /var/www/html/
   sudo chmod -R 755 /var/www/html/
 
   # Configurar proxy reverso Apache com SSL completo
-  echo "⚙️ Configurando proxy reverso Apache..."
+  echo -e "${YELLOW}"
   configure_ssl_complete
 
   # Verificar configuração Apache
-  echo "✅ Verificando configuração Apache..."
+  echo -e "${YELLOW}"
   if sudo apache2ctl configtest >> /dev/null 2>&1; then
-    echo "✅ Configuração Apache válida"
+    echo -e "${GREEN}"
   else
-    echo -e "${YELLOW}⚠️ Possíveis problemas na configuração Apache${NC}"
+    echo -e "${YELLOW}"
     sudo apache2ctl configtest
   fi
 
   # Reiniciar Apache
-  echo "🔄 Reiniciando Apache..."
+  echo -e "${YELLOW}"
   sudo systemctl enable apache2 >> /dev/null 2>&1
   sudo systemctl restart apache2 >> /dev/null 2>&1
 
   if sudo systemctl is-active --quiet apache2; then
-    echo -e "${GREEN}✅ Apache configurado com sucesso!${NC}"
+    echo -e "${GREEN}"
     local server_ip=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
-    echo -e "${GREEN}🌐 Interface disponível em: http://$server_ip${NC}"
+    echo -e "${GREEN}"
   else
-    echo -e "${RED}❌ Erro ao iniciar Apache${NC}"
+    echo -e "${RED}"
     sudo systemctl status apache2
     return 1
   fi
 }
 
 deploy_to_apache() {
-  echo -e "${GREEN}📋 Realizando deploy para Apache...${NC}"
+  echo -e "${GREEN}"
   
   # Verificar se o Apache está rodando
   if ! sudo systemctl is-active --quiet apache2; then
-    echo -e "${YELLOW}⚠️ Apache não está rodando. Tentando iniciar...${NC}"
+    echo -e "${YELLOW}"
     sudo systemctl start apache2
     if ! sudo systemctl is-active --quiet apache2; then
-      echo -e "${RED}❌ Não foi possível iniciar o Apache${NC}"
+      echo -e "${RED}"
       return 1
     fi
   fi
@@ -160,7 +160,7 @@ deploy_to_apache() {
   sudo cp -r /var/www/html /var/www/html.backup >> /dev/null 2>&1
 
   # Deploy dos arquivos
-  echo "📂 Copiando arquivos atualizados..."
+  echo -e "${YELLOW}"
   
   # Copiar páginas
   if [ -d "$SCRIPT_DIR/pages" ]; then
@@ -187,7 +187,7 @@ deploy_to_apache() {
   # Recarregar configuração do Apache
   sudo systemctl reload apache2 >> /dev/null 2>&1
 
-  echo -e "${GREEN}✅ Deploy realizado com sucesso!${NC}"
+  echo -e "${GREEN}"
 }
 
 setup_https_proxy() {
@@ -203,13 +203,13 @@ setup_https_proxy() {
 }
 
 setup_ssl_proxy_config() {
-  echo "⚙️ Configurando proxy SSL com API para BRLN-OS..."
+  echo -e "${YELLOW}"
   
   # Configure Apache for local access only
   configure_apache_local_ports
   
   # Verificar e habilitar módulos necessários
-  echo "🔌 Verificando módulos Apache..."
+  echo -e "${YELLOW}"
   sudo a2enmod ssl >> /dev/null 2>&1
   sudo a2enmod proxy >> /dev/null 2>&1
   sudo a2enmod proxy_http >> /dev/null 2>&1
@@ -223,7 +223,7 @@ setup_ssl_proxy_config() {
   fi
   
   # Criar configuração SSL com proxy para API
-  echo "📝 Criando configuração SSL com proxy..."
+  echo -e "${YELLOW}"
   sudo tee /etc/apache2/sites-available/brln-ssl-api.conf > /dev/null << EOF
 <VirtualHost *:443>
     ServerAdmin webmaster@localhost
@@ -301,7 +301,7 @@ EOF
 }
 
 verify_apache_modules() {
-  echo "🔍 Verificando módulos Apache necessários..."
+  echo -e "${YELLOW}"
   
   local modules=("ssl" "proxy" "proxy_http" "proxy_wstunnel" "headers" "rewrite")
   local missing_modules=()
@@ -313,7 +313,7 @@ verify_apache_modules() {
   done
   
   if [ ${#missing_modules[@]} -gt 0 ]; then
-    echo "📦 Habilitando módulos: ${missing_modules[*]}"
+    echo -e "${YELLOW}"
     for module in "${missing_modules[@]}"; do
       sudo a2enmod "$module" >> /dev/null 2>&1
     done
@@ -323,7 +323,7 @@ verify_apache_modules() {
 }
 
 force_https_only() {
-  echo "🔒 Configurando redirecionamento HTTP para HTTPS..."
+  echo -e "${YELLOW}"
   
   # Criar configuração HTTP que redireciona para HTTPS
   sudo tee /etc/apache2/sites-available/brln-http-redirect.conf > /dev/null << 'EOF'
@@ -349,17 +349,17 @@ EOF
 }
 
 copy_ssl_certificates() {
-  echo "🔐 Configurando certificados SSL..."
+  echo -e "${YELLOW}"
   
   # Gerar certificados auto-assinados se não existirem
   if [ ! -f /etc/ssl/certs/ssl-cert-snakeoil.pem ]; then
-    echo "📜 Gerando certificados SSL auto-assinados..."
+    echo -e "${YELLOW}"
     sudo make-ssl-cert generate-default-snakeoil --force-overwrite
   fi
   
   # Verificar se existem certificados personalizados no projeto
   if [ -f "$SCRIPT_DIR/../certs/server.crt" ] && [ -f "$SCRIPT_DIR/../certs/server.key" ]; then
-    echo "📋 Copiando certificados personalizados..."
+    echo -e "${YELLOW}"
     sudo cp "$SCRIPT_DIR/../certs/server.crt" /etc/ssl/certs/brln-server.crt
     sudo cp "$SCRIPT_DIR/../certs/server.key" /etc/ssl/private/brln-server.key
     sudo chmod 644 /etc/ssl/certs/brln-server.crt
@@ -375,7 +375,7 @@ copy_ssl_certificates() {
 }
 
 configure_ssl_complete() {
-  echo "🔐 Configurando SSL completo para BRLN-OS..."
+  echo -e "${YELLOW}"
   
   # Verificar módulos necessários
   verify_apache_modules
@@ -392,48 +392,56 @@ configure_ssl_complete() {
   echo -e "${GREEN}✅ Configuração SSL completa!${NC}"
 }
 
-copy_brln_files() {
-  echo "📂 Copiando arquivos necessários do BRLN-OS..."
+# Unified function to copy BRLN-OS files to Apache
+copy_brln_files_to_apache() {
+  echo -e "${YELLOW}"
+  
+  # Detect correct base directory (scripts/ or root)
+  local base_dir
+  if [[ "$SCRIPT_DIR" == *"/scripts" ]]; then
+    base_dir="$SCRIPT_DIR/.."
+  else
+    base_dir="$SCRIPT_DIR"
+  fi
   
   # Criar diretórios necessários
-  sudo mkdir -p /var/www/html/{pages,api,assets}
+  sudo mkdir -p /var/www/html/pages
   
   # Copiar páginas principais
-  if [ -d "$SCRIPT_DIR/../pages" ]; then
-    echo "📄 Copiando páginas..."
-    sudo cp -r "$SCRIPT_DIR/../pages"/* /var/www/html/pages/ 2>/dev/null || true
+  if [ -d "$base_dir/pages" ]; then
+    echo -e "${YELLOW}"
+    sudo cp -r "$base_dir/pages"/* /var/www/html/pages/ 2>/dev/null || true
   fi
   
   # Copiar arquivo principal
-  if [ -f "$SCRIPT_DIR/../main.html" ]; then
-    echo "🏠 Copiando página principal..."
-    sudo cp "$SCRIPT_DIR/../main.html" /var/www/html/index.html 2>/dev/null || true
+  if [ -f "$base_dir/main.html" ]; then
+    echo -e "${YELLOW}"
+    sudo cp "$base_dir/main.html" /var/www/html/index.html 2>/dev/null || true
   fi
   
   # Copiar simple-lnwallet
-  if [ -d "$SCRIPT_DIR/../simple-lnwallet" ]; then
-    echo "💰 Copiando simple-lnwallet..."
-    sudo cp -r "$SCRIPT_DIR/../simple-lnwallet" /var/www/html/ 2>/dev/null || true
+  if [ -d "$base_dir/simple-lnwallet" ]; then
+    echo -e "${YELLOW}"
+    sudo cp -r "$base_dir/simple-lnwallet" /var/www/html/ 2>/dev/null || true
   fi
   
   # Copiar assets estáticos
-  echo "🎨 Copiando assets estáticos..."
+  echo -e "${YELLOW}"
   for ext in css js png jpg jpeg gif svg webp ico; do
-    if ls "$SCRIPT_DIR/../"*.$ext 1> /dev/null 2>&1; then
-      sudo cp "$SCRIPT_DIR/../"*.$ext /var/www/html/assets/ 2>/dev/null || true
+    if ls "$base_dir"/*.$ext 1> /dev/null 2>&1; then
+      sudo cp "$base_dir"/*.$ext /var/www/html/ 2>/dev/null || true
     fi
   done
   
   # Ajustar permissões
   sudo chown -R www-data:www-data /var/www/html/
-  sudo chmod -R 644 /var/www/html/
-  sudo find /var/www/html/ -type d -exec chmod 755 {} \;
+  sudo chmod -R 755 /var/www/html/
   
-  echo -e "${GREEN}✅ Arquivos BRLN-OS copiados!${NC}"
+  echo -e "${GREEN}"
 }
 
 setup_basic_proxy() {
-  echo "⚙️ Configurando proxy básico para BRLN-OS..."
+  echo -e "${YELLOW}"
   
   # Criar configuração de proxy básico
   sudo tee /etc/apache2/sites-available/brln-proxy.conf > /dev/null << EOF

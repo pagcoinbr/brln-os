@@ -5,7 +5,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
 gotty_install() {
-  echo -e "${GREEN}📥 Instalando Gotty do repositório oficial...${NC}"
+  echo -e "${GREEN}"
   
   # Gotty official release from GitHub
   GOTTY_VERSION="2.0.0-alpha.3"
@@ -20,7 +20,7 @@ gotty_install() {
   elif [[ "$ARCH" == "armv7l" ]]; then
     GOTTY_ARCH="arm"
   else
-    echo -e "${YELLOW}⚠️ Arquitetura $ARCH não suportada, tentando amd64...${NC}"
+    echo -e "${YELLOW}"
     GOTTY_ARCH="amd64"
   fi
   
@@ -28,41 +28,41 @@ gotty_install() {
   
   # Remove existing gotty if present
   if [[ -f /usr/local/bin/gotty ]]; then
-    echo -e "${YELLOW}🔄 Removendo versão anterior do gotty...${NC}"
+    echo -e "${YELLOW}"
     sudo rm -f /usr/local/bin/gotty
   fi
   
   # Download and install gotty
   cd /tmp
-  echo -e "${YELLOW}📥 Baixando gotty v${GOTTY_VERSION} para ${GOTTY_ARCH}...${NC}"
+  echo -e "${YELLOW}"
   if wget -q "$GOTTY_URL" -O "gotty.tar.gz"; then
     if tar -xzf gotty.tar.gz; then
       sudo mv gotty /usr/local/bin/gotty
       sudo chmod +x /usr/local/bin/gotty
       rm -f gotty.tar.gz
-      echo -e "${GREEN}✅ Gotty v${GOTTY_VERSION} instalado com sucesso!${NC}"
+      echo -e "${GREEN}"
       
       # Verify installation
       if /usr/local/bin/gotty --version >/dev/null 2>&1; then
-        echo -e "${GREEN}✅ Gotty verificado e funcionando!${NC}"
+        echo -e "${GREEN}"
         return 0
       else
-        echo -e "${RED}❌ Erro na verificação do gotty${NC}"
+        echo -e "${RED}"
         return 1
       fi
     else
-      echo -e "${RED}❌ Erro ao extrair gotty${NC}"
+      echo -e "${RED}"
       rm -f gotty.tar.gz
       return 1
     fi
   else
-    echo -e "${RED}❌ Erro ao baixar gotty de $GOTTY_URL${NC}"
+    echo -e "${RED}"
     return 1
   fi
 }
 
 create_gotty_service() {
-  echo -e "${YELLOW}⚙️ Criando serviço gotty-terminal...${NC}"
+  echo -e "${YELLOW}"
   
   sudo tee /etc/systemd/system/gotty-terminal.service > /dev/null << EOF
 [Unit]
@@ -89,11 +89,11 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl enable gotty-terminal
   
-  echo -e "${GREEN}✅ Serviço gotty-terminal criado e habilitado na porta 3131!${NC}"
+  echo -e "${GREEN}"
 }
 
 terminal_web() {
-  echo -e "${GREEN}💻 Configurando interface web do terminal...${NC}"
+  echo -e "${GREEN}"
   
   # Install Gotty
   if gotty_install; then
@@ -101,7 +101,7 @@ terminal_web() {
     create_gotty_service
     
     # Start the service within script context
-    echo -e "${YELLOW}🚀 Iniciando serviço gotty-terminal...${NC}"
+    echo -e "${YELLOW}"
     # Stop any conflicting processes first
     sudo pkill -f 'gotty.*3131' 2>/dev/null || true
     
@@ -110,16 +110,16 @@ terminal_web() {
     # Centralized service check
     for i in {1..3}; do
         if sudo systemctl is-active --quiet gotty-terminal; then
-            echo -e "${GREEN}✅ Terminal web configurado e rodando na porta 3131${NC}"
+            echo -e "${GREEN}"
             break
         elif [[ $i -eq 3 ]]; then
-            echo -e "${YELLOW}⚠️ Terminal web com problemas (continuando instalação)${NC}"
+            echo -e "${YELLOW}"
         else
             sleep 1
         fi
     done
   else
-    echo -e "${RED}❌ Gotty não foi instalado corretamente${NC}"
+    echo -e "${RED}"
     return 1
   fi
 }

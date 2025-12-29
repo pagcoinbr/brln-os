@@ -3,6 +3,22 @@
 # Utility functions
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 
+# Function to center text output
+center_text() {
+    local text="$1"
+    local color="${2:-$NC}"
+    local term_width=$(tput cols 2>/dev/null || echo 80)
+    # Strip color codes for length calculation
+    local text_plain=$(echo -e "$text" | sed 's/\x1b\[[0-9;]*m//g')
+    local text_length=${#text_plain}
+    local padding=$(( (term_width - text_length) / 2 ))
+    
+    if [[ $padding -gt 0 ]]; then
+        printf "%${padding}s" ""
+    fi
+    echo -e "${color}${text}${NC}"
+}
+
 safe_cp() {
   local src="$1"
   local dest="$2"
@@ -10,7 +26,7 @@ safe_cp() {
   if [[ -e "$src" ]]; then
     sudo cp "$src" "$dest"
   else
-    echo -e "${RED}❌ Arquivo não encontrado para cópia: $src${NC}"
+    echo -e "${RED}"
     return 1
   fi
 }
@@ -33,14 +49,14 @@ spinner() {
   
   # Just wait for the background process without animation
   local pid=$!
-  echo -e "${YELLOW}⏳ Aguardando processo (PID: $pid)...${NC}"
+  echo -e "${YELLOW}"
   wait $pid
   local exit_status=$?
   
   if [ $exit_status -eq 0 ]; then
-    echo -e "${GREEN}✔️ Processo finalizado com sucesso!${NC}"
+    echo -e "${GREEN}"
   else
-    echo -e "${RED}❌ Processo finalizado com erro (código: $exit_status)${NC}"
+    echo -e "${RED}"
   fi
   
   return $exit_status
@@ -57,15 +73,15 @@ configure_ufw() {
 }
 
 configure_secure_firewall() {
-  echo -e "${YELLOW}🔒 Configurando firewall seguro (apenas SSH e HTTPS)...${NC}"
+  echo -e "${YELLOW}"
   
   # Get current SSH port (default 22)
   ssh_port=$(sudo ss -tlnp | grep sshd | awk '{print $4}' | cut -d':' -f2 | head -n1)
   ssh_port=${ssh_port:-22}
   
-  echo -e "${BLUE}Configurando portas permitidas:${NC}"
-  echo -e "${BLUE}  • SSH: $ssh_port${NC}"
-  echo -e "${BLUE}  • HTTPS: 443${NC}"
+  echo -e "${BLUE}"
+  echo -e "${BLUE}"
+  echo -e "${BLUE}"
   
   # Reset UFW to default settings
   sudo ufw --force reset
@@ -83,20 +99,20 @@ configure_secure_firewall() {
   # Enable UFW
   sudo ufw --force enable
   
-  echo -e "${GREEN}✅ Firewall configurado - apenas SSH ($ssh_port) e HTTPS (443) permitidos${NC}"
+  echo -e "${GREEN}"
   
   # Show current status
   sudo ufw status numbered
 }
 
 close_ports_except_ssh() {
-  echo -e "${YELLOW}🔒 Fechando todas as portas exceto SSH...${NC}"
+  echo -e "${YELLOW}"
   
   # Get current SSH port (default 22)
   ssh_port=$(sudo ss -tlnp | grep sshd | awk '{print $4}' | cut -d':' -f2 | head -n1)
   ssh_port=${ssh_port:-22}
   
-  echo -e "${BLUE}Mantendo porta SSH: $ssh_port${NC}"
+  echo -e "${BLUE}"
   
   # Reset UFW to default settings
   sudo ufw --force reset
@@ -111,7 +127,7 @@ close_ports_except_ssh() {
   # Enable UFW
   sudo ufw --force enable
   
-  echo -e "${GREEN}✅ Firewall configurado - apenas SSH ($ssh_port) permitido${NC}"
+  echo -e "${GREEN}"
   
   # Show current status
   sudo ufw status numbered
