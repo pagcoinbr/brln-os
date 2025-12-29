@@ -1471,7 +1471,7 @@ async function autoConfigureLND() {
     statusMessage.textContent = 'Running expect script to configure LND...';
     progressBar.style.width = '40%';
     
-    const extendedKey = lndKeys[network];
+    const extendedKey = lndKeys[network].extended_master_key;
     lndScriptOutput.value += `📋 Network: ${network}\n`;
     lndScriptOutput.value += `🔑 Extended Master Key:\n    ${extendedKey}\n\n`;
     lndScriptOutput.value += '⏳ Executing: /root/brln-os/scripts/auto-lnd-create-masterkey.exp\n';
