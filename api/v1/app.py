@@ -6,63 +6,85 @@ Usando gRPC para comunicação com LND
 ESTRUTURA DA API:
 
 System Management:
-- GET  /api/v1/system/status          - Status do sistema (CPU, RAM, LND, Bitcoin, etc)
-- GET  /api/v1/system/services        - Status de todos os serviços
-- POST /api/v1/system/service         - Gerenciar serviços (start/stop/restart)
-- GET  /api/v1/system/health          - Health check
+- GET  /api/v1/system/status                    - Status do sistema (CPU, RAM, LND, Bitcoin, etc)
+- GET  /api/v1/system/services                  - Status de todos os serviços
+- POST /api/v1/system/service                   - Gerenciar serviços (start/stop/restart)
+- GET  /api/v1/system/health                    - Health check
+- GET  /api/v1/system/check-lnd-installation    - Verificar se LND está instalado
 
 Wallet Management (On-chain):
-- GET  /api/v1/wallet/balance/onchain - Saldo Bitcoin on-chain
-- GET  /api/v1/wallet/transactions    - Listar transações on-chain
-- POST /api/v1/wallet/transactions/send - Enviar Bitcoin on-chain
-- POST /api/v1/wallet/addresses       - Gerar novos endereços Bitcoin
-- GET  /api/v1/wallet/utxos          - Listar UTXOs disponíveis
+- GET  /api/v1/wallet/balance/onchain           - Saldo Bitcoin on-chain
+- GET  /api/v1/wallet/balance/lightning         - Saldo Lightning Network
+- GET  /api/v1/wallet/transactions              - Listar transações on-chain
+- POST /api/v1/wallet/transactions/send         - Enviar Bitcoin on-chain
+- POST /api/v1/wallet/addresses                 - Gerar novos endereços Bitcoin
+- GET  /api/v1/wallet/utxos                     - Listar UTXOs disponíveis
 
 Lightning Network:
-- GET  /api/v1/lightning/peers         - Listar peers conectados
-- POST /api/v1/lightning/peers/connect - Conectar a um peer
-- GET  /api/v1/lightning/channels      - Listar canais Lightning
-- POST /api/v1/lightning/channels/open - Abrir canal Lightning
-- POST /api/v1/lightning/channels/close - Fechar canal Lightning
-- GET  /api/v1/lightning/channels/pending - Listar canais pendentes
-- POST /api/v1/lightning/invoices      - Criar invoice Lightning
-- POST /api/v1/lightning/payments      - Enviar pagamento Lightning
-- POST /api/v1/lightning/payments/keysend - Enviar keysend (pagamento espontâneo)
+- GET  /api/v1/lightning/peers                  - Listar peers conectados
+- POST /api/v1/lightning/peers/connect          - Conectar a um peer
+- GET  /api/v1/lightning/channels               - Listar canais Lightning
+- POST /api/v1/lightning/channels/open          - Abrir canal Lightning
+- POST /api/v1/lightning/channels/close         - Fechar canal Lightning
+- GET  /api/v1/lightning/channels/pending       - Listar canais pendentes
+- POST /api/v1/lightning/invoices               - Criar invoice Lightning
+- POST /api/v1/lightning/payments               - Enviar pagamento Lightning
+- POST /api/v1/lightning/payments/keysend       - Enviar keysend (pagamento espontâneo)
 
 Transaction Fees:
-- GET  /api/v1/fees                    - Obter estimativas de taxas de transação
+- GET  /api/v1/fees                             - Obter estimativas de taxas de transação
 
 HD Wallet Management:
-- POST /api/v1/wallet/hd/generate      - Gerar nova seed phrase BIP39
-- POST /api/v1/wallet/hd/import        - Importar wallet existente
-- POST /api/v1/wallet/hd/derive        - Derivar endereços para todas as chains
-- GET  /api/v1/wallet/hd/addresses     - Obter endereços derivados em cache
-- POST /api/v1/wallet/hd/unlock        - Desbloquear wallet com senha
-- GET  /api/v1/wallet/hd/chains        - Listar chains suportadas
-- DELETE /api/v1/wallet/hd/remove      - Remover wallet do sistema
+- POST /api/v1/wallet/generate                  - Gerar nova seed phrase BIP39
+- POST /api/v1/wallet/import                    - Importar wallet existente
+- POST /api/v1/wallet/save                      - Salvar wallet criptografada
+- GET  /api/v1/wallet/list                      - Listar todas as wallets salvas
+- GET  /api/v1/wallet/system-default            - Obter wallet padrão do sistema
+- POST /api/v1/wallet/system-default            - Definir wallet padrão do sistema
+- POST /api/v1/wallet/integrate                 - Integrar wallet com LND e Elements
+- POST /api/v1/wallet/load                      - Carregar e descriptografar wallet
+- GET  /api/v1/wallet/addresses/<wallet_id>     - Obter endereços derivados
+- GET  /api/v1/wallet/balance/<chain>/<addr>    - Obter saldo de chain específica
+- POST /api/v1/wallet/validate                  - Validar seed phrase BIP39
+- GET  /api/v1/wallet/status                    - Status do sistema de wallets
+- POST /api/v1/wallet/bip39-to-lnd              - Converter BIP39 para LND master key
 
 Elements/Liquid Network:
-- GET  /api/v1/elements/balances       - Obter saldos de todos os assets
-- GET  /api/v1/elements/assets         - Listar assets conhecidos
-- POST /api/v1/elements/addresses      - Gerar novo endereço Liquid
-- POST /api/v1/elements/send           - Enviar asset para endereço
-- GET  /api/v1/elements/utxos          - Listar UTXOs Liquid não gastos
-- GET  /api/v1/elements/transactions   - Listar transações Liquid recentes
-- GET  /api/v1/elements/info           - Informações da blockchain Liquid
+- GET  /api/v1/elements/balances                - Obter saldos de todos os assets
+- POST /api/v1/elements/addresses               - Gerar novo endereço Liquid
+- POST /api/v1/elements/send                    - Enviar asset para endereço
+- GET  /api/v1/elements/utxos                   - Listar UTXOs Liquid não gastos
+- GET  /api/v1/elements/transactions            - Listar transações Liquid recentes
+- GET  /api/v1/elements/info                    - Informações da blockchain Liquid
 
 Lightning Chat System:
-- GET  /api/v1/chat/conversations      - Listar todas as conversas ativas
-- GET  /api/v1/chat/messages           - Obter mensagens de uma conversa
-- POST /api/v1/chat/send               - Enviar mensagem via keysend
-- GET  /api/v1/chat/notifications      - Contador de novas mensagens
-- POST /api/v1/chat/reset              - Resetar contador de mensagens
+- GET  /api/v1/lightning/chat/conversations     - Listar todas as conversas ativas
+- GET  /api/v1/lightning/chat/messages/<node>   - Obter mensagens de uma conversa
+- POST /api/v1/lightning/chat/send              - Enviar mensagem via keysend
+- GET  /api/v1/lightning/chat/notifications     - Contador de novas mensagens
+- POST /api/v1/lightning/chat/notifications     - Resetar contador de mensagens
+- POST /api/v1/lightning/chat/keysends/check    - Processar keysends recebidos
 
-Advanced Lightning Features:
-- GET  /api/v1/lightning/balance       - Saldo dos canais Lightning
-- GET  /api/v1/lightning/info          - Informações detalhadas do node
-- POST /api/v1/lightning/decode        - Decodificar payment request
-- GET  /api/v1/lightning/forwarding    - Histórico de forwarding
-- POST /api/v1/lightning/backup        - Backup do channel.backup
+Bitcoin Core Proxy:
+- GET  /api/v1/bitcoin/info                     - Informações do Bitcoin Core
+- GET  /api/v1/bitcoin/block/height             - Altura do bloco atual
+- GET  /api/v1/bitcoin/block/<block_hash>       - Informações de bloco específico
+
+LND Wallet Initialization:
+- POST /api/v1/lnd/wallet/genseed               - Gerar seed phrase do LND
+- POST /api/v1/lnd/wallet/init                  - Inicializar wallet LND
+- POST /api/v1/lnd/wallet/unlock                - Desbloquear wallet LND
+- POST /api/v1/lnd/wallet/create-from-api       - Criar wallet LND usando seed da API
+- POST /api/v1/lnd/wallet/create-expect         - Criar wallet LND usando expect script
+
+TRON GasFree Wallet:
+- POST /api/v1/tron/wallet/initialize           - Inicializar wallet TRON
+- GET  /api/v1/tron/wallet/address              - Obter endereço wallet TRON
+- GET  /api/v1/tron/wallet/balance              - Obter saldo TRON/USDT
+- POST /api/v1/tron/wallet/send                 - Enviar USDT via gas-free
+- GET  /api/v1/tron/wallet/transactions         - Histórico de transações TRON
+- POST /api/v1/tron/config/save                 - Salvar configuração TRON
+- GET  /api/v1/tron/config/load                 - Carregar configuração TRON
 """
 
 # Environment Virtual Check
@@ -348,29 +370,45 @@ class WalletManager:
         return sqlite3.connect(WALLET_DB_PATH)
     
     def generate_secure_entropy(self, word_count=12):
-        """Gera entropia segura usando múltiplas fontes"""
-        try:
-            # Determine entropy size based on word count
-            # 12 words = 128 bits, 24 words = 256 bits
-            entropy_size = 16 if word_count == 12 else 32
+        """
+        Generate cryptographically secure entropy using OS-provided CSPRNG.
+        
+        Uses secrets.token_bytes() which relies on:
+        - Linux: /dev/urandom (ChaCha20-based CSPRNG)
+        - Windows: CryptGenRandom
+        - macOS: /dev/urandom (Fortuna CSPRNG)
+        
+        No need to mix multiple sources - the OS does this properly.
+        See: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
+        
+        Args:
+            word_count: 12 (128-bit) or 24 (256-bit) word mnemonic
             
-            # Base entropy
+        Returns:
+            bytes: Cryptographically secure random bytes
+        """
+        if word_count not in [12, 24]:
+            raise ValueError("Word count must be 12 or 24")
+            
+        # 12 words = 128 bits = 16 bytes
+        # 24 words = 256 bits = 32 bytes
+        entropy_size = 16 if word_count == 12 else 32
+        
+        try:
+            # secrets.token_bytes() is specifically designed for cryptographic use
+            # It's audited, battle-tested, and follows security best practices
             entropy = secrets.token_bytes(entropy_size)
             
-            # Add system-specific entropy
-            import platform
-            import time
-            system_info = f"{platform.node()}{platform.processor()}{time.time()}"
-            system_hash = hashlib.sha256(system_info.encode()).digest()[:entropy_size//2]
+            # Verify we got the correct amount of entropy
+            if len(entropy) != entropy_size:
+                raise ValueError(f"Expected {entropy_size} bytes, got {len(entropy)}")
+                
+            return entropy
             
-            # Combine entropy sources
-            combined = bytes(a ^ b for a, b in zip(entropy[:entropy_size//2], system_hash))
-            combined += entropy[entropy_size//2:]
-            
-            return combined
         except Exception as e:
-            print(f"Error generating entropy: {e}")
-            return secrets.token_bytes(entropy_size)
+            # If entropy generation fails, this is a critical error
+            # Do NOT fallback to weak sources - fail loudly
+            raise RuntimeError(f"CRITICAL: Failed to generate secure entropy: {e}")
     
     def generate_mnemonic(self, word_count=12):
         """Gera uma nova seed phrase BIP39 com 12 ou 24 palavras"""
