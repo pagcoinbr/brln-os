@@ -175,6 +175,7 @@ menu_configuration() {
   echo -e "${YELLOW}┌─ Opções de Configuração ─┐${NC}"
   echo -e "${GREEN}1.${NC} 🛠️ Utilitários"
   echo -e "${GREEN}2.${NC} 🗂️ Gerar Protocol Buffers"
+  echo -e "${GREEN}3.${NC} 🔐 Gerenciador de Senhas"
   echo ""
   echo -e "${BLUE}0.${NC} Voltar ao menu principal"
   echo ""
@@ -184,6 +185,7 @@ menu_configuration() {
   case $choice in
     1) run_utils; read -p "Pressione Enter para continuar..."; menu_configuration ;;
     2) run_generate_protobuf; read -p "Pressione Enter para continuar..."; menu_configuration ;;
+    3) source "$SCRIPT_DIR/scripts/password_manager_menu.sh"; show_password_menu; menu_configuration ;;
     0) menu ;;
     *) echo "Opção inválida!"; sleep 2; menu_configuration ;;
   esac

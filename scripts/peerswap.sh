@@ -2,81 +2,132 @@
 # PeerSwap & PeerSwap Web Installation Script
 # BRLN-OS PeerSwap Configuration and Management
 
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
+
 # Source required configurations
-source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
+source "$SCRIPT_DIR/scripts/config.sh"
+source "$SCRIPT_DIR/scripts/utils.sh"
 
 # PeerSwap versions
-PEERSWAP_VERSION="4.0"
+PEERSWAP_VERSION="4.0rc1"
 PSWEB_VERSION="1.7.8"
 
 install_peerswap() {
-  echo -e "${GREEN}🔄 Instalando PeerSwap...${NC}"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}      🔄 INSTALAÇÃO DO PEERSWAP v${PEERSWAP_VERSION}${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  # Verificar se já está instalado
+  # Check if already installed
   if command -v peerswapd &> /dev/null; then
-    echo -e "${YELLOW}⚠️ PeerSwap já está instalado. Versão:${NC}"
-    peerswapd --version 2>/dev/null || echo "Versão não disponível"
-    read -p "Deseja reinstalar? (y/n): " reinstall
-    if [[ "$reinstall" != "y" ]]; then
+    echo -e "${YELLOW}⚠️  PeerSwap já está instalado${NC}"
+    peerswapd --version 2>/dev/null || echo "Versão instalada"
+    echo ""
+    read -p "Deseja reinstalar? (s/n): " reinstall
+    if [[ "$reinstall" != "s" && "$reinstall" != "S" ]]; then
+      echo -e "${BLUE}Instalação cancelada.${NC}"
       return 0
     fi
   fi
 
-  app="PeerSwap"
-  
-  # Criar usuário peerswap se não existir
+  # Create peerswap user if doesn't exist
   if ! id "peerswap" &>/dev/null; then
-    echo "👤 Criando usuário peerswap..."
+    echo -e "${BLUE}👤 Criando usuário 'peerswap'...${NC}"
     sudo adduser --disabled-password --gecos "" peerswap
+    echo -e "${GREEN}✓ Usuário 'peerswap' criado${NC}"
+    echo ""
+  else
+    echo -e "${GREEN}✓ Usuário 'peerswap' já existe${NC}"
+    echo ""
   fi
+  
+  atual_user="peerswap"
 
-  # Instalar dependências
-  echo "📦 Instalando dependências..."
-  sudo apt update >> /dev/null 2>&1 & spinner
-  sudo apt install -y git build-essential golang-go >> /dev/null 2>&1 & spinner
+  # Install dependencies
+  echo -e "${BLUE}🛠️  Instalando dependências...${NC}"
+  sudo apt update > /dev/null 2>&1
+  sudo apt install -y build-essential git > /dev/null 2>&1
+  echo -e "${GREEN}✓ Dependências instaladas${NC}"
+  echo ""
 
-  # Verificar versão do Go
-  GO_VERSION=$(go version 2>/dev/null | grep -o 'go[0-9]\+\.[0-9]\+' | head -n1)
-  if [[ -z "$GO_VERSION" ]] || [[ "${GO_VERSION#go}" < "1.19" ]]; then
-    echo "📦 Instalando Go mais recente..."
+  # Check Go version
+  echo -e "${BLUE}🔍 Verificando Go...${NC}"
+  if command -v go &> /dev/null; then
+    GO_VERSION=$(go version | grep -o 'go[0-9]\+\.[0-9]\+' | sed 's/go//')
+    echo -e "${GREEN}✓ Go $GO_VERSION encontrado${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Go não encontrado. Instalando...${NC}"
     install_go
   fi
+  echo ""
 
-  # Criar diretórios
-  echo "📁 Criando diretórios..."
-  sudo mkdir -p /data/peerswap
-  sudo chown peerswap:peerswap /data/peerswap
+  # Create peerswap directory
+  echo -e "${BLUE}📁 Criando diretórios...${NC}"
+  sudo -u peerswap mkdir -p /home/peerswap/.peerswap
+  echo -e "${GREEN}✓ Diretório criado: /home/peerswap/.peerswap${NC}"
+  echo ""
 
-  # Compilar PeerSwap do código fonte
-  echo "🔨 Compilando PeerSwap do código fonte..."
-  cd /tmp
+  # Clone and compile PeerSwap as peerswap user
+  echo -e "${BLUE}📥 Clonando repositório PeerSwap...${NC}"
   
-  # Clonar repositório
-  git clone https://github.com/ElementsProject/peerswap.git
-  cd peerswap
+  # Remove old clone if exists
+  sudo -u peerswap rm -rf /home/peerswap/peerswap
   
-  # Checkout versão específica
-  git checkout v$PEERSWAP_VERSION 2>/dev/null || git checkout main
-  
-  # Compilar
-  echo "⚙️ Compilando binários..."
-  make lnd-release >> /dev/null 2>&1 & spinner
-  
-  # Instalar binários
-  sudo install -m 0755 -o root -g root -t /usr/local/bin \
-    build/peerswapd-lnd \
-    build/pscli-lnd
-    
-  # Criar links simbólicos
-  sudo ln -sf /usr/local/bin/peerswapd-lnd /usr/local/bin/peerswapd
-  sudo ln -sf /usr/local/bin/pscli-lnd /usr/local/bin/pscli
+  if sudo -u peerswap git clone https://github.com/ElementsProject/peerswap.git /home/peerswap/peerswap; then
+    echo -e "${GREEN}✓ Repositório clonado${NC}"
+  else
+    echo -e "${RED}❌ Erro ao clonar repositório${NC}"
+    return 1
+  fi
+  echo ""
 
-  # Cleanup
-  cd /
-  rm -rf /tmp/peerswap
+  cd /home/peerswap/peerswap
+  
+  # Checkout specific version
+  echo -e "${BLUE}🔖 Checkout versão v${PEERSWAP_VERSION}...${NC}"
+  if sudo -u peerswap git checkout v$PEERSWAP_VERSION 2>/dev/null; then
+    echo -e "${GREEN}✓ Versão v${PEERSWAP_VERSION} selecionada${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Usando branch main${NC}"
+  fi
+  echo ""
+  
+  # Compile
+  echo -e "${BLUE}🔨 Compilando PeerSwap (isso pode levar alguns minutos)...${NC}"
+  if sudo -u peerswap make lnd-release; then
+    echo -e "${GREEN}✓ Compilação concluída${NC}"
+  else
+    echo -e "${RED}❌ Erro na compilação${NC}"
+    return 1
+  fi
+  echo ""
 
-  echo -e "${GREEN}✅ PeerSwap compilado e instalado com sucesso!${NC}"
+  # Verify binaries were created
+  if [[ -f "/home/peerswap/go/bin/peerswapd" ]]; then
+    echo -e "${GREEN}✓ Binário instalado em /home/peerswap/go/bin/peerswapd${NC}"
+  else
+    echo -e "${RED}❌ Binário não encontrado${NC}"
+    return 1
+  fi
+
+  # Add Go bin to PATH if not already there
+  if ! sudo -u peerswap grep -q "\$HOME/go/bin" /home/peerswap/.bashrc 2>/dev/null; then
+    echo -e "${BLUE}🔧 Adicionando Go bin ao PATH...${NC}"
+    echo 'export PATH=$PATH:$HOME/go/bin' | sudo -u peerswap tee -a /home/peerswap/.bashrc > /dev/null
+    echo -e "${GREEN}✓ PATH atualizado${NC}"
+  fi
+
+  echo ""
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}   PeerSwap ${PEERSWAP_VERSION} instalado com sucesso!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  echo -e "${CYAN}📋 Binário instalado em:${NC}"
+  echo -e "   ${BLUE}~/go/bin/peerswapd${NC}"
+  echo -e "   ${BLUE}~/go/bin/pscli${NC}"
+  echo ""
 }
 
 install_go() {
@@ -112,409 +163,569 @@ install_go() {
 }
 
 configure_peerswap() {
-  echo -e "${GREEN}⚙️ Configurando PeerSwap...${NC}"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        ⚙️  CONFIGURAÇÃO DO PEERSWAP${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
 
-  # Criar arquivo de configuração
-  echo "📝 Criando arquivo de configuração..."
-  sudo mkdir -p /data/peerswap
+  # Ensure peerswap user and directory exist
+  if ! id "peerswap" &>/dev/null; then
+    echo -e "${RED}❌ Usuário 'peerswap' não existe!${NC}"
+    echo -e "${YELLOW}Execute a instalação do PeerSwap primeiro${NC}"
+    return 1
+  fi
   
-  # Configuração PeerSwap
-  sudo tee /data/peerswap/peerswap.conf > /dev/null << EOF
-# PeerSwap Configuration
+  sudo -u peerswap mkdir -p /home/peerswap/.peerswap
 
-# LND Connection
-lnd.host=localhost:10009
-lnd.tlscertpath=/data/lnd/tls.cert
-lnd.macaroonpath=/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon
+  # Get Elements RPC password from password manager
+  echo -e "${BLUE}🔐 Recuperando credenciais do Elements...${NC}"
+  source "$SCRIPT_DIR/brln-tools/password_manager.sh"
+  
+  elements_rpc_password=$(python3 "$SCRIPT_DIR/brln-tools/password_manager.py" get elements_rpc_password 2>/dev/null)
+  
+  if [[ -z "$elements_rpc_password" ]]; then
+    echo -e "${YELLOW}⚠️  Senha do Elements RPC não encontrada no gerenciador${NC}"
+    echo -e "${YELLOW}Tentando ler de /data/elements/elements.conf...${NC}"
+    elements_rpc_password=$(grep rpcpassword /data/elements/elements.conf 2>/dev/null | cut -d'=' -f2)
+    
+    if [[ -z "$elements_rpc_password" ]]; then
+      echo -e "${RED}❌ Não foi possível obter a senha do Elements RPC${NC}"
+      echo -e "${YELLOW}Configure o Elements primeiro ou insira a senha manualmente${NC}"
+      read -p "Senha RPC do Elements: " elements_rpc_password
+    fi
+  fi
+  echo -e "${GREEN}✓ Credenciais recuperadas${NC}"
+  echo ""
 
-# Elements Connection (if available)
-elementsd.rpchost=localhost
-elementsd.rpcport=7041
+  # Get admin/main user for LND paths
+  if [[ "$SUDO_USER" ]]; then
+    lnd_user="$SUDO_USER"
+  else
+    # Try to find the user with LND installation
+    lnd_user=$(find /home -maxdepth 2 -name ".lnd" -type d 2>/dev/null | head -n1 | cut -d'/' -f3)
+    if [[ -z "$lnd_user" ]]; then
+      lnd_user="admin"  # fallback
+    fi
+  fi
+
+  # Create configuration file
+  echo -e "${BLUE}📝 Criando arquivo de configuração...${NC}"
+  sudo -u peerswap tee /home/peerswap/.peerswap/peerswap.conf > /dev/null << EOF
+lnd.tlscertpath=/home/$lnd_user/.lnd/tls.cert
+lnd.macaroonpath=/home/$lnd_user/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
 elementsd.rpcuser=elements
-elementsd.rpcpassword=$(grep rpcpassword /data/elements/elements.conf 2>/dev/null | cut -d'=' -f2 || echo "changeme")
+elementsd.rpcpass=$elements_rpc_password
+elementsd.rpchost=http://127.0.0.1
+elementsd.rpcport=7041
 elementsd.rpcwallet=peerswap
-
-# PeerSwap Settings
-datadir=/data/peerswap
-network=mainnet
-resthost=localhost
-restport=42069
-
-# Policy Settings
-policy.reserve_onchain_msat=100000000
-policy.reserve_channel_msat=100000000
-policy.min_swap_amount_msat=10000000
-policy.max_swap_amount_msat=1000000000
-
-# Logging
-loglevel=info
-logfile=/data/peerswap/peerswap.log
+elementsd.liquidswaps=true
+bitcoinswaps=false
 EOF
 
-  # Ajustar permissões
-  sudo chown peerswap:peerswap /data/peerswap/peerswap.conf
-  sudo chmod 600 /data/peerswap/peerswap.conf
+  # Set permissions
+  sudo chmod 600 /home/peerswap/.peerswap/peerswap.conf
+  sudo chown peerswap:peerswap /home/peerswap/.peerswap/peerswap.conf
+  echo -e "${GREEN}✓ Arquivo de configuração criado${NC}"
+  echo -e "${GREEN}✓ Permissões ajustadas (600)${NC}"
+  echo ""
 
-  echo -e "${GREEN}✅ Configuração criada!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}   PeerSwap configurado com sucesso!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  echo -e "${CYAN}📋 Informações de configuração:${NC}"
+  echo -e "   ${BLUE}Arquivo de config:${NC} /home/peerswap/.peerswap/peerswap.conf"
+  echo -e "   ${BLUE}Usuário LND:${NC}       $lnd_user"
+  echo -e "   ${BLUE}Liquid Swaps:${NC}      Habilitado"
+  echo -e "   ${BLUE}Bitcoin Swaps:${NC}     Desabilitado"
+  echo -e "   ${BLUE}Elements Wallet:${NC}   peerswap"
+  echo ""
+  echo -e "${YELLOW}💡 Próximo passo: Crie a wallet 'peerswap' no Elements${NC}"
+  echo ""
 }
 
 create_peerswap_service() {
-  echo -e "${GREEN}🔧 Criando serviço systemd para PeerSwap...${NC}"
-  
-  # Criar arquivo de serviço
-  sudo tee /etc/systemd/system/peerswap.service > /dev/null << EOF
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        🔧 CRIANDO SERVIÇO SYSTEMD${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+
+  echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
+  sudo tee /etc/systemd/system/peerswapd.service > /dev/null << EOF
 [Unit]
-Description=PeerSwap Daemon
-Documentation=https://github.com/ElementsProject/peerswap
-After=network.target lnd.service
-Wants=network.target
-Requires=lnd.service
+Description=Peer Swap Daemon
 
 [Service]
-Type=simple
-ExecStart=/usr/local/bin/peerswapd --config=/data/peerswap/peerswap.conf
-ExecReload=/bin/kill -HUP \$MAINPID
-TimeoutStopSec=60
-TimeoutStartSec=30
-Restart=always
-RestartSec=30
+ExecStart=/home/peerswap/go/bin/peerswapd
 User=peerswap
-Group=peerswap
-
-# Process management
-KillMode=process
-KillSignal=SIGTERM
-
-# Security measures  
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=full
-ProtectHome=true
-
-# Directory creation and permissions
-RuntimeDirectory=peerswap
-RuntimeDirectoryMode=0710
+Restart=always
+RestartSec=60
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-  # Habilitar serviço
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Arquivo de serviço criado${NC}"
+  else
+    echo -e "${RED}❌ Erro ao criar arquivo de serviço${NC}"
+    return 1
+  fi
+  echo ""
+
+  # Reload systemd and enable service
+  echo -e "${BLUE}🔄 Habilitando serviço...${NC}"
   sudo systemctl daemon-reload
-  sudo systemctl enable peerswap
-  
-  echo -e "${GREEN}✅ Serviço PeerSwap criado e habilitado!${NC}"
+  sudo systemctl enable peerswapd
+  echo -e "${GREEN}✓ Serviço habilitado${NC}"
+  echo ""
+
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}   Serviço systemd criado e habilitado!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  echo -e "${CYAN}📋 Comandos úteis:${NC}"
+  echo -e "   ${BLUE}Iniciar:${NC}    sudo systemctl start peerswapd"
+  echo -e "   ${BLUE}Parar:${NC}      sudo systemctl stop peerswapd"
+  echo -e "   ${BLUE}Status:${NC}     sudo systemctl status peerswapd"
+  echo -e "   ${BLUE}Logs:${NC}       journalctl -u peerswapd -f"
+  echo ""
 }
 
 install_psweb() {
-  echo -e "${GREEN}🌐 Instalando PeerSwap Web Interface...${NC}"
-
-  app="PeerSwap Web"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}      🌐 INSTALAÇÃO DO PEERSWAP WEB UI${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  # Verificar se Node.js está instalado
-  if ! command -v npm &> /dev/null; then
-    echo "📦 Instalando Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt install nodejs -y >> /dev/null 2>&1 & spinner
+  # Check if already installed
+  if command -v psweb &> /dev/null; then
+    echo -e "${YELLOW}⚠️  PeerSwap Web já está instalado${NC}"
+    echo ""
+    read -p "Deseja reinstalar? (s/n): " reinstall
+    if [[ "$reinstall" != "s" && "$reinstall" != "S" ]]; then
+      echo -e "${BLUE}Instalação cancelada.${NC}"
+      return 0
+    fi
   fi
 
-  # Criar usuário psweb se não existir
-  if ! id "psweb" &>/dev/null; then
-    echo "👤 Criando usuário psweb..."
-    sudo adduser --disabled-password --gecos "" psweb
+  # Ensure peerswap user exists
+  if ! id "peerswap" &>/dev/null; then
+    echo -e "${RED}❌ Usuário 'peerswap' não existe!${NC}"
+    echo -e "${YELLOW}Execute a instalação do PeerSwap primeiro${NC}"
+    return 1
   fi
 
-  # Criar diretórios
-  echo "📁 Criando diretórios..."
-  sudo mkdir -p /data/psweb /opt/psweb
-  sudo chown psweb:psweb /data/psweb
+  # Check Go version
+  echo -e "${BLUE}🔍 Verificando Go...${NC}"
+  if command -v go &> /dev/null; then
+    GO_VERSION=$(go version | grep -o 'go[0-9]\+\.[0-9]\+' | sed 's/go//')
+    echo -e "${GREEN}✓ Go $GO_VERSION encontrado${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Go não encontrado. Instalando...${NC}"
+    install_go
+  fi
+  echo ""
 
-  # Baixar e instalar PeerSwap Web
-  echo "⬇️ Baixando PeerSwap Web v$PSWEB_VERSION..."
-  cd /tmp
+  # Clone PeerSwap Web UI as peerswap user
+  echo -e "${BLUE}📥 Clonando repositório PeerSwap Web UI...${NC}"
   
-  # Clonar repositório
-  git clone https://github.com/Impa10r/peerswap-web.git
-  cd peerswap-web
+  # Remove old clone if exists
+  sudo -u peerswap rm -rf /home/peerswap/peerswap-web
   
-  # Checkout versão específica se disponível
-  git checkout v$PSWEB_VERSION 2>/dev/null || echo "Usando branch main"
+  if sudo -u peerswap git clone https://github.com/Impa10r/peerswap-web /home/peerswap/peerswap-web; then
+    echo -e "${GREEN}✓ Repositório clonado${NC}"
+  else
+    echo -e "${RED}❌ Erro ao clonar repositório${NC}"
+    return 1
+  fi
+  echo ""
+
+  cd /home/peerswap/peerswap-web
   
-  # Copiar para diretório final
-  sudo cp -r . /opt/psweb/
-  sudo chown -R psweb:psweb /opt/psweb
+  # Compile PeerSwap Web
+  echo -e "${BLUE}🔨 Compilando PeerSwap Web (isso pode levar alguns minutos)...${NC}"
+  if sudo -u peerswap make -j$(nproc) install-lnd; then
+    echo -e "${GREEN}✓ Compilação concluída${NC}"
+  else
+    echo -e "${RED}❌ Erro na compilação${NC}"
+    return 1
+  fi
+  echo ""
 
-  # Instalar dependências
-  echo "📦 Instalando dependências Node.js..."
-  cd /opt/psweb
-  sudo -u psweb npm install >> /dev/null 2>&1 & spinner
+  # Verify binary was created
+  if [[ -f "/home/peerswap/go/bin/psweb" ]]; then
+    echo -e "${GREEN}✓ Binário instalado em /home/peerswap/go/bin/psweb${NC}"
+  else
+    echo -e "${RED}❌ Binário não encontrado${NC}"
+    return 1
+  fi
 
-  # Cleanup
-  rm -rf /tmp/peerswap-web
-
-  echo -e "${GREEN}✅ PeerSwap Web instalado!${NC}"
+  echo ""
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}   PeerSwap Web UI instalado com sucesso!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  echo -e "${CYAN}📋 Informações de configuração:${NC}"
+  echo -e "   ${BLUE}Usuário:${NC}         peerswap"
+  echo -e "   ${BLUE}Binário:${NC}         /home/peerswap/go/bin/psweb"
+  echo -e "   ${BLUE}Porta:${NC}           1984"
+  echo ""
+  echo -e "${CYAN}✨ Recursos do PeerSwap Web UI:${NC}"
+  echo -e "   ${BLUE}1️⃣${NC}  Transforme BTC em L-BTC via Liquid Peg-in"
+  echo -e "   ${BLUE}2️⃣${NC}  Rebalanceie canais rapidamente com L-BTC"
+  echo -e "   ${BLUE}3️⃣${NC}  Gerencie automaticamente fees com autofee"
+  echo ""
 }
 
-configure_psweb() {
-  echo -e "${GREEN}⚙️ Configurando PeerSwap Web...${NC}"
-
-  # Criar arquivo de configuração
-  echo "📝 Criando arquivo de configuração..."
-  sudo tee /data/psweb/config.json > /dev/null << EOF
-{
-  "peerswap": {
-    "host": "localhost",
-    "port": 42069,
-    "protocol": "http"
-  },
-  "lnd": {
-    "host": "localhost",
-    "port": 10009,
-    "tlsCertPath": "/data/lnd/tls.cert",
-    "macaroonPath": "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon"
-  },
-  "elements": {
-    "host": "localhost", 
-    "port": 7041,
-    "user": "elements",
-    "password": "$(grep rpcpassword /data/elements/elements.conf 2>/dev/null | cut -d'=' -f2 || echo "changeme")"
-  },
-  "server": {
-    "port": 1984,
-    "host": "0.0.0.0"
-  },
-  "theme": "dark",
-  "autoRefresh": 30,
-  "currency": "BRL"
-}
-EOF
-
-  # Ajustar permissões
-  sudo chown psweb:psweb /data/psweb/config.json
-  sudo chmod 600 /data/psweb/config.json
-
-  echo -e "${GREEN}✅ Configuração PeerSwap Web criada!${NC}"
-}
+# configure_psweb is not needed - psweb auto-configures on first run
 
 create_psweb_service() {
-  echo -e "${GREEN}🔧 Criando serviço systemd para PeerSwap Web...${NC}"
-  
-  # Criar arquivo de serviço
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        🔧 CRIANDO SERVIÇO SYSTEMD${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+
+  echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
   sudo tee /etc/systemd/system/psweb.service > /dev/null << EOF
 [Unit]
-Description=PeerSwap Web Interface
-Documentation=https://github.com/Impa10r/peerswap-web
-After=network.target peerswap.service
-Wants=network.target
-Requires=peerswap.service
+Description=PeerSwap Web UI
 
 [Service]
+ExecStart=/home/peerswap/go/bin/psweb
+User=peerswap
 Type=simple
-WorkingDirectory=/opt/psweb
-ExecStart=/usr/bin/node server.js --config=/data/psweb/config.json
-ExecReload=/bin/kill -HUP \$MAINPID
-TimeoutStopSec=60
-TimeoutStartSec=15
-Restart=always
-RestartSec=30
-User=psweb
-Group=psweb
-
-# Environment
-Environment=NODE_ENV=production
-Environment=CONFIG_PATH=/data/psweb/config.json
-
-# Process management
 KillMode=process
-KillSignal=SIGTERM
-
-# Security measures
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
+TimeoutSec=180
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-  # Habilitar serviço
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Arquivo de serviço criado${NC}"
+  else
+    echo -e "${RED}❌ Erro ao criar arquivo de serviço${NC}"
+    return 1
+  fi
+  echo ""
+
+  # Reload systemd and enable service
+  echo -e "${BLUE}🔄 Habilitando serviço...${NC}"
   sudo systemctl daemon-reload
   sudo systemctl enable psweb
-  
-  echo -e "${GREEN}✅ Serviço PeerSwap Web criado e habilitado!${NC}"
+  echo -e "${GREEN}✓ Serviço habilitado${NC}"
+  echo ""
+
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}   Serviço systemd criado e habilitado!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  echo -e "${CYAN}📋 Comandos úteis:${NC}"
+  echo -e "   ${BLUE}Iniciar:${NC}    sudo systemctl start psweb"
+  echo -e "   ${BLUE}Parar:${NC}      sudo systemctl stop psweb"
+  echo -e "   ${BLUE}Status:${NC}     sudo systemctl status psweb"
+  echo -e "   ${BLUE}Logs:${NC}       journalctl -u psweb -f"
+  echo ""
 }
 
 start_peerswap() {
-  echo -e "${GREEN}🚀 Iniciando PeerSwap...${NC}"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        🚀 INICIANDO PEERSWAP${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  # Verificar dependências
+  # Check if LND is running
   if ! sudo systemctl is-active --quiet lnd; then
-    echo -e "${RED}❌ LND não está rodando! Inicie o LND primeiro.${NC}"
+    echo -e "${RED}❌ LND não está em execução!${NC}"
+    echo -e "${YELLOW}Inicie o LND primeiro: sudo systemctl start lnd${NC}"
+    echo ""
     return 1
   fi
+  
+  # Check if Elements is running
+  if ! sudo systemctl is-active --quiet elementsd; then
+    echo -e "${RED}❌ Elements não está em execução!${NC}"
+    echo -e "${YELLOW}Inicie o Elements primeiro: sudo systemctl start elementsd${NC}"
+    echo ""
+    return 1
+  fi
+  
+  # Check if already running
+  if sudo systemctl is-active --quiet peerswapd; then
+    echo -e "${YELLOW}ℹ️  PeerSwap já está em execução${NC}"
+    echo ""
+    show_peerswap_status
+    return 0
+  fi
 
-  sudo systemctl start peerswap
+  echo -e "${BLUE}▶️  Iniciando serviço...${NC}"
+  sudo systemctl start peerswapd
+  
+  # Wait for service to start
+  echo -e "${YELLOW}⏳ Aguardando inicialização...${NC}"
   sleep 5
   
-  if sudo systemctl is-active --quiet peerswap; then
-    echo -e "${GREEN}✅ PeerSwap iniciado com sucesso!${NC}"
-    
-    # Configurar UFW
-    if ! sudo ufw status | grep -q "42069/tcp"; then
-      sudo ufw allow from $subnet to any port 42069 proto tcp comment 'allow PeerSwap from local network'
-    fi
-    
+  if sudo systemctl is-active --quiet peerswapd; then
+    echo -e "${GREEN}✓ PeerSwap iniciado com sucesso!${NC}"
+    echo ""
     show_peerswap_status
   else
     echo -e "${RED}❌ Falha ao iniciar PeerSwap!${NC}"
-    echo "Verifique os logs: journalctl -u peerswap -f"
+    echo ""
+    echo -e "${YELLOW}Verificando logs:${NC}"
+    sudo journalctl -u peerswapd -n 20 --no-pager
     return 1
   fi
 }
 
 start_psweb() {
-  echo -e "${GREEN}🌐 Iniciando PeerSwap Web...${NC}"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        🚀 INICIANDO PEERSWAP WEB UI${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  # Verificar dependências
-  if ! sudo systemctl is-active --quiet peerswap; then
-    echo -e "${RED}❌ PeerSwap não está rodando! Inicie o PeerSwap primeiro.${NC}"
+  # Check if PeerSwap is running
+  if ! sudo systemctl is-active --quiet peerswapd; then
+    echo -e "${RED}❌ PeerSwap não está em execução!${NC}"
+    echo -e "${YELLOW}Inicie o PeerSwap primeiro: sudo systemctl start peerswapd${NC}"
+    echo ""
     return 1
   fi
+  
+  # Check if already running
+  if sudo systemctl is-active --quiet psweb; then
+    echo -e "${YELLOW}ℹ️  PeerSwap Web já está em execução${NC}"
+    echo ""
+    local_ip=$(hostname -I | awk '{print $1}')
+    echo -e "${GREEN}🌐 Interface disponível em:${NC}"
+    echo -e "   ${BLUE}http://${local_ip}:1984${NC}"
+    echo ""
+    return 0
+  fi
 
+  echo -e "${BLUE}▶️  Iniciando serviço...${NC}"
   sudo systemctl start psweb
-  sleep 3
+  
+  # Wait for service to start
+  echo -e "${YELLOW}⏳ Aguardando inicialização...${NC}"
+  sleep 5
   
   if sudo systemctl is-active --quiet psweb; then
-    echo -e "${GREEN}✅ PeerSwap Web iniciado com sucesso!${NC}"
+    echo -e "${GREEN}✓ PeerSwap Web iniciado com sucesso!${NC}"
+    echo ""
     
-    # Configurar UFW
-    if ! sudo ufw status | grep -q "1984/tcp"; then
-      sudo ufw allow from $subnet to any port 1984 proto tcp comment 'allow PeerSwap Web from local network'
-    fi
-    
-    echo -e "${YELLOW}🌐 Interface disponível em: http://$ip_local:1984${NC}"
+    local_ip=$(hostname -I | awk '{print $1}')
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}   PeerSwap Web UI disponível!${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${CYAN}🌐 Acesse via navegador:${NC}"
+    echo -e "   ${BLUE}http://${local_ip}:1984${NC}"
+    echo ""
+    echo -e "${YELLOW}💡 Dica: Configure o firewall se necessário:${NC}"
+    echo -e "   ${BLUE}sudo ufw allow 1984/tcp${NC}"
+    echo ""
   else
     echo -e "${RED}❌ Falha ao iniciar PeerSwap Web!${NC}"
-    echo "Verifique os logs: journalctl -u psweb -f"
+    echo ""
+    echo -e "${YELLOW}Verificando logs:${NC}"
+    sudo journalctl -u psweb -n 20 --no-pager
     return 1
   fi
 }
 
 show_peerswap_status() {
-  echo -e "${BLUE}📊 Status do PeerSwap:${NC}"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        📊 STATUS DO PEERSWAP${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  # Status do serviço
-  echo "🔧 Serviço PeerSwap:"
-  if sudo systemctl is-active --quiet peerswap; then
-    echo -e "   ${GREEN}✅ Ativo${NC}"
+  # Check service status
+  if sudo systemctl is-active --quiet peerswapd; then
+    echo -e "   ${GREEN}●${NC} Serviço: ${GREEN}Ativo${NC}"
+  else
+    echo -e "   ${RED}●${NC} Serviço: ${RED}Inativo${NC}"
+    echo ""
+    return 1
+  fi
+  
+  # Check if pscli is available
+  if [[ -f "/home/peerswap/go/bin/pscli" ]]; then
+    echo -e "   ${GREEN}●${NC} CLI: ${GREEN}Disponível${NC}"
+    echo ""
     
-    # Tentar conectar via CLI
-    if command -v pscli &> /dev/null; then
-      echo "📡 Conectividade:"
-      if timeout 5 pscli --config=/data/peerswap/peerswap.conf getinfo >/dev/null 2>&1; then
-        echo -e "   ${GREEN}✅ CLI conectado${NC}"
-        
-        # Informações básicas
-        local peers=$(pscli --config=/data/peerswap/peerswap.conf listpeers 2>/dev/null | wc -l || echo "0")
-        echo "👥 Peers: $peers"
-        
-      else
-        echo -e "   ${RED}❌ CLI não responde${NC}"
-      fi
+    # Try to get info from pscli
+    if timeout 5 sudo -u peerswap /home/peerswap/go/bin/pscli listpeers >/dev/null 2>&1; then
+      local peers=$(sudo -u peerswap /home/peerswap/go/bin/pscli listpeers 2>/dev/null | grep -c '"node_id"' || echo "0")
+      echo -e "${CYAN}Informações:${NC}"
+      echo -e "   ${BLUE}Peers:${NC}       $peers"
+    else
+      echo -e "${YELLOW}⚠️  Aguardando conexão com daemon...${NC}"
     fi
   else
-    echo -e "   ${RED}❌ Inativo${NC}"
+    echo -e "   ${YELLOW}●${NC} CLI: ${YELLOW}Não encontrado${NC}"
   fi
   
-  # Status PeerSwap Web
-  echo "🌐 PeerSwap Web:"
-  if sudo systemctl is-active --quiet psweb; then
-    echo -e "   ${GREEN}✅ Ativo (http://$ip_local:1984)${NC}"
-  else
-    echo -e "   ${RED}❌ Inativo${NC}"
+  # Check PeerSwap Web if installed
+  if sudo systemctl list-unit-files | grep -q psweb; then
+    echo ""
+    echo -e "${CYAN}PeerSwap Web:${NC}"
+    if sudo systemctl is-active --quiet psweb; then
+      local_ip=$(hostname -I | awk '{print $1}')
+      echo -e "   ${GREEN}●${NC} Status: ${GREEN}Ativo${NC}"
+      echo -e "   ${BLUE}URL:${NC}    http://${local_ip}:1984"
+    else
+      echo -e "   ${RED}●${NC} Status: ${RED}Inativo${NC}"
+    fi
   fi
+  
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
 }
 
 create_elements_wallet_for_peerswap() {
-  echo -e "${GREEN}👛 Configurando wallet Elements para PeerSwap...${NC}"
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        👛 CONFIGURAR WALLET PEERSWAP${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  # Verificar se Elements está rodando
+  # Check if Elements is running
   if ! sudo systemctl is-active --quiet elementsd; then
-    echo -e "${RED}❌ Elements não está rodando!${NC}"
+    echo -e "${RED}❌ Elements não está em execução!${NC}"
+    echo -e "${YELLOW}Inicie o Elements primeiro: sudo systemctl start elementsd${NC}"
+    echo ""
     return 1
   fi
 
-  # Criar wallet específica para PeerSwap
-  if ! elements-cli -conf=/data/elements/elements.conf listwallets | grep -q "peerswap"; then
-    echo "💼 Criando wallet 'peerswap'..."
+  # Check if RPC is available
+  if ! timeout 5 elements-cli -datadir=/data/elements getnetworkinfo >/dev/null 2>&1; then
+    echo -e "${RED}❌ Elements RPC não está disponível${NC}"
+    echo -e "${YELLOW}Aguarde a inicialização do Elements${NC}"
+    echo ""
+    return 1
+  fi
+
+  # Check if wallet already exists
+  if elements-cli -datadir=/data/elements listwallets 2>/dev/null | grep -q '"peerswap"'; then
+    echo -e "${GREEN}✓ Wallet 'peerswap' já existe${NC}"
+  else
+    echo -e "${BLUE}💼 Criando wallet 'peerswap'...${NC}"
     
-    if elements-cli -conf=/data/elements/elements.conf createwallet "peerswap" false false "" false false true >/dev/null 2>&1; then
-      echo -e "${GREEN}✅ Wallet 'peerswap' criada!${NC}"
+    if elements-cli -datadir=/data/elements createwallet "peerswap" false false "" false false true >/dev/null 2>&1; then
+      echo -e "${GREEN}✓ Wallet 'peerswap' criada com sucesso!${NC}"
     else
       echo -e "${RED}❌ Erro ao criar wallet${NC}"
       return 1
     fi
-  else
-    echo -e "${GREEN}✅ Wallet 'peerswap' já existe${NC}"
+  fi
+  echo ""
+
+  # Generate address for the wallet
+  echo -e "${BLUE}🏠 Gerando endereço L-BTC...${NC}"
+  local address=$(elements-cli -datadir=/data/elements -rpcwallet=peerswap getnewaddress 2>/dev/null)
+  if [[ -n "$address" ]]; then
+    echo -e "${GREEN}✓ Endereço gerado:${NC}"
+    echo ""
+    echo -e "   ${YELLOW}$address${NC}"
+    echo ""
   fi
 
-  # Gerar endereço para a wallet
-  local address=$(elements-cli -conf=/data/elements/elements.conf -rpcwallet=peerswap getnewaddress 2>/dev/null)
-  if [[ -n "$address" ]]; then
-    echo -e "${BLUE}📬 Endereço PeerSwap L-BTC: ${YELLOW}$address${NC}"
-  fi
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}   Wallet PeerSwap configurada!${NC}"
+  echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  echo -e "${YELLOW}💡 Envie L-BTC para este endereço para começar a usar swaps${NC}"
+  echo ""
 }
 
 stop_peerswap() {
-  echo -e "${YELLOW}⏹️ Parando PeerSwap...${NC}"
-  sudo systemctl stop peerswap psweb
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${YELLOW}        ⏹️  PARANDO PEERSWAP${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   
-  if ! sudo systemctl is-active --quiet peerswap; then
-    echo -e "${GREEN}✅ PeerSwap parado com sucesso!${NC}"
+  if ! sudo systemctl is-active --quiet peerswapd; then
+    echo -e "${YELLOW}ℹ️  PeerSwap já está parado${NC}"
+    echo ""
+    return 0
+  fi
+  
+  echo -e "${BLUE}⏸️  Parando serviços...${NC}"
+  sudo systemctl stop peerswapd
+  
+  # Also stop psweb if running
+  if sudo systemctl is-active --quiet psweb; then
+    sudo systemctl stop psweb
+  fi
+  
+  # Wait for service to stop
+  sleep 3
+  
+  if ! sudo systemctl is-active --quiet peerswapd; then
+    echo -e "${GREEN}✓ PeerSwap parado com sucesso!${NC}"
   else
     echo -e "${RED}❌ Erro ao parar PeerSwap${NC}"
     return 1
   fi
+  
+  echo ""
 }
 
 # Menu PeerSwap
 peerswap_menu() {
   while true; do
-    echo
-    echo -e "${CYAN}🔄 PeerSwap Management${NC}"
-    echo "======================"
-    echo "1) Instalar PeerSwap"
-    echo "2) Configurar PeerSwap"
-    echo "3) Criar Serviço PeerSwap"
-    echo "4) Instalar PeerSwap Web"
-    echo "5) Configurar PeerSwap Web"
-    echo "6) Criar Serviço PeerSwap Web"
-    echo "7) Iniciar PeerSwap"
-    echo "8) Iniciar PeerSwap Web"
-    echo "9) Status PeerSwap"
-    echo "10) Configurar Wallet Elements"
-    echo "11) Parar Serviços"
-    echo "0) Voltar"
-    echo
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}        🔄 PEERSWAP MANAGEMENT${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "  ${BLUE}1)${NC} Instalar PeerSwap"
+    echo -e "  ${BLUE}2)${NC} Configurar PeerSwap"
+    echo -e "  ${BLUE}3)${NC} Criar Serviço Systemd"
+    echo -e "  ${BLUE}4)${NC} Configurar Wallet Elements"
+    echo -e "  ${BLUE}5)${NC} Iniciar PeerSwap"
+    echo -e "  ${BLUE}6)${NC} Status PeerSwap"
+    echo -e "  ${BLUE}7)${NC} Parar PeerSwap"
+    echo ""
+    echo -e "  ${CYAN}Web Interface:${NC}"
+    echo -e "  ${BLUE}8)${NC} Instalar PeerSwap Web"
+    echo -e "  ${BLUE}9)${NC} Criar Serviço PeerSwap Web"
+    echo -e "  ${BLUE}10)${NC} Iniciar PeerSwap Web"
+    echo ""
+    echo -e "  ${BLUE}0)${NC} Voltar"
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     read -p "Escolha uma opção: " option
 
     case $option in
       1) install_peerswap ;;
       2) configure_peerswap ;;
       3) create_peerswap_service ;;
-      4) install_psweb ;;
-      5) configure_psweb ;;
-      6) create_psweb_service ;;
-      7) start_peerswap ;;
-      8) start_psweb ;;
-      9) show_peerswap_status ;;
-      10) create_elements_wallet_for_peerswap ;;
-      11) stop_peerswap ;;
+      4) create_elements_wallet_for_peerswap ;;
+      5) start_peerswap ;;
+      6) show_peerswap_status ;;
+      7) stop_peerswap ;;
+      8) install_psweb ;;
+      9) create_psweb_service ;;
+      10) start_psweb ;;
       0) break ;;
       *) echo -e "${RED}❌ Opção inválida!${NC}" ;;
     esac
     
+    echo ""
     read -p "Pressione ENTER para continuar..."
   done
 }
