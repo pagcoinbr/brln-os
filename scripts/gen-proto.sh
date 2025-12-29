@@ -13,9 +13,10 @@ NC='\033[0m' # No Color
 # Configuration
 API_DIR="/root/brln-os/api/v1"
 PROTO_DIR="$API_DIR/proto"
+LND_PROTO_URL="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc"
 
-echo -e "${BLUE}🔧 BRLN-OS Protocol Buffer Generator (Simple)${NC}"
-echo -e "${BLUE}=============================================${NC}"
+echo -e "${BLUE}🔧 BRLN-OS Protocol Buffer Generator with Download${NC}"
+echo -e "${BLUE}=================================================${NC}"
 
 # Check if running from correct directory
 if [[ ! -d "$API_DIR" ]]; then
@@ -23,13 +24,80 @@ if [[ ! -d "$API_DIR" ]]; then
     exit 1
 fi
 
+# Create proto directory if it doesn't exist
 if [[ ! -d "$PROTO_DIR" ]]; then
-    echo -e "${RED}❌ Proto directory not found: $PROTO_DIR${NC}"
-    exit 1
+    echo -e "${YELLOW}📁 Creating proto directory: $PROTO_DIR${NC}"
+    mkdir -p "$PROTO_DIR"
 fi
+
+# Download required proto files
+echo -e "${YELLOW}📥 Downloading LND proto files...${NC}"
+
+# Main lightning.proto file
+if [[ ! -f "$PROTO_DIR/lightning.proto" ]] || [[ "$1" == "--force-download" ]]; then
+    echo -e "${YELLOW}   📄 Downloading lightning.proto...${NC}"
+    curl -s -L "$LND_PROTO_URL/lightning.proto" -o "$PROTO_DIR/lightning.proto"
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}   ✅ lightning.proto downloaded${NC}"
+    else
+        echo -e "${RED}   ❌ Failed to download lightning.proto${NC}"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}   ✅ lightning.proto already exists${NC}"
+fi
+
+# Download additional proto files for sub-services
+ADDITIONAL_PROTO_DOWNLOADS=(
+    "signrpc/signer.proto"
+    "chainrpc/chainnotifier.proto"
+    "invoicesrpc/invoices.proto"
+    "walletrpc/walletkit.proto"
+    "routerrpc/router.proto"
+    "peersrpc/peers.proto"
+)
+
+for proto_file in "${ADDITIONAL_PROTO_DOWNLOADS[@]}"; do
+    proto_dir_path="$PROTO_DIR/$(dirname "$proto_file")"
+    proto_file_path="$PROTO_DIR/$proto_file"
+    
+    # Create subdirectory if needed
+    if [[ ! -d "$proto_dir_path" ]]; then
+        mkdir -p "$proto_dir_path"
+    fi
+    
+    if [[ ! -f "$proto_file_path" ]] || [[ "$1" == "--force-download" ]]; then
+        echo -e "${YELLOW}   📄 Downloading $proto_file...${NC}"
+        curl -s -L "$LND_PROTO_URL/$proto_file" -o "$proto_file_path"
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}   ✅ $proto_file downloaded${NC}"
+        else
+            echo -e "${YELLOW}   ⚠️ Warning: Failed to download $proto_file${NC}"
+        fi
+    else
+        echo -e "${GREEN}   ✅ $proto_file already exists${NC}"
+    fi
+done
 
 # Change to API directory
 cd "$API_DIR"
+
+# Activate virtual environment if it exists
+VENV_PATHS=("/root/envflask" "/home/admin/envflask")
+VENV_ACTIVATED=false
+
+for venv_path in "${VENV_PATHS[@]}"; do
+    if [[ -f "$venv_path/bin/activate" ]]; then
+        echo -e "${YELLOW}⚡ Ativando ambiente virtual: $venv_path${NC}"
+        source "$venv_path/bin/activate"
+        VENV_ACTIVATED=true
+        break
+    fi
+done
+
+if [[ "$VENV_ACTIVATED" == false ]]; then
+    echo -e "${YELLOW}⚠️ Ambiente virtual não encontrado, usando Python do sistema${NC}"
+fi
 
 # Check if grpcio-tools is available
 if ! python3 -c "import grpc_tools.protoc" >/dev/null 2>&1; then

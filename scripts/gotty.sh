@@ -4,85 +4,122 @@
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
-gotty_do() {
-  echo -e "${GREEN} Instalando Interface gráfica... ${NC}"
-  LOCAL_APPS="$LOCAL_APPS_DIR"
-  
-  # Check if gotty archives are directly in LOCAL_APPS or in gotty subdirectory
-  if [[ -f "$LOCAL_APPS/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" ]]; then
-    GOTTY_PATH="$LOCAL_APPS"
-  elif [[ -f "$LOCAL_APPS/gotty/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" ]]; then
-    GOTTY_PATH="$LOCAL_APPS/gotty"
-  else
-    echo -e "${RED}❌ Arquivos do gotty não encontrados em $LOCAL_APPS ou $LOCAL_APPS/gotty${NC}"
-    echo -e "${YELLOW}Defina LOCAL_APPS_DIR para um caminho válido antes de continuar.${NC}"
-    return 1
-  fi
-  
-  if [[ $arch == "x86_64" ]]; then
-    sudo tar -xvzf "$GOTTY_PATH/gotty_2.0.0-alpha.3_linux_amd64.tar.gz" -C "$HOME" >> /dev/null 2>&1
-  else
-    sudo tar -xvzf "$GOTTY_PATH/gotty_2.0.0-alpha.3_linux_arm.tar.gz" -C "$HOME" >> /dev/null 2>&1
-  fi
-  
-  # Move e torna executável
-  sudo mv "$HOME/gotty" /usr/local/bin/gotty
-  sudo chmod +x /usr/local/bin/gotty
-}
-
 gotty_install() {
-  if [[ ! -f /usr/local/bin/gotty ]]; then
-    gotty_do
+  echo -e "${GREEN}📥 Instalando Gotty do repositório oficial...${NC}"
+  
+  # Gotty official release from GitHub
+  GOTTY_VERSION="2.0.0-alpha.3"
+  GOTTY_URL="https://github.com/yudai/gotty/releases/download/v${GOTTY_VERSION}/gotty_${GOTTY_VERSION}_linux_amd64.tar.gz"
+  
+  # Detect architecture
+  ARCH=$(uname -m)
+  if [[ "$ARCH" == "x86_64" ]]; then
+    GOTTY_ARCH="amd64"
+  elif [[ "$ARCH" == "aarch64" ]]; then
+    GOTTY_ARCH="arm64"
+  elif [[ "$ARCH" == "armv7l" ]]; then
+    GOTTY_ARCH="arm"
   else
-    echo -e "${GREEN} Gotty já instalado, atualizando... ${NC}"
-    sudo rm -f /usr/local/bin/gotty
-    gotty_do
+    echo -e "${YELLOW}⚠️ Arquitetura $ARCH não suportada, tentando amd64...${NC}"
+    GOTTY_ARCH="amd64"
   fi
-}
-
-install_gotty_services() {
-  echo -e "${GREEN}📋 Instalando serviços Gotty...${NC}"
   
-  SERVICES=("gotty" "gotty-fullauto" "gotty-logs-lnd" "gotty-logs-bitcoind" "gotty-btc-editor" "gotty-lnd-editor")
+  GOTTY_URL="https://github.com/yudai/gotty/releases/download/v${GOTTY_VERSION}/gotty_${GOTTY_VERSION}_linux_${GOTTY_ARCH}.tar.gz"
   
-  for service in "${SERVICES[@]}"; do
-    service_file="$SERVICES_DIR/${service}.service"
-    if [[ -f "$service_file" ]]; then
-      echo "📋 Instalando ${service}.service..."
-      safe_cp "$service_file" "/etc/systemd/system/${service}.service"
-      if [[ $? -eq 0 ]]; then
-        sudo systemctl daemon-reload
-        sudo systemctl enable ${service} >> /dev/null 2>&1 || echo -e "${YELLOW}⚠️ Não foi possível habilitar ${service}${NC}"
+  # Remove existing gotty if present
+  if [[ -f /usr/local/bin/gotty ]]; then
+    echo -e "${YELLOW}🔄 Removendo versão anterior do gotty...${NC}"
+    sudo rm -f /usr/local/bin/gotty
+  fi
+  
+  # Download and install gotty
+  cd /tmp
+  echo -e "${YELLOW}📥 Baixando gotty v${GOTTY_VERSION} para ${GOTTY_ARCH}...${NC}"
+  if wget -q "$GOTTY_URL" -O "gotty.tar.gz"; then
+    if tar -xzf gotty.tar.gz; then
+      sudo mv gotty /usr/local/bin/gotty
+      sudo chmod +x /usr/local/bin/gotty
+      rm -f gotty.tar.gz
+      echo -e "${GREEN}✅ Gotty v${GOTTY_VERSION} instalado com sucesso!${NC}"
+      
+      # Verify installation
+      if /usr/local/bin/gotty --version >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ Gotty verificado e funcionando!${NC}"
+        return 0
+      else
+        echo -e "${RED}❌ Erro na verificação do gotty${NC}"
+        return 1
       fi
     else
-      echo -e "${RED}❌ Arquivo ${service}.service não encontrado em $SERVICES_DIR${NC}"
+      echo -e "${RED}❌ Erro ao extrair gotty${NC}"
+      rm -f gotty.tar.gz
+      return 1
     fi
-  done
+  else
+    echo -e "${RED}❌ Erro ao baixar gotty de $GOTTY_URL${NC}"
+    return 1
+  fi
+}
+
+create_gotty_service() {
+  echo -e "${YELLOW}⚙️ Criando serviço gotty-terminal...${NC}"
   
+  sudo tee /etc/systemd/system/gotty-terminal.service > /dev/null << EOF
+[Unit]
+Description=GoTTY Web Terminal
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root
+ExecStart=/usr/local/bin/gotty --port 3131 --permit-write --reconnect bash
+Restart=always
+RestartSec=10
+
+# Segurança
+NoNewPrivileges=false
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Reload systemd and enable service
   sudo systemctl daemon-reload
-  echo -e "${GREEN}✅ Serviços Gotty instalados${NC}"
+  sudo systemctl enable gotty-terminal
+  
+  echo -e "${GREEN}✅ Serviço gotty-terminal criado e habilitado na porta 3131!${NC}"
 }
 
 terminal_web() {
   echo -e "${GREEN}💻 Configurando interface web do terminal...${NC}"
   
-  # Instalar Gotty
-  gotty_install
-  
-  # Instalar serviços
-  install_gotty_services
-  
-  # Verificar se os serviços foram instalados
-  if [[ ! -f /usr/local/bin/gotty ]]; then
+  # Install Gotty
+  if gotty_install; then
+    # Create and enable service
+    create_gotty_service
+    
+    # Start the service within script context
+    echo -e "${YELLOW}🚀 Iniciando serviço gotty-terminal...${NC}"
+    # Stop any conflicting processes first
+    sudo pkill -f 'gotty.*3131' 2>/dev/null || true
+    
+    sudo systemctl start gotty-terminal >/dev/null 2>&1
+    
+    # Centralized service check
+    for i in {1..3}; do
+        if sudo systemctl is-active --quiet gotty-terminal; then
+            echo -e "${GREEN}✅ Terminal web configurado e rodando na porta 3131${NC}"
+            break
+        elif [[ $i -eq 3 ]]; then
+            echo -e "${YELLOW}⚠️ Terminal web com problemas (continuando instalação)${NC}"
+        else
+            sleep 1
+        fi
+    done
+  else
     echo -e "${RED}❌ Gotty não foi instalado corretamente${NC}"
     return 1
   fi
-  
-  echo -e "${GREEN}✅ Interface web do terminal configurada com sucesso!${NC}"
-  echo -e "${BLUE}💡 Use os serviços systemd para gerenciar as interfaces web do terminal${NC}"
-}
-
-gui_update() {
-  echo -e "${GREEN}🔄 Atualizando interface gráfica...${NC}"
-  terminal_web
 }

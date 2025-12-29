@@ -29,30 +29,22 @@ configure_apache_local_ports() {
     echo "   • Tailscale: $tailscale_ip"
   fi
   
-  # Update ports.conf to listen only on localhost and Tailscale
+  # Update ports.conf to listen on all interfaces for HTTPS
   sudo tee /etc/apache2/ports.conf > /dev/null << EOF
-# Apache ports configuration - Local access only
+# Apache ports configuration - All interfaces
 # Generated automatically by BRLN-OS
 
-# Port 80 disabled to avoid conflict with Docker
-# Listen 80
+# Port 80 - HTTP (redirects to HTTPS)
+Listen 80
 
 <IfModule mod_ssl.c>
-    # Listen on localhost IPv4 and IPv6
-    Listen 127.0.0.1:443
-    Listen [::1]:443
-    
-    # Listen on Tailscale IP if available
-$(if [[ -n "$tailscale_ip" ]]; then echo "    Listen $tailscale_ip:443"; fi)
+    # Listen on all interfaces for HTTPS
+    Listen 443
 </IfModule>
 
 <IfModule mod_gnutls.c>
-    # Listen on localhost IPv4 and IPv6  
-    Listen 127.0.0.1:443
-    Listen [::1]:443
-    
-    # Listen on Tailscale IP if available
-$(if [[ -n "$tailscale_ip" ]]; then echo "    Listen $tailscale_ip:443"; fi)
+    # Listen on all interfaces for HTTPS
+    Listen 443
 </IfModule>
 EOF
 }
