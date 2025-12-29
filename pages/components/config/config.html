@@ -198,6 +198,10 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.8);
       }
+      
+      .terminal-modal[style*="display: block"] {
+        display: block !important;
+      }
 
       .terminal-modal-content {
         position: relative;
@@ -402,7 +406,7 @@
     <div class="terminal-modal-content">
       <div class="terminal-modal-header">
         <span class="terminal-modal-title">🖥️ Terminal Web BRLN-OS</span>
-        <button class="terminal-close">&times;</button>
+        <button class="terminal-close" onclick="closeTerminalModal()">&times;</button>
       </div>
       <iframe id="terminalIframe" class="terminal-iframe" src=""></iframe>
     </div>

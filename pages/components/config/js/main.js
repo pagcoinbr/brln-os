@@ -41,6 +41,14 @@ function closeTerminalModal() {
 window.openTerminalModal = openTerminalModal;
 window.closeTerminalModal = closeTerminalModal;
 
+// Setup close button handler
+document.addEventListener('DOMContentLoaded', function() {
+  const closeBtn = document.querySelector('.terminal-close');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeTerminalModal);
+  }
+});
+
 // Fechar modal ao clicar fora dele
 window.onclick = function(event) {
   const modal = document.getElementById('terminalModal');

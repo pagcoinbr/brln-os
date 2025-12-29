@@ -1560,9 +1560,13 @@ select:focus {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
+  animation: fadeIn 0.3s ease;
+}
+
+.terminal-modal[style*="display: flex"] {
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.3s ease;
 }
 
 .terminal-modal-content {

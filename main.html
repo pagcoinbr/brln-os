@@ -36,6 +36,86 @@
         width: 100%;
         height: calc(100vh - 80px);
       }
+
+      /* Terminal Modal Styles */
+      .terminal-modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        overflow: auto;
+      }
+      
+      .terminal-modal[style*="display: block"] {
+        display: block !important;
+      }
+
+      .terminal-modal-content {
+        position: relative;
+        background-color: #1e1e1e;
+        margin: 2% auto;
+        width: 95%;
+        height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .terminal-modal-header {
+        background-color: #2d2d2d;
+        padding: 10px 20px;
+        border-radius: 8px 8px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #444;
+      }
+
+      .terminal-modal-title {
+        color: #fff;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .terminal-close {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .terminal-close:hover {
+        background-color: #c0392b;
+      }
+
+      .terminal-iframe {
+        flex: 1;
+        border: none;
+        border-radius: 0 0 8px 8px;
+        background-color: #000;
+      }
+
+      @media (max-width: 768px) {
+        .terminal-modal-content {
+          margin: 1% auto;
+          width: 98%;
+          height: 95%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -55,6 +135,17 @@
         src="pages/home/index.html"
         name="contentFrame"
       ></iframe>
+    </div>
+
+    <!-- Terminal Web Modal -->
+    <div id="terminalModal" class="terminal-modal">
+      <div class="terminal-modal-content">
+        <div class="terminal-modal-header">
+          <span class="terminal-modal-title">🖥️ Terminal Web BRLN-OS - Initial Setup</span>
+          <button class="terminal-close" onclick="closeTerminalModal()">&times;</button>
+        </div>
+        <iframe id="terminalIframe" class="terminal-iframe" src=""></iframe>
+      </div>
     </div>
 
     <script>
@@ -472,15 +563,15 @@
         }
 
         /**
-         * Redirect to terminal web menu.sh
+         * Open terminal web menu.sh in iframe modal
          */
         redirectToTerminalMenu() {
-          console.log('Main: Redirecting to terminal menu for initial setup...');
+          console.log('Main: Opening terminal menu for initial setup in iframe modal...');
           this.showWalletNotification('Sistema não configurado - abrindo terminal de configuração...', false);
           
           setTimeout(() => {
-            // Redirect to terminal running menu.sh
-            window.location.href = '/terminal/?cmd=cd%20/root/brln-os%20%26%26%20bash%20scripts/menu.sh';
+            // Open terminal in iframe modal instead of redirecting
+            openTerminalModal('/terminal/?cmd=cd%20/root/brln-os%20%26%26%20bash%20scripts/menu.sh');
           }, 1500);
         }
 
@@ -576,6 +667,67 @@
         
         console.log('Main: Application initialized with wallet management');
       });
+
+      // ============================================
+      // TERMINAL MODAL CONTROL FUNCTIONS
+      // ============================================
+      function openTerminalModal(url = '/terminal/') {
+        const modal = document.getElementById('terminalModal');
+        const iframe = document.getElementById('terminalIframe');
+        
+        console.log('Opening terminal modal with URL:', url);
+        
+        // Set iframe source
+        iframe.src = url;
+        
+        // Show modal
+        modal.style.display = 'block';
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeTerminalModal() {
+        const modal = document.getElementById('terminalModal');
+        const iframe = document.getElementById('terminalIframe');
+        
+        console.log('Closing terminal modal');
+        
+        // Hide modal
+        modal.style.display = 'none';
+        
+        // Clear iframe
+        iframe.src = '';
+        
+        // Restore body scroll
+        document.body.style.overflow = 'auto';
+        
+        // Reload page to check if setup was completed
+        console.log('Reloading page to check setup status...');
+        window.location.reload();
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        const modal = document.getElementById('terminalModal');
+        if (event.target === modal) {
+          closeTerminalModal();
+        }
+      };
+
+      // Close modal with ESC key
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+          const modal = document.getElementById('terminalModal');
+          if (modal.style.display === 'block') {
+            closeTerminalModal();
+          }
+        }
+      });
+
+      // Make functions globally accessible
+      window.openTerminalModal = openTerminalModal;
+      window.closeTerminalModal = closeTerminalModal;
     </script>
   </body>
 </html>
