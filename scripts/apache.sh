@@ -55,7 +55,6 @@ setup_apache_web() {
   if ! command -v apache2 &> /dev/null; then
     sudo apt update
     sudo apt install apache2 -y # & spinner
-  else
   fi
 
   # Parar e desabilitar Next.js frontend se estiver rodando

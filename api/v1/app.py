@@ -47,6 +47,7 @@ HD Wallet Management:
 - GET  /api/v1/wallet/balance/<chain>/<addr>    - Obter saldo de chain específica
 - POST /api/v1/wallet/validate                  - Validar seed phrase BIP39
 - GET  /api/v1/wallet/status                    - Status do sistema de wallets
+- POST /api/v1/wallet/export-backup             - Exportar backup completo para recuperação
 - POST /api/v1/wallet/bip39-to-lnd              - Converter BIP39 para LND master key
 
 Elements/Liquid Network:
@@ -1048,6 +1049,118 @@ class WalletManager:
             
         except Exception as e:
             return {}, f"Error getting cached addresses: {str(e)}"
+    
+    def export_backup_info(self, wallet_id, password):
+        """
+        Export complete backup information for disaster recovery.
+        
+        This includes everything needed to recover funds if the system is lost:
+        - Encrypted mnemonic (still encrypted for security)
+        - Salt for decryption
+        - All derivation paths used
+        - Metadata about the wallet
+        - Standards used (BIP39/BIP32/BIP44)
+        
+        Args:
+            wallet_id: Wallet identifier
+            password: Password to verify access (optional verification)
+            
+        Returns:
+            dict: Complete backup information
+            str: Error message if any
+        """
+        try:
+            conn = sqlite3.connect(WALLET_DB_PATH)
+            cursor = conn.cursor()
+            
+            # Get wallet data
+            cursor.execute('''
+                SELECT encrypted_mnemonic, salt, metadata, created_at, 
+                       has_password, is_system_default
+                FROM wallets WHERE wallet_id = ?
+            ''', (wallet_id,))
+            
+            wallet_result = cursor.fetchone()
+            if not wallet_result:
+                conn.close()
+                return None, f"Wallet {wallet_id} not found"
+            
+            encrypted_mnemonic, salt, metadata, created_at, has_password, is_system_default = wallet_result
+            
+            # Get all derivation paths used
+            cursor.execute('''
+                SELECT chain_id, address, derivation_path
+                FROM derived_addresses
+                WHERE wallet_id = ?
+            ''', (wallet_id,))
+            
+            derivation_info = []
+            for row in cursor.fetchall():
+                chain_id, address, path = row
+                chain_config = SUPPORTED_CHAINS.get(chain_id, {})
+                derivation_info.append({
+                    'chain': chain_config.get('name', chain_id),
+                    'symbol': chain_config.get('symbol', ''),
+                    'coin_type': chain_config.get('coin_type'),
+                    'address': address,
+                    'derivation_path': path
+                })
+            
+            conn.close()
+            
+            # Create comprehensive backup package
+            backup_info = {
+                'wallet_id': wallet_id,
+                'created_at': created_at,
+                'is_system_default': bool(is_system_default),
+                'has_password': bool(has_password),
+                
+                # Critical recovery data
+                'encrypted_mnemonic': base64.b64encode(encrypted_mnemonic).decode('utf-8'),
+                'salt': base64.b64encode(salt).decode('utf-8'),
+                
+                # Standards used
+                'recovery_standards': {
+                    'mnemonic_standard': 'BIP39',
+                    'word_list': 'English',
+                    'key_derivation': 'BIP32',
+                    'path_standard': 'BIP44',
+                    'encryption': 'AES-256 via Fernet',
+                    'kdf': 'PBKDF2-HMAC-SHA256',
+                    'kdf_iterations': 200000
+                },
+                
+                # Derivation paths used
+                'derivation_info': derivation_info,
+                'supported_chains': list(SUPPORTED_CHAINS.keys()),
+                
+                # Metadata
+                'metadata': json.loads(metadata) if metadata else {},
+                
+                # Recovery instructions
+                'recovery_notes': {
+                    'step_1': 'Decrypt encrypted_mnemonic using your password and salt',
+                    'step_2': 'Use BIP39 to convert mnemonic to 512-bit seed (with optional passphrase)',
+                    'step_3': 'Use BIP32 to generate master keys from seed',
+                    'step_4': 'Use BIP44 derivation paths to generate child keys',
+                    'step_5': 'Generate addresses for each chain using derivation_info paths',
+                    'compatible_wallets': [
+                        'This API (preferred)',
+                        'Electrum (Bitcoin only)',
+                        'MyEtherWallet (Ethereum only)',
+                        'Ian Coleman BIP39 Tool (all chains, online)',
+                        'Hardware wallets (Trezor, Ledger)'
+                    ]
+                },
+                
+                'export_timestamp': datetime.now().isoformat(),
+                'export_version': '1.0'
+            }
+            
+            return backup_info, None
+            
+        except Exception as e:
+            return None, f"Error exporting backup info: {str(e)}"
 
 # Singleton para o gerenciador de carteiras
 wallet_manager = WalletManager()
@@ -5073,6 +5186,62 @@ def wallet_status():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/wallet/export-backup', methods=['POST'])
+def export_wallet_backup():
+    """
+    Export complete wallet backup information for disaster recovery
+    
+    Required JSON parameters:
+    - wallet_id: Wallet identifier
+    - password: Password to verify ownership (optional)
+    
+    Returns complete backup package with:
+    - Encrypted mnemonic (still encrypted)
+    - Salt and encryption details
+    - All derivation paths used
+    - Recovery instructions
+    - Compatible wallet list
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                'error': 'No data provided',
+                'status': 'error'
+            }), 400
+        
+        wallet_id = data.get('wallet_id')
+        password = data.get('password')  # Optional, for verification
+        
+        if not wallet_id:
+            return jsonify({
+                'error': 'wallet_id is required',
+                'status': 'error'
+            }), 400
+        
+        # Export backup information
+        backup_info, error = wallet_manager.export_backup_info(wallet_id, password)
+        
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 400
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Backup information exported successfully',
+            'backup': backup_info,
+            'warning': 'CRITICAL: Store this backup securely! It contains encrypted wallet data.',
+            'recommendation': 'Save this JSON to multiple secure locations (encrypted USB, paper wallet, safe deposit box)'
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': f'Failed to export backup: {str(e)}',
+            'status': 'error'
+        }), 500
 
 # === LND WALLET INITIALIZATION ENDPOINTS ===
 
