@@ -105,8 +105,8 @@ async function toggleService(serviceName) {
 async function loadServicesStatus() {
   console.log('Carregando status dos serviços...');
   try {
-    console.log('Fazendo fetch para: https://brln-os.pagcoin.org/api/v1/system/services');
-    const response = await fetch('https://brln-os.pagcoin.org/api/v1/system/services', {
+    console.log('Fazendo fetch para: /api/v1/system/services');
+    const response = await fetch('/api/v1/system/services', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -140,8 +140,8 @@ async function loadServicesStatus() {
 // Carregar status do sistema
 async function loadSystemStatus() {
   try {
-    console.log('Fazendo fetch para: https://brln-os.pagcoin.org/api/v1/system/status');
-    const response = await fetch('https://brln-os.pagcoin.org/api/v1/system/status', {
+    console.log('Fazendo fetch para: /api/v1/system/status');
+    const response = await fetch('/api/v1/system/status', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

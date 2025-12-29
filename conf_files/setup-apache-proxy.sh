@@ -35,12 +35,13 @@ fi
 # Copiar configurações do BRLN
 echo "📁 Copiando configurações BRLN..."
 sudo cp /root/brln-os/conf_files/brln-apache.conf /etc/apache2/sites-available/
-sudo cp /root/brln-os/conf_files/brln-proxy-rules.conf /etc/apache2/
+sudo cp /root/brln-os/conf_files/brln-ssl-api.conf /etc/apache2/sites-available/
 
 # Desabilitar site padrão e habilitar BRLN
 echo "🔄 Configurando sites Apache..."
-sudo a2dissite 000-default
+sudo a2dissite 000-default 2>/dev/null || true
 sudo a2ensite brln-apache
+sudo a2ensite brln-ssl-api
 
 # Verificar configuração
 echo "✅ Verificando configuração Apache..."
