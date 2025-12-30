@@ -1,8 +1,5 @@
 <div align="center">
-
-<img width="1920" height="1080" alt="Open Node is a project that aims to provide a free and open-source environment for the implementation of your own Lightning node  It is based on the BRLN Bolt implementation, and it&#39;s free and ope" src="https://github.com/user-attachments/assets/73b61408-d94a-47f3-b1aa-bad2175baf13" />
-
-
+<img width="1280" height="720" alt="Untitled design(1)" src="https://github.com/user-attachments/assets/673060c6-7110-44e9-b492-feeb649275d7" />
 # BRLN-OS v2.0 – Sistema Operacional Multi-Node
 
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?style=for-the-badge&logo=bitcoin&logoColor=white)](https://bitcoin.org)
