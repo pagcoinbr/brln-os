@@ -251,8 +251,11 @@ config.ini
 .env*
 *credentials*
 *secrets*
-*password*
 *token*
+
+# Exclude password database files but NOT password manager scripts
+*.db-password
+brln-passwords.db
 
 # Chat database (contains private conversations)
 lightning_chat.db
