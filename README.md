@@ -290,39 +290,6 @@ brln-os/
 
 O BRLN-OS é projetado para **proteger a privacidade**, mas a configuração final depende de você. Recomendações:
 
-### Boas Práticas de Privacidade
-
-**Rodar Atrás de Tor e I2P**
-- Use o `bitcoin.conf` fornecido como base
-- Instale o Tor pelo menu "Ferramentas de Sistema" (`scripts/system.sh`)
-- O Bitcoin Core usa automaticamente o proxy Tor
-
-**Evitar Exposição Direta de Portas**
-- Acesse via LAN ou VPN Tailscale
-- Se precisar de acesso externo, use HTTPS com certificados válidos e firewall adequado
-
-**Backups Seguros**
-- Backups regulares de:
-  - `/home/bitcoin/.bitcoin` (ou seu diretório de dados)
-  - `/home/lnd/.lnd` (inclui seed, macaroon, channels.db)
-  - Diretórios de dados do LNbits, LNDg e outros serviços
-
-**Segregação de Usuários**
-- Cada serviço roda com seu próprio usuário de sistema (bitcoin, lnd, lnbits, etc.)
-- Reduz o impacto de falhas e melhora a segurança
-
-**Atualizações Frequentes**
-- O BRLN-OS pode configurar `git pull` automático via cron
-- Rode `./brunel.sh` periodicamente para verificar atualizações
-
-### Checklist de Segurança
-
-- [ ] Tor instalado e rodando
-- [ ] Firewall (UFW) configurado
-- [ ] Senhas fortes para todas as carteiras
-- [ ] Autenticação por chave SSH habilitada
-- [ ] Backups regulares das seeds
-- [ ] Sistema atualizado regularmente
 
 **Lembre-se**: privacidade é um processo contínuo. Revise regularmente sua superfície de ataque, portas abertas e dependências.
 
