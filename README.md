@@ -60,9 +60,10 @@ Interface em português, menus interativos e automação para reduzir a barreira
 
 A principal motivação é **proteger a privacidade e a liberdade** das pessoas, especialmente em contextos onde a vigilância e o controle financeiro podem colocar sua vida em risco.
 </div>
+
 ---
 
-## 🚀 Guia de Instalação
+## Guia de Instalação
 
 ### Passo 1: Baixar o Ubuntu 24.04 LTS
 
@@ -124,24 +125,25 @@ Quando você acessar pela primeira vez a interface web em `http://SEU_ENDERECO_I
 
 **Cenário 1: Instalação Nova**
 - Abre automaticamente o setup interativo no terminal
-- Siga os prompts do `menu.sh` para configurar o sistema
+- Selecione **1** para configurar o sistema
 - Crie sua primeira carteira
 
 ---
 
 <div align="center">
 
-## 🏗️ Visão Geral da Arquitetura
+## Visão Geral da Arquitetura
 
 O BRLN-OS oferece:
 
 **Bitcoin Core** como backend on-chain, configurado para uso com Tor e I2P  
-**LND (Lightning Network Daemon)** como nó Lightning principal  
+**LND** como nó Lightning
+**Elements** como nó Liquid
 **Aplicações Lightning**: ThunderHub, LNbits, LNDg, Balance of Satoshis e Simple LNWallet  
-**Interface Web em Português** servida via Apache, com página principal em `main.html` e componentes em `pages/`  
-**API BRLN** (Flask + gRPC) para expor status do sistema, carteira e operações Lightning via HTTP  
-**Terminal Web (Gotty)** para acesso ao shell via navegador (se habilitado)  
-**Serviços gerenciados pelo systemd** com arquivos de unidade em `services/`
+**Interface Web em Português** servida via Apache  
+**API BRLN** (Flask + gRPC) para fornecer status do sistema, carteira e operar seu node via HTTP  
+**Terminal Web** para acesso limitado ao terminal para debug, via navegador
+**Serviços gerenciados pelo systemd** resiliente e nativo.
 
 <img width="1487" height="912" alt="Arquitetura do Sistema" src="https://github.com/user-attachments/assets/b1c1eb9b-49b4-40bb-864f-aab7b89d97d2" />
 
