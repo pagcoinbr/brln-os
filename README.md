@@ -3,12 +3,12 @@
 # BRLN-OS v2.0 – Sistema Operacional Multi-Node
 
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?style=for-the-badge&logo=bitcoin&logoColor=white)](https://bitcoin.org)
-[![Lightning Network](https://img.shields.io/badge/Lightning-⚡-792EE5?style=for-the-badge&logo=lightning&logoColor=white)](https://lightning.network)
-[![Liquid Network](https://img.shields.io/badge/Liquid%20Network-LBTC-00B800?style=for-the-badge&logo=liquid&logoColor=white)](https://liquid.net)
+[![Lightning](https://img.shields.io/badge/Lightning-⚡-792EE5?style=for-the-badge&logo=lightning&logoColor=white)](https://lightning.network)
+[![Liquid](https://img.shields.io/badge/Liquid%20Network-L-₿-blue?style=for-the-badge&logo=liquid&logoColor=white)](https://liquid.net)
 [![TRON](https://img.shields.io/badge/TRON-TRX-E50914?style=for-the-badge&logo=tron&logoColor=white)](https://tron.network)
 [![Linux](https://img.shields.io/badge/Linux-Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
-[![Open Source](https://img.shields.io/badge/Open%20Source-MIT-green?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
-[![Free Banking](https://img.shields.io/badge/Free%20Banking-Self%20Sovereign-blue?style=for-the-badge&logo=bank&logoColor=white)](#)
+[![Open Source](https://img.shields.io/badge/Open%20Source-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Free Banking](https://img.shields.io/badge/Free%20Banking-Self%20Sovereign-red?style=for-the-badge&logo=bank&logoColor=white)](#)
 [![Privacy First](https://img.shields.io/badge/Privacy-First-purple?style=for-the-badge&logo=tor&logoColor=white)](#)
 
 **BRLN-OS** é uma distribuição Aplicação completa que transforma qualquer servidor Linux em um nó completo de Bitcoin + Lightning + Liquid, focada em soberania individual, privacidade financeira e usabilidade para o público brasileiro e além.
