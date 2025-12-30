@@ -17,7 +17,7 @@ store_password_full() {
     local username="$4"
     local port="$5"
     local url="$6"
-    local master_password="${BRLN_MASTER_PASSWORD:-}"
+    local user_key="${BRLN_USER_KEY:-}"
     
     if [[ -z "$service_name" || -z "$password" ]]; then
         echo "Error: service_name and password are required" >&2
@@ -30,8 +30,8 @@ store_password_full() {
     port="${port:-0}"
     url="${url:-}"
     
-    if [[ -n "$master_password" ]]; then
-        python3 "$PASSWORD_MANAGER_SCRIPT" store "$service_name" "$username" "$password" "$description" "$port" "$url" "$master_password"
+    if [[ -n "$user_key" ]]; then
+        python3 "$PASSWORD_MANAGER_SCRIPT" store "$service_name" "$username" "$password" "$description" "$port" "$url" "$user_key"
     else
         python3 "$PASSWORD_MANAGER_SCRIPT" store "$service_name" "$username" "$password" "$description" "$port" "$url"
     fi
@@ -49,15 +49,15 @@ store_password() {
 # Get password for a service
 get_password() {
     local service_name="$1"
-    local master_password="${BRLN_MASTER_PASSWORD:-}"
+    local user_key="${BRLN_USER_KEY:-}"
     
     if [[ -z "$service_name" ]]; then
         echo "Error: service_name is required" >&2
         return 1
     fi
     
-    if [[ -n "$master_password" ]]; then
-        python3 "$PASSWORD_MANAGER_SCRIPT" get "$service_name" "$master_password"
+    if [[ -n "$user_key" ]]; then
+        python3 "$PASSWORD_MANAGER_SCRIPT" get "$service_name" "$user_key"
     else
         python3 "$PASSWORD_MANAGER_SCRIPT" get "$service_name"
     fi

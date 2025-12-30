@@ -64,22 +64,17 @@ gotty_install() {
 create_gotty_service() {
   echo -e "${YELLOW}"
   
-  sudo tee /etc/systemd/system/gotty-terminal.service > /dev/null << EOF
+  sudo tee /etc/systemd/system/gotty-fullauto.service > /dev/null << EOF
 [Unit]
-Description=GoTTY Web Terminal
+Description=Terminal Web para BRLN FullAuto
 After=network.target
 
 [Service]
-Type=simple
 User=root
-WorkingDirectory=/root
-ExecStart=/usr/local/bin/gotty --port 3131 --permit-write --reconnect bash
+WorkingDirectory=/root/brln-os/scripts
+Environment=TERM=xterm
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash /root/brln-os/scripts/menu.sh
 Restart=always
-RestartSec=10
-
-# Segurança
-NoNewPrivileges=false
-PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
@@ -87,7 +82,7 @@ EOF
 
   # Reload systemd and enable service
   sudo systemctl daemon-reload
-  sudo systemctl enable gotty-terminal
+  sudo systemctl enable gotty-fullauto
   
   echo -e "${GREEN}"
 }
@@ -105,11 +100,15 @@ terminal_web() {
     # Stop any conflicting processes first
     sudo pkill -f 'gotty.*3131' 2>/dev/null || true
     
-    sudo systemctl start gotty-terminal >/dev/null 2>&1
+    # Stop old service if it exists
+    sudo systemctl stop gotty-terminal 2>/dev/null || true
+    sudo systemctl disable gotty-terminal 2>/dev/null || true
+    
+    sudo systemctl start gotty-fullauto >/dev/null 2>&1
     
     # Centralized service check
     for i in {1..3}; do
-        if sudo systemctl is-active --quiet gotty-terminal; then
+        if sudo systemctl is-active --quiet gotty-fullauto; then
             echo -e "${GREEN}"
             break
         elif [[ $i -eq 3 ]]; then
