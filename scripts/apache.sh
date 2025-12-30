@@ -103,9 +103,10 @@ setup_apache_web() {
   configure_ssl_complete
 
   # Verificar configuração Apache
-  if sudo apache2ctl configtest; then
-  else
+  if ! sudo apache2ctl configtest; then
+    echo -e "${RED}❌ Erro na configuração do Apache${NC}"
     sudo apache2ctl configtest
+    return 1
   fi
 
   # Reiniciar ou recarregar Apache dependendo do contexto
