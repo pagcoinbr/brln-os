@@ -153,87 +153,6 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 
 ---
 
-## 🔧 Principais Componentes
-
-### 3.1 Bitcoin e Lightning Core
-
-**Bitcoin Core**
-- Instalado a partir dos binários oficiais via `scripts/bitcoin.sh`
-- Diretório de dados padrão: `/home/bitcoin/.bitcoin`
-- Configuração base em `conf_files/bitcoin.conf` (inclui proxy Tor e suporte I2P via i2pd)
-
-**LND (Lightning Network Daemon)**
-- Instalado via `scripts/bitcoin.sh` (função `download_lnd`)
-- Diretório de dados padrão: `/home/lnd/.lnd`
-- Configuração base em `conf_files/lnd.conf`
-- Integração gRPC com a API BRLN (veja `api/v1/`)
-
-### 3.2 Aplicações Lightning
-
-<div align="center">
-
-<img width="1463" height="908" alt="Aplicações Lightning" src="https://github.com/user-attachments/assets/e231791c-67d4-4f33-a85f-9fab1848a5c7" />
-
-</div>
-
-Instaladas e gerenciadas por `scripts/lightning.sh` e pelo menu interativo em `scripts/menu.sh`:
-
-- **ThunderHub** – Interface web moderna para o LND
-- **LNbits** – Servidor de carteira Lightning multiusuário
-- **LNDg** – Dashboard avançado para gestão e rebalanceamento de canais
-- **Balance of Satoshis (BOS)** – Ferramenta CLI para automação e gestão de canais
-- **Simple LNWallet** – Carteira Lightning minimalista integrada à interface
-
-### 3.3 Interface Web e Proxy
-
-**Servidor Web Apache** configurado por `scripts/apache.sh` e `scripts/system.sh`:
-- Copia `main.html`, `pages/` e assets estáticos para `/var/www/html/`
-- Serve a interface em `http://IP_DO_SEU_NO/`
-
-**Proxy Reverso Apache** documentado em `conf_files/README-Apache-Proxy.md`:
-- Mapeia serviços internos para caminhos únicos (`/thunderhub/`, `/lnbits/`, `/lndg/`, `/simple-lnwallet/`, `/api/`)
-- Resolve problemas de SameSite cookie e iframe, mantendo tudo sob o mesmo domínio
-
-### 3.4 API BRLN
-
-Implementada em `api/v1/app.py` (Flask + gRPC):
-
-**Gestão do Sistema**
-- Status do sistema (CPU, RAM, LND, Bitcoin, etc.)
-- Gestão de serviços (start/stop/restart)
-- Health checks
-
-**Carteira On-chain**
-- Saldo e transações de Bitcoin
-- Envio de BTC, geração de endereços, gestão de UTXOs
-
-**Lightning Network**
-- Peers, canais, faturas, pagamentos
-- Keysend, taxas, roteamento
-- Gestão de canais
-
-Faz a ponte com o LND via gRPC usando protos em `api/v1/proto/`  
-- Serviço systemd: `services/brln-api.service`
-
-### 3.5 Privacidade e Rede
-
-**Tor**
-- Instalado e habilitado via `scripts/system.sh`
-- Bitcoin Core configurado para usar proxy Tor (veja `conf_files/bitcoin.conf`)
-
-**I2P (i2pd)**
-- Suporte configurado em `bitcoin.conf` para conexões I2P (i2psam)
-
-**Tailscale VPN**
-- Instalado via `scripts/system.sh`
-- Recomendado para acesso remoto seguro em vez de redirecionar portas públicas
-
-### 3.6 Terminal Web (Gotty)
-
-- Instalado e gerenciado via `scripts/gotty.sh`
-- Serviços systemd: `gotty.service`, `gotty-fullauto.service` e serviços de log/editor
-- Abre em um modal com iframe para integração transparente
-
 ---
 
 <div align="center">
@@ -246,16 +165,16 @@ Faz a ponte com o LND via gRPC usando protos em `api/v1/proto/`
 
 ### Sistema Operacional
 
-- **Ubuntu Server 22.04 LTS ou 24.04 LTS** (recomendado)
+- **Ubuntu Server 24.04 LTS** (recomendado)
 - Arquiteturas suportadas:
   - `x86_64` (PC/servidor padrão)
   - `arm64`/`aarch64` (incluindo Raspberry Pi mais recentes)
 
 ### Hardware Mínimo
 
-- **CPU**: Processador 64 bits, 2 GHz dual-core ou melhor
-- **RAM**: 4 GB mínimo, **8 GB recomendado**
-- **Armazenamento**: SSD de 500 GB mínimo para Bitcoin mainnet (menos para testnet ou pruning agressivo)
+- **CPU**: Processador 64 bits, i5 ou Ryzen 5 de 3ª geração ou superior
+- **RAM**: 8 GB mínimo, **16 GB recomendado**
+- **Armazenamento**: SSD de 1 TB mínimo para Bitcoin mainnet (menos para testnet ou pruning)
 - **Rede**: Conexão de internet estável com boa banda de upload
 
 ### Requisitos de Rede
