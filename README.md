@@ -127,17 +127,6 @@ Quando você acessar pela primeira vez a interface web em `http://SEU_ENDERECO_I
 - Siga os prompts do `menu.sh` para configurar o sistema
 - Crie sua primeira carteira
 
-**Cenário 2: Diretório do LND Existe, mas Sem Carteira**
-- Abre a interface de criação de carteira
-- Crie ou importe uma carteira
-- Configure seu nó Lightning
-
-**Cenário 3: Tudo Configurado**
-- Acessa diretamente o painel principal
-- Seu sistema está pronto para uso!
-
-Para instruções de instalação detalhadas, veja [INSTALLATION_TUTORIAL.md](INSTALLATION_TUTORIAL.md).
-
 ---
 
 <div align="center">
