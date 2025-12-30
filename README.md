@@ -149,7 +149,8 @@ O BRLN-OS oferece:
 
 <img width="1487" height="912" alt="Arquitetura do Sistema" src="https://github.com/user-attachments/assets/b1c1eb9b-49b4-40bb-864f-aab7b89d97d2" />
 
-Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a necessidade de expor portas diretamente à Internet.
+
+Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a necessidade de expor portas do seu servidor.
 
 </div>
 
