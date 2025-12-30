@@ -1,5 +1,5 @@
 <div align="center">
-<img width="880" height="320" alt="Untitled design(1)" src="https://github.com/user-attachments/assets/673060c6-7110-44e9-b492-feeb649275d7" />
+<img width="780" height="320" alt="Untitled design(1)" src="https://github.com/user-attachments/assets/673060c6-7110-44e9-b492-feeb649275d7" />
 # BRLN-OS v2.0 – Sistema Operacional Multi-Node
 
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?style=for-the-badge&logo=bitcoin&logoColor=white)](https://bitcoin.org)
