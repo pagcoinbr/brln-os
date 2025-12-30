@@ -140,7 +140,9 @@ O BRLN-OS oferece:
 
 **Bitcoin Core** como backend on-chain, configurado para uso com Tor e I2P  
 **LND** como nó Lightning
+
 **Elements** como nó Liquid
+
 **Aplicações Lightning**: ThunderHub, LNbits, LNDg, Balance of Satoshis e Simple LNWallet  
 **Interface Web em Português** servida via Apache  
 **API BRLN** (Flask + gRPC) para fornecer status do sistema, carteira e operar seu node via HTTP  
