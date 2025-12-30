@@ -181,7 +181,7 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 ### Requisitos de Rede
 
 - Acesso SSH ao servidor (porta 22)
-- Acesso HTTP/HTTPS na rede local (porta 443) para a interface web
+- Acesso HTTPS na rede local (porta 443) para a interface web
 - **Recomendado**: NÃO expor portas diretamente na Internet; use Tailscale ou outra VPN
 
 ---
@@ -224,7 +224,6 @@ brln-os/
 │   ├── setup-tools-env.sh     # Ambiente virtual das ferramentas brln-tools
 │   ├── setup-wallet-env.sh    # Ambiente para carteiras auxiliares
 │   ├── setup-tron-wallet.py   # Script Python de configuração da carteira TRON
-│   ├── integrate_wallets.py   # Integração entre carteiras e serviços
 │   ├── auto_wallet_integration.py  # Automatização de integração de wallets
 │   ├── init-lnd-wallet.sh     # Inicialização da carteira LND
 │   ├── auto-lnd-create*.exp   # Scripts Expect para criação/gerenciamento da carteira LND
@@ -236,7 +235,7 @@ brln-os/
 │   └── USER_APPLICATION_MATRIX.md   # Matriz de funcionalidades por aplicação
 ├── api/
 │   └── v1/
-│       ├── app.py             # API Flask + gRPC integrando com LND
+│       ├── app.py             # API Flask + gRPC
 │       ├── requirements.txt   # Dependências da API BRLN v1
 │       ├── install.sh         # Setup automatizado do ambiente da API
 │       ├── HD_WALLET_GUIDE.md # Guia da carteira HD e fluxos de seed
@@ -266,7 +265,6 @@ brln-os/
 │   ├── thunderhub.service     # Dashboard web ThunderHub
 │   ├── simple-lnwallet.service# Simple LNWallet (interface Lightning minimalista)
 │   ├── bos-telegram.service   # Bot Telegram do Balance of Satoshis
-│   ├── lightning-monitor.service # Serviço de monitoramento Lightning
 │   ├── brln-api.service       # API BRLN (Flask + gRPC)
 │   ├── elementsd.service      # Daemon Elements/Liquid
 │   ├── gotty-fullauto.service # Terminal web gotty e auxiliares
@@ -283,64 +281,6 @@ brln-os/
 │   └── vm-4-tests.sh          # Script auxiliar para ambiente de testes/VM
 └── favicon.ico                # Ícone da interface web BRLN-OS
 ```
-
----
-
-## 🔐 Privacidade e Segurança
-
-O BRLN-OS é projetado para **proteger a privacidade**, mas a configuração final depende de você. Recomendações:
-
-
-**Lembre-se**: privacidade é um processo contínuo. Revise regularmente sua superfície de ataque, portas abertas e dependências.
-
----
-
-## 🔄 Atualização do Sistema
-
-Para atualizar o código do BRLN-OS e os componentes gerenciados:
-
-```bash
-cd /caminho/para/brln-os
-./brunel.sh update
-```
-
-Este comando:
-- Executa `git pull` no repositório
-- Atualiza dependências Python (API)
-- Atualiza e redeploya a interface web via Apache
-- Revalida permissões no sudoers e atualiza cron
-
----
-
-## 🛠️ Serviços Systemd
-
-Os arquivos em `services/` definem como cada componente roda em segundo plano:
-
-| Serviço | Descrição |
-|---------|-----------|
-| `bitcoind.service` | Daemon do Bitcoin Core |
-| `lnd.service` | Lightning Network Daemon |
-| `lnbits.service` | Servidor de carteira LNbits multiusuário |
-| `thunderhub.service` | Dashboard web ThunderHub |
-| `lndg.service` + `lndg-controller.service` | Dashboard LNDg e controlador |
-| `simple-lnwallet.service` | Interface web Simple LNWallet |
-| `bos-telegram.service` | Bot Telegram do Balance of Satoshis |
-| `lightning-monitor.service` | Serviço de monitoramento Lightning |
-| `brln-api.service` | API BRLN (Flask + gRPC) |
-| `gotty*.service` | Terminal web e ferramentas administrativas |
-| `elementsd.service` | Daemon do Elements/Liquid |
-| `peerswapd.service` + `psweb.service` | PeerSwap e interface web |
-
-Interaja com os serviços via `systemctl`:
-
-```bash
-sudo systemctl status bitcoind
-sudo systemctl start lnd
-sudo systemctl enable thunderhub
-sudo systemctl restart brln-api
-```
-
-O BRLN-OS adiciona entradas específicas no sudoers para permitir que o usuário admin gerencie serviços sem solicitar senha.
 
 ---
 
@@ -373,7 +313,7 @@ Estude a documentação oficial de cada projeto para entender limites, riscos e 
 ### Como Obter Ajuda
 
 - **Telegram**: [https://t.me/pagcoinbr](https://t.me/pagcoinbr)
-- **E-mail**: suporte.brln@gmail.com | suporte@brln-os
+- **E-mail**: suporte.brln@gmail.com | suporte@pagcoin.org
 - **Website**: [https://services.br-ln.com](https://services.br-ln.com)
 - **GitHub Issues**: [https://github.com/pagcoinbr/brln-os/issues](https://github.com/pagcoinbr/brln-os/issues)
 
@@ -404,25 +344,8 @@ Este projeto é licenciado sob a **Licença MIT**. Veja o arquivo [LICENSE](LICE
 
 <div align="center">
 
-## 🌟 Recursos em Destaque
+**Construído com ❤️ pela liberdade e soberania da comunidade BRLN **
 
-✅ **Nó Completo de Bitcoin** – Sincronize e valide toda a blockchain  
-✅ **Lightning Network** – Envie/receba pagamentos instantâneos e de baixo custo  
-✅ **Interface Web** – Dashboard amigável em português  
-✅ **Privacidade em Primeiro Lugar** – Integração com Tor e I2P por padrão  
-✅ **Auto-Hospedado** – Sem dependência de terceiros  
-✅ **Suporte Multi-Moeda** – Bitcoin, Elements/Liquid, TRON  
-✅ **Gerenciador de Carteira HD** – Gestão de seeds BIP39  
-✅ **Gestão de Canais** – Integração com ThunderHub, LNDg, BOS  
-✅ **Acesso via API** – API RESTful com backend gRPC  
-✅ **Atualizações Automáticas** – Auto-update configurável via cron  
-✅ **Monitoramento Profissional** – Status do sistema e gestão de serviços  
-✅ **Open Source** – Licença MIT, orientado pela comunidade  
-
----
-
-**Construído com ❤️ pela liberdade e soberania financeira em Bitcoin**
-
-*BRLN-OS – Banco pelo Povo e para o Povo*
+*BRLN-OS – Bitcoin Open Bank*
 
 </div>
