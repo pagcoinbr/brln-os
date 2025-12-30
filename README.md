@@ -8,8 +8,6 @@
 [![TRON](https://img.shields.io/badge/TRON-TRX-E50914?style=for-the-badge&logo=tron&logoColor=white)](https://tron.network)
 [![Linux](https://img.shields.io/badge/Linux-Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Open Source](https://img.shields.io/badge/Open%20Source-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
-[![Free Banking](https://img.shields.io/badge/Free%20Banking-Self%20Sovereign-red?style=for-the-badge&logo=bank&logoColor=white)](#)
-[![Privacy First](https://img.shields.io/badge/Privacy-First-purple?style=for-the-badge&logo=tor&logoColor=white)](#)
 
 **BRLN-OS** é uma distribuição Aplicação completa que transforma qualquer servidor Linux em um nó completo de Bitcoin + Lightning + Liquid, focada em soberania individual, privacidade financeira e usabilidade para o público brasileiro e além.
 
