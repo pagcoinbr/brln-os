@@ -17,7 +17,7 @@ Ela automatiza a instalação, configuração e integração do **Bitcoin Core**
 
 ---
 
-<img width="1287" height="812" alt="Arquitetura do Nó Bitcoin" src="https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4" />
+<img width="1087" height="712" alt="Arquitetura do Nó Bitcoin" src="https://github.com/user-attachments/assets/cabf3db7-8b91-4289-8078-49f78444d7b4" />
 
 ---
 
