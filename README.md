@@ -1,6 +1,8 @@
 <div align="center">
+   
+<img width="736" height="736" alt="Logo Branco" src="https://github.com/user-attachments/assets/4fdbc728-7c1b-4793-88bd-a956e70e8a67" />
 
-# BRLN-OS v2.0 – Sistema Operacional Multi-Node de Bitcoin
+# BRLN-OS v2.0 – Sistema Operacional Multi-Node
 
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?style=for-the-badge&logo=bitcoin&logoColor=white)](https://bitcoin.org)
 [![Lightning Network](https://img.shields.io/badge/Lightning-⚡-792EE5?style=for-the-badge&logo=lightning&logoColor=white)](https://lightning.network)
@@ -11,11 +13,11 @@
 [![Free Banking](https://img.shields.io/badge/Free%20Banking-Self%20Sovereign-blue?style=for-the-badge&logo=bank&logoColor=white)](#)
 [![Privacy First](https://img.shields.io/badge/Privacy-First-purple?style=for-the-badge&logo=tor&logoColor=white)](#)
 
-**BRLN-OS** é uma distribuição Linux completa que transforma qualquer servidor Ubuntu em um nó completo de Bitcoin + Lightning Network, focada em soberania individual, privacidade financeira e usabilidade para o público brasileiro e além.
+**BRLN-OS** é uma distribuição Aplicação completa que transforma qualquer servidor Linux em um nó completo de Bitcoin + Lightning + Liquid, focada em soberania individual, privacidade financeira e usabilidade para o público brasileiro e além.
 
 <img width="1541" height="915" alt="Interface Principal do BRLN-OS" src="https://github.com/user-attachments/assets/530a8642-38b6-4f77-85c9-1f53ced2aa7a" />
 
-Ela automatiza a instalação, configuração e integração do **Bitcoin Core**, **LND** e um conjunto completo de ferramentas e sistemas de monitoramento da Lightning Network, expondo tudo através de uma interface web própria e serviços locais, sem depender de terceiros.
+Ela automatiza a instalação, configuração e integração do **Bitcoin Core**, **LND**, **Elements** e um conjunto completo de ferramentas e sistemas de monitoramento, expondo tudo através de uma interface web própria, sem depender de terceiros.
 
 ---
 
@@ -44,23 +46,23 @@ Ela automatiza a instalação, configuração e integração do **Bitcoin Core**
 
 <div align="center">
 
-## 🎯 Por Que Este Projeto Existe?
+## Por Que Este Projeto Existe?
 
 O BRLN-OS é construído sobre princípios fundamentais:
 
-**Privacidade Financeira Como um Direito**  
-Transações e saldos devem ser controlados por você, rodando na sua própria infraestrutura, sem custódia de terceiros.
+**Privacidade Como um Direito**  
+Transações e saldos devem ser controlados por você, rodando na sua própria infraestrutura, sem custódia de terceiros. Sua vida está prestes a mudar, pois grandes poderes, vêm grandes responsabilidades.
 
 **Soberania Digital**  
 O nó roda no seu hardware, com software livre e serviços auto-hospedados.
 
 **Resistência à Vigilância**  
-Uso de Tor, suporte a I2P (i2pd) e VPN opcional (Tailscale) para reduzir a exposição de metadados.
+Uso de Tor, suporte a I2P (i2pd) e VPN opcional (Tailscale) para reduzir a exposição em qualquer lugar.
 
 **Empoderamento Individual**  
-Interface em português, menus interativos e automação para reduzir a barreira técnica de operar um nó completo de Bitcoin/Lightning.
+Interface em português, menus interativos e automação para reduzir a barreira técnica de operar um nó completo de Bitcoin.
 
-A principal motivação é **proteger a privacidade e a liberdade financeira** das pessoas, especialmente em contextos onde a vigilância e o controle financeiro estão aumentando.
+A principal motivação é **proteger a privacidade e a liberdade** das pessoas, especialmente em contextos onde a vigilância e o controle financeiro podem colocar sua vida em risco.
 
 </div>
 
@@ -93,7 +95,7 @@ A principal motivação é **proteger a privacidade e a liberdade financeira** d
 2. Siga o assistente de instalação do Ubuntu:
    - Configure idioma, teclado e rede
    - **Crie uma conta de usuário** (guarde as credenciais!)
-   - **Selecione "Install OpenSSH server"** (importante para acesso remoto)
+   - 🚨 **Selecione "Install OpenSSH server"** (OBRIGATÓRIO!)
    - Conclua a instalação e reinicie
 
 ### Passo 4: Conectar via SSH
