@@ -155,8 +155,6 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 
 ---
 
----
-
 <div align="center">
 
 ## 📋 Requisitos de Sistema
@@ -182,43 +180,12 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 ### Requisitos de Rede
 
 - Acesso SSH ao servidor (porta 22)
-- Acesso HTTP/HTTPS na rede local (portas 80 e 443) para a interface web
+- Acesso HTTP/HTTPS na rede local (porta 443) para a interface web
 - **Recomendado**: NÃO expor portas diretamente na Internet; use Tailscale ou outra VPN
 
 ---
 
-## ⚡ Início Rápido
-
-Para quem já está confortável com linha de comando no Ubuntu Server:
-
-1. Garanta que você está logado como usuário com privilégios `sudo` (por exemplo, `admin`).
-
-2. Atualize o sistema:
-   ```bash
-   sudo apt update && sudo apt upgrade -y
-   sudo apt install git -y
-   ```
-
-3. Clone o repositório:
-   ```bash
-   git clone https://github.com/pagcoinbr/brln-os.git
-   cd brln-os
-   ```
-
-4. Rode o menu de instalação interativo:
-   ```bash
-   chmod +x brunel.sh
-   ./brunel.sh
-   ```
-
-5. Acesse a interface web:
-   - Abra o navegador em `http://IP_DO_SEU_NO/`
-
----
-
 ## 📁 Estrutura do Projeto
-
-Visão simplificada dos principais diretórios:
 
 ```text
 brln-os/
