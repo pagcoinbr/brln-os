@@ -4,7 +4,7 @@
 
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?style=for-the-badge&logo=bitcoin&logoColor=white)](https://bitcoin.org)
 [![Lightning](https://img.shields.io/badge/Lightning-⚡-792EE5?style=for-the-badge&logo=lightning&logoColor=white)](https://lightning.network)
-[![Liquid](https://img.shields.io/badge/Liquid%20Network-L-₿-blue?style=for-the-badge&logo=liquid&logoColor=white)](https://liquid.net)
+[![Liquid](https://img.shields.io/badge/Liquid-₿-blue?style=for-the-badge&logo=liquid&logoColor=white)](https://liquid.net)
 [![TRON](https://img.shields.io/badge/TRON-TRX-E50914?style=for-the-badge&logo=tron&logoColor=white)](https://tron.network)
 [![Linux](https://img.shields.io/badge/Linux-Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Open Source](https://img.shields.io/badge/Open%20Source-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
