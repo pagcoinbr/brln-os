@@ -144,7 +144,7 @@ O BRLN-OS oferece:
 **Aplicações Lightning**: ThunderHub, LNbits, LNDg, Balance of Satoshis e Simple LNWallet  
 **Interface Web em Português** servida via Apache  
 **API BRLN** (Flask + gRPC) para fornecer status do sistema, carteira e operar seu node via HTTP  
-**Terminal Web** para acesso limitado ao terminal para debug, via navegador
+**Terminal Web** para acesso limitado ao terminal para debug, via navegador  
 **Serviços gerenciados pelo systemd** resiliente e nativo.
 
 <img width="1487" height="912" alt="Arquitetura do Sistema" src="https://github.com/user-attachments/assets/b1c1eb9b-49b4-40bb-864f-aab7b89d97d2" />
