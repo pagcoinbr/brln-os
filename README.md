@@ -59,7 +59,7 @@ Uso de Tor, suporte a I2P (i2pd) e VPN opcional (Tailscale) para reduzir a expos
 Interface em português, menus interativos e automação para reduzir a barreira técnica de operar um nó completo de Bitcoin.
 
 A principal motivação é **proteger a privacidade e a liberdade** das pessoas, especialmente em contextos onde a vigilância e o controle financeiro podem colocar sua vida em risco.
-
+</div>
 ---
 
 ## 🚀 Guia de Instalação
@@ -138,7 +138,6 @@ Quando você acessar pela primeira vez a interface web em `http://SEU_ENDERECO_I
 
 Para instruções de instalação detalhadas, veja [INSTALLATION_TUTORIAL.md](INSTALLATION_TUTORIAL.md).
 
-</div>
 ---
 
 <div align="center">
