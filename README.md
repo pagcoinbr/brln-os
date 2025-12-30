@@ -60,8 +60,6 @@ Interface em português, menus interativos e automação para reduzir a barreira
 
 A principal motivação é **proteger a privacidade e a liberdade** das pessoas, especialmente em contextos onde a vigilância e o controle financeiro podem colocar sua vida em risco.
 
-</div>
-
 ---
 
 ## 🚀 Guia de Instalação
@@ -140,6 +138,7 @@ Quando você acessar pela primeira vez a interface web em `http://SEU_ENDERECO_I
 
 Para instruções de instalação detalhadas, veja [INSTALLATION_TUTORIAL.md](INSTALLATION_TUTORIAL.md).
 
+</div>
 ---
 
 <div align="center">
