@@ -1,6 +1,7 @@
 <div align="center">
-   
-<img width="736" height="736" alt="Logo Branco" src="https://github.com/user-attachments/assets/4fdbc728-7c1b-4793-88bd-a956e70e8a67" />
+
+<img width="1920" height="1080" alt="Open Node is a project that aims to provide a free and open-source environment for the implementation of your own Lightning node  It is based on the BRLN Bolt implementation, and it&#39;s free and ope" src="https://github.com/user-attachments/assets/73b61408-d94a-47f3-b1aa-bad2175baf13" />
+
 
 # BRLN-OS v2.0 – Sistema Operacional Multi-Node
 
