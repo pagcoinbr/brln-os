@@ -190,42 +190,98 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 
 ```text
 brln-os/
-├── brunel.sh              # Script principal de instalação com menu interativo
-├── main.html              # Página principal da interface web
-├── pages/                 # Componentes da interface (home, tools, bitcoin, lightning, etc.)
-│   ├── home/              # Página inicial com verificação de status da carteira
-│   ├── components/        # Componentes de UI
-│   │   ├── bitcoin/       # Interface on-chain de Bitcoin
-│   │   ├── lightning/     # Interface da Lightning Network
-│   │   ├── elements/      # Interface para Elements/Liquid
-│   │   ├── wallet/        # Gerenciador de carteira HD
-│   │   ├── tron/          # Carteira TRON (gas-free)
-│   │   └── config/        # Painel de configuração do sistema
-├── scripts/               # Scripts shell modulares
-│   ├── config.sh          # Configuração global, caminhos, arquitetura
-│   ├── utils.sh           # Funções utilitárias (spinner, safe_cp, firewall, etc.)
-│   ├── apache.sh          # Configuração e deploy do Apache
-│   ├── bitcoin.sh         # Instalação do Bitcoin Core + LND
-│   ├── lightning.sh       # Apps Lightning (ThunderHub, LNbits, BOS, API)
-│   ├── gotty.sh           # Terminal web
-│   ├── system.sh          # Ferramentas de sistema (Tor, Tailscale, cron, sudoers)
-│   ├── menu.sh            # Menu interativo principal
-│   ├── elements.sh        # Suporte a Elements/Liquid
-│   └── peerswap.sh        # Integração PeerSwap
+├── brunel.sh                  # Script principal: instalação, menu e updates
+├── main.html                  # Página principal da interface web
+├── README.md / README_EN.md   # Documentação em PT e EN
+├── INSTALLATION_TUTORIAL.md   # Guia detalhado de instalação
+├── LOGIN_FLOW_CHANGES.md      # Notas sobre fluxo de login/autenticação
+├── LICENSE                    # Licença MIT
+├── .env.example               # Exemplo de variáveis de ambiente (API / serviços)
+├── pages/                     # Interface web (HTML/CSS/JS)
+│   ├── home/                  # Página inicial, cards de status do nó
+│   └── components/            # Componentes reutilizáveis da interface
+│       ├── header/            # Cabeçalho e navegação
+│       ├── footer/            # Rodapé institucional/associação
+│       ├── bitcoin/           # Interface on-chain de Bitcoin
+│       ├── lightning/         # Interface Lightning (canais, pagamentos)
+│       ├── elements/          # Interface Elements/Liquid
+│       ├── wallet/            # Gerenciador de carteira HD (BIP39, seeds)
+│       ├── tron/              # Integração TRON (carteira e gas-free)
+│       └── config/            # Painel de configuração / administração
+├── scripts/                   # Scripts shell modulares
+│   ├── config.sh              # Configuração global, paths e arquitetura
+│   ├── utils.sh               # Funções utilitárias (spinner, safe_cp, firewall, etc.)
+│   ├── menu.sh                # Menu interativo principal (TUI)
+│   ├── bitcoin.sh             # Bitcoin Core + diretórios, usuários, permissões
+│   ├── lightning.sh           # LND, LNbits, LNDg, ThunderHub, BOS, Simple LNWallet
+│   ├── elements.sh            # Elements/Liquid e serviços relacionados
+│   ├── apache.sh              # Apache, virtual hosts, SSL, proxy da interface/API
+│   ├── system.sh              # Tor, I2P, Tailscale, firewall, cron, sudoers
+│   ├── peerswap.sh            # Integração PeerSwap (LND + psweb)
+│   ├── gotty.sh               # Terminal web (gotty) e ferramentas administrativas
+│   ├── setup-environments.sh  # Criação dos ambientes virtuais Python
+│   ├── setup-api-env.sh       # Ambiente virtual específico da API v1
+│   ├── setup-tools-env.sh     # Ambiente virtual das ferramentas brln-tools
+│   ├── setup-wallet-env.sh    # Ambiente para carteiras auxiliares
+│   ├── setup-tron-wallet.py   # Script Python de configuração da carteira TRON
+│   ├── integrate_wallets.py   # Integração entre carteiras e serviços
+│   ├── auto_wallet_integration.py  # Automatização de integração de wallets
+│   ├── init-lnd-wallet.sh     # Inicialização da carteira LND
+│   ├── auto-lnd-create*.exp   # Scripts Expect para criação/gerenciamento da carteira LND
+│   ├── maintenance.sh         # Rotinas de manutenção (logs, pods, updates)
+│   ├── password_manager_menu.sh    # Menu TUI para o gerenciador de senhas
+│   ├── gen-proto.sh           # Wrapper para geração de stubs gRPC
+│   ├── generate-protobuf.sh   # Geração de arquivos *_pb2*.py a partir dos .proto
+│   ├── bitcoin.sh             # Instalação e configuração do Bitcoin Core
+│   └── USER_APPLICATION_MATRIX.md   # Matriz de funcionalidades por aplicação
 ├── api/
 │   └── v1/
-│       ├── app.py         # API Flask + gRPC integrando com LND
-│       ├── requirements.txt
-│       ├── proto/         # Arquivos .proto do LND
-│       └── *_pb2*.py      # Arquivos gRPC gerados
-├── conf_files/
-│   ├── bitcoin.conf       # Configuração padrão do Bitcoin Core (Tor + I2P)
-│   ├── lnd.conf           # Configuração padrão do LND
-│   ├── README-Apache-Proxy.md
-│   └── setup-apache-proxy.sh
-├── services/              # Arquivos de unidade systemd para todos os serviços
-├── brln-tools/            # Ferramentas utilitárias (BIP39, gerenciador de senhas, etc.)
-└── INSTALLATION_TUTORIAL.md  # Guia detalhado de instalação
+│       ├── app.py             # API Flask + gRPC integrando com LND
+│       ├── requirements.txt   # Dependências da API BRLN v1
+│       ├── install.sh         # Setup automatizado do ambiente da API
+│       ├── HD_WALLET_GUIDE.md # Guia da carteira HD e fluxos de seed
+│       ├── proto/             # Arquivos .proto do LND (chain, invoices, router, etc.)
+│       ├── *_pb2*.py          # Stubs gRPC gerados (lightning, router, wallet, etc.)
+│       ├── chainrpc/          # Bindings gRPC específicos de blockchain
+│       ├── invoicesrpc/       # Bindings gRPC para invoices Lightning
+│       ├── peersrpc/          # Bindings gRPC para peers e conexões
+│       ├── routerrpc/         # Bindings gRPC para roteamento de pagamentos
+│       ├── signrpc/           # Bindings gRPC para operações de assinatura
+│       └── walletrpc/         # Bindings gRPC para operações de carteira
+├── conf_files/                # Arquivos de configuração de serviços
+│   ├── bitcoin.conf           # Bitcoin Core (Tor, I2P, peers, pruning)
+│   ├── elements.conf          # Elements/Liquid
+│   ├── lnd.conf               # LND (canal, fees, backends)
+│   ├── brln-apache.conf       # VirtualHost Apache da interface BRLN-OS
+│   ├── brln-ssl-api.conf      # VirtualHost Apache para API (HTTPS)
+│   ├── README-Apache-Proxy.md # Guia de configuração de proxy reverso Apache
+│   ├── setup-apache-proxy.sh  # Script de aplicação das configs de proxy
+│   └── testnet/               # Configurações específicas para ambiente testnet
+├── services/                  # Arquivos unit do systemd
+│   ├── bitcoind.service       # Daemon do Bitcoin Core
+│   ├── lnd.service            # Lightning Network Daemon (LND)
+│   ├── lnbits.service         # Servidor LNbits
+│   ├── lndg.service           # Dashboard LNDg
+│   ├── lndg-controller.service# Controlador de tarefas LNDg
+│   ├── thunderhub.service     # Dashboard web ThunderHub
+│   ├── simple-lnwallet.service# Simple LNWallet (interface Lightning minimalista)
+│   ├── bos-telegram.service   # Bot Telegram do Balance of Satoshis
+│   ├── lightning-monitor.service # Serviço de monitoramento Lightning
+│   ├── brln-api.service       # API BRLN (Flask + gRPC)
+│   ├── elementsd.service      # Daemon Elements/Liquid
+│   ├── gotty-fullauto.service # Terminal web gotty e auxiliares
+│   └── messager-monitor.service # Monitor de mensagens/alertas Lightning
+├── brln-tools/                # Ferramentas auxiliares em Python
+│   ├── bip39-tool.py          # Ferramenta de geração/validação de seeds BIP39
+│   ├── bip39_wordlist.txt     # Wordlist oficial BIP39 (PT/EN)
+│   ├── password_manager.py    # Gerenciador de senhas (CLI/TUI)
+│   ├── password_manager.sh    # Wrapper shell para o gerenciador de senhas
+│   ├── boskeysend.py          # Helper para operações BOS keysend
+│   ├── swap-wallet21.py       # Ferramentas de swap / wallet auxiliar
+│   ├── config.ini             # Configuração das ferramentas brln-tools
+│   ├── requirements.txt       # Dependências Python dessas ferramentas
+│   └── vm-4-tests.sh          # Script auxiliar para ambiente de testes/VM
+└── favicon.ico                # Ícone da interface web BRLN-OS
 ```
 
 ---
