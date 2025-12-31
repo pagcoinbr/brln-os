@@ -24,20 +24,30 @@ get_tailscale_ip() {
   fi
 }
 
-# Configure Apache ports for localhost and Tailscale only
+# Get local network IP
+get_local_ip() {
+  ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+' || echo "127.0.0.1"
+}
+
+# Configure Apache ports for localhost, local network, and Tailscale
 configure_apache_local_ports() {
   local tailscale_ip=$(get_tailscale_ip)
+  local local_ip=$(get_local_ip)
   
-  echo "🌐 Configurando Apache para acesso local apenas..."
+  echo "🌐 Configurando Apache para acesso múltiplo..."
   echo "   • Localhost: 127.0.0.1"
+  echo "   • Rede Local: $local_ip"
   if [[ -n "$tailscale_ip" ]]; then
-    echo "   • Tailscale: $tailscale_ip"
+    echo "   • Tailscale VPN: $tailscale_ip"
+  else
+    echo "   ⚠️ Tailscale IP não disponível (autentique para ativar)"
   fi
   
   # Update ports.conf to listen on all interfaces for HTTPS
   sudo tee /etc/apache2/ports.conf > /dev/null << EOF
 # Apache ports configuration - All interfaces
 # Generated automatically by BRLN-OS
+# Accessible from: localhost, local network, and Tailscale VPN
 
 # Port 80 - HTTP (redirects to HTTPS)
 Listen 80

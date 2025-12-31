@@ -62,15 +62,11 @@ configure_ufw() {
 }
 
 configure_secure_firewall() {
-  echo -e "${YELLOW}"
+  echo -e "${YELLOW}🔒 Configurando firewall para acesso local...${NC}"
   
   # Get current SSH port (default 22)
   ssh_port=$(sudo ss -tlnp | grep sshd | awk '{print $4}' | cut -d':' -f2 | head -n1)
   ssh_port=${ssh_port:-22}
-  
-  echo -e "${BLUE}"
-  echo -e "${BLUE}"
-  echo -e "${BLUE}"
   
   # Reset UFW to default settings
   sudo ufw --force reset
@@ -82,13 +78,24 @@ configure_secure_firewall() {
   # Allow SSH
   sudo ufw allow $ssh_port/tcp comment 'SSH access'
   
-  # Allow HTTPS
-  sudo ufw allow 443/tcp comment 'HTTPS access'
+  # Allow HTTPS only from local networks
+  echo -e "${BLUE}Permitindo HTTPS (443) apenas de redes locais...${NC}"
+  
+  # Allow from localhost
+  sudo ufw allow from 127.0.0.1 to any port 443 proto tcp comment 'HTTPS from localhost'
+  
+  # Allow from private network ranges (RFC 1918)
+  sudo ufw allow from 192.168.0.0/16 to any port 443 proto tcp comment 'HTTPS from 192.168.x.x'
+  sudo ufw allow from 10.0.0.0/8 to any port 443 proto tcp comment 'HTTPS from 10.x.x.x'
+  sudo ufw allow from 172.16.0.0/12 to any port 443 proto tcp comment 'HTTPS from 172.16-31.x.x'
+  
+  # Allow from Tailscale network (100.64.0.0/10 - CGNAT range used by Tailscale)
+  sudo ufw allow from 100.64.0.0/10 to any port 443 proto tcp comment 'HTTPS from Tailscale VPN'
   
   # Enable UFW
   sudo ufw --force enable
   
-  echo -e "${GREEN}"
+  echo -e "${GREEN}✅ Firewall configurado! HTTPS restrito a redes locais e Tailscale${NC}"
   
   # Show current status
   sudo ufw status numbered

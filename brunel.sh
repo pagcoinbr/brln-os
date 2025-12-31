@@ -55,9 +55,14 @@ source "$SCRIPTS_DIR/lightning.sh"
 configure_user_environment() {
     echo -e "${YELLOW}👤 Configurando ambiente de usuário...${NC}"
     
-    # Detect current user
-    atual_user=$(whoami)
-    echo -e "${BLUE}Usuário atual: $atual_user${NC}"
+    # Detect the actual user (not root when using sudo)
+    if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
+        atual_user="$SUDO_USER"
+        echo -e "${BLUE}Usuário detectado (via sudo): $atual_user${NC}"
+    else
+        atual_user=$(whoami)
+        echo -e "${BLUE}Usuário atual: $atual_user${NC}"
+    fi
     
     # Set paths based on user
     if [[ $atual_user == "root" ]]; then
@@ -255,7 +260,7 @@ tailscale_vpn() {
     echo -e "${YELLOW}🌐 Configurando Tailscale VPN...${NC}"
     
     # Install Tailscale
-    if ! command -v tailscale; then
+    if ! command -v tailscale &> /dev/null; then
         echo -e "${YELLOW}📦 Instalando Tailscale...${NC}"
         curl -fsSL https://tailscale.com/install.sh | sh
         echo -e "${GREEN}✅ Tailscale instalado!${NC}"
@@ -264,7 +269,7 @@ tailscale_vpn() {
     fi
     
     # Check if qrencode is installed
-    if ! command -v qrencode; then
+    if ! command -v qrencode &> /dev/null; then
         echo -e "${YELLOW}📦 Instalando qrencode...${NC}"
         sudo apt install qrencode -y
     fi
@@ -278,16 +283,25 @@ tailscale_vpn() {
         TAILSCALE_AUTH_URL=$(echo "$auth_output" | grep -o 'https://login.tailscale.com[^[:space:]]*')
         export TAILSCALE_AUTH_URL
         echo -e "${GREEN}✅ Tailscale iniciado!${NC}"
-        echo -e "${BLUE}🔗 Link de autenticação capturado${NC}"
+        echo -e "${BLUE}🔗 Link de autenticação capturado (autentique para obter IP)${NC}"
     else
         echo -e "${GREEN}✅ Tailscale já conectado!${NC}"
+    fi
+    
+    # Wait for Tailscale IP to be available (up to 10 seconds)
+    echo -e "${YELLOW}⏳ Aguardando IP do Tailscale...${NC}"
+    for i in {1..10}; do
         tailscale_ip=$(tailscale ip -4 2>/dev/null | head -1)
-        if [[ -n "$tailscale_ip" ]]; then
+        if [[ -n "$tailscale_ip" && "$tailscale_ip" != "127.0.0.1" ]]; then
             TAILSCALE_IP="$tailscale_ip"
             export TAILSCALE_IP
-            echo -e "${BLUE}🌐 IP Tailscale: $TAILSCALE_IP${NC}"
+            echo -e "${GREEN}✅ IP Tailscale obtido: $TAILSCALE_IP${NC}"
+            return 0
         fi
-    fi
+        [[ $i -lt 10 ]] && sleep 1
+    done
+    
+    echo -e "${YELLOW}⚠️ IP Tailscale não disponível (autenticação necessária)${NC}"
 }
 
 # Function to show installation summary with QR codes
