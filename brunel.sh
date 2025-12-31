@@ -86,16 +86,16 @@ configure_user_environment() {
     source "$VENV_DIR/bin/activate"
     
     # Install/upgrade basic dependencies
-    pip install --upgrade pip > /dev/null 2>&1
+    pip install --upgrade pip
     
     # Install API dependencies if requirements file exists
     if [[ -f "$SCRIPT_DIR/api/v1/requirements.txt" ]]; then
-        pip install -r "$SCRIPT_DIR/api/v1/requirements.txt" > /dev/null 2>&1
+        pip install -r "$SCRIPT_DIR/api/v1/requirements.txt"
         echo -e "${GREEN}✅ Dependências da API instaladas${NC}"
     fi
     
     # Install additional Flask dependencies
-    pip install flask flask-cors grpcio grpcio-tools > /dev/null 2>&1
+    pip install flask flask-cors grpcio grpcio-tools
     echo -e "${GREEN}✅ Dependências Flask e gRPC instaladas${NC}"
     
     # Export variables for use by other functions
@@ -144,19 +144,19 @@ update_and_upgrade() {
     sudo -v
     
     # Update system
-    sudo apt update && sudo apt upgrade -y > /dev/null 2>&1
+    sudo apt update && sudo apt upgrade -y
     
     # Install Apache and Python dependencies
     echo -e "${YELLOW}📦 Instalando Apache e dependências Python...${NC}"
-    sudo apt install apache2 curl wget python3-venv expect -y > /dev/null 2>&1
+    sudo apt install apache2 curl wget python3-venv expect -y
     
     # Enable Apache modules
     echo -e "${YELLOW}⚙️ Habilitando módulos do Apache...${NC}"
-    sudo a2enmod cgid dir ssl rewrite proxy proxy_http headers > /dev/null 2>&1
+    sudo a2enmod cgid dir ssl rewrite proxy proxy_http headers
     
     # Restart Apache
     echo -e "${YELLOW}🔄 Reiniciando o serviço Apache...${NC}"
-    sudo systemctl restart apache2 > /dev/null 2>&1
+    sudo systemctl restart apache2
     
     echo -e "${GREEN}✅ Sistema atualizado e Apache configurado!${NC}"
 }
@@ -193,7 +193,7 @@ install_brln_api_with_user_env() {
     
     # Start the API service within script context
     echo -e "${YELLOW}🚀 Iniciando serviço API...${NC}"
-    sudo systemctl start brln-api >/dev/null 2>&1
+    sudo systemctl start brln-api
     
     # Check if service started successfully (centralized check)
     for i in {1..5}; do
@@ -226,18 +226,18 @@ tailscale_vpn() {
     echo -e "${YELLOW}🌐 Configurando Tailscale VPN...${NC}"
     
     # Install Tailscale
-    if ! command -v tailscale &> /dev/null; then
+    if ! command -v tailscale; then
         echo -e "${YELLOW}📦 Instalando Tailscale...${NC}"
-        curl -fsSL https://tailscale.com/install.sh | sh > /dev/null 2>&1
+        curl -fsSL https://tailscale.com/install.sh | sh
         echo -e "${GREEN}✅ Tailscale instalado!${NC}"
     else
         echo -e "${GREEN}✅ Tailscale já instalado${NC}"
     fi
     
     # Check if qrencode is installed
-    if ! command -v qrencode &> /dev/null; then
+    if ! command -v qrencode; then
         echo -e "${YELLOW}📦 Instalando qrencode...${NC}"
-        sudo apt install qrencode -y > /dev/null 2>&1
+        sudo apt install qrencode -y
     fi
     
     echo -e "${YELLOW}🔗 Iniciando Tailscale...${NC}"
