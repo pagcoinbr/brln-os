@@ -35,7 +35,7 @@ gotty_install() {
   # Download and install gotty
   cd /tmp
   echo -e "${YELLOW}"
-  if wget -q "$GOTTY_URL" -O "gotty.tar.gz"; then
+  if wget -nv "$GOTTY_URL" -O "gotty.tar.gz"; then
     if tar -xzf gotty.tar.gz; then
       sudo mv gotty /usr/local/bin/gotty
       sudo chmod +x /usr/local/bin/gotty

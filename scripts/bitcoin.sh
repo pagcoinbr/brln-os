@@ -35,9 +35,9 @@ install_bitcoind() {
   fi
   
   # Download binaries and checksums
-  wget -q --show-progress https://bitcoincore.org/bin/bitcoin-core-${BTC_VERSION}/bitcoin-${BTC_VERSION}-${BTC_ARCH}.tar.gz
-  wget -q https://bitcoincore.org/bin/bitcoin-core-${BTC_VERSION}/SHA256SUMS
-  wget -q https://bitcoincore.org/bin/bitcoin-core-${BTC_VERSION}/SHA256SUMS.asc
+  wget -nv https://bitcoincore.org/bin/bitcoin-core-${BTC_VERSION}/bitcoin-${BTC_VERSION}-${BTC_ARCH}.tar.gz
+  wget -nv https://bitcoincore.org/bin/bitcoin-core-${BTC_VERSION}/SHA256SUMS
+  wget -nv https://bitcoincore.org/bin/bitcoin-core-${BTC_VERSION}/SHA256SUMS.asc
   
   # Verify checksum
   echo -e "${BLUE}Verificando checksum...${NC}"
@@ -104,7 +104,7 @@ install_bitcoind() {
   # Generate rpcauth line
   sudo -u bitcoin bash -c "
     cd /home/bitcoin/.bitcoin
-    wget -q https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
+    wget -nv https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
     
     # Generate rpcauth line
     RPCAUTH_LINE=\$(python3 rpcauth.py minibolt '\$RPC_PASS' | grep 'rpcauth=')
@@ -278,11 +278,11 @@ EOF'
   
   # Download binaries, checksums and signatures
   echo -e "${BLUE}Baixando LND v${LND_VERSION}-beta...${NC}"
-  wget -q --show-progress https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/lnd-linux-${LND_ARCH}-v${LND_VERSION}-beta.tar.gz
-  wget -q https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-v${LND_VERSION}-beta.txt.ots
-  wget -q https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-v${LND_VERSION}-beta.txt
-  wget -q https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-roasbeef-v${LND_VERSION}-beta.sig.ots
-  wget -q https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-roasbeef-v${LND_VERSION}-beta.sig
+  wget -nv https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/lnd-linux-${LND_ARCH}-v${LND_VERSION}-beta.tar.gz
+  wget -nv https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-v${LND_VERSION}-beta.txt.ots
+  wget -nv https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-v${LND_VERSION}-beta.txt
+  wget -nv https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-roasbeef-v${LND_VERSION}-beta.sig.ots
+  wget -nv https://github.com/lightningnetwork/lnd/releases/download/v${LND_VERSION}-beta/manifest-roasbeef-v${LND_VERSION}-beta.sig
   
   # Verify checksum
   echo -e "${BLUE}Verificando checksum...${NC}"

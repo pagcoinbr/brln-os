@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Suppress interactive prompts during installation
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
+export NEEDRESTART_SUSPEND=1
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'  

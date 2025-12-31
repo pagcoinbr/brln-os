@@ -173,7 +173,7 @@ EOF"
   
   # Add GPG key
   echo -e "${BLUE}Adicionando chave GPG...${NC}"
-  wget -qO- $TOR_GPGLINK | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg
+  wget -nvO- $TOR_GPGLINK 2>&1 | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
   
   # Install Tor
   echo -e "${BLUE}Instalando Tor e keyring...${NC}"
@@ -232,7 +232,7 @@ install_i2p() {
   
   # Add I2P repository using their helper script
   echo -e "${BLUE}Adicionando repositório I2P...${NC}"
-  wget -q -O - $I2P_REPO_HELPER | sudo bash -s -
+  wget -nv -O - $I2P_REPO_HELPER 2>&1 | sudo bash -s -
   
   echo -e "${BLUE}📦 Atualizando repositórios...${NC}"
   sudo apt update

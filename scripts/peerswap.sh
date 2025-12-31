@@ -144,7 +144,7 @@ install_go() {
   
   GO_VERSION="1.21.5"
   cd /tmp
-  wget -q "https://golang.org/dl/go$GO_VERSION.linux-$GO_ARCH.tar.gz"
+  wget -nv "https://golang.org/dl/go$GO_VERSION.linux-$GO_ARCH.tar.gz"
   
   # Remover instalação anterior
   sudo rm -rf /usr/local/go
