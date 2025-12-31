@@ -31,32 +31,21 @@ safe_cp() {
   fi
 }
 
-# SPINNER FUNCTION COMMENTED OUT FOR DEVELOPMENT
+# SPINNER FUNCTION MODIFIED FOR DEBUG - SHOWS ALL OUTPUT
 # This prevents loading animations from hiding crashes/freezes during development
 spinner() {
-  # local pid=$!
-  # local delay=0.1
-  # local spinstr='|/-\'
-  
-  # while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-  #   local temp=${spinstr#?}
-  #   printf " [%c]  " "$spinstr"
-  #   local spinstr=$temp${spinstr%"$temp"}
-  #   sleep $delay
-  #   printf "\b\b\b\b\b\b"
-  # done
-  # printf "    \b\b\b\b"
-  
-  # Just wait for the background process without animation
+  # Just wait for the background process without animation and show all output
   local pid=$!
-  echo -e "${YELLOW}"
+  echo -e "${BLUE}[DEBUG] Waiting for process $pid to complete...${NC}"
+  
+  # Wait for the process and capture exit status
   wait $pid
   local exit_status=$?
   
   if [ $exit_status -eq 0 ]; then
-    echo -e "${GREEN}"
+    echo -e "${GREEN}[DEBUG] Process completed successfully (exit code: $exit_status)${NC}"
   else
-    echo -e "${RED}"
+    echo -e "${RED}[DEBUG] Process failed with exit code: $exit_status${NC}"
   fi
   
   return $exit_status

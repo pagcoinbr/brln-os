@@ -48,7 +48,8 @@ update_and_upgrade() {
 
   # Garante que o pacote python3-venv esteja instalado (still needed for control scripts)
   if ! dpkg -l | grep -q python3-venv; then
-    sudo apt install python3-venv -y >> /dev/null 2>&1 & spinner
+    echo -e "${BLUE}📦 Instalando python3-venv...${NC}"
+    sudo apt install python3-venv -y
   else
     echo "✅ python3-venv já está instalado."
   fi
@@ -58,7 +59,8 @@ update_and_upgrade() {
 
   # Cria o ambiente virtual apenas se ainda não existir
   if [ ! -d "$FLASKVENV_DIR" ]; then
-    python3 -m venv "$FLASKVENV_DIR" >> /dev/null 2>&1 & spinner
+    echo -e "${BLUE}🐍 Criando ambiente virtual Flask...${NC}"
+    python3 -m venv "$FLASKVENV_DIR"
   else
     echo "✅ Ambiente virtual já existe em $FLASKVENV_DIR."
   fi
@@ -68,7 +70,8 @@ update_and_upgrade() {
 
   # Instalar dependências Python se requirements.txt existir
   if [[ -f "$REPO_DIR/api/v1/requirements.txt" ]]; then
-    pip install -r "$REPO_DIR/api/v1/requirements.txt" >> /dev/null 2>&1 & spinner
+    echo -e "${BLUE}📦 Instalando dependências API...${NC}"
+    pip install -r "$REPO_DIR/api/v1/requirements.txt"
   fi
 
   # Configurar permissões sudo para serviços

@@ -8,7 +8,8 @@ install_nodejs() {
   echo -e "${GREEN}📦 Instalando Node.js...${NC}"
   if ! command -v npm &> /dev/null; then
     curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-    sudo apt install nodejs -y >> /dev/null 2>&1 & spinner
+    echo -e "${BLUE}📦 Instalando Node.js...${NC}"
+    sudo apt install nodejs -y
   else
     echo "✅ Node.js já está instalado."
   fi
@@ -28,7 +29,8 @@ install_bos() {
   if ! command -v node &> /dev/null; then
     echo -e "${BLUE}Instalando Node.js 21.x...${NC}"
     curl -sL https://deb.nodesource.com/setup_21.x | sudo -E bash -
-    sudo apt-get install nodejs -y > /dev/null 2>&1
+    echo -e "${BLUE}📦 Instalando pacote Node.js...${NC}"
+    sudo apt-get install nodejs -y
   fi
   
   NODE_VERSION=$(node -v)
@@ -47,7 +49,8 @@ install_bos() {
   
   # Install Balance of Satoshis
   echo -e "${BLUE}Instalando Balance of Satoshis...${NC}"
-  npm i -g balanceofsatoshis > /dev/null 2>&1
+  echo -e "${BLUE}📦 Instalando Balance of Satoshis...${NC}"
+  npm i -g balanceofsatoshis
   
   # Verify installation
   if command -v bos &> /dev/null; then
@@ -116,7 +119,8 @@ EOF
   # Install qrencode if not available
   if ! command -v qrencode &> /dev/null; then
     echo -e "${BLUE}Instalando gerador de QR Code...${NC}"
-    sudo apt install -y qrencode > /dev/null 2>&1
+    echo -e "${BLUE}📦 Instalando qrencode...${NC}"
+    sudo apt install -y qrencode
   fi
   
   read -p "Deseja configurar o Telegram Bot agora? (s/n): " setup_telegram
@@ -492,29 +496,80 @@ lnbits_install() {
   
   # Create lnbits user
   if ! id "lnbits" &>/dev/null; then
+    echo -e "${BLUE}👤 Criando usuário lnbits...${NC}"
     sudo useradd -r -m -s /bin/bash lnbits
+    echo -e "${GREEN}✓ Usuário lnbits criado${NC}"
+  else
+    echo -e "${YELLOW}⚠ Usuário lnbits já existe${NC}"
   fi
   
   # Install Python dependencies
-  sudo apt install python3-pip python3-venv -y >> /dev/null 2>&1 & spinner
+  echo -e "${BLUE}📦 Instalando dependências Python...${NC}"
+  sudo apt install python3-pip python3-venv -y
+  
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Erro ao instalar dependências Python${NC}"
+    return 1
+  fi
   
   # Clone LNbits
+  echo -e "${BLUE}📥 Clonando repositório LNbits...${NC}"
   cd /home/lnbits
+  
+  if [ -d "lnbits" ]; then
+    echo -e "${YELLOW}⚠ Diretório lnbits já existe, removendo...${NC}"
+    sudo rm -rf lnbits
+  fi
+  
   sudo -u lnbits git clone https://github.com/lnbits/lnbits.git
+  
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Erro ao clonar repositório LNbits${NC}"
+    return 1
+  fi
+  
   cd lnbits
   
   # Setup virtual environment
+  echo -e "${BLUE}🐍 Criando ambiente virtual...${NC}"
   sudo -u lnbits python3 -m venv venv
-  sudo -u lnbits ./venv/bin/pip install -r requirements.txt >> /dev/null 2>&1 & spinner
+  
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Erro ao criar ambiente virtual${NC}"
+    return 1
+  fi
+  
+  echo -e "${BLUE}📦 Instalando dependências LNbits...${NC}"
+  echo -e "${YELLOW}⏳ Isto pode demorar alguns minutos...${NC}"
+  sudo -u lnbits ./venv/bin/pip install --upgrade pip
+  sudo -u lnbits ./venv/bin/pip install -r requirements.txt
+  
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ Erro ao instalar dependências do LNbits${NC}"
+    echo -e "${BLUE}💡 Tentando com --no-cache-dir...${NC}"
+    sudo -u lnbits ./venv/bin/pip install --no-cache-dir -r requirements.txt
+    
+    if [ $? -ne 0 ]; then
+      echo -e "${RED}❌ Falha na instalação das dependências. Verifique os logs acima.${NC}"
+      return 1
+    fi
+  fi
   
   # Install systemd service
+  echo -e "${BLUE}🔧 Configurando serviço systemd...${NC}"
   if [[ -f "$SERVICES_DIR/lnbits.service" ]]; then
     safe_cp "$SERVICES_DIR/lnbits.service" /etc/systemd/system/lnbits.service
     sudo systemctl daemon-reload
     sudo systemctl enable lnbits
+    echo -e "${GREEN}✓ Serviço systemd configurado${NC}"
+  else
+    echo -e "${YELLOW}⚠ Arquivo de serviço não encontrado: $SERVICES_DIR/lnbits.service${NC}"
   fi
   
-  echo -e "${GREEN}✅ LNbits instalado!${NC}"
+  echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
+  echo -e "${CYAN}💡 Iniciar com: sudo systemctl start lnbits${NC}"
+  echo -e "${CYAN}💡 Status: sudo systemctl status lnbits${NC}"
+  echo -e "${CYAN}💡 Logs: journalctl -fu lnbits${NC}"
 }
 
 setup_lightning_monitor() {
@@ -522,7 +577,8 @@ setup_lightning_monitor() {
   
   # Setup virtual environment for Flask API
   if [ ! -d "$FLASKVENV_DIR" ]; then
-    python3 -m venv "$FLASKVENV_DIR" >> /dev/null 2>&1 & spinner
+    echo -e "${BLUE}🐍 Criando ambiente virtual Flask...${NC}"
+    python3 -m venv "$FLASKVENV_DIR"
   else
     echo "✅ Ambiente virtual já existe em $FLASKVENV_DIR."
   fi
@@ -532,7 +588,8 @@ setup_lightning_monitor() {
   
   # Install Flask dependencies
   if [[ -f "$SCRIPT_DIR/api/v1/requirements.txt" ]]; then
-    pip install -r "$SCRIPT_DIR/api/v1/requirements.txt" >> /dev/null 2>&1 & spinner
+    echo -e "${BLUE}📦 Instalando dependências Flask...${NC}"
+    pip install -r "$SCRIPT_DIR/api/v1/requirements.txt"
   fi
   
   # Install systemd service
@@ -553,7 +610,8 @@ install_brln_api() {
   
   # Install gRPC dependencies
   source "$FLASKVENV_DIR/bin/activate"
-  pip install grpcio grpcio-tools >> /dev/null 2>&1 & spinner
+  echo -e "${BLUE}📦 Instalando gRPC...${NC}"
+  pip install grpcio grpcio-tools
   
   # Generate gRPC files if proto files exist
   if [[ -d "$SCRIPT_DIR/api/v1/proto" ]]; then
@@ -563,7 +621,7 @@ install_brln_api() {
       --python_out=. \
       --grpc_python_out=. \
       --proto_path=proto \
-      proto/*.proto >> /dev/null 2>&1
+      proto/*.proto
   fi
   
   # Install API service
