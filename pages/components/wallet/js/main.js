@@ -1812,11 +1812,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const goToHomeBtn = document.getElementById('goToHomeBtn');
   if (goToHomeBtn) {
     goToHomeBtn.addEventListener('click', () => {
-      // Navigate to main.html in parent window
+      // Navigate to index.html in parent window
       if (window.parent && window.parent !== window) {
-        window.parent.location.href = '/main.html';
+        window.parent.location.href = '/index.html';
       } else {
-        window.location.href = '/main.html';
+        window.location.href = '/index.html';
       }
     });
   }
