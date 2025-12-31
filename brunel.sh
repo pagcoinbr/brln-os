@@ -21,9 +21,6 @@ if [[ ":$PATH:" != *":$SCRIPT_DIR:"* ]]; then
     export PATH="$SCRIPT_DIR:$PATH"
 fi
 
-# CD to the script directory to ensure relative paths work
-cd "$SCRIPT_DIR"
-
 # Function to center text output
 center_text() {
     local text="$1"
@@ -39,7 +36,7 @@ center_text() {
 }
 
 # Installation header
-clear
+# clear
 echo
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}BRLN-OS INSTALLER v2.0${NC}"
@@ -63,18 +60,35 @@ configure_user_environment() {
     echo -e "${BLUE}Usuário atual: $atual_user${NC}"
     
     # Set paths based on user
-    if [[ $atual_user == "admin" ]]; then
-        USER_HOME="/home/admin"
-        VENV_DIR="/home/admin/brln-os-envs/api-v1"
-        API_USER="admin"
-    else
+    if [[ $atual_user == "root" ]]; then
         USER_HOME="/root"
         VENV_DIR="/root/brln-os-envs/api-v1"
         API_USER="root"
+        echo -e "${BLUE}Modo: Root (administrador do sistema)${NC}"
+    elif [[ $atual_user == "admin" ]]; then
+        USER_HOME="/home/admin"
+        VENV_DIR="/home/admin/brln-os-envs/api-v1"
+        API_USER="admin"
+        echo -e "${BLUE}Modo: Admin (usuário dedicado)${NC}"
+    else
+        USER_HOME="/home/$atual_user"
+        VENV_DIR="/home/$atual_user/brln-os-envs/api-v1"
+        API_USER="$atual_user"
+        echo -e "${BLUE}Modo: Usuário personalizado ($atual_user)${NC}"
     fi
     
     echo -e "${BLUE}Diretório home: $USER_HOME${NC}"
     echo -e "${BLUE}Ambiente virtual: $VENV_DIR${NC}"
+    
+    # Check if python3-venv is installed
+    if ! dpkg -l | grep -q python3-venv; then
+        echo -e "${YELLOW}📦 Instalando python3-venv...${NC}"
+        sudo apt update
+        sudo apt install -y python3-venv
+        echo -e "${GREEN}✅ python3-venv instalado${NC}"
+    else
+        echo -e "${GREEN}✅ python3-venv já instalado${NC}"
+    fi
     
     # Create and activate virtual environment if it doesn't exist
     if [ ! -d "$VENV_DIR" ]; then
@@ -89,6 +103,16 @@ configure_user_environment() {
     # Activate virtual environment and install dependencies
     echo -e "${YELLOW}⚡ Instalando dependências...${NC}"
     source "$VENV_DIR/bin/activate"
+    
+    # Check if pip is installed
+    if ! command -v pip &> /dev/null; then
+        echo -e "${YELLOW}📦 Instalando pip...${NC}"
+        sudo apt update
+        sudo apt install -y python3-pip
+        echo -e "${GREEN}✅ pip instalado${NC}"
+    else
+        echo -e "${GREEN}✅ pip já instalado${NC}"
+    fi
     
     # Install/upgrade basic dependencies
     pip install --upgrade pip
@@ -268,7 +292,7 @@ tailscale_vpn() {
 
 # Function to show installation summary with QR codes
 show_installation_summary() {
-    clear
+    #clear
     
     # ASCII Art Banner
     local term_width=$(tput cols 2>/dev/null || echo 80)
@@ -342,11 +366,23 @@ show_installation_summary() {
     if [[ -n "$tailscale_url" ]]; then
         qrencode -t ANSIUTF8 -m 1 -l M "$tailscale_url" > "$tailscale_qr_file" 2>/dev/null
         
-        # Display Tailscale QR code centered
+        # Display Tailscale QR code centered (properly handling ANSI codes)
         if [[ -s "$tailscale_qr_file" ]]; then
-            # Center each line of the QR code
+            local term_width=$(tput cols 2>/dev/null || echo 80)
+            
+            # Read and center each line of the QR code
             while IFS= read -r line; do
-                center_text "$line" ""
+                # Remove ANSI escape codes to get true length
+                local visible_line=$(echo "$line" | sed 's/\x1b\[[0-9;]*m//g')
+                local visible_length=${#visible_line}
+                local qr_padding=$(( (term_width - visible_length) / 2 ))
+                
+                # Print padding and then the line with ANSI codes intact
+                if [[ $qr_padding -gt 0 ]]; then
+                    printf "%${qr_padding}s%s\n" "" "$line"
+                else
+                    echo "$line"
+                fi
             done < "$tailscale_qr_file"
         fi
         

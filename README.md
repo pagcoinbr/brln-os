@@ -110,25 +110,25 @@ A principal motivação é **proteger a privacidade e a liberdade** das pessoas,
 
 ### Passo 5: Instalar o BRLN-OS
 
-Uma vez conectado via SSH, execute este comando único:
+Uma vez conectado via SSH, execute estes comandos:
 
 ```bash
-sudo adduser --gecos "" admin && sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin && sudo apt update && sudo apt full-upgrade && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash brunel.sh
+sudo adduser --gecos "" admin && sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin && sudo apt update && sudo apt full-upgrade && sudo su - admin
 ```
 
-Este comando irá:
+E para iniciar a instalação
+```bash
+git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash brunel.sh
+```
+
+Estes comandos irão:
+- Criar usuário e grupo admin
 - Clonar o repositório do BRLN-OS
-- Entrar no diretório
-- Rodar o script de instalação com menu interativo
+- Iniciar o script de instalação com menu interativo
 
 ### Passo 6: Configuração Inicial
 
-Quando você acessar pela primeira vez a interface web em `http://SEU_ENDERECO_IP`:
-
-**Cenário 1: Instalação Nova**
-- Abre automaticamente o setup interativo no terminal
-- Selecione **1** para configurar o sistema
-- Crie sua primeira carteira
+Quando você acessar pela primeira vez a interface web em `https://SEU_ENDERECO_IP`:
 
 ---
 
