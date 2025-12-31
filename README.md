@@ -112,17 +112,12 @@ A principal motivação é **proteger a privacidade e a liberdade** das pessoas,
 
 Uma vez conectado via SSH, execute estes comandos:
 
-```bash
-if id admin >/dev/null 2>&1; then sudo passwd admin; else sudo useradd -m -s /bin/bash -g admin -G sudo,adm,cdrom,dip,plugdev,lxd admin && sudo passwd admin && sudo apt update && sudo apt full-upgrade && sudo su - admin; fi
-```
-
 E para iniciar a instalação
 ```bash
 git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash brunel.sh
 ```
 
 Estes comandos irão:
-- Criar usuário e grupo admin
 - Clonar o repositório do BRLN-OS
 - Iniciar o script de instalação com menu interativo
 
