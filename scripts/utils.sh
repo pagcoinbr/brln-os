@@ -128,3 +128,33 @@ close_ports_except_ssh() {
   # Show current status
   sudo ufw status numbered
 }
+
+# Function to ensure proper ownership of /data subdirectories
+ensure_data_ownership() {
+  local service="$1"  # bitcoin, lnd, elements, etc.
+  local user="${2:-$service}"
+  local group="${3:-$service}"
+  
+  if [[ -d "/data/$service" ]]; then
+    echo -e "${BLUE}Assegurando propriedade: /data/$service → $user:$group${NC}"
+    sudo chown -R "$user:$group" "/data/$service"
+    sudo chmod 750 "/data/$service"
+  fi
+}
+
+# Function to verify /data compartmentalization
+verify_data_compartments() {
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${CYAN}🔒 Verificando compartimentalização /data/${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  
+  for dir in /data/*/; do
+    if [[ -d "$dir" ]]; then
+      local dirname=$(basename "$dir")
+      local owner=$(stat -c '%U:%G' "$dir")
+      local perms=$(stat -c '%a' "$dir")
+      echo -e "${GREEN}✓${NC} $dirname: $owner (perms: $perms)"
+    fi
+  done
+  echo ""
+}

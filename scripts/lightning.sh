@@ -67,10 +67,8 @@ install_bos() {
     sudo bash -c 'echo "127.0.0.1 localhost" >> /etc/hosts'
   fi
   
-  # Adjust LND directory permissions
-  echo -e "${BLUE}Ajustando permissões do diretório LND...${NC}"
-  sudo chown -R $atual_user:$atual_user /data/lnd
-  sudo chmod -R 755 /data/lnd
+  # Note: /data/lnd ownership remains as lnd:lnd for security
+  # BOS will access LND files through proper group permissions
   
   # Export BOS_DEFAULT_LND_PATH
   if ! grep -q 'export BOS_DEFAULT_LND_PATH=' ~/.profile; then
@@ -83,16 +81,16 @@ install_bos() {
   mkdir -p ~/.bos/$NODE_NAME
   
   # Check if LND files exist before proceeding
-  if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon" ]]; then
+  if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon" ]]; then
     # Generate base64 files
     echo -e "${BLUE}Gerando arquivos base64...${NC}"
     base64 -w0 /data/lnd/tls.cert > /data/lnd/tls.cert.base64
-    base64 -w0 /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon > /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64
+    base64 -w0 /data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon > /data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon.base64
     
     # Create credentials.json
     echo -e "${BLUE}Criando credentials.json...${NC}"
     cert_base64=$(cat /data/lnd/tls.cert.base64)
-    macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64)
+    macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon.base64)
     
     cat > ~/.bos/$NODE_NAME/credentials.json <<EOFCRED
 {
@@ -128,7 +126,7 @@ EOFCRED
   fi
   
   # Run the updater script immediately if files exist
-  if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon" ]]; then
+  if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon" ]]; then
     /usr/local/bin/update-bos-credentials
   fi
   if bos utxos 2>/dev/null | grep -q "utxos|channel"; then
@@ -282,7 +280,7 @@ Wants=lnd.service
 After=lnd.service
 
 [Service]
-ExecStart=/home/${atual_user}/.npm-global/bin/bos telegram --use-small-units --connect ${telegram_id}
+ExecStart=${HOME}/.npm-global/bin/bos telegram --use-small-units --connect ${telegram_id}
 User=${atual_user}
 Restart=always
 TimeoutSec=120
@@ -373,7 +371,7 @@ install_thunderhub() {
   
   # Clone repository
   echo -e "${BLUE}Clonando ThunderHub v${VERSION}...${NC}"
-  cd /home/$atual_user
+  cd ~
   
   if [[ -d "thunderhub" ]]; then
     echo -e "${YELLOW}⚠ Diretório thunderhub já existe. Removendo...${NC}"
@@ -419,7 +417,7 @@ install_thunderhub() {
   fi
   
   # Verify version
-  INSTALLED_VERSION=$(head -n 3 /home/$atual_user/thunderhub/package.json | grep version | cut -d'"' -f4)
+  INSTALLED_VERSION=$(head -n 3 $HOME/thunderhub/package.json | grep version | cut -d'"' -f4)
   echo -e "${GREEN}✓ ThunderHub v${INSTALLED_VERSION} instalado${NC}"
   
   # Configure
@@ -429,7 +427,7 @@ install_thunderhub() {
   cp .env .env.local
   
   # Update config path
-  sed -i "s|ACCOUNT_CONFIG_PATH=.*|ACCOUNT_CONFIG_PATH='/home/$atual_user/thunderhub/thubConfig.yaml'|" .env.local
+  sed -i "s|ACCOUNT_CONFIG_PATH=.*|ACCOUNT_CONFIG_PATH='$HOME/thunderhub/thubConfig.yaml'|" .env.local
   
   # Generate master password for ThunderHub
   THUB_MASTER_PASSWORD=$(openssl rand -base64 24)
@@ -441,7 +439,7 @@ masterPassword: '${THUB_MASTER_PASSWORD}'
 accounts:
   - name: 'BRLNBolt'
     serverUrl: '127.0.0.1:10009'
-    macaroonPath: '/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon'
+    macaroonPath: '/data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon'
     certificatePath: '/data/lnd/tls.cert'
     password: '${THUB_ACCOUNT_PASSWORD}'
 backupsEnabled: true
@@ -469,7 +467,7 @@ Requires=lnd.service
 After=lnd.service
 
 [Service]
-WorkingDirectory=/home/${atual_user}/thunderhub
+WorkingDirectory=${HOME}/thunderhub
 ExecStart=/usr/bin/npm run start
 
 User=${atual_user}
@@ -516,7 +514,7 @@ EOF"
   echo -e "${GREEN}✓ Senhas armazenadas no gerenciador de senhas${NC}"
   echo -e "${CYAN}💡 Consultar senhas: Menu > Configurações > Gerenciador de Senhas${NC}"
   echo -e "${CYAN}💡 Logs: journalctl -fu thunderhub${NC}"
-  echo -e "${CYAN}💡 Config: /home/$atual_user/thunderhub/thubConfig.yaml${NC}"
+  echo -e "${CYAN}💡 Config: $HOME/thunderhub/thubConfig.yaml${NC}"
   echo -e "${CYAN}💡 Status: sudo systemctl status thunderhub${NC}"
 }
 
@@ -679,7 +677,7 @@ install_lndg() {
   
   # Clone repository
   echo -e "${BLUE}Clonando repositório LNDg...${NC}"
-  cd /home/$atual_user
+  cd ~
   
   if [[ -d "lndg" ]]; then
     echo -e "${YELLOW}⚠ Diretório lndg já existe. Atualizando...${NC}"
@@ -728,8 +726,8 @@ After=lnd.service
 Requires=lnd.service
 
 [Service]
-WorkingDirectory=/home/${atual_user}/lndg
-ExecStart=/home/${atual_user}/lndg/.venv/bin/python3 /home/${atual_user}/lndg/manage.py runserver 0.0.0.0:8889
+WorkingDirectory=${HOME}/lndg
+ExecStart=${HOME}/lndg/.venv/bin/python3 ${HOME}/lndg/manage.py runserver 0.0.0.0:8889
 User=${atual_user}
 Group=${atual_user}
 Restart=on-failure

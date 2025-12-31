@@ -144,10 +144,13 @@ except ImportError as e:
 # Desabilitar warnings desnecessários
 warnings.filterwarnings("ignore")
 
+# Network configuration
+BITCOIN_NETWORK = os.environ.get('BITCOIN_NETWORK', 'mainnet')
+
 # Configurações LND
 LND_HOST = "localhost"
 LND_GRPC_PORT = "10009"
-MACAROON_PATH = "/data/lnd/data/chain/bitcoin/testnet/admin.macaroon"
+MACAROON_PATH = f"/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon"
 TLS_CERT_PATH = "/data/lnd/tls.cert"
 
 # Configurações Elements/Liquid
@@ -162,6 +165,14 @@ WALLET_DB_PATH = os.path.join(WALLET_DATA_DIR, "wallets.db")
 
 # Criar diretório de dados do wallet se não existir
 os.makedirs(WALLET_DATA_DIR, exist_ok=True)
+
+# Ensure proper ownership for brln-wallet directory
+import subprocess
+try:
+    subprocess.run(['chown', '-R', 'root:root', WALLET_DATA_DIR], check=False)
+    subprocess.run(['chmod', '750', WALLET_DATA_DIR], check=False)
+except Exception as e:
+    print(f"Warning: Could not set ownership for {WALLET_DATA_DIR}: {e}")
 
 # Configuração das blockchains suportadas
 SUPPORTED_CHAINS = {
@@ -4463,7 +4474,7 @@ def save_wallet():
                             # Check if admin.macaroon was created
                             import time
                             time.sleep(3)
-                            if os.path.exists('/data/lnd/data/chain/bitcoin/testnet/admin.macaroon'):
+                            if os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
                                 print(f"✅ Admin macaroon created - LND integration complete for wallet '{wallet_id}'")
                             else:
                                 print(f"⚠️ Admin macaroon not found - LND may still be initializing for wallet '{wallet_id}'")
@@ -4739,7 +4750,7 @@ def integrate_system_wallet():
                         # Check if admin.macaroon was created
                         import time
                         time.sleep(3)
-                        if os.path.exists('/data/lnd/data/chain/bitcoin/testnet/admin.macaroon'):
+                        if os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
                             print(f"✅ Admin macaroon created - Manual LND integration complete for wallet '{wallet_id}'")
                         else:
                             print(f"⚠️ Admin macaroon not found - LND may still be initializing for manual integration '{wallet_id}'")
@@ -4874,7 +4885,7 @@ def load_wallet():
                 # Start background LND integration using expect script if needed
                 try:
                     # Check if admin.macaroon exists
-                    if not os.path.exists('/data/lnd/data/chain/bitcoin/testnet/admin.macaroon'):
+                    if not os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
                         print(f"🔄 Admin macaroon not found, starting LND integration for loaded wallet '{wallet_id}'...")
                         
                         def background_lnd_integration():

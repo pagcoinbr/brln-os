@@ -24,9 +24,10 @@ API_BASE_URL = "http://localhost:2121/api/v1"
 CHECK_INTERVAL = 5  # segundos
 
 # Configurações gRPC do LND (valores padrão)
+BITCOIN_NETWORK = os.getenv('BITCOIN_NETWORK', 'mainnet')
 LND_HOST = os.getenv('LND_HOST', 'localhost')
 LND_PORT = os.getenv('LND_PORT', '10009')
-MACAROON_PATH = os.getenv('MACAROON_PATH', '/root/.lnd/data/chain/bitcoin/mainnet/admin.macaroon')
+MACAPATH = os.getenv('MACAROON_PATH', f'/root/.lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon')
 TLS_CERT_PATH = os.getenv('TLS_CERT_PATH', '/root/.lnd/tls.cert')
 
 # Configurar logging

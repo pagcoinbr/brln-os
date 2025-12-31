@@ -213,7 +213,7 @@ configure_peerswap() {
   echo -e "${BLUE}📝 Criando arquivo de configuração...${NC}"
   sudo -u peerswap tee /home/peerswap/.peerswap/peerswap.conf > /dev/null << EOF
 lnd.tlscertpath=/home/$lnd_user/.lnd/tls.cert
-lnd.macaroonpath=/home/$lnd_user/.lnd/data/chain/bitcoin/mainnet/admin.macaroon
+lnd.macaroonpath=/home/$lnd_user/.lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon
 elementsd.rpcuser=elements
 elementsd.rpcpass=$elements_rpc_password
 elementsd.rpchost=http://127.0.0.1

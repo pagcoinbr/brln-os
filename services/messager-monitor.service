@@ -18,6 +18,7 @@ StandardError=journal
 
 # Variáveis de ambiente
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=BITCOIN_NETWORK=mainnet
 Environment=MACAROON_PATH=/data/lnd/data/chain/bitcoin/testnet/admin.macaroon
 Environment=TLS_CERT_PATH=/data/lnd/tls.cert
 

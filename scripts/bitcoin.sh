@@ -6,6 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
 install_bitcoind() {
   echo -e "${GREEN}₿ Instalando Bitcoin Core...${NC}"
+  echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
   # Create bitcoin user if it doesn't exist
   if ! id "bitcoin" &>/dev/null; then
@@ -125,9 +126,12 @@ install_bitcoind() {
   store_password_full "bitcoin_rpc" "$RPC_PASS" "Bitcoin Core RPC credentials" "minibolt" 8332 "http://127.0.0.1:8332"
   echo -e "${GREEN}✓ Credenciais RPC salvas no gerenciador de senhas${NC}"
   
-  # Copy or create configuration
-  if [[ -f "$SCRIPT_DIR/conf_files/bitcoin.conf" ]]; then
-    echo -e "${BLUE}Copiando arquivo de configuração...${NC}"
+  # Copy or create configuration based on network
+  if [[ "$BITCOIN_NETWORK" == "testnet" ]] && [[ -f "$SCRIPT_DIR/conf_files/testnet/bitcoin.conf" ]]; then
+    echo -e "${BLUE}Copiando arquivo de configuração (TESTNET)...${NC}"
+    sudo cp "$SCRIPT_DIR/conf_files/testnet/bitcoin.conf" /data/bitcoin/bitcoin.conf
+  elif [[ -f "$SCRIPT_DIR/conf_files/bitcoin.conf" ]]; then
+    echo -e "${BLUE}Copiando arquivo de configuração (MAINNET)...${NC}"
     sudo cp "$SCRIPT_DIR/conf_files/bitcoin.conf" /data/bitcoin/bitcoin.conf
     
     # Replace rpcauth placeholder with generated one
@@ -141,9 +145,19 @@ install_bitcoind() {
     echo -e "${YELLOW}  Por favor, crie manualmente o arquivo de configuração${NC}"
   fi
   
+  # Ensure proper ownership of /data/bitcoin
+  ensure_data_ownership "bitcoin"
+  
   # Create symbolic link for admin user
-  if [ ! -L /home/$atual_user/.bitcoin ]; then
-    sudo ln -s /data/bitcoin /home/$atual_user/.bitcoin || true
+  if [[ $atual_user == "root" ]]; then
+    # Root user's home is /root, not /home/root
+    if [ ! -L /root/.bitcoin ]; then
+      sudo ln -s /data/bitcoin /root/.bitcoin || true
+    fi
+  else
+    if [ ! -L /home/$atual_user/.bitcoin ]; then
+      sudo ln -s /data/bitcoin /home/$atual_user/.bitcoin || true
+    fi
   fi
   
   # Install systemd service
@@ -164,6 +178,7 @@ install_bitcoind() {
 
 configure_lnd() {
   echo -e "${GREEN}⚡ Configurando LND...${NC}"
+  echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
   # Create lnd user if it doesn't exist
   if ! id "lnd" &>/dev/null; then
@@ -212,9 +227,12 @@ configure_lnd() {
   store_password_full "lnd_wallet" "$WALLET_PASS" "LND Wallet Password" "lnd" 8080 "https://127.0.0.1:8080"
   echo -e "${GREEN}✓ Senha da carteira LND salva no gerenciador de senhas${NC}"
   
-  # Copy or create configuration
-  if [[ -f "$SCRIPT_DIR/conf_files/lnd.conf" ]]; then
-    echo -e "${BLUE}Copiando arquivo de configuração...${NC}"
+  # Copy or create configuration based on network
+  if [[ "$BITCOIN_NETWORK" == "testnet" ]] && [[ -f "$SCRIPT_DIR/conf_files/testnet/lnd.conf" ]]; then
+    echo -e "${BLUE}Copiando arquivo de configuração (TESTNET)...${NC}"
+    sudo cp "$SCRIPT_DIR/conf_files/testnet/lnd.conf" /data/lnd/lnd.conf
+  elif [[ -f "$SCRIPT_DIR/conf_files/lnd.conf" ]]; then
+    echo -e "${BLUE}Copiando arquivo de configuração (MAINNET)...${NC}"
     sudo cp "$SCRIPT_DIR/conf_files/lnd.conf" /data/lnd/lnd.conf
     
     # Get Bitcoin RPC credentials if available
@@ -229,6 +247,9 @@ configure_lnd() {
     echo -e "${YELLOW}⚠ Arquivo lnd.conf não encontrado em conf_files/${NC}"
     echo -e "${YELLOW}  Por favor, crie manualmente o arquivo de configuração${NC}"
   fi
+  
+  # Ensure proper ownership of /data/lnd
+  ensure_data_ownership "lnd"
   
   echo -e "${GREEN}✓ LND configurado${NC}"
 }

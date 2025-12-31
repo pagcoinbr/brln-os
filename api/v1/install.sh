@@ -217,7 +217,7 @@ else
     echo -e "${YELLOW}💡 Dicas de troubleshooting:${NC}"
     echo "1. Verifique se o LND está rodando: systemctl status lnd"
     echo "2. Verifique os certificados: ls -la /data/lnd/tls.cert"
-    echo "3. Verifique o macaroon: ls -la /data/lnd/data/chain/bitcoin/testnet/admin.macaroon"
+    echo "3. Verifique o macaroon: ls -la /data/lnd/data/chain/bitcoin/\${BITCOIN_NETWORK:-mainnet}/admin.macaroon"
     echo "4. Teste conectividade: netstat -tlnp | grep :2121"
 fi
 

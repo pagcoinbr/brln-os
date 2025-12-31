@@ -156,6 +156,7 @@ ExecStart=$VENV_DIR/bin/python3 $SCRIPT_DIR/api/v1/app.py
 Restart=always
 RestartSec=10
 Environment=PYTHONPATH=$SCRIPT_DIR/api/v1
+Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 
 # Segurança
 NoNewPrivileges=true

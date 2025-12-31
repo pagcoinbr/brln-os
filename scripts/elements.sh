@@ -177,6 +177,9 @@ configure_elements() {
   sudo mkdir -p /data/elements
   sudo chown -R elements:elements /data/elements
   
+  # Ensure proper ownership of /data/elements
+  ensure_data_ownership "elements"
+  
   # Create symbolic link from elements home to data directory
   echo -e "${BLUE}🔗 Criando link simbólico...${NC}"
   sudo -u elements ln -sf /data/elements /home/elements/.elements 2>/dev/null || true
