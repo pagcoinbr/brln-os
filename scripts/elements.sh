@@ -93,7 +93,7 @@ install_elements() {
 
   # Verify SHA256 checksum
   echo -e "${BLUE}🔍 Verificando checksum SHA256...${NC}"
-  if sha256sum --ignore-missing --check SHA256SUMS.asc | grep -q "elements-${ELEMENTS_VERSION}-${ELEMENTS_ARCH}.tar.gz: OK"; then
+  if sha256sum --ignore-missing --check SHA256SUMS.asc 2>&1 | grep -v "improperly formatted" | grep -q "elements-${ELEMENTS_VERSION}-${ELEMENTS_ARCH}.tar.gz: OK"; then
     echo -e "${GREEN}✓ Checksum SHA256 verificado com sucesso!${NC}"
   else
     echo -e "${RED}❌ Falha na verificação do checksum SHA256!${NC}"

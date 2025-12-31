@@ -79,37 +79,66 @@ install_bos() {
   export BOS_DEFAULT_LND_PATH=/data/lnd
   
   # Create bos directory
-  NODE_NAME="${HOSTNAME:-brlnbolt}"
   echo -e "${BLUE}Criando diretório para node: $NODE_NAME${NC}"
   mkdir -p ~/.bos/$NODE_NAME
   
-  # Generate base64 files
-  echo -e "${BLUE}Gerando arquivos base64...${NC}"
-  base64 -w0 /data/lnd/tls.cert > /data/lnd/tls.cert.base64
-  base64 -w0 /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon > /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64
-  
-  # Create credentials.json
-  echo -e "${BLUE}Criando credentials.json...${NC}"
-  cert_base64=$(cat /data/lnd/tls.cert.base64)
-  macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64)
-  
-  cat > ~/.bos/$NODE_NAME/credentials.json <<EOF
+  # Check if LND files exist before proceeding
+  if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon" ]]; then
+    # Generate base64 files
+    echo -e "${BLUE}Gerando arquivos base64...${NC}"
+    base64 -w0 /data/lnd/tls.cert > /data/lnd/tls.cert.base64
+    base64 -w0 /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon > /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64
+    
+    # Create credentials.json
+    echo -e "${BLUE}Criando credentials.json...${NC}"
+    cert_base64=$(cat /data/lnd/tls.cert.base64)
+    macaroon_base64=$(cat /data/lnd/data/chain/bitcoin/mainnet/admin.macaroon.base64)
+    
+    cat > ~/.bos/$NODE_NAME/credentials.json <<EOFCRED
 {
   "cert": "$cert_base64",
   "macaroon": "$macaroon_base64",
   "socket": "localhost:10009"
 }
-EOF
+EOFCRED
+    
+    echo -e "${GREEN}✓ Credenciais BOS configuradas${NC}"
+  else
+    echo -e "${YELLOW}⚠️  LND ainda não gerou os arquivos necessários (tls.cert e admin.macaroon)${NC}"
+    echo -e "${YELLOW}   As credenciais serão criadas automaticamente quando o LND iniciar${NC}"
+  fi
   
-  # Test installation
-  echo -e "${BLUE}Testando instalação bos...${NC}"
-  if bos utxos | grep -q "utxos\|channel"; then
+  # Setup daily credentials update cron job
+  echo -e "${BLUE}Configurando atualização automática de credenciais...${NC}"
+  
+  # Install jq if not available (needed for credential updater)
+  if ! command -v jq &> /dev/null; then
+    sudo apt-get install -y jq > /dev/null 2>&1
+  fi
+  
+  # Add cron job to update credentials daily at 3 AM
+  CRON_CMD="/usr/local/bin/update-bos-credentials"
+  CRON_ENTRY="0 3 * * * $CRON_CMD >> /tmp/bos-update.log 2>&1"
+  
+  if ! crontab -l 2>/dev/null | grep -Fq "$CRON_CMD"; then
+    (crontab -l 2>/dev/null; echo "$CRON_ENTRY") | crontab -
+    echo -e "${GREEN}✓ Cron job configurado para atualização diária às 3 AM${NC}"
+  else
+    echo -e "${GREEN}✓ Cron job já configurado${NC}"
+  fi
+  
+  # Run the updater script immediately if files exist
+  if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/mainnet/admin.macaroon" ]]; then
+    /usr/local/bin/update-bos-credentials
+  fi
+  if bos utxos 2>/dev/null | grep -q "utxos|channel"; then
     echo -e "${GREEN}✓ bos funcionando corretamente${NC}"
   else
     echo -e "${YELLOW}⚠ Aguarde o LND sincronizar completamente para usar bos${NC}"
-  fi
-  
   # Interactive Telegram setup
+  fi
+
+  # Test installation complete
   echo ""
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${GREEN}         📱 CONFIGURAÇÃO DO TELEGRAM BOT${NC}"
