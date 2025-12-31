@@ -3,7 +3,7 @@
 # Interactive menu for managing stored passwords
 
 source "$(dirname "${BASH_SOURCE[0]}")/../scripts/config.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/password_manager.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../brln-tools/password_manager.sh"
 
 show_password_menu() {
     while true; do

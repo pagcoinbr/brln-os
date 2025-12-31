@@ -1,14 +1,16 @@
-# MiniBolt: systemd unit for lnd
+# LND: unidade systemd para lnd
 # /etc/systemd/system/lnd.service
 
 [Unit]
 Description=Lightning Network Daemon
+Requires=bitcoind.service
+After=bitcoind.service
 
 [Service]
 ExecStart=/usr/local/bin/lnd
 ExecStop=/usr/local/bin/lncli stop
 
-# Process management
+# Gerenciamento de processo
 ####################
 Restart=on-failure
 RestartSec=60
@@ -16,14 +18,14 @@ Type=notify
 TimeoutStartSec=1200
 TimeoutStopSec=3600
 
-# Directory creation and permissions
+# Criação e permissões de diretório
 ####################################
 RuntimeDirectory=lightningd
 RuntimeDirectoryMode=0710
-User=admin
-Group=admin
+User=lnd
+Group=lnd
 
-# Hardening Measures
+# Medidas de proteção
 ####################
 PrivateTmp=true
 ProtectSystem=full
