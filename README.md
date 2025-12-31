@@ -110,9 +110,8 @@ A principal motivação é **proteger a privacidade e a liberdade** das pessoas,
 
 ### Passo 5: Instalar o BRLN-OS
 
-Uma vez conectado via SSH, execute estes comandos:
+Uma vez conectado via SSH, execute estes comandos para iniciar a instalação:
 
-E para iniciar a instalação
 ```bash
 git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash brunel.sh
 ```
