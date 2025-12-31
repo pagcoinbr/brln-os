@@ -113,7 +113,7 @@ A principal motivação é **proteger a privacidade e a liberdade** das pessoas,
 Uma vez conectado via SSH, execute estes comandos:
 
 ```bash
-sudo adduser --gecos "" admin && sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin && sudo apt update && sudo apt full-upgrade && sudo su - admin
+if id admin >/dev/null 2>&1; then sudo passwd admin; else sudo useradd -m -s /bin/bash -g admin -G sudo,adm,cdrom,dip,plugdev,lxd admin && sudo passwd admin && sudo apt update && sudo apt full-upgrade && sudo su - admin; fi
 ```
 
 E para iniciar a instalação
