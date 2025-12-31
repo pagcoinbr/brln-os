@@ -164,16 +164,22 @@ install_tor() {
   ARCH=$(dpkg --print-architecture)
   CODENAME=$(lsb_release -cs)
   
+  # Add GPG key first
+  echo -e "${BLUE}Adicionando chave GPG do Tor...${NC}"
+  if [[ ! -f /usr/share/keyrings/tor-archive-keyring.gpg ]]; then
+    wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
+    if [[ ! -s /usr/share/keyrings/tor-archive-keyring.gpg ]]; then
+      echo -e "${RED}❌ Falha ao baixar chave GPG. Tentando método alternativo...${NC}"
+      wget -O- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | sudo gpg --dearmor --yes -o /usr/share/keyrings/tor-archive-keyring.gpg
+    fi
+  fi
+  
   # Create Tor repository file
   echo -e "${BLUE}Criando arquivo de repositório Tor...${NC}"
   sudo bash -c "cat > /etc/apt/sources.list.d/tor.list << EOF
 deb     [arch=${ARCH} signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org ${CODENAME} main
 deb-src [arch=${ARCH} signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org ${CODENAME} main
 EOF"
-  
-  # Add GPG key
-  echo -e "${BLUE}Adicionando chave GPG...${NC}"
-  wget -nvO- $TOR_GPGLINK 2>&1 | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
   
   # Install Tor
   echo -e "${BLUE}Instalando Tor e keyring...${NC}"
