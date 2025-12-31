@@ -100,10 +100,6 @@ terminal_web() {
     # Stop any conflicting processes first
     sudo pkill -f 'gotty.*3131' || true
     
-    # Stop old service if it exists
-    sudo systemctl stop gotty-terminal || true
-    sudo systemctl disable gotty-terminal || true
-    
     sudo systemctl start gotty-fullauto
     
     # Centralized service check

@@ -414,15 +414,6 @@ show_installation_summary() {
     
     # Clean up temp file
     rm -f "$tailscale_qr_file"
-    
-    echo
-    center_text "🎯 PRÓXIMOS PASSOS" "${YELLOW}"
-    center_text "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" "${YELLOW}"
-    center_text "1. Escaneie o QR Code Tailscale ou acesse via HTTPS local" "${BLUE}"
-    center_text "2. Acesse a interface web e clique em 'Configurações'" "${BLUE}"
-    center_text "3. Use o 'Terminal Web' para gerenciar o sistema" "${BLUE}"
-    center_text "4. Configure o Lightning Node através da interface" "${BLUE}"
-    echo
 }
 
 # Main execution flow
