@@ -89,7 +89,7 @@ update_and_upgrade() {
   fi
 
   # Configurar crontab para atualização automática
-  crontab_entry="0 2 * * * cd $REPO_DIR && git pull origin $branch > /tmp/git_pull.log 2>&1"
+  crontab_entry="0 2 * * * cd $REPO_DIR && # git pull origin $branch > /tmp/git_pull.log 2>&1"
   if ! crontab -l | grep -Fq "$crontab_entry"; then
     (crontab -l; echo "$crontab_entry") | crontab -
     echo "📅 Crontab configurado para atualizações automáticas"

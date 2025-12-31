@@ -736,7 +736,7 @@ export -f install_go
 export -f configure_peerswap
 export -f create_peerswap_service
 export -f install_psweb
-export -f configure_psweb
+# export -f configure_psweb  # Function not needed - psweb auto-configures
 export -f create_psweb_service
 export -f start_peerswap
 export -f start_psweb

@@ -655,7 +655,7 @@ install_lndg() {
   if [[ -d "lndg" ]]; then
     echo -e "${YELLOW}⚠ Diretório lndg já existe. Atualizando...${NC}"
     cd lndg
-    git pull
+    # git pull  # Disabled to avoid conflicts with local changes
   else
     git clone https://github.com/cryptosharks131/lndg.git
     cd lndg

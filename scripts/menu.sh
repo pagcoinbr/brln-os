@@ -148,7 +148,7 @@ menu_system_tools() {
 
 # Display banner
 show_banner() {
-    clear
+    #clear
     echo -e "${CYAN}"
     echo "  ██████╗ ██████╗ ██╗     ███╗   ██╗       ██████╗ ███████╗"
     echo "  ██╔══██╗██╔══██╗██║     ████╗  ██║      ██╔═══██╗██╔════╝"
@@ -165,7 +165,7 @@ show_banner() {
 }
 
 menu_configuration() {
-  clear
+ # clear
   echo -e "${CYAN}"
   echo "╔══════════════════════════════════════════════════════════════════════╗"
   echo "║                        ⚙️ CONFIGURAÇÕES ⚙️                        ║"
@@ -313,7 +313,7 @@ install_complete_system() {
 }
 
 menu() {
-  clear
+  #clear
   echo -e "${CYAN}"
   show_banner
   echo -e "${NC}"
@@ -359,5 +359,3 @@ menu() {
 
 # Start the main menu
 menu
-  update_and_upgrade
-}

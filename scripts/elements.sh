@@ -419,26 +419,7 @@ show_elements_status() {
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
 }
-      if elements-cli -conf=/data/elements/elements.conf getwalletinfo; then
-        local balance=$(elements-cli -conf=/data/elements/elements.conf getbalance || echo "0.00")
-        echo "💰 Saldo L-BTC: $balance"
-      else
-        echo -e "   ${YELLOW}⚠️ Wallet não carregada${NC}"
-      fi
-      
-    else
-      echo -e "   ${RED}❌ RPC não responde${NC}"
-    fi
-  fi
   
-  # Status do serviço
-  echo "🔧 Serviço:"
-  if sudo systemctl is-active --quiet elementsd; then
-    echo -e "   ${GREEN}✅ Ativo${NC}"
-  else
-    echo -e "   ${RED}❌ Inativo${NC}"
-  fi
-}
 
 create_elements_wallet() {
   echo ""
