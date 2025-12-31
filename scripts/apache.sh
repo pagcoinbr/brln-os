@@ -6,13 +6,18 @@ source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
 # Get dynamic Tailscale IP
 get_tailscale_ip() {
+  # Check if Tailscale is installed first
+  if ! command -v tailscale &> /dev/null; then
+    return 0
+  fi
+  
   # Try to get Tailscale IP from interface
-  local tailscale_ip=$(ip addr show tailscale0 | grep -oP 'inet \K[^/]+' | head -1)
+  local tailscale_ip=$(ip addr show tailscale0 2>/dev/null | grep -oP 'inet \K[^/]+' | head -1)
   if [[ -n "$tailscale_ip" && "$tailscale_ip" != "127.0.0.1" ]]; then
     echo "$tailscale_ip"
   else
     # Fallback: try to get from tailscale status
-    local ts_ip=$(tailscale ip -4 || echo "")
+    local ts_ip=$(tailscale ip -4 2>/dev/null || echo "")
     if [[ -n "$ts_ip" && "$ts_ip" != "127.0.0.1" ]]; then
       echo "$ts_ip"
     fi
@@ -90,7 +95,7 @@ setup_apache_web() {
   
   # Copiar arquivos CSS, JS, imagens adicionais
   for ext in css js png jpg jpeg gif svg webp; do
-    if ls "$SCRIPT_DIR"/*.$ext; then
+    if ls "$SCRIPT_DIR"/*.$ext 2>/dev/null; then
       sudo cp -f "$SCRIPT_DIR"/*.$ext /var/www/html/ || true
     fi
   done
@@ -397,7 +402,7 @@ copy_brln_files_to_apache() {
   
   # Copiar assets estáticos
   for ext in css js png jpg jpeg gif svg webp ico; do
-    if ls "$base_dir"/*.$ext; then
+    if ls "$base_dir"/*.$ext 2>/dev/null; then
       sudo cp "$base_dir"/*.$ext /var/www/html/ || true
     fi
   done

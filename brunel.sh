@@ -413,9 +413,9 @@ show_installation_summary() {
 
 # Main execution flow
 update_and_upgrade
+tailscale_vpn
 configure_ssl_complete
 configure_secure_firewall
-tailscale_vpn
 
 # Install BRLN API for system management with user detection
 echo
