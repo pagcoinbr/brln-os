@@ -113,10 +113,6 @@ A principal motivação é **proteger a privacidade e a liberdade** das pessoas,
 Uma vez conectado via SSH, execute este comando único:
 
 ```bash
-
-```
-
-```bash
 sudo adduser --gecos "" admin && sudo usermod -a -G sudo,adm,cdrom,dip,plugdev,lxd admin && sudo apt update && sudo apt full-upgrade && git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash brunel.sh
 ```
 
