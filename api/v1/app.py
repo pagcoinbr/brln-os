@@ -169,7 +169,7 @@ os.makedirs(WALLET_DATA_DIR, exist_ok=True)
 # Ensure proper ownership for brln-wallet directory
 import subprocess
 try:
-    subprocess.run(['chown', '-R', 'root:root', WALLET_DATA_DIR], check=False)
+    subprocess.run(['chown', '-R', 'brln-api:brln-api', WALLET_DATA_DIR], check=False)
     subprocess.run(['chmod', '750', WALLET_DATA_DIR], check=False)
 except Exception as e:
     print(f"Warning: Could not set ownership for {WALLET_DATA_DIR}: {e}")
@@ -1854,7 +1854,7 @@ elements_rpc_client = ElementsRPCClient()
 # === SISTEMA DE CHAT LIGHTNING ===
 
 # Configuração do banco SQLite
-CHAT_DB_PATH = "/data/lightning_chat.db"
+CHAT_DB_PATH = "/data/brln-wallet/lightning_chat.db"
 
 def init_chat_database():
     """Inicializa o banco de dados SQLite para o chat"""

@@ -118,9 +118,37 @@ configure_user_environment() {
     export API_USER
 }
 
+# Function to setup API user and directories
+setup_api_user() {
+    echo -e "${YELLOW}👤 Configurando usuário API...${NC}"
+    
+    # Create brln-api user if it doesn't exist
+    if ! id "brln-api" &>/dev/null; then
+        echo -e "${BLUE}Criando usuário brln-api...${NC}"
+        sudo adduser --disabled-password --gecos "" brln-api
+    fi
+    
+    # Add admin user to brln-api group for management access
+    sudo adduser $atual_user brln-api || true
+    
+    # Give brln-api user read access to the project directory
+    sudo setfacl -R -m u:brln-api:rx /home/admin/brln-os || true
+    
+    # Create API data directory
+    echo -e "${BLUE}Configurando diretório de dados da API...${NC}"
+    sudo mkdir -p /data/brln-wallet
+    sudo chown -R brln-api:brln-api /data/brln-wallet
+    sudo chmod 755 /data/brln-wallet
+    
+    echo -e "${GREEN}✅ Usuário API configurado${NC}"
+}
+
 # Function to configure API service
 configure_api_service() {
     echo -e "${YELLOW}⚙️ Configurando serviço API...${NC}"
+    
+    # Setup API user first
+    setup_api_user
     
     sudo tee /etc/systemd/system/brln-api.service > /dev/null << EOF
 [Unit]
@@ -129,10 +157,11 @@ After=network.target lnd.service
 
 [Service]
 Type=simple
-User=$API_USER
+User=brln-api
+Group=brln-api
 WorkingDirectory=$SCRIPT_DIR/api/v1
 ExecStartPre=/bin/bash $SCRIPT_DIR/scripts/setup-api-env.sh
-ExecStart=$VENV_DIR/bin/python3 $SCRIPT_DIR/api/v1/app.py
+ExecStart=/home/brln-api/venv/bin/python3 $SCRIPT_DIR/api/v1/app.py
 Restart=always
 RestartSec=10
 Environment=PYTHONPATH=$SCRIPT_DIR/api/v1

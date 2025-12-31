@@ -16,13 +16,17 @@ REQUIREMENTS_FILE="$REQUIREMENTS_FILE_API"
 setup_api_environment() {
   echo "Setting up BRLN-OS API environment..."
   
-  # Create virtual environment directory
-  mkdir -p "$(dirname "$API_VENV_DIR")"
+  # Use dedicated API venv location for the brln-api user
+  API_VENV_DIR="/home/brln-api/venv"
+  
+  # Create virtual environment directory with proper permissions
+  sudo mkdir -p "$(dirname "$API_VENV_DIR")"
   
   # Create virtual environment if it doesn't exist
   if [[ ! -d "$API_VENV_DIR" ]]; then
     echo "Creating virtual environment for API..."
-    python3 -m venv "$API_VENV_DIR"
+    sudo python3 -m venv "$API_VENV_DIR"
+    sudo chown -R brln-api:brln-api "$API_VENV_DIR"
   fi
   
   # Activate virtual environment

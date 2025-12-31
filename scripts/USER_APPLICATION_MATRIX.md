@@ -14,7 +14,8 @@ This document provides a comprehensive overview of all system users, application
 | `lnd` | Lightning Network Daemon | bitcoin.sh | lnd, bitcoin, debian-tor |
 | `elements` | Elements/Liquid daemon | elements.sh | elements |
 | `peerswap` | PeerSwap & PeerSwap Web | peerswap.sh | peerswap |
-| `$atual_user` (admin) | Lightning apps & management | - | bitcoin, lnd |
+| `brln-api` | BRLN-OS API service | brunel.sh | brln-api |
+| `$atual_user` (admin) | Lightning apps & management | - | bitcoin, lnd, brln-api |
 | `root` | System services | - | - |
 
 ---
@@ -91,7 +92,28 @@ This document provides a comprehensive overview of all system users, application
 
 ---
 
-### 👤 User: `$atual_user` (admin/main user)
+### � User: `brln-api`
+
+**BRLN-OS API Service** - Flask + gRPC
+- **Binary:** `/home/brln-api/venv/bin/python3`
+- **Application:** `/home/admin/brln-os/api/v1/app.py`
+- **Data Directory:** `/data/brln-wallet/`
+- **Virtual Environment:** `/home/brln-api/venv/`
+- **Service:** `brln-api.service`
+- **Group:** `brln-api`
+- **Port:** 2121 (HTTP API)
+- **Database:** SQLite (`wallets.db`, `lightning_chat.db`)
+- **Features:**
+  - Wallet management and generation
+  - System status monitoring
+  - Lightning Network gRPC interface
+  - Multi-blockchain support (Bitcoin, Elements, TRON)
+  - Encrypted wallet storage
+  - Chat database for Lightning messaging
+
+---
+
+### �👤 User: `$atual_user` (admin/main user)
 
 **Balance of Satoshis (bos)**
 - **Binary:** `~/.npm-global/bin/bos`
