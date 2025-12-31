@@ -268,6 +268,13 @@ install_complete_system() {
   # Execute installation scripts in order
   echo -e "${YELLOW}⚙️ Configurando sistema...${NC}"
   update_and_upgrade
+
+  # Install Tor and I2P first (required for Bitcoin/Lightning privacy features)
+  echo -e "${YELLOW}🧅 Instalando Tor...${NC}"
+  install_tor
+  
+  echo -e "${YELLOW}🔒 Instalando I2P...${NC}"
+  install_i2p
   
   if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
     echo -e "${YELLOW}🌐 Configurando Apache...${NC}"

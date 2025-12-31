@@ -165,26 +165,27 @@ def decrypt_password(encrypted_password, user_key, salt):
 
 def store_password(service_name, username, password, description="", port=0, url="", user_key=None):
     """Store or update a password in the database"""
-    if not user_key:
-        user_key = os.environ.get('BRLN_USER_KEY')
-        if not user_key:
-            print("✗ User key required (set BRLN_USER_KEY environment variable)", file=sys.stderr)
-            return False
-    
     init_database()
     
-    # Get or create user
+    # Get or create user first
     user_id, generated_key, salt = create_or_get_user()
     
     if generated_key:
         # First time setup - use the generated key
         user_key = generated_key
     else:
+        # Not first time - user_key is required
+        if not user_key:
+            user_key = os.environ.get('BRLN_USER_KEY')
+            if not user_key:
+                print("✗ User key required (set BRLN_USER_KEY environment variable)", file=sys.stderr)
+                return False
+        
         # Verify the provided key
         if not verify_user_key(user_id, user_key):
             print("✗ Invalid user key", file=sys.stderr)
             return False
-    
+
     # Encrypt password with user key
     encrypted_password = encrypt_password(password, user_key, salt)
     
