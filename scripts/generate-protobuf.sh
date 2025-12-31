@@ -22,12 +22,34 @@ echo -e "${BLUE}====================================${NC}"
 
 # Check if running from correct directory
 if [[ ! -d "$API_DIR" ]]; then
-    echo -e "${RED}❌ API directory not found: $API_DIR${NC}"
+    echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ ERRO: Diretório da API não encontrado${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}   Procurando: $API_DIR${NC}"
+    echo -e "${YELLOW}   Diretório atual: $PWD${NC}"
+    echo -e "${YELLOW}   💡 Possíveis causas:${NC}"
+    echo -e "${YELLOW}      - BRLN-OS não está instalado${NC}"
+    echo -e "${YELLOW}      - BRLN-OS instalado em local diferente${NC}"
+    echo -e "${YELLOW}   💡 Solução 1: Instalar BRLN-OS${NC}"
+    echo -e "${YELLOW}      git clone https://github.com/pagcoinbr/brln-os.git /root/brln-os${NC}"
+    echo -e "${YELLOW}   💡 Solução 2: Ajustar variável API_DIR no script${NC}"
+    echo -e "${YELLOW}      Se BRLN-OS está em outro local, edite o script e ajuste API_DIR${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     exit 1
 fi
 
 if [[ ! -d "$PROTO_DIR" ]]; then
-    echo -e "${RED}❌ Proto directory not found: $PROTO_DIR${NC}"
+    echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ ERRO: Diretório proto não encontrado${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}   Procurando: $PROTO_DIR${NC}"
+    echo -e "${YELLOW}   💡 Solução: Os arquivos .proto precisam ser baixados primeiro${NC}"
+    echo -e "${YELLOW}      Execute: /root/brln-os/scripts/gen-proto.sh${NC}"
+    echo -e "${YELLOW}   Este script irá:${NC}"
+    echo -e "${YELLOW}      1. Criar o diretório proto${NC}"
+    echo -e "${YELLOW}      2. Baixar todos os arquivos .proto necessários${NC}"
+    echo -e "${YELLOW}      3. Compilar os arquivos automaticamente${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     exit 1
 fi
 
@@ -43,9 +65,28 @@ else
 fi
 
 # Check if grpcio-tools is installed
-if ! python3 -c "import grpc_tools.protoc"; then
-    echo -e "${YELLOW}📦 Installing grpcio-tools...${NC}"
-    pip3 install grpcio-tools
+echo -e "${YELLOW}🔍 Verificando grpcio-tools...${NC}"
+if ! python3 -c "import grpc_tools.protoc" 2>/dev/null; then
+    echo -e "${YELLOW}📦 grpcio-tools não encontrado, tentando instalar...${NC}"
+    if pip3 install grpcio-tools 2>&1; then
+        echo -e "${GREEN}✅ grpcio-tools instalado com sucesso${NC}"
+    else
+        echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}❌ ERRO: Falha ao instalar grpcio-tools${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${YELLOW}   💡 Possíveis causas:${NC}"
+        echo -e "${YELLOW}      - Sem permissões de root${NC}"
+        echo -e "${YELLOW}      - Sem conexão com a internet${NC}"
+        echo -e "${YELLOW}      - Problemas com pip${NC}"
+        echo -e "${YELLOW}   💡 Soluções:${NC}"
+        echo -e "${YELLOW}      sudo pip3 install grpcio-tools${NC}"
+        echo -e "${YELLOW}      ou${NC}"
+        echo -e "${YELLOW}      python3 -m pip install --user grpcio-tools${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}✅ grpcio-tools disponível${NC}"
 fi
 
 # Check if protoc is available

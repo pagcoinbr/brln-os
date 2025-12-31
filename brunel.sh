@@ -212,14 +212,31 @@ install_brln_api_with_user_env() {
     # Generate gRPC proto files
     echo -e "${YELLOW}🔧 Gerando arquivos proto gRPC...${NC}"
     if [[ -x "$SCRIPTS_DIR/gen-proto.sh" ]]; then
-        cd "$SCRIPT_DIR/api/v1" && source "$VENV_DIR/bin/activate" && bash "$SCRIPTS_DIR/gen-proto.sh"
-        if [[ $? -eq 0 ]]; then
+        cd "$SCRIPT_DIR/api/v1" && source "$VENV_DIR/bin/activate" && bash "$SCRIPTS_DIR/gen-proto.sh" 2>&1
+        PROTO_STATUS=$?
+        if [[ $PROTO_STATUS -eq 0 ]]; then
             echo -e "${GREEN}✅ Arquivos proto gerados${NC}"
         else
-            echo -e "${YELLOW}⚠️ Aviso: Erro na geração de proto${NC}"
+            echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo -e "${RED}❌ ERRO: Falha na geração dos arquivos proto${NC}"
+            echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo -e "${YELLOW}   Código de saída: $PROTO_STATUS${NC}"
+            echo -e "${YELLOW}   💡 Verifique os erros detalhados acima${NC}"
+            echo -e "${YELLOW}   💡 Logs podem estar em /tmp ou no output do script${NC}"
+            echo -e "${YELLOW}   💡 Execute manualmente para mais detalhes:${NC}"
+            echo -e "${YELLOW}      cd $SCRIPT_DIR/api/v1${NC}"
+            echo -e "${YELLOW}      source $VENV_DIR/bin/activate${NC}"
+            echo -e "${YELLOW}      bash $SCRIPTS_DIR/gen-proto.sh${NC}"
+            echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         fi
     else
-        echo -e "${YELLOW}⚠️ Script gen-proto.sh não encontrado${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}❌ ERRO: Script gen-proto.sh não encontrado${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${YELLOW}   Procurando: $SCRIPTS_DIR/gen-proto.sh${NC}"
+        echo -e "${YELLOW}   💡 Verifique se o BRLN-OS está instalado corretamente${NC}"
+        echo -e "${YELLOW}   💡 Execute: ls -la $SCRIPTS_DIR/gen-proto.sh${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     fi
     
     # Configure systemd service with correct user and paths

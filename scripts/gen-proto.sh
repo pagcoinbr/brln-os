@@ -18,9 +18,61 @@ LND_PROTO_URL="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnr
 echo -e "${BLUE}🔧 BRLN-OS Protocol Buffer Generator with Download${NC}"
 echo -e "${BLUE}=================================================${NC}"
 
+# Function to check dependencies
+check_dependencies() {
+    local missing_deps=()
+    local error_details=()
+    
+    echo -e "${YELLOW}🔍 Verificando dependências...${NC}"
+    
+    # Check if API directory exists
+    if [[ ! -d "$API_DIR" ]]; then
+        missing_deps+=("API_DIRECTORY")
+        error_details+=("❌ Diretório da API não encontrado: $API_DIR")
+        error_details+=("   💡 Solução: Certifique-se de que o BRLN-OS está instalado em /root/brln-os")
+        error_details+=("   💡 Ou execute: git clone https://github.com/pagcoinbr/brln-os.git /root/brln-os")
+    fi
+    
+    # Check if curl is installed
+    if ! command -v curl &> /dev/null; then
+        missing_deps+=("CURL")
+        error_details+=("❌ curl não está instalado")
+        error_details+=("   💡 Solução: sudo apt update && sudo apt install -y curl")
+    fi
+    
+    # Check if python3 is installed
+    if ! command -v python3 &> /dev/null; then
+        missing_deps+=("PYTHON3")
+        error_details+=("❌ Python 3 não está instalado")
+        error_details+=("   💡 Solução: sudo apt update && sudo apt install -y python3 python3-pip")
+    fi
+    
+    # Check if pip3 is installed
+    if ! command -v pip3 &> /dev/null; then
+        missing_deps+=("PIP3")
+        error_details+=("❌ pip3 não está instalado")
+        error_details+=("   💡 Solução: sudo apt update && sudo apt install -y python3-pip")
+    fi
+    
+    # Display errors if any dependencies are missing
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}❌ ERRO: Dependências ausentes detectadas${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        for detail in "${error_details[@]}"; do
+            echo -e "${RED}$detail${NC}"
+        done
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+        echo -e "${YELLOW}📋 Dependências ausentes: ${missing_deps[*]}${NC}\n"
+        return 1
+    fi
+    
+    echo -e "${GREEN}✅ Todas as dependências básicas verificadas${NC}"
+    return 0
+}
+
 # Check if running from correct directory
-if [[ ! -d "$API_DIR" ]]; then
-    echo -e "${RED}❌ API directory not found: $API_DIR${NC}"
+if ! check_dependencies; then
     exit 1
 fi
 
@@ -36,11 +88,23 @@ echo -e "${YELLOW}📥 Downloading LND proto files...${NC}"
 # Main lightning.proto file
 if [[ ! -f "$PROTO_DIR/lightning.proto" ]] || [[ "$1" == "--force-download" ]]; then
     echo -e "${YELLOW}   📄 Downloading lightning.proto...${NC}"
-    curl -s -L "$LND_PROTO_URL/lightning.proto" -o "$PROTO_DIR/lightning.proto"
-    if [[ $? -eq 0 ]]; then
+    CURL_OUTPUT=$(curl -s -L -w "\n%{http_code}" "$LND_PROTO_URL/lightning.proto" -o "$PROTO_DIR/lightning.proto" 2>&1)
+    HTTP_CODE=$(echo "$CURL_OUTPUT" | tail -n1)
+    if [[ $? -eq 0 ]] && [[ "$HTTP_CODE" == "200" ]]; then
         echo -e "${GREEN}   ✅ lightning.proto downloaded${NC}"
     else
-        echo -e "${RED}   ❌ Failed to download lightning.proto${NC}"
+        echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}❌ ERRO: Falha ao baixar lightning.proto${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${YELLOW}   URL: $LND_PROTO_URL/lightning.proto${NC}"
+        echo -e "${YELLOW}   HTTP Code: $HTTP_CODE${NC}"
+        echo -e "${YELLOW}   💡 Possíveis causas:${NC}"
+        echo -e "${YELLOW}      - Sem conexão com a internet${NC}"
+        echo -e "${YELLOW}      - URL do repositório mudou${NC}"
+        echo -e "${YELLOW}      - Problemas de DNS${NC}"
+        echo -e "${YELLOW}   💡 Solução: Verifique sua conexão e tente novamente${NC}"
+        echo -e "${YELLOW}      curl -v $LND_PROTO_URL/lightning.proto${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
         exit 1
     fi
 else
@@ -100,11 +164,26 @@ if [[ "$VENV_ACTIVATED" == false ]]; then
 fi
 
 # Check if grpcio-tools is available
-if ! python3 -c "import grpc_tools.protoc"; then
-    echo -e "${YELLOW}📦 grpcio-tools not found in current environment${NC}"
-    echo -e "${YELLOW}💡 Install with: pip3 install grpcio-tools${NC}"
+echo -e "${YELLOW}🔍 Verificando grpcio-tools...${NC}"
+if ! python3 -c "import grpc_tools.protoc" 2>/dev/null; then
+    echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ ERRO: grpcio-tools não encontrado${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}   O pacote grpcio-tools é necessário para compilar arquivos .proto${NC}"
+    echo -e "${YELLOW}   💡 Solução 1: Instalar com pip3${NC}"
+    echo -e "${YELLOW}      pip3 install grpcio-tools${NC}"
+    echo -e "${YELLOW}   💡 Solução 2: Se usar ambiente virtual${NC}"
+    if [[ "$VENV_ACTIVATED" == true ]]; then
+        echo -e "${YELLOW}      pip install grpcio-tools${NC}"
+    else
+        echo -e "${YELLOW}      source /root/envflask/bin/activate && pip install grpcio-tools${NC}"
+    fi
+    echo -e "${YELLOW}   💡 Solução 3: Instalar todas as dependências da API${NC}"
+    echo -e "${YELLOW}      pip3 install -r $API_DIR/requirements.txt${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     exit 1
 fi
+echo -e "${GREEN}✅ grpcio-tools disponível${NC}"
 
 echo -e "${YELLOW}🧹 Cleaning old generated files...${NC}"
 # Remove old generated files
@@ -114,16 +193,30 @@ echo -e "${YELLOW}🔨 Generating main lightning.proto files...${NC}"
 
 # Generate main lightning protobuf files
 echo -e "${YELLOW}   📄 Compiling lightning.proto...${NC}"
-python3 -m grpc_tools.protoc \
+COMPILE_ERROR=$(python3 -m grpc_tools.protoc \
     --proto_path="$PROTO_DIR" \
     --python_out=. \
     --grpc_python_out=. \
-    "$PROTO_DIR/lightning.proto"
+    "$PROTO_DIR/lightning.proto" 2>&1)
+COMPILE_STATUS=$?
 
-if [[ $? -eq 0 ]]; then
+if [[ $COMPILE_STATUS -eq 0 ]]; then
     echo -e "${GREEN}   ✅ lightning.proto compiled successfully${NC}"
 else
-    echo -e "${RED}   ❌ Failed to compile lightning.proto${NC}"
+    echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ ERRO: Falha ao compilar lightning.proto${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}   Arquivo: $PROTO_DIR/lightning.proto${NC}"
+    echo -e "${YELLOW}   Diretório de trabalho: $PWD${NC}"
+    echo -e "${RED}   Detalhes do erro:${NC}"
+    echo -e "${RED}$COMPILE_ERROR${NC}"
+    echo -e "${YELLOW}   💡 Possíveis causas:${NC}"
+    echo -e "${YELLOW}      - Arquivo .proto corrompido ou inválido${NC}"
+    echo -e "${YELLOW}      - Sintaxe incorreta no arquivo .proto${NC}"
+    echo -e "${YELLOW}      - Dependências ausentes no arquivo .proto${NC}"
+    echo -e "${YELLOW}   💡 Solução: Tente baixar novamente os arquivos proto${NC}"
+    echo -e "${YELLOW}      $0 --force-download${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     exit 1
 fi
 
