@@ -43,7 +43,7 @@ else
 fi
 
 # Check if grpcio-tools is installed
-if ! python3 -c "import grpc_tools.protoc" >/dev/null 2>&1; then
+if ! python3 -c "import grpc_tools.protoc"; then
     echo -e "${YELLOW}📦 Installing grpcio-tools...${NC}"
     pip3 install grpcio-tools
 fi
@@ -57,7 +57,7 @@ fi
 
 echo -e "${YELLOW}🧹 Cleaning old generated files...${NC}"
 # Remove old generated files
-rm -f *_pb2.py *_pb2_grpc.py 2>/dev/null || true
+rm -f *_pb2.py *_pb2_grpc.py || true
 
 echo -e "${YELLOW}🔨 Generating protocol buffer files...${NC}"
 
@@ -84,7 +84,7 @@ for proto_file in "${COMPILE_ORDER[@]}"; do
             --proto_path="$PROTO_DIR" \
             --python_out=. \
             --grpc_python_out=. \
-            "$PROTO_DIR/$proto_file" >/dev/null 2>&1; then
+            "$PROTO_DIR/$proto_file"; then
             ((GENERATED_COUNT++))
             echo -e "${GREEN}   ✅ $proto_file compiled successfully${NC}"
         else
@@ -98,7 +98,7 @@ done
 
 # Additional proto files (compile any remaining .proto files)
 echo -e "${YELLOW}🔍 Checking for additional proto files...${NC}"
-ADDITIONAL_PROTOS=$(find "$PROTO_DIR" -name "*.proto" ! -path "*/signrpc/*" ! -path "*/chainrpc/*" ! -path "*/invoicesrpc/*" ! -path "*/walletrpc/*" ! -path "*/routerrpc/*" ! -path "*/peersrpc/*" ! -name "lightning.proto" 2>/dev/null || true)
+ADDITIONAL_PROTOS=$(find "$PROTO_DIR" -name "*.proto" ! -path "*/signrpc/*" ! -path "*/chainrpc/*" ! -path "*/invoicesrpc/*" ! -path "*/walletrpc/*" ! -path "*/routerrpc/*" ! -path "*/peersrpc/*" ! -name "lightning.proto" || true)
 
 for proto_file in $ADDITIONAL_PROTOS; do
     if [[ -f "$proto_file" ]]; then
@@ -109,7 +109,7 @@ for proto_file in $ADDITIONAL_PROTOS; do
             --proto_path="$PROTO_DIR" \
             --python_out=. \
             --grpc_python_out=. \
-            "$proto_file" >/dev/null 2>&1; then
+            "$proto_file"; then
             ((GENERATED_COUNT++))
             echo -e "${GREEN}   ✅ $relative_path compiled successfully${NC}"
         else
@@ -124,7 +124,7 @@ echo -e "${YELLOW}🔧 Fixing import statements...${NC}"
 for grpc_file in *_pb2_grpc.py; do
     if [[ -f "$grpc_file" ]]; then
         # Convert relative imports to absolute imports
-        sed -i 's/from \. import \([a-z_]*\)_pb2/import \1_pb2/g' "$grpc_file" 2>/dev/null || true
+        sed -i 's/from \. import \([a-z_]*\)_pb2/import \1_pb2/g' "$grpc_file" || true
         echo -e "${GREEN}   ✅ Fixed imports in $grpc_file${NC}"
     fi
 done
@@ -143,7 +143,7 @@ for file in "${MAIN_FILES[@]}"; do
 done
 
 # Count all generated files
-TOTAL_GENERATED=$(ls -1 *_pb2.py *_pb2_grpc.py 2>/dev/null | wc -l)
+TOTAL_GENERATED=$(ls -1 *_pb2.py *_pb2_grpc.py | wc -l)
 
 echo -e "${BLUE}📊 Generation Summary:${NC}"
 echo -e "${GREEN}   ✅ Successfully compiled: $GENERATED_COUNT proto files${NC}"
@@ -168,7 +168,7 @@ try:
 except ImportError as e:
     print(f'❌ Import error: {e}')
     exit(1)
-" 2>/dev/null; then
+"; then
         echo -e "${GREEN}✅ Import test passed!${NC}"
     else
         echo -e "${RED}❌ Import test failed${NC}"
@@ -176,7 +176,7 @@ except ImportError as e:
     
     # Set proper permissions
     echo -e "${YELLOW}🔑 Setting file permissions...${NC}"
-    chmod 644 *_pb2.py *_pb2_grpc.py 2>/dev/null || true
+    chmod 644 *_pb2.py *_pb2_grpc.py || true
     
     echo ""
     echo -e "${GREEN}🎉 Protocol buffer generation completed successfully!${NC}"

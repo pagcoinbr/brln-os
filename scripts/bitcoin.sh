@@ -15,11 +15,11 @@ install_bitcoind() {
   
   # Add admin user to bitcoin group
   echo -e "${BLUE}Adicionando usuário admin ao grupo bitcoin...${NC}"
-  sudo adduser $atual_user bitcoin 2>/dev/null || true
+  sudo adduser $atual_user bitcoin || true
   
   # Add bitcoin user to debian-tor group for Tor control
   echo -e "${BLUE}Adicionando usuário bitcoin ao grupo debian-tor...${NC}"
-  sudo adduser bitcoin debian-tor 2>/dev/null || true
+  sudo adduser bitcoin debian-tor || true
   
   # Download and verify Bitcoin Core
   echo -e "${BLUE}Baixando Bitcoin Core v${BTC_VERSION}...${NC}"
@@ -54,7 +54,7 @@ install_bitcoind() {
     grep download_url | 
     grep -oE "https://[a-zA-Z0-9./-]+" | 
     while read url; do 
-      curl -s "$url" | gpg --import 2>/dev/null
+      curl -s "$url" | gpg --import
     done
   
   if gpg --verify SHA256SUMS.asc 2>&1 | grep -q "Good signature"; then
@@ -107,7 +107,7 @@ install_bitcoind() {
     wget -q https://raw.githubusercontent.com/bitcoin/bitcoin/master/share/rpcauth/rpcauth.py
     
     # Generate rpcauth line
-    RPCAUTH_LINE=\$(python3 rpcauth.py minibolt '$RPC_PASS' 2>/dev/null | grep 'rpcauth=')
+    RPCAUTH_LINE=\$(python3 rpcauth.py minibolt '\$RPC_PASS' | grep 'rpcauth=')
     
     # Save password to file (will be needed by other services)
     echo '$RPC_PASS' > /home/bitcoin/.bitcoin/.rpcpass
@@ -143,7 +143,7 @@ install_bitcoind() {
   
   # Create symbolic link for admin user
   if [ ! -L /home/$atual_user/.bitcoin ]; then
-    sudo ln -s /data/bitcoin /home/$atual_user/.bitcoin 2>/dev/null || true
+    sudo ln -s /data/bitcoin /home/$atual_user/.bitcoin || true
   fi
   
   # Install systemd service
@@ -173,11 +173,11 @@ configure_lnd() {
   
   # Add lnd user to bitcoin and debian-tor groups
   echo -e "${BLUE}Adicionando lnd aos grupos bitcoin e debian-tor...${NC}"
-  sudo usermod -a -G bitcoin,debian-tor lnd 2>/dev/null || true
+  sudo usermod -a -G bitcoin,debian-tor lnd || true
   
   # Add admin user to lnd group
   echo -e "${BLUE}Adicionando $atual_user ao grupo lnd...${NC}"
-  sudo adduser $atual_user lnd 2>/dev/null || true
+  sudo adduser $atual_user lnd || true
   
   # Create /data/lnd directory structure
   echo -e "${BLUE}Criando estrutura de diretórios...${NC}"
@@ -295,7 +295,7 @@ EOF'
   
   # Import GPG key and verify signature
   echo -e "${BLUE}Importando chave GPG do desenvolvedor...${NC}"
-  curl -s https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import 2>/dev/null
+  curl -s https://raw.githubusercontent.com/lightningnetwork/lnd/master/scripts/keys/roasbeef.asc | gpg --import
   
   echo -e "${BLUE}Verificando assinatura GPG...${NC}"
   if gpg --verify manifest-roasbeef-v${LND_VERSION}-beta.sig manifest-v${LND_VERSION}-beta.txt 2>&1 | grep -q "Good signature"; then
@@ -307,7 +307,7 @@ EOF'
   # Verify OpenTimestamps (if ots is available)
   if command -v ots &> /dev/null; then
     echo -e "${BLUE}Verificando timestamp OpenTimestamps...${NC}"
-    ots --no-cache verify manifest-roasbeef-v${LND_VERSION}-beta.sig.ots -f manifest-roasbeef-v${LND_VERSION}-beta.sig 2>/dev/null && \
+    ots --no-cache verify manifest-roasbeef-v${LND_VERSION}-beta.sig.ots -f manifest-roasbeef-v${LND_VERSION}-beta.sig && \
       echo -e "${GREEN}✓ Timestamp verificado${NC}" || \
       echo -e "${YELLOW}⚠ Timestamp não disponível${NC}"
   fi

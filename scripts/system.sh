@@ -27,10 +27,10 @@ update_and_upgrade() {
   fi
 
   # Parar e desabilitar Next.js frontend se estiver rodando
-  if sudo systemctl is-active --quiet brln-frontend 2>/dev/null; then
+  if sudo systemctl is-active --quiet brln-frontend; then
     echo "⏹️ Parando serviço Next.js frontend..."
-    sudo systemctl stop brln-frontend 2>/dev/null || true
-    sudo systemctl disable brln-frontend 2>/dev/null || true
+    sudo systemctl stop brln-frontend || true
+    sudo systemctl disable brln-frontend || true
   fi
 
   # Configurar Apache Web Server (skip if already running from web terminal)
@@ -90,8 +90,8 @@ update_and_upgrade() {
 
   # Configurar crontab para atualização automática
   crontab_entry="0 2 * * * cd $REPO_DIR && git pull origin $branch > /tmp/git_pull.log 2>&1"
-  if ! crontab -l 2>/dev/null | grep -Fq "$crontab_entry"; then
-    (crontab -l 2>/dev/null; echo "$crontab_entry") | crontab -
+  if ! crontab -l | grep -Fq "$crontab_entry"; then
+    (crontab -l; echo "$crontab_entry") | crontab -
     echo "📅 Crontab configurado para atualizações automáticas"
   else
     echo "✅ A entrada do crontab já existe. Nenhuma alteração feita."
@@ -111,8 +111,8 @@ setup_ufw_firewall() {
   
   # Check IPv6 availability
   echo -e "${BLUE}Verificando disponibilidade de IPv6...${NC}"
-  if ping6 -c2 2001:858:2:2:aabb:0:563b:1526 &>/dev/null || \
-     ping6 -c2 2620:13:4000:6000::1000:118 &>/dev/null; then
+  if ping6 -c2 2001:858:2:2:aabb:0:563b:1526 || \
+     ping6 -c2 2620:13:4000:6000::1000:118; then
     echo -e "${GREEN}✓ IPv6 disponível${NC}"
     IPV6_AVAILABLE=true
   else
@@ -173,7 +173,7 @@ EOF"
   
   # Add GPG key
   echo -e "${BLUE}Adicionando chave GPG...${NC}"
-  wget -qO- $TOR_GPGLINK | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
+  wget -qO- $TOR_GPGLINK | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg
   
   # Install Tor
   echo -e "${BLUE}Instalando Tor e keyring...${NC}"
@@ -199,7 +199,7 @@ EOF"
     
     # If the line doesn't exist at all, add it
     if ! grep -q "ControlPort 9051" /etc/tor/torrc; then
-      echo "ControlPort 9051" | sudo tee -a /etc/tor/torrc > /dev/null
+      echo "ControlPort 9051" | sudo tee -a /etc/tor/torrc
     fi
   fi
   

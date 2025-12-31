@@ -43,7 +43,7 @@ gotty_install() {
       echo -e "${GREEN}"
       
       # Verify installation
-      if /usr/local/bin/gotty --version >/dev/null 2>&1; then
+      if /usr/local/bin/gotty --version; then
         echo -e "${GREEN}"
         return 0
       else
@@ -98,13 +98,13 @@ terminal_web() {
     # Start the service within script context
     echo -e "${YELLOW}"
     # Stop any conflicting processes first
-    sudo pkill -f 'gotty.*3131' 2>/dev/null || true
+    sudo pkill -f 'gotty.*3131' || true
     
     # Stop old service if it exists
-    sudo systemctl stop gotty-terminal 2>/dev/null || true
-    sudo systemctl disable gotty-terminal 2>/dev/null || true
+    sudo systemctl stop gotty-terminal || true
+    sudo systemctl disable gotty-terminal || true
     
-    sudo systemctl start gotty-fullauto >/dev/null 2>&1
+    sudo systemctl start gotty-fullauto
     
     # Centralized service check
     for i in {1..3}; do

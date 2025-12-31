@@ -23,7 +23,7 @@ install_peerswap() {
   # Check if already installed
   if command -v peerswapd &> /dev/null; then
     echo -e "${YELLOW}⚠️  PeerSwap já está instalado${NC}"
-    peerswapd --version 2>/dev/null || echo "Versão instalada"
+    peerswapd --version || echo "Versão instalada"
     echo ""
     read -p "Deseja reinstalar? (s/n): " reinstall
     if [[ "$reinstall" != "s" && "$reinstall" != "S" ]]; then
@@ -47,8 +47,8 @@ install_peerswap() {
 
   # Install dependencies
   echo -e "${BLUE}🛠️  Instalando dependências...${NC}"
-  sudo apt update > /dev/null 2>&1
-  sudo apt install -y build-essential git > /dev/null 2>&1
+  sudo apt update
+  sudo apt install -y build-essential git
   echo -e "${GREEN}✓ Dependências instaladas${NC}"
   echo ""
 
@@ -87,7 +87,7 @@ install_peerswap() {
   
   # Checkout specific version
   echo -e "${BLUE}🔖 Checkout versão v${PEERSWAP_VERSION}...${NC}"
-  if sudo -u peerswap git checkout v$PEERSWAP_VERSION 2>/dev/null; then
+  if sudo -u peerswap git checkout v$PEERSWAP_VERSION; then
     echo -e "${GREEN}✓ Versão v${PEERSWAP_VERSION} selecionada${NC}"
   else
     echo -e "${YELLOW}⚠️  Usando branch main${NC}"
@@ -113,9 +113,9 @@ install_peerswap() {
   fi
 
   # Add Go bin to PATH if not already there
-  if ! sudo -u peerswap grep -q "\$HOME/go/bin" /home/peerswap/.bashrc 2>/dev/null; then
+  if ! sudo -u peerswap grep -q "\$HOME/go/bin" /home/peerswap/.bashrc; then
     echo -e "${BLUE}🔧 Adicionando Go bin ao PATH...${NC}"
-    echo 'export PATH=$PATH:$HOME/go/bin' | sudo -u peerswap tee -a /home/peerswap/.bashrc > /dev/null
+    echo 'export PATH=$PATH:$HOME/go/bin' | sudo -u peerswap tee -a /home/peerswap/.bashrc
     echo -e "${GREEN}✓ PATH atualizado${NC}"
   fi
 
@@ -182,12 +182,12 @@ configure_peerswap() {
   echo -e "${BLUE}🔐 Recuperando credenciais do Elements...${NC}"
   source "$SCRIPT_DIR/brln-tools/password_manager.sh"
   
-  elements_rpc_password=$(python3 "$SCRIPT_DIR/brln-tools/password_manager.py" get elements_rpc_password 2>/dev/null)
+  elements_rpc_password=$(python3 "$SCRIPT_DIR/brln-tools/password_manager.py" get elements_rpc_password)
   
   if [[ -z "$elements_rpc_password" ]]; then
     echo -e "${YELLOW}⚠️  Senha do Elements RPC não encontrada no gerenciador${NC}"
     echo -e "${YELLOW}Tentando ler de /data/elements/elements.conf...${NC}"
-    elements_rpc_password=$(grep rpcpassword /data/elements/elements.conf 2>/dev/null | cut -d'=' -f2)
+    elements_rpc_password=$(grep rpcpassword /data/elements/elements.conf | cut -d'=' -f2)
     
     if [[ -z "$elements_rpc_password" ]]; then
       echo -e "${RED}❌ Não foi possível obter a senha do Elements RPC${NC}"
@@ -203,7 +203,7 @@ configure_peerswap() {
     lnd_user="$SUDO_USER"
   else
     # Try to find the user with LND installation
-    lnd_user=$(find /home -maxdepth 2 -name ".lnd" -type d 2>/dev/null | head -n1 | cut -d'/' -f3)
+    lnd_user=$(find /home -maxdepth 2 -name ".lnd" -type d | head -n1 | cut -d'/' -f3)
     if [[ -z "$lnd_user" ]]; then
       lnd_user="admin"  # fallback
     fi
@@ -565,8 +565,8 @@ show_peerswap_status() {
     echo ""
     
     # Try to get info from pscli
-    if timeout 5 sudo -u peerswap /home/peerswap/go/bin/pscli listpeers >/dev/null 2>&1; then
-      local peers=$(sudo -u peerswap /home/peerswap/go/bin/pscli listpeers 2>/dev/null | grep -c '"node_id"' || echo "0")
+    if timeout 5 sudo -u peerswap /home/peerswap/go/bin/pscli listpeers; then
+      local peers=$(sudo -u peerswap /home/peerswap/go/bin/pscli listpeers | grep -c '"node_id"' || echo "0")
       echo -e "${CYAN}Informações:${NC}"
       echo -e "   ${BLUE}Peers:${NC}       $peers"
     else
@@ -610,7 +610,7 @@ create_elements_wallet_for_peerswap() {
   fi
 
   # Check if RPC is available
-  if ! timeout 5 elements-cli -datadir=/data/elements getnetworkinfo >/dev/null 2>&1; then
+  if ! timeout 5 elements-cli -datadir=/data/elements getnetworkinfo; then
     echo -e "${RED}❌ Elements RPC não está disponível${NC}"
     echo -e "${YELLOW}Aguarde a inicialização do Elements${NC}"
     echo ""
@@ -618,12 +618,12 @@ create_elements_wallet_for_peerswap() {
   fi
 
   # Check if wallet already exists
-  if elements-cli -datadir=/data/elements listwallets 2>/dev/null | grep -q '"peerswap"'; then
+  if elements-cli -datadir=/data/elements listwallets | grep -q '"peerswap"'; then
     echo -e "${GREEN}✓ Wallet 'peerswap' já existe${NC}"
   else
     echo -e "${BLUE}💼 Criando wallet 'peerswap'...${NC}"
     
-    if elements-cli -datadir=/data/elements createwallet "peerswap" false false "" false false true >/dev/null 2>&1; then
+    if elements-cli -datadir=/data/elements createwallet "peerswap" false false "" false false true; then
       echo -e "${GREEN}✓ Wallet 'peerswap' criada com sucesso!${NC}"
     else
       echo -e "${RED}❌ Erro ao criar wallet${NC}"
@@ -634,7 +634,7 @@ create_elements_wallet_for_peerswap() {
 
   # Generate address for the wallet
   echo -e "${BLUE}🏠 Gerando endereço L-BTC...${NC}"
-  local address=$(elements-cli -datadir=/data/elements -rpcwallet=peerswap getnewaddress 2>/dev/null)
+  local address=$(elements-cli -datadir=/data/elements -rpcwallet=peerswap getnewaddress)
   if [[ -n "$address" ]]; then
     echo -e "${GREEN}✓ Endereço gerado:${NC}"
     echo ""

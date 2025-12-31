@@ -54,7 +54,7 @@ install_bos() {
   
   # Verify installation
   if command -v bos &> /dev/null; then
-    BOS_VERSION=$(bos --version 2>/dev/null | head -n1)
+    BOS_VERSION=$(bos --version | head -n1)
     echo -e "${GREEN}✓ bos instalado: $BOS_VERSION${NC}"
   else
     echo -e "${RED}❌ Erro ao instalar bos${NC}"
@@ -103,7 +103,7 @@ EOF
   
   # Test installation
   echo -e "${BLUE}Testando instalação bos...${NC}"
-  if bos utxos 2>/dev/null | grep -q "utxos\|channel"; then
+  if bos utxos | grep -q "utxos\|channel"; then
     echo -e "${GREEN}✓ bos funcionando corretamente${NC}"
   else
     echo -e "${YELLOW}⚠ Aguarde o LND sincronizar completamente para usar bos${NC}"
@@ -194,7 +194,7 @@ EOF
     echo -e "${BLUE}Aguardando sua mensagem no bot...${NC}"
     
     # Clear any old updates
-    curl -s "https://api.telegram.org/bot${bot_api_key}/getUpdates?offset=-1" > /dev/null
+    curl -s "https://api.telegram.org/bot${bot_api_key}/getUpdates?offset=-1"
     
     # Wait for user message and capture Telegram ID
     telegram_id=""
@@ -283,7 +283,7 @@ EOFSERVICE"
     curl -s -X POST "https://api.telegram.org/bot${bot_api_key}/sendMessage" \
       -d chat_id="$telegram_id" \
       -d text="✅ *BRLNBolt conectado com sucesso!*%0A%0ABot Balance of Satoshis ativo.%0A%0ATeste com: \`/balance\`" \
-      -d parse_mode="Markdown" > /dev/null
+      -d parse_mode="Markdown"
     
     echo ""
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -340,7 +340,7 @@ install_thunderhub() {
   
   # Import developer's GPG key
   echo -e "${BLUE}Importando chave GPG do desenvolvedor...${NC}"
-  curl -s https://github.com/apotdevin.gpg | gpg --import 2>/dev/null || true
+  curl -s https://github.com/apotdevin.gpg | gpg --import || true
   
   # Clone repository
   echo -e "${BLUE}Clonando ThunderHub v${VERSION}...${NC}"
@@ -364,7 +364,7 @@ install_thunderhub() {
   
   # Install dependencies
   echo -e "${BLUE}Instalando dependências NPM (isso pode demorar)...${NC}"
-  npm install > /dev/null 2>&1
+  npm install
   
   if [[ $? -eq 0 ]]; then
     echo -e "${GREEN}✓ Dependências instaladas${NC}"
@@ -375,7 +375,7 @@ install_thunderhub() {
   
   # Disable telemetry (optional)
   echo -e "${BLUE}Desativando telemetria do Next.js...${NC}"
-  npx next telemetry disable 2>/dev/null
+  npx next telemetry disable || true
   
   # Build
   echo -e "${BLUE}Compilando ThunderHub (isso pode demorar vários minutos)...${NC}"
@@ -669,11 +669,11 @@ install_lndg() {
   
   # Install requirements
   echo -e "${BLUE}Instalando dependências Python...${NC}"
-  .venv/bin/pip3 install -r requirements.txt > /dev/null 2>&1
+  .venv/bin/pip3 install -r requirements.txt
   
   # Install whitenoise
   echo -e "${BLUE}Instalando Whitenoise...${NC}"
-  .venv/bin/pip3 install whitenoise > /dev/null 2>&1
+  .venv/bin/pip3 install whitenoise
   
   # Initialize Django settings
   echo -e "${BLUE}Inicializando configurações Django...${NC}"

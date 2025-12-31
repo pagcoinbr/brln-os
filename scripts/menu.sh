@@ -37,7 +37,7 @@ run_utils() {
       ;;
     3)
       echo -e "${YELLOW}📊 Verificando status dos serviços...${NC}"
-      systemctl status bitcoind lnd elementsd --no-pager -l 2>/dev/null || echo "Alguns serviços podem não estar instalados"
+      systemctl status bitcoind lnd elementsd --no-pager -l || echo "Alguns serviços podem não estar instalados"
       echo -e "${GREEN}✅ Verificação concluída!${NC}"
       ;;
     4)
@@ -101,10 +101,10 @@ run_generate_protobuf() {
     3)
       echo -e "${YELLOW}📁 Verificando arquivos proto...${NC}"
       echo -e "${BLUE}Arquivos .proto encontrados:${NC}"
-      find "$PROTO_DIR" -name "*.proto" -type f 2>/dev/null | sed 's|.*/||' | sort || echo "Nenhum arquivo .proto encontrado"
+      find "$PROTO_DIR" -name "*.proto" -type f | sed 's|.*/||' | sort || echo "Nenhum arquivo .proto encontrado"
       echo ""
       echo -e "${BLUE}Arquivos _pb2.py gerados:${NC}"
-      find "$API_DIR" -name "*_pb2.py" -type f 2>/dev/null | sed 's|.*/||' | sort || echo "Nenhum arquivo _pb2.py encontrado"
+      find "$API_DIR" -name "*_pb2.py" -type f | sed 's|.*/||' | sort || echo "Nenhum arquivo _pb2.py encontrado"
       echo -e "${GREEN}✅ Verificação concluída!${NC}"
       ;;
     *)
@@ -259,7 +259,7 @@ install_complete_system() {
   
   # Detect if running from web terminal (GoTTY)
   SKIP_WEB_SERVICES=false
-  if [[ -n "$GOTTY_CLIENT_ADDRESS" ]] || pgrep -f "gotty.*menu.sh" > /dev/null 2>&1; then
+  if [[ -n "$GOTTY_CLIENT_ADDRESS" ]] || pgrep -f "gotty.*menu.sh"; then
     SKIP_WEB_SERVICES=true
     echo -e "${YELLOW}⚠️  Detectado terminal web - Apache e GoTTY serão ignorados para evitar desconexão${NC}"
     sleep 2

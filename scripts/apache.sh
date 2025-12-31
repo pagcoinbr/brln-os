@@ -52,7 +52,7 @@ EOF
 setup_apache_web() {
 
   # Instalar Apache se não estiver instalado
-  if ! command -v apache2 &> /dev/null; then
+  if ! command -v apache2; then
     sudo apt update
     sudo apt install apache2 -y # & spinner
   fi
@@ -90,7 +90,7 @@ setup_apache_web() {
   
   # Copiar arquivos CSS, JS, imagens adicionais
   for ext in css js png jpg jpeg gif svg webp; do
-    if ls "$SCRIPT_DIR"/*.$ext 1> /dev/null 2>&1; then
+    if ls "$SCRIPT_DIR"/*.$ext; then
       sudo cp -f "$SCRIPT_DIR"/*.$ext /var/www/html/ || true
     fi
   done
@@ -113,7 +113,7 @@ setup_apache_web() {
   sudo systemctl enable apache2
   
   # Se rodando do terminal web, apenas recarregar para não perder conexão
-  if pgrep -f "gotty.*menu.sh" > /dev/null 2>&1; then
+  if pgrep -f "gotty.*menu.sh"; then
     echo -e "${YELLOW}⚠️  Terminal web detectado - usando reload ao invés de restart${NC}"
     sudo systemctl reload apache2
   else
@@ -397,7 +397,7 @@ copy_brln_files_to_apache() {
   
   # Copiar assets estáticos
   for ext in css js png jpg jpeg gif svg webp ico; do
-    if ls "$base_dir"/*.$ext 1> /dev/null 2>&1; then
+    if ls "$base_dir"/*.$ext; then
       sudo cp "$base_dir"/*.$ext /var/www/html/ || true
     fi
   done
@@ -515,20 +515,20 @@ apache_maintenance() {
   echo -e "${GREEN}🔧 Executando manutenção do Apache...${NC}"
   
   # Check for service conflicts (Nginx vs Apache)
-  if pgrep -x "nginx" > /dev/null && pgrep -x "apache2" > /dev/null; then
+  if pgrep -x "nginx" && pgrep -x "apache2"; then
     echo -e "${YELLOW}⚠️ Conflito detectado: Nginx e Apache rodando simultaneamente${NC}"
     echo -e "${BLUE}🔄 Parando Nginx para evitar conflitos...${NC}"
     sudo systemctl stop nginx || true
     sudo systemctl disable nginx || true
     echo -e "${GREEN}✅ Nginx parado${NC}"
-  elif pgrep -x "nginx" > /dev/null; then
+  elif pgrep -x "nginx"; then
     echo -e "${YELLOW}⚠️ Nginx rodando - parando para usar Apache${NC}"
     sudo systemctl stop nginx || true
     sudo systemctl disable nginx || true
   fi
   
   # Ensure Apache is running
-  if ! pgrep -x "apache2" > /dev/null; then
+  if ! pgrep -x "apache2"; then
     echo -e "${BLUE}🚀 Iniciando Apache...${NC}"
     sudo systemctl enable apache2
     sudo systemctl start apache2

@@ -74,7 +74,7 @@ install_elements() {
   cd /tmp || return 1
   
   # Clean previous downloads
-  rm -f elements-${ELEMENTS_VERSION}-*.tar.gz SHA256SUMS.asc 2>/dev/null
+  rm -f elements-${ELEMENTS_VERSION}-*.tar.gz SHA256SUMS.asc || true
   
   # Download binary
   if ! wget -q --show-progress "https://github.com/ElementsProject/elements/releases/download/elements-${ELEMENTS_VERSION}/elements-${ELEMENTS_VERSION}-${ELEMENTS_ARCH}.tar.gz"; then
@@ -93,7 +93,7 @@ install_elements() {
 
   # Verify SHA256 checksum
   echo -e "${BLUE}🔍 Verificando checksum SHA256...${NC}"
-  if sha256sum --ignore-missing --check SHA256SUMS.asc 2>/dev/null | grep -q "elements-${ELEMENTS_VERSION}-${ELEMENTS_ARCH}.tar.gz: OK"; then
+  if sha256sum --ignore-missing --check SHA256SUMS.asc | grep -q "elements-${ELEMENTS_VERSION}-${ELEMENTS_ARCH}.tar.gz: OK"; then
     echo -e "${GREEN}✓ Checksum SHA256 verificado com sucesso!${NC}"
   else
     echo -e "${RED}❌ Falha na verificação do checksum SHA256!${NC}"
@@ -104,7 +104,7 @@ install_elements() {
   # Import GPG key for verification
   echo -e "${BLUE}🔐 Importando chave GPG do desenvolvedor...${NC}"
   # Key: BD0F3062F87842410B06A0432F656B0610604482 (Elements Project)
-  if gpg --keyserver keyserver.ubuntu.com --recv-keys BD0F3062F87842410B06A0432F656B0610604482 2>/dev/null; then
+  if gpg --keyserver keyserver.ubuntu.com --recv-keys BD0F3062F87842410B06A0432F656B0610604482; then
     echo -e "${GREEN}✓ Chave GPG importada${NC}"
   else
     echo -e "${YELLOW}⚠️  Aviso: Não foi possível importar a chave GPG${NC}"
@@ -380,15 +380,15 @@ show_elements_status() {
   fi
   
   # Try to connect to RPC
-  if timeout 5 elements-cli -datadir=/data/elements getnetworkinfo >/dev/null 2>&1; then
+  if timeout 5 elements-cli -datadir=/data/elements getnetworkinfo; then
     echo -e "   ${GREEN}●${NC} RPC: ${GREEN}Conectado${NC}"
     echo ""
     
     # Get network info
-    local chain=$(elements-cli -datadir=/data/elements getblockchaininfo 2>/dev/null | grep '"chain"' | cut -d'"' -f4)
-    local blocks=$(elements-cli -datadir=/data/elements getblockcount 2>/dev/null)
-    local connections=$(elements-cli -datadir=/data/elements getconnectioncount 2>/dev/null)
-    local network_info=$(elements-cli -datadir=/data/elements getnetworkinfo 2>/dev/null)
+    local chain=$(elements-cli -datadir=/data/elements getblockchaininfo | grep '"chain"' | cut -d'"' -f4)
+    local blocks=$(elements-cli -datadir=/data/elements getblockcount)
+    local connections=$(elements-cli -datadir=/data/elements getconnectioncount)
+    local network_info=$(elements-cli -datadir=/data/elements getnetworkinfo)
     local version=$(echo "$network_info" | grep '"version"' | head -n1 | grep -o '[0-9]*')
     
     echo -e "${CYAN}Informações da Rede:${NC}"
@@ -399,8 +399,8 @@ show_elements_status() {
     echo ""
     
     # Check wallet status
-    if elements-cli -datadir=/data/elements getwalletinfo >/dev/null 2>&1; then
-      local balance=$(elements-cli -datadir=/data/elements getbalance 2>/dev/null | head -n1)
+    if elements-cli -datadir=/data/elements getwalletinfo; then
+      local balance=$(elements-cli -datadir=/data/elements getbalance | head -n1)
       echo -e "${CYAN}Wallet:${NC}"
       echo -e "   ${BLUE}Status:${NC}      ${GREEN}Carregada${NC}"
       echo -e "   ${BLUE}Saldo L-BTC:${NC} ${balance:-0.00000000}"
@@ -419,8 +419,8 @@ show_elements_status() {
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo ""
 }
-      if elements-cli -conf=/data/elements/elements.conf getwalletinfo >/dev/null 2>&1; then
-        local balance=$(elements-cli -conf=/data/elements/elements.conf getbalance 2>/dev/null || echo "0.00")
+      if elements-cli -conf=/data/elements/elements.conf getwalletinfo; then
+        local balance=$(elements-cli -conf=/data/elements/elements.conf getbalance || echo "0.00")
         echo "💰 Saldo L-BTC: $balance"
       else
         echo -e "   ${YELLOW}⚠️ Wallet não carregada${NC}"
@@ -448,7 +448,7 @@ create_elements_wallet() {
   echo ""
   
   # Check if RPC is available
-  if ! timeout 5 elements-cli -datadir=/data/elements getnetworkinfo >/dev/null 2>&1; then
+  if ! timeout 5 elements-cli -datadir=/data/elements getnetworkinfo; then
     echo -e "${RED}❌ Elements RPC não está disponível${NC}"
     echo -e "${YELLOW}Certifique-se de que o Elements está em execução${NC}"
     echo ""
@@ -456,13 +456,13 @@ create_elements_wallet() {
   fi
 
   # Check if wallet already exists
-  if elements-cli -datadir=/data/elements getwalletinfo >/dev/null 2>&1; then
+  if elements-cli -datadir=/data/elements getwalletinfo; then
     echo -e "${GREEN}✓ Wallet já existe${NC}"
     echo ""
     
     # Show existing address
     echo -e "${BLUE}🏠 Gerando novo endereço L-BTC...${NC}"
-    local address=$(elements-cli -datadir=/data/elements getnewaddress 2>/dev/null)
+    local address=$(elements-cli -datadir=/data/elements getnewaddress)
     if [[ -n "$address" ]]; then
       echo -e "${GREEN}✓ Endereço gerado:${NC}"
       echo ""
@@ -473,13 +473,13 @@ create_elements_wallet() {
     # Create new wallet
     echo -e "${BLUE}💼 Criando wallet padrão...${NC}"
     
-    if elements-cli -datadir=/data/elements createwallet "" false false "" false false true >/dev/null 2>&1; then
+    if elements-cli -datadir=/data/elements createwallet "" false false "" false false true; then
       echo -e "${GREEN}✓ Wallet criada com sucesso!${NC}"
       echo ""
       
       # Generate address
       echo -e "${BLUE}🏠 Gerando endereço L-BTC...${NC}"
-      local address=$(elements-cli -datadir=/data/elements getnewaddress 2>/dev/null)
+      local address=$(elements-cli -datadir=/data/elements getnewaddress)
       if [[ -n "$address" ]]; then
         echo -e "${GREEN}✓ Endereço gerado:${NC}"
         echo ""
@@ -568,8 +568,8 @@ uninstall_elements() {
 
   # Stop service
   echo -e "${BLUE}⏸️  Parando serviço...${NC}"
-  sudo systemctl stop elementsd 2>/dev/null || true
-  sudo systemctl disable elementsd 2>/dev/null || true
+  sudo systemctl stop elementsd || true
+  sudo systemctl disable elementsd || true
   echo -e "${GREEN}✓ Serviço parado${NC}"
   
   # Remove service file
@@ -592,7 +592,7 @@ uninstall_elements() {
   if [[ "$remove_data" == "s" || "$remove_data" == "S" ]]; then
     echo -e "${BLUE}🗑️  Removendo dados...${NC}"
     sudo rm -rf /data/elements
-    sudo userdel -r elements 2>/dev/null || true
+    sudo userdel -r elements || true
     echo -e "${GREEN}✓ Dados e usuário removidos${NC}"
   else
     echo -e "${YELLOW}Dados preservados em /data/elements${NC}"

@@ -100,7 +100,7 @@ if [[ "$VENV_ACTIVATED" == false ]]; then
 fi
 
 # Check if grpcio-tools is available
-if ! python3 -c "import grpc_tools.protoc" >/dev/null 2>&1; then
+if ! python3 -c "import grpc_tools.protoc"; then
     echo -e "${YELLOW}📦 grpcio-tools not found in current environment${NC}"
     echo -e "${YELLOW}💡 Install with: pip3 install grpcio-tools${NC}"
     exit 1
@@ -108,7 +108,7 @@ fi
 
 echo -e "${YELLOW}🧹 Cleaning old generated files...${NC}"
 # Remove old generated files
-rm -f *_pb2.py *_pb2_grpc.py 2>/dev/null || true
+rm -f *_pb2.py *_pb2_grpc.py || true
 
 echo -e "${YELLOW}🔨 Generating main lightning.proto files...${NC}"
 
@@ -146,7 +146,7 @@ for proto_file in "${ADDITIONAL_PROTOS[@]}"; do
             --proto_path="$PROTO_DIR" \
             --python_out=. \
             --grpc_python_out=. \
-            "$PROTO_DIR/$proto_file" >/dev/null 2>&1
+            "$PROTO_DIR/$proto_file"
         
         if [[ $? -eq 0 ]]; then
             echo -e "${GREEN}   ✅ $proto_file compiled successfully${NC}"
@@ -163,7 +163,7 @@ echo -e "${YELLOW}🔧 Fixing import statements...${NC}"
 for grpc_file in *_pb2_grpc.py; do
     if [[ -f "$grpc_file" ]]; then
         # Convert relative imports to absolute imports
-        sed -i 's/from \. import \([a-z_]*\)_pb2/import \1_pb2/g' "$grpc_file" 2>/dev/null || true
+        sed -i 's/from \. import \([a-z_]*\)_pb2/import \1_pb2/g' "$grpc_file" || true
         echo -e "${GREEN}   ✅ Fixed imports in $grpc_file${NC}"
     fi
 done
@@ -183,7 +183,7 @@ for file in "${MAIN_FILES[@]}"; do
 done
 
 # Count all generated files
-TOTAL_GENERATED=$(ls -1 *_pb2.py *_pb2_grpc.py 2>/dev/null | wc -l)
+TOTAL_GENERATED=$(ls -1 *_pb2.py *_pb2_grpc.py | wc -l)
 
 echo -e "${BLUE}📊 Generation Summary:${NC}"
 echo -e "${GREEN}   📦 Total generated files: $TOTAL_GENERATED${NC}"
@@ -203,7 +203,7 @@ try:
 except ImportError as e:
     print(f'❌ Import error: {e}')
     exit(1)
-" 2>/dev/null; then
+"; then
         echo -e "${GREEN}✅ Import test passed!${NC}"
     else
         echo -e "${RED}❌ Import test failed${NC}"
@@ -211,7 +211,7 @@ except ImportError as e:
     fi
     
     # Set proper permissions
-    chmod 644 *_pb2.py *_pb2_grpc.py 2>/dev/null || true
+    chmod 644 *_pb2.py *_pb2_grpc.py || true
     
     echo ""
     echo -e "${GREEN}🎉 Protocol buffer generation completed successfully!${NC}"

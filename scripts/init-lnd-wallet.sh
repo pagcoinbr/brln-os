@@ -23,11 +23,11 @@ generate_seed() {
     local api_response
     if api_response=$(curl -s -X POST http://localhost:2121/api/v1/wallet/generate \
         -H "Content-Type: application/json" \
-        -d '{"word_count": 24}' 2>/dev/null); then
+        -d '{"word_count": 24}'); then
         echo -e "${GREEN}✅ Seed generated via local API (port 2121)${NC}"
     elif api_response=$(curl -s -X POST http://localhost:5000/api/v1/wallet/generate \
         -H "Content-Type: application/json" \
-        -d '{"word_count": 24}' 2>/dev/null); then
+        -d '{"word_count": 24}'); then
         echo -e "${GREEN}✅ Seed generated via proxy API (port 5000)${NC}"
     else
         echo -e "${RED}❌ Failed to connect to API on both ports 2121 and 5000${NC}"
@@ -93,7 +93,7 @@ test_lnd_connection() {
     
     sleep 3
     
-    if lncli getinfo >/dev/null 2>&1; then
+    if lncli getinfo; then
         echo -e "${GREEN}✅ LND is running and responsive!${NC}"
         lncli getinfo | jq '{
             identity_pubkey: .identity_pubkey,

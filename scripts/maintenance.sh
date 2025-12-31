@@ -58,13 +58,13 @@ check_and_manage_webservers() {
     local apache_running=false
     
     # Check if nginx is running
-    if pgrep -x "nginx" > /dev/null; then
+    if pgrep -x "nginx"; then
         nginx_running=true
         echo -e "${YELLOW}📋 Nginx está rodando${NC}"
     fi
     
     # Check if apache is running
-    if pgrep -x "apache2" > /dev/null; then
+    if pgrep -x "apache2"; then
         apache_running=true
         echo -e "${YELLOW}📋 Apache está rodando${NC}"
     fi
@@ -87,7 +87,7 @@ check_and_manage_webservers() {
     install_and_configure_apache_complete
     
     # Start Apache if not running
-    if ! pgrep -x "apache2" > /dev/null; then
+    if ! pgrep -x "apache2"; then
         echo -e "${BLUE}🚀 Iniciando Apache...${NC}"
         sudo systemctl enable apache2
         sudo systemctl start apache2
@@ -134,7 +134,7 @@ install_and_configure_apache_complete() {
     fi
     
     # Test configuration
-    if sudo apache2ctl configtest > /dev/null 2>&1; then
+    if sudo apache2ctl configtest; then
         echo -e "${GREEN}✅ Configuração Apache completa válida${NC}"
     else
         echo -e "${RED}❌ Erro na configuração Apache${NC}"
@@ -170,13 +170,13 @@ maintain_apache_config() {
   if [ ! -f /etc/apache2/sites-available/brln-ssl-api.conf ]; then
     echo "📝 Recriando configuração SSL com proxy..."
     configure_ssl_complete
-  elif ! sudo apache2ctl configtest 2>/dev/null; then
+  elif ! sudo apache2ctl configtest; then
     echo "⚠️ Configuração Apache inválida. Recriando..."
     configure_ssl_complete
   fi
   
   # Verificar se proxy está funcionando
-  if ! curl -s -k https://localhost/api/v1/health >/dev/null 2>&1; then
+  if ! curl -s -k https://localhost/api/v1/health; then
     echo "🔄 Proxy API não responde. Reconfigurando..."
     sudo systemctl reload apache2
   fi
@@ -197,7 +197,7 @@ verify_apache_modules_if_needed() {
   if [ ${#missing_modules[@]} -gt 0 ]; then
     echo "📦 Habilitando módulos: ${missing_modules[*]}"
     for module in "${missing_modules[@]}"; do
-      sudo a2enmod "$module" >/dev/null 2>&1
+      sudo a2enmod "$module"
     done
     sudo systemctl reload apache2
   fi
@@ -254,7 +254,7 @@ deploy_frontend_files() {
     
     # Create backup of current files
     if [[ -d /var/www/html/pages ]]; then
-        sudo cp -r /var/www/html /var/www/html.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+        sudo cp -r /var/www/html /var/www/html.backup.$(date +%Y%m%d_%H%M%S) || true
     fi
     
     # Create directory structure
@@ -308,8 +308,8 @@ verify_frontend_status() {
         echo -e "${GREEN}✅ Apache está rodando${NC}"
         
         # Check listening ports
-        local ssl_port=$(netstat -tlnp 2>/dev/null | grep apache | grep :443 || true)
-        local http_port=$(netstat -tlnp 2>/dev/null | grep apache | grep :80 || true)
+        local ssl_port=$(netstat -tlnp | grep apache | grep :443 || true)
+        local http_port=$(netstat -tlnp | grep apache | grep :80 || true)
         
         if [[ -n "$ssl_port" ]]; then
             echo -e "${GREEN}✅ SSL (porta 443) ativo${NC}"
@@ -320,7 +320,7 @@ verify_frontend_status() {
         fi
         
         # Get server IP
-        local server_ip=$(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')
+        local server_ip=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
         echo -e "${GREEN}🌐 Frontend disponível em: https://$server_ip${NC}"
         
     else
@@ -330,7 +330,7 @@ verify_frontend_status() {
     fi
     
     # Check for conflicting services
-    if pgrep -x "nginx" > /dev/null; then
+    if pgrep -x "nginx"; then
         echo -e "${YELLOW}⚠️ Nginx ainda está rodando - pode causar conflitos${NC}"
     fi
     
@@ -429,8 +429,8 @@ update_api_requirements() {
         # Activate virtual environment and update packages
         echo -e "${BLUE}📦 Atualizando dependências Python...${NC}"
         source "$venv_path/bin/activate"
-        pip install --upgrade pip > /dev/null 2>&1
-        pip install -r "$requirements_file" > /dev/null 2>&1
+        pip install --upgrade pip
+        pip install -r "$requirements_file"
         deactivate
         
         echo -e "${GREEN}✅ Dependências Python atualizadas${NC}"
@@ -451,7 +451,7 @@ verify_api_services() {
             
             # Check if API is responding (for brln-api)
             if [[ "$service" == "brln-api" ]]; then
-                local api_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:2121/api/v1/system/health 2>/dev/null || echo "000")
+                local api_response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:2121/api/v1/system/health || echo "000")
                 if [[ "$api_response" == "200" ]]; then
                     echo -e "${GREEN}✅ API respondendo em http://localhost:2121${NC}"
                 else
