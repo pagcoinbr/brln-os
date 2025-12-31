@@ -51,38 +51,18 @@ source "$SCRIPTS_DIR/apache.sh"
 source "$SCRIPTS_DIR/gotty.sh"
 source "$SCRIPTS_DIR/lightning.sh"
 
-# Function to detect and configure user environment
+# Function to detect and configure user environment (now uses shared logic)
 configure_user_environment() {
     echo -e "${YELLOW}👤 Configurando ambiente de usuário...${NC}"
     
-    # Detect the actual user (not root when using sudo)
-    if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
-        atual_user="$SUDO_USER"
-        echo -e "${BLUE}Usuário detectado (via sudo): $atual_user${NC}"
-    else
-        atual_user=$(whoami)
-        echo -e "${BLUE}Usuário atual: $atual_user${NC}"
-    fi
+    # Use shared path detection function from utils.sh
+    configure_brln_paths
     
-    # Set paths based on user
-    if [[ $atual_user == "root" ]]; then
-        USER_HOME="/root"
-        VENV_DIR="/root/brln-os-envs/api-v1"
-        API_USER="root"
-        echo -e "${BLUE}Modo: Root (administrador do sistema)${NC}"
-    elif [[ $atual_user == "admin" ]]; then
-        USER_HOME="/home/admin"
-        VENV_DIR="/home/admin/brln-os-envs/api-v1"
-        API_USER="admin"
-        echo -e "${BLUE}Modo: Admin (usuário dedicado)${NC}"
-    else
-        USER_HOME="/home/$atual_user"
-        VENV_DIR="/home/$atual_user/brln-os-envs/api-v1"
-        API_USER="$atual_user"
-        echo -e "${BLUE}Modo: Usuário personalizado ($atual_user)${NC}"
-    fi
+    # Set compatibility variables for existing code
+    atual_user="$ATUAL_USER"
+    VENV_DIR="$VENV_DIR_API"
+    API_USER="$ATUAL_USER"
     
-    echo -e "${BLUE}Diretório home: $USER_HOME${NC}"
     echo -e "${BLUE}Ambiente virtual: $VENV_DIR${NC}"
     
     # Check if python3-venv is installed

@@ -158,3 +158,93 @@ verify_data_compartments() {
   done
   echo ""
 }
+
+# ============================================================================
+# PATH DETECTION FUNCTIONS - Reusable across all BRLN-OS scripts
+# ============================================================================
+
+# Detect current user (handles sudo cases)
+detect_current_user() {
+    if [[ -n "$SUDO_USER" && "$SUDO_USER" != "root" ]]; then
+        echo "$SUDO_USER"
+    else
+        whoami
+    fi
+}
+
+# Configure user environment paths based on detected user
+# Sets global variables: ATUAL_USER, USER_HOME, BRLN_OS_DIR, API_DIR, VENV_DIR_API, VENV_DIR_TOOLS, API_USER
+configure_brln_paths() {
+    local quiet=${1:-false}
+    
+    # Detect the actual user (not root when using sudo)
+    ATUAL_USER=$(detect_current_user)
+    
+    # Determine BRLN-OS installation directory
+    # Try to detect from current script location first
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ "$script_dir" =~ .*/brln-os/.* ]]; then
+        BRLN_OS_DIR="$(echo "$script_dir" | sed 's|\(/[^/]*/brln-os\).*|\1|')"
+    else
+        # Fallback to user-based detection
+        if [[ $ATUAL_USER == "root" ]]; then
+            BRLN_OS_DIR="/root/brln-os"
+        elif [[ $ATUAL_USER == "admin" ]]; then
+            BRLN_OS_DIR="/home/admin/brln-os"
+        else
+            BRLN_OS_DIR="/home/$ATUAL_USER/brln-os"
+        fi
+    fi
+    
+    # Set paths based on user
+    if [[ $ATUAL_USER == "root" ]]; then
+        USER_HOME="/root"
+        VENV_DIR_API="/root/brln-os-envs/api-v1"
+        VENV_DIR_TOOLS="/root/brln-os-envs/brln-tools"
+        API_USER="root"
+        if [[ "$quiet" != "true" ]]; then
+            echo -e "${BLUE}Modo: Root (administrador do sistema)${NC}"
+        fi
+    elif [[ $ATUAL_USER == "admin" ]]; then
+        USER_HOME="/home/admin"
+        VENV_DIR_API="/home/admin/brln-os-envs/api-v1"
+        VENV_DIR_TOOLS="/home/admin/brln-os-envs/brln-tools"
+        API_USER="admin"
+        if [[ "$quiet" != "true" ]]; then
+            echo -e "${BLUE}Modo: Admin (usuário dedicado)${NC}"
+        fi
+    else
+        USER_HOME="/home/$ATUAL_USER"
+        VENV_DIR_API="/home/$ATUAL_USER/brln-os-envs/api-v1"
+        VENV_DIR_TOOLS="/home/$ATUAL_USER/brln-os-envs/brln-tools"
+        API_USER="$ATUAL_USER"
+        if [[ "$quiet" != "true" ]]; then
+            echo -e "${BLUE}Modo: Usuário personalizado ($ATUAL_USER)${NC}"
+        fi
+    fi
+    
+    # Set derived paths
+    API_DIR="$BRLN_OS_DIR/api/v1"
+    PROTO_DIR="$API_DIR/proto"
+    REQUIREMENTS_FILE_API="$API_DIR/requirements.txt"
+    REQUIREMENTS_FILE_TOOLS="$BRLN_OS_DIR/brln-tools/requirements.txt"
+    
+    if [[ "$quiet" != "true" ]]; then
+        echo -e "${BLUE}Usuário: $ATUAL_USER${NC}"
+        echo -e "${BLUE}BRLN-OS Dir: $BRLN_OS_DIR${NC}"
+        echo -e "${BLUE}API Dir: $API_DIR${NC}"
+        echo -e "${BLUE}Diretório home: $USER_HOME${NC}"
+    fi
+}
+
+# Quick function to just get the API directory path
+get_api_dir() {
+    configure_brln_paths true
+    echo "$API_DIR"
+}
+
+# Quick function to just get the BRLN-OS root directory
+get_brln_os_dir() {
+    configure_brln_paths true
+    echo "$BRLN_OS_DIR"
+}

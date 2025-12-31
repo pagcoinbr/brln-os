@@ -3,8 +3,15 @@
 # BRLN-Tools - Dependency Management
 # Environment setup for BRLN Tools (Telegram bots, etc.)
 
-TOOLS_VENV_DIR="/root/brln-os-envs/brln-tools"
-REQUIREMENTS_FILE="/root/brln-os/brln-tools/requirements.txt"
+# Import common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+# Configure dynamic paths
+configure_brln_paths
+# Now we have: VENV_DIR_TOOLS, REQUIREMENTS_FILE_TOOLS, etc. set dynamically
+TOOLS_VENV_DIR="$VENV_DIR_TOOLS"
+REQUIREMENTS_FILE="$REQUIREMENTS_FILE_TOOLS"
 
 setup_tools_environment() {
   echo "Setting up BRLN-Tools environment..."

@@ -3,6 +3,10 @@
 # Generate Protocol Buffer Files Script for BRLN-OS API
 # This script regenerates all gRPC protocol buffer files from .proto sources
 
+# Import common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
 set -o pipefail  # Exit on pipe failures but allow individual commands to fail
 
 # Colors for output
@@ -12,9 +16,9 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-API_DIR="/root/brln-os/api/v1"
-PROTO_DIR="$API_DIR/proto"
+# Configure dynamic paths
+configure_brln_paths
+# Now we have: API_DIR, PROTO_DIR, etc. set dynamically
 VENV_DIR="/home/admin/envflask"
 
 echo -e "${BLUE}🔧 BRLN-OS Protocol Buffer Generator${NC}"

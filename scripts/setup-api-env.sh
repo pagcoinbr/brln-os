@@ -3,8 +3,15 @@
 # API BRLN-OS - Dependency Management
 # Environment setup for BRLN-OS API v1
 
-API_VENV_DIR="/root/brln-os-envs/api-v1"
-REQUIREMENTS_FILE="/root/brln-os/api/v1/requirements.txt"
+# Import common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
+# Configure dynamic paths
+configure_brln_paths
+# Now we have: VENV_DIR_API, REQUIREMENTS_FILE_API, etc. set dynamically
+API_VENV_DIR="$VENV_DIR_API"
+REQUIREMENTS_FILE="$REQUIREMENTS_FILE_API"
 
 setup_api_environment() {
   echo "Setting up BRLN-OS API environment..."

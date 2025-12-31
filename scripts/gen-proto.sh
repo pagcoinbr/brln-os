@@ -3,6 +3,10 @@
 # Simple Protocol Buffer Generator for BRLN-OS API
 # This script regenerates gRPC protocol buffer files from .proto sources
 
+# Import common functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/utils.sh"
+
 # Colors for output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -10,9 +14,9 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-API_DIR="/root/brln-os/api/v1"
-PROTO_DIR="$API_DIR/proto"
+# Configure dynamic paths
+configure_brln_paths
+# Now we have: API_DIR, PROTO_DIR, BRLN_OS_DIR, etc. set dynamically
 LND_PROTO_URL="https://raw.githubusercontent.com/lightningnetwork/lnd/master/lnrpc"
 
 echo -e "${BLUE}🔧 BRLN-OS Protocol Buffer Generator with Download${NC}"
@@ -29,8 +33,8 @@ check_dependencies() {
     if [[ ! -d "$API_DIR" ]]; then
         missing_deps+=("API_DIRECTORY")
         error_details+=("❌ Diretório da API não encontrado: $API_DIR")
-        error_details+=("   💡 Solução: Certifique-se de que o BRLN-OS está instalado em /root/brln-os")
-        error_details+=("   💡 Ou execute: git clone https://github.com/pagcoinbr/brln-os.git /root/brln-os")
+        error_details+=("   💡 Solução: Certifique-se de que o BRLN-OS está instalado em $BRLN_OS_DIR")
+        error_details+=("   💡 Ou execute: git clone https://github.com/pagcoinbr/brln-os.git $BRLN_OS_DIR")
     fi
     
     # Check if curl is installed
