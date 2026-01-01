@@ -253,19 +253,8 @@ create_peerswap_service() {
   echo ""
 
   echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
-  sudo tee /etc/systemd/system/peerswapd.service > /dev/null << EOF
-[Unit]
-Description=Peer Swap Daemon
-
-[Service]
-ExecStart=/home/peerswap/go/bin/peerswapd
-User=peerswap
-Restart=always
-RestartSec=60
-
-[Install]
-WantedBy=multi-user.target
-EOF
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_peerswapd_service
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Arquivo de serviço criado${NC}"
@@ -391,22 +380,8 @@ create_psweb_service() {
   echo ""
 
   echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
-  sudo tee /etc/systemd/system/psweb.service > /dev/null << EOF
-[Unit]
-Description=PeerSwap Web UI
-
-[Service]
-ExecStart=/home/peerswap/go/bin/psweb
-User=peerswap
-Type=simple
-KillMode=process
-TimeoutSec=180
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_psweb_service
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Arquivo de serviço criado${NC}"

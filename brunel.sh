@@ -150,30 +150,9 @@ configure_api_service() {
     # Setup API user first
     setup_api_user
     
-    sudo tee /etc/systemd/system/brln-api.service > /dev/null << EOF
-[Unit]
-Description=BRLN-OS API gRPC - Comando Central
-After=network.target lnd.service
-
-[Service]
-Type=simple
-User=brln-api
-Group=brln-api
-WorkingDirectory=$SCRIPT_DIR/api/v1
-ExecStartPre=/bin/bash $SCRIPT_DIR/scripts/setup-api-env.sh
-ExecStart=/home/brln-api/venv/bin/python3 $SCRIPT_DIR/api/v1/app.py
-Restart=always
-RestartSec=10
-Environment=PYTHONPATH=$SCRIPT_DIR/api/v1
-Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
-
-# Segurança
-NoNewPrivileges=true
-PrivateTmp=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Create service using services.sh
+    source "$SCRIPT_DIR/scripts/services.sh"
+    create_brln_api_service
     
     # Reload systemd and enable service
     sudo systemctl daemon-reload

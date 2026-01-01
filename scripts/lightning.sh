@@ -270,28 +270,8 @@ EOFCRED
     
     # Create systemd service
     echo -e "${BLUE}Criando serviço systemd...${NC}"
-    sudo bash -c "cat > /etc/systemd/system/bos-telegram.service << 'EOFSERVICE'
-# Systemd unit for Bos-Telegram Bot
-# /etc/systemd/system/bos-telegram.service
-
-[Unit]
-Description=bos-telegram
-Wants=lnd.service
-After=lnd.service
-
-[Service]
-ExecStart=${HOME}/.npm-global/bin/bos telegram --use-small-units --connect ${telegram_id}
-User=${atual_user}
-Restart=always
-TimeoutSec=120
-RestartSec=30
-StandardOutput=null
-StandardError=journal
-Environment=BOS_DEFAULT_LND_PATH=/data/lnd
-
-[Install]
-WantedBy=multi-user.target
-EOFSERVICE"
+    source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+    create_bos_telegram_service
     
     # Enable and start service
     sudo systemctl daemon-reload
@@ -457,36 +437,8 @@ EOF
   
   # Create systemd service
   echo -e "${BLUE}Criando serviço systemd...${NC}"
-  sudo bash -c "cat > /etc/systemd/system/thunderhub.service << 'EOF'
-# BRLN Bolt: unidade systemd para Thunderhub
-# /etc/systemd/system/thunderhub.service
-
-[Unit]
-Description=ThunderHub
-Requires=lnd.service
-After=lnd.service
-
-[Service]
-WorkingDirectory=${HOME}/thunderhub
-ExecStart=/usr/bin/npm run start
-
-User=${atual_user}
-Group=${atual_user}
-
-# Process management
-####################
-TimeoutSec=300
-
-# Hardening Measures
-####################
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-
-[Install]
-WantedBy=multi-user.target
-EOF"
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_thunderhub_service
   
   # Enable and start service
   echo -e "${BLUE}Habilitando e iniciando serviço...${NC}"
@@ -719,47 +671,12 @@ install_lndg() {
   
   # Create systemd service for LNDg
   echo -e "${BLUE}Criando serviço systemd para LNDg...${NC}"
-  sudo bash -c "cat > /etc/systemd/system/lndg.service << 'EOF'
-[Unit]
-Description=LNDG Service
-After=lnd.service
-Requires=lnd.service
-
-[Service]
-WorkingDirectory=${HOME}/lndg
-ExecStart=${HOME}/lndg/.venv/bin/python3 ${HOME}/lndg/manage.py runserver 0.0.0.0:8889
-User=${atual_user}
-Group=${atual_user}
-Restart=on-failure
-Type=simple
-StandardError=syslog
-NotifyAccess=none
-
-[Install]
-WantedBy=multi-user.target
-EOF"
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_lndg_service
   
   # Create systemd service for LNDg Controller
   echo -e "${BLUE}Criando serviço systemd para LNDg Controller...${NC}"
-  sudo bash -c "cat > /etc/systemd/system/lndg-controller.service << 'EOF'
-[Unit]
-Description=Controlador de backend para Lndg
-After=lnd.service
-Requires=lnd.service
-
-[Service]
-Environment=PYTHONUNBUFFERED=1
-User=${atual_user}
-Group=${atual_user}
-ExecStart=/home/${atual_user}/lndg/.venv/bin/python3 /home/${atual_user}/lndg/controller.py
-StandardOutput=append:/var/log/lndg-controller.log
-StandardError=append:/var/log/lndg-controller.log
-Restart=always
-RestartSec=60s
-
-[Install]
-WantedBy=multi-user.target
-EOF"
+  create_lndg_controller_service
   
   # Create log files with proper permissions
   sudo touch /var/log/lndg-controller.log

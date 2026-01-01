@@ -160,14 +160,13 @@ install_bitcoind() {
     fi
   fi
   
-  # Install systemd service
-  if [[ -f "$SERVICES_DIR/bitcoind.service" ]]; then
-    echo -e "${BLUE}Instalando serviço systemd...${NC}"
-    safe_cp "$SERVICES_DIR/bitcoind.service" /etc/systemd/system/bitcoind.service
-    sudo systemctl daemon-reload
-    sudo systemctl enable bitcoind
-    echo -e "${GREEN}✓ Serviço bitcoind habilitado${NC}"
-  fi
+  # Install systemd service using services.sh
+  echo -e "${BLUE}Instalando serviço systemd...${NC}"
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_bitcoind_service
+  sudo systemctl daemon-reload
+  sudo systemctl enable bitcoind
+  echo -e "${GREEN}✓ Serviço bitcoind habilitado${NC}"
   
   echo -e "${GREEN}✅ Bitcoin Core instalado com sucesso!${NC}"
   echo -e "${CYAN}💡 Credenciais RPC armazenadas no gerenciador de senhas${NC}"
@@ -360,14 +359,13 @@ EOF'
   # Configure LND
   configure_lnd
   
-  # Install systemd service
-  if [[ -f "$SERVICES_DIR/lnd.service" ]]; then
-    echo -e "${BLUE}Instalando serviço systemd...${NC}"
-    safe_cp "$SERVICES_DIR/lnd.service" /etc/systemd/system/lnd.service
-    sudo systemctl daemon-reload
-    sudo systemctl enable lnd
-    echo -e "${GREEN}✓ Serviço lnd habilitado${NC}"
-  fi
+  # Install systemd service using services.sh
+  echo -e "${BLUE}Instalando serviço systemd...${NC}"
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_lnd_service
+  sudo systemctl daemon-reload
+  sudo systemctl enable lnd
+  echo -e "${GREEN}✓ Serviço lnd habilitado${NC}"
   
   echo -e "${GREEN}✅ LND instalado com sucesso!${NC}"
   echo -e "${CYAN}💡 Senha da carteira armazenada no gerenciador de senhas${NC}"

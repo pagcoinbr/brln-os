@@ -273,29 +273,8 @@ create_elements_service() {
   echo ""
   
   echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
-  sudo tee /etc/systemd/system/elementsd.service > /dev/null << 'EOF'
-[Unit]
-Description=Elements daemon on mainnet
-# Requires=bitcoind.service
-# After=bitcoind.service
-
-[Service]
-ExecStart=/usr/local/bin/elementsd -datadir=/data/elements/
-User=elements
-Group=elements
-Restart=on-failure
-TimeoutStartSec=infinity
-TimeoutStopSec=600
-
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-MemoryDenyWriteExecute=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_elementsd_service
 
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Arquivo de serviço criado${NC}"

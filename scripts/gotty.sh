@@ -62,23 +62,10 @@ gotty_install() {
 }
 
 create_gotty_service() {
-  echo -e "${YELLOW}"
+  echo -e "${YELLOW}📄 Criando serviço gotty...${NC}"
   
-  sudo tee /etc/systemd/system/gotty-fullauto.service > /dev/null << EOF
-[Unit]
-Description=Terminal Web para BRLN FullAuto
-After=network.target
-
-[Service]
-User=root
-WorkingDirectory=/root/brln-os/scripts
-Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash /root/brln-os/scripts/menu.sh
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
+  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  create_gotty_service
 
   # Reload systemd and enable service
   sudo systemctl daemon-reload

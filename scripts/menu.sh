@@ -51,6 +51,72 @@ run_utils() {
   esac
 }
 
+run_logs_and_config() {
+  bash "$SCRIPT_DIR/scripts/logs-and-config.sh"
+}
+
+run_services_manager() {
+  echo -e "${GREEN}⚙️ Gerenciador de Serviços BRLN-OS${NC}"
+  echo ""
+  echo -e "${BLUE}📋 Opções disponíveis:${NC}"
+  echo -e "${GREEN}1.${NC} Listar todos os serviços disponíveis"
+  echo -e "${GREEN}2.${NC} Criar todos os serviços"
+  echo -e "${GREEN}3.${NC} Criar serviço específico"
+  echo -e "${GREEN}4.${NC} Ver status dos serviços ativos"
+  echo ""
+  echo -n "Escolha uma opção (1-4): "
+  read service_choice
+  
+  case $service_choice in
+    1)
+      echo ""
+      bash "$SCRIPT_DIR/scripts/services.sh" list
+      ;;
+    2)
+      echo ""
+      echo -e "${YELLOW}⚠️ Isto criará TODOS os serviços systemd do BRLN-OS${NC}"
+      echo -n "Continuar? (s/N): "
+      read confirm
+      if [[ "$confirm" =~ ^[Ss]$ ]]; then
+        bash "$SCRIPT_DIR/scripts/services.sh" all
+        sudo systemctl daemon-reload
+        echo -e "${GREEN}✅ Todos os serviços criados!${NC}"
+      fi
+      ;;
+    3)
+      echo ""
+      echo -e "${BLUE}Serviços disponíveis:${NC}"
+      echo "bitcoind, lnd, elementsd, peerswapd, psweb, brln-api,"
+      echo "gotty, bos-telegram, thunderhub, lnbits, lndg, lndg-controller, messager-monitor"
+      echo ""
+      echo -n "Digite o nome do serviço: "
+      read service_name
+      if [[ -n "$service_name" ]]; then
+        bash "$SCRIPT_DIR/scripts/services.sh" create "$service_name"
+        sudo systemctl daemon-reload
+      fi
+      ;;
+    4)
+      echo ""
+      echo -e "${BLUE}📊 Status dos serviços BRLN-OS:${NC}"
+      echo ""
+      services=("bitcoind" "lnd" "elementsd" "peerswapd" "psweb" "brln-api" "gotty-fullauto" "bos-telegram" "thunderhub" "lnbits" "lndg" "lndg-controller" "messager-monitor")
+      for service in "${services[@]}"; do
+        status=$(systemctl is-active "$service" 2>/dev/null || echo "not-found")
+        case "$status" in
+          active) echo -e "  ${GREEN}●${NC} $service - ativo" ;;
+          inactive) echo -e "  ${YELLOW}●${NC} $service - inativo" ;;
+          failed) echo -e "  ${RED}●${NC} $service - falhou" ;;
+          *) echo -e "  ${GRAY}●${NC} $service - não instalado" ;;
+        esac
+      done
+      ;;
+    *)
+      echo -e "${RED}❌ Opção inválida${NC}"
+      ;;
+  esac
+}
+
 run_generate_protobuf() {
   echo -e "${GREEN}🗂️ Gerador de Protocol Buffers${NC}"
   echo ""
@@ -176,6 +242,8 @@ menu_configuration() {
   echo -e "${GREEN}1.${NC} 🛠️ Utilitários"
   echo -e "${GREEN}2.${NC} 🗂️ Gerar Protocol Buffers"
   echo -e "${GREEN}3.${NC} 🔐 Gerenciador de Senhas"
+  echo -e "${GREEN}4.${NC} ⚙️ Gerenciar Serviços Systemd"
+  echo -e "${GREEN}5.${NC} 📊 Logs e Configurações"
   echo ""
   echo -e "${BLUE}0.${NC} Voltar ao menu principal"
   echo ""
@@ -186,6 +254,8 @@ menu_configuration() {
     1) run_utils; read -p "Pressione Enter para continuar..."; menu_configuration ;;
     2) run_generate_protobuf; read -p "Pressione Enter para continuar..."; menu_configuration ;;
     3) source "$SCRIPT_DIR/scripts/password_manager_menu.sh"; show_password_menu; menu_configuration ;;
+    4) run_services_manager; read -p "Pressione Enter para continuar..."; menu_configuration ;;
+    5) run_logs_and_config; menu_configuration ;;
     0) menu ;;
     *) echo "Opção inválida!"; sleep 2; menu_configuration ;;
   esac
