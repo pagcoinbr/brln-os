@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# API BRLN-OS - Dependency Management
+# API BRLN-OS - Dependency Management  
 # Environment setup for BRLN-OS API v1
 
 # Import common functions
@@ -10,27 +10,37 @@ source "$SCRIPT_DIR/utils.sh"
 # Configure dynamic paths
 configure_brln_paths
 # Now we have: VENV_DIR_API, REQUIREMENTS_FILE_API, etc. set dynamically
-API_VENV_DIR="$VENV_DIR_API"
 REQUIREMENTS_FILE="$REQUIREMENTS_FILE_API"
 
 setup_api_environment() {
   echo "Setting up BRLN-OS API environment..."
   
-  # Use dedicated API venv location for the brln-api user
-  API_VENV_DIR="/home/brln-api/venv"
-  
-  # Create virtual environment directory with proper permissions
-  sudo mkdir -p "$(dirname "$API_VENV_DIR")"
-  
-  # Create virtual environment if it doesn't exist
-  if [[ ! -d "$API_VENV_DIR" ]]; then
-    echo "Creating virtual environment for API..."
-    sudo python3 -m venv "$API_VENV_DIR"
-    sudo chown -R brln-api:brln-api "$API_VENV_DIR"
+  # Create brln-api user if it doesn't exist (must be done first)
+  if ! id "brln-api" &>/dev/null; then
+    echo "Creating brln-api user..."
+    sudo adduser --disabled-password --gecos "" brln-api
   fi
   
-  # Activate virtual environment
-  source "$API_VENV_DIR/bin/activate"
+  # Use the dynamically configured venv location (admin user's space)
+  REAL_VENV_DIR="$VENV_DIR_API"
+  SYMLINK_VENV_DIR="/home/brln-api/venv"
+  
+  # Create virtual environment in admin user space
+  if [[ ! -d "$REAL_VENV_DIR" ]]; then
+    echo "Creating virtual environment at $REAL_VENV_DIR..."
+    mkdir -p "$(dirname "$REAL_VENV_DIR")"
+    python3 -m venv "$REAL_VENV_DIR"
+  fi
+  
+  # Create symlink from brln-api home to real venv location
+  if [[ ! -L "$SYMLINK_VENV_DIR" ]]; then
+    sudo mkdir -p "$(dirname "$SYMLINK_VENV_DIR")"
+    sudo ln -sf "$REAL_VENV_DIR" "$SYMLINK_VENV_DIR"
+    echo "Created symlink: $SYMLINK_VENV_DIR -> $REAL_VENV_DIR"
+  fi
+  
+  # Activate virtual environment (using real location)
+  source "$REAL_VENV_DIR/bin/activate"
   
   # Upgrade pip
   pip install --upgrade pip
@@ -48,10 +58,13 @@ setup_api_environment() {
     pip install eth-hash[pycryptodome]==0.5.2 pycryptodome==3.20.0
   fi
   
-  # Fix ownership after all pip operations
-  sudo chown -R brln-api:brln-api "$API_VENV_DIR"
+  # Ensure brln-api user can read the real venv location
+  sudo chown -R $(whoami):$(whoami) "$REAL_VENV_DIR"
+  sudo chmod -R 755 "$REAL_VENV_DIR"
   
   echo "API environment setup complete!"
+  echo "Real venv: $REAL_VENV_DIR"
+  echo "Symlink: $SYMLINK_VENV_DIR -> $REAL_VENV_DIR"
 }
 
 # Check if running directly
