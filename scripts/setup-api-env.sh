@@ -48,6 +48,9 @@ setup_api_environment() {
     pip install eth-hash[pycryptodome]==0.5.2 pycryptodome==3.20.0
   fi
   
+  # Fix ownership after all pip operations
+  sudo chown -R brln-api:brln-api "$API_VENV_DIR"
+  
   echo "API environment setup complete!"
 }
 
