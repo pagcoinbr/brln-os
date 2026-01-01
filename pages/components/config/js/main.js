@@ -332,6 +332,101 @@ async function loadSystemStatus() {
   }
 }
 
+// Password Manager Backup Functions
+async function loadBackupInfo() {
+  try {
+    console.log('Loading password manager backup info...');
+    const response = await fetch('/api/v1/system/passwords/backup/info', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Backup info:', data);
+    
+    // Update UI elements
+    const sizeElement = document.getElementById('backup-size');
+    const countElement = document.getElementById('backup-count');
+    const dateElement = document.getElementById('backup-date');
+    
+    if (sizeElement) {
+      sizeElement.textContent = data.file_size_human || 'N/A';
+    }
+    if (countElement) {
+      countElement.textContent = data.stored_passwords !== undefined ? data.stored_passwords : 'N/A';
+    }
+    if (dateElement) {
+      // Format the date nicely
+      if (data.last_modified) {
+        const date = new Date(data.last_modified);
+        dateElement.textContent = date.toLocaleString();
+      } else {
+        dateElement.textContent = 'N/A';
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error loading backup info:', error);
+    document.getElementById('backup-size').textContent = 'Error';
+    document.getElementById('backup-count').textContent = 'Error';
+    document.getElementById('backup-date').textContent = 'Error';
+  }
+}
+
+async function downloadBackup() {
+  try {
+    console.log('Downloading password manager backup...');
+    const response = await fetch('/api/v1/system/passwords/backup', {
+      method: 'GET',
+      credentials: 'same-origin'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // Get filename from Content-Disposition header
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'brln-passwords-backup.db';
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="(.+)"/);
+      if (match) {
+        filename = match[1];
+      }
+    }
+    
+    // Download the file
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    console.log('Backup downloaded successfully:', filename);
+    alert('Backup downloaded successfully!');
+    
+  } catch (error) {
+    console.error('Error downloading backup:', error);
+    alert(`Error downloading backup: ${error.message}`);
+  }
+}
+
+// Make backup functions globally accessible
+window.loadBackupInfo = loadBackupInfo;
+window.downloadBackup = downloadBackup;
+
 // Inicializar quando a página carregar
 document.addEventListener('DOMContentLoaded', async function() {
   // Perform initial setup check
@@ -346,12 +441,16 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Carregar status inicial
   loadServicesStatus();
   loadSystemStatus();
+  loadBackupInfo();
   
   // Atualizar status a cada 10 segundos
   setInterval(loadSystemStatus, 10000);
   
   // Atualizar status dos serviços a cada 5 segundos
   setInterval(loadServicesStatus, 5000);
+  
+  // Atualizar backup info a cada 30 segundos
+  setInterval(loadBackupInfo, 30000);
   
   // Add click handler for terminal web button
   const terminalBtn = document.querySelector('.terminal-web-btn');

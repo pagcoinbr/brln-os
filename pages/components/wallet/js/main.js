@@ -1439,11 +1439,62 @@ async function autoConfigureLND() {
       return;
     }
     
-    // Prompt for wallet password
-    const walletPassword = prompt('Enter a password for the LND wallet (minimum 8 characters):');
-    if (!walletPassword || walletPassword.length < 8) {
-      walletService.showNotification('Password must be at least 8 characters', 'error');
-      return;
+    // Get or generate LND wallet password from secure password manager
+    statusMessage.textContent = 'Retrieving LND wallet password...';
+    progressBar.style.width = '10%';
+    
+    let walletPassword;
+    try {
+      // Try to get existing password from secure password manager
+      const passwordResponse = await fetch(`${API_BASE_URL}/system/passwords/get/lnd_wallet`, {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'}
+      });
+      
+      if (passwordResponse.ok) {
+        const passwordData = await passwordResponse.json();
+        if (passwordData.password) {
+          walletPassword = passwordData.password;
+          lndScriptOutput.value += '🔐 Retrieved existing LND wallet password from secure storage\n\n';
+        }
+      }
+    } catch (error) {
+      console.log('No existing LND password found, will generate new one');
+    }
+    
+    // If no password exists, generate and store a new one
+    if (!walletPassword) {
+      lndScriptOutput.value += '🔑 Generating new secure LND wallet password...\n';
+      
+      // Generate a cryptographically secure 24-character password
+      const array = new Uint8Array(18);
+      crypto.getRandomValues(array);
+      walletPassword = btoa(String.fromCharCode.apply(null, array)).substring(0, 24);
+      
+      // Store in secure password manager
+      try {
+        const storeResponse = await fetch(`${API_BASE_URL}/system/passwords/store`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            service_name: 'lnd_wallet',
+            username: 'lnd',
+            password: walletPassword,
+            description: 'LND Wallet Password',
+            port: 8080,
+            url: 'https://127.0.0.1:8080'
+          })
+        });
+        
+        if (storeResponse.ok) {
+          lndScriptOutput.value += '✅ New password generated and stored securely\n\n';
+        } else {
+          lndScriptOutput.value += '⚠️  Password generated but storage failed (will use anyway)\n\n';
+        }
+      } catch (error) {
+        console.error('Failed to store password:', error);
+        lndScriptOutput.value += '⚠️  Password generated but storage failed (will use anyway)\n\n';
+      }
     }
     
     // Show automation status and output container

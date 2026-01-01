@@ -243,10 +243,11 @@ EOF
 
   # Store credentials in password manager
   echo -e "${BLUE}💾 Armazenando credenciais no gerenciador de senhas...${NC}"
-  source "$SCRIPT_DIR/brln-tools/password_manager.sh"
+  ensure_pm_session  # Unlock password manager session
+  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
   
-  store_password_full "elements_rpc_user" "$elements_rpc_user" "Elements Core - RPC Username" "elements" 7041 "http://localhost:7041"
-  store_password_full "elements_rpc_password" "$elements_rpc_pass" "Elements Core - RPC Password" "elements" 7041 "http://localhost:7041"
+  secure_store_password_full "elements_rpc_user" "$elements_rpc_user" "Elements Core - RPC Username" "elements" 7041 "http://localhost:7041"
+  secure_store_password_full "elements_rpc_password" "$elements_rpc_pass" "Elements Core - RPC Password" "elements" 7041 "http://localhost:7041"
   
   echo -e "${GREEN}✓ Credenciais armazenadas no gerenciador de senhas${NC}"
   echo ""

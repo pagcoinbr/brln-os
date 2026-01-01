@@ -180,9 +180,9 @@ configure_peerswap() {
 
   # Get Elements RPC password from password manager
   echo -e "${BLUE}🔐 Recuperando credenciais do Elements...${NC}"
-  source "$SCRIPT_DIR/brln-tools/password_manager.sh"
+  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
   
-  elements_rpc_password=$(python3 "$SCRIPT_DIR/brln-tools/password_manager.py" get elements_rpc_password)
+  elements_rpc_password=$(python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" get elements_rpc_password)
   
   if [[ -z "$elements_rpc_password" ]]; then
     echo -e "${YELLOW}⚠️  Senha do Elements RPC não encontrada no gerenciador${NC}"

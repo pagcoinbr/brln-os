@@ -186,6 +186,13 @@ create_brln_api_service() {
         brln_os_dir="/root/brln-os"
     fi
     
+    # Check if SystemD credential exists
+    local load_credential=""
+    if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
+        load_credential="LoadCredential=brln-master-password:/etc/credstore/brln-master-password.cred"
+        echo -e "${GREEN}✅ SystemD encrypted credentials detected${NC}"
+    fi
+    
     sudo tee /etc/systemd/system/brln-api.service > /dev/null << EOF
 [Unit]
 Description=BRLN-OS API gRPC - Comando Central
@@ -202,6 +209,7 @@ Restart=always
 RestartSec=10
 Environment=PYTHONPATH=${brln_os_dir}/api/v1
 Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
+${load_credential}
 
 # Security
 NoNewPrivileges=true
@@ -218,6 +226,14 @@ EOF
 create_gotty_service() {
     echo -e "${YELLOW}🌐 Creating gotty-fullauto.service...${NC}"
     
+    # Determine the correct paths based on current setup
+    local brln_os_dir
+    if [[ -d "/home/admin/brln-os" ]]; then
+        brln_os_dir="/home/admin/brln-os"
+    else
+        brln_os_dir="/root/brln-os"
+    fi
+    
     sudo tee /etc/systemd/system/gotty-fullauto.service > /dev/null << EOF
 [Unit]
 Description=Terminal Web para BRLN FullAuto
@@ -225,9 +241,9 @@ After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/home/admin/brln-os/scripts
+WorkingDirectory=${brln_os_dir}/scripts
 Environment=TERM=xterm
-ExecStart=/usr/local/bin/gotty -p 3131 -w bash /home/admin/brln-os/scripts/menu.sh
+ExecStart=/usr/local/bin/gotty -p 3131 -w bash ${brln_os_dir}/scripts/menu.sh
 Restart=always
 
 [Install]

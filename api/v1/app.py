@@ -128,6 +128,16 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
+# Secure Password Manager API Integration
+sys.path.insert(0, '/root/brln-os/brln-tools')
+try:
+    from secure_password_api import SecurePasswordAPI
+    HAS_SECURE_PASSWORD_API = True
+    print("Secure Password Manager API loaded successfully")
+except ImportError as e:
+    HAS_SECURE_PASSWORD_API = False
+    print(f"Warning: Secure Password Manager API not available: {e}")
+
 # Wallet management imports
 try:
     import mnemonic
@@ -147,6 +157,78 @@ warnings.filterwarnings("ignore")
 # Network configuration
 BITCOIN_NETWORK = os.environ.get('BITCOIN_NETWORK', 'mainnet')
 
+# Initialize Secure Password Manager API
+def get_master_password_from_credentials():
+    """
+    Get master password from SystemD encrypted credentials or environment variable.
+    Priority: SystemD Credentials -> Environment Variable
+    """
+    # Try SystemD credentials first
+    credentials_dir = os.environ.get('CREDENTIALS_DIRECTORY')
+    if credentials_dir:
+        cred_file = Path(credentials_dir) / 'brln-master-password'
+        if cred_file.exists():
+            try:
+                with open(cred_file, 'r') as f:
+                    password = f.read().strip()
+                    if password:
+                        print("Master password loaded from SystemD encrypted credentials")
+                        return password
+            except Exception as e:
+                print(f"Warning: Could not read SystemD credential: {e}")
+    
+    # Fallback to environment variable
+    env_password = os.environ.get('BRLN_MASTER_PASSWORD')
+    if env_password:
+        print("Master password loaded from environment variable")
+        return env_password
+    
+    print("WARNING: Master password not found in SystemD credentials or environment")
+    return None
+
+if HAS_SECURE_PASSWORD_API:
+    try:
+        master_password = get_master_password_from_credentials()
+        password_api = SecurePasswordAPI(
+            master_password=master_password,
+            cache_enabled=True
+        )
+        print("Secure Password Manager API initialized")
+        
+        # Check if initialized
+        if not password_api.is_initialized():
+            print("WARNING: Secure password manager not initialized!")
+            print("Run: python3 /root/brln-os/brln-tools/secure_password_manager.py init")
+    except Exception as e:
+        print(f"Warning: Could not initialize secure password API: {e}")
+        password_api = None
+else:
+    password_api = None
+
+def get_secure_credential(service_name, fallback_value=None):
+    """
+    Get credential from secure password manager with fallback.
+    Priority: Password Manager -> Environment Variable -> Fallback
+    """
+    if password_api:
+        try:
+            credential = password_api.get_password(service_name)
+            if credential:
+                return credential
+        except Exception as e:
+            print(f"Warning: Could not retrieve {service_name} from password manager: {e}")
+    
+    # Try environment variable
+    env_key = service_name.upper().replace('_', '_')
+    env_value = os.environ.get(env_key)
+    if env_value:
+        return env_value
+    
+    # Use fallback
+    if fallback_value:
+        print(f"Warning: Using fallback value for {service_name}")
+    return fallback_value
+
 # Configurações LND
 LND_HOST = "localhost"
 LND_GRPC_PORT = "10009"
@@ -156,8 +238,13 @@ TLS_CERT_PATH = "/data/lnd/tls.cert"
 # Configurações Elements/Liquid
 ELEMENTS_RPC_HOST = "localhost"
 ELEMENTS_RPC_PORT = "7041"
-ELEMENTS_RPC_USER = "test"
-ELEMENTS_RPC_PASSWORD = "test"
+# Load credentials from secure password manager
+ELEMENTS_RPC_USER = get_secure_credential('elements_rpc_user', 'elements')
+ELEMENTS_RPC_PASSWORD = get_secure_credential('elements_rpc_password', 'changeme_elements')
+
+if ELEMENTS_RPC_PASSWORD == 'changeme_elements':
+    print("WARNING: Using default Elements RPC password - please configure secure credentials")
+    print("Store password: secure_store_password 'elements_rpc_password' 'admin' 'your_secure_password'")
 
 # Configurações do Wallet HD
 WALLET_DATA_DIR = "/data/brln-wallet"
@@ -1768,14 +1855,22 @@ class ElementsRPCClient:
     def __init__(self):
         self.host = ELEMENTS_RPC_HOST
         self.port = ELEMENTS_RPC_PORT
-        self.user = ELEMENTS_RPC_USER
-        self.password = ELEMENTS_RPC_PASSWORD
+        # Load credentials dynamically on init
+        self._update_credentials()
+    
+    def _update_credentials(self):
+        """Update credentials from secure password manager"""
+        self.user = get_secure_credential('elements_rpc_user', ELEMENTS_RPC_USER)
+        self.password = get_secure_credential('elements_rpc_password', ELEMENTS_RPC_PASSWORD)
         self.auth = base64.b64encode(f"{self.user}:{self.password}".encode()).decode()
         
     def _call_rpc(self, method, params=None):
         """Faz chamada RPC para Elements daemon"""
         if params is None:
             params = []
+        
+        # Refresh credentials before each call (supports password rotation)
+        self._update_credentials()
             
         headers = {
             'Content-Type': 'application/json',
@@ -6305,6 +6400,246 @@ def tron_load_config():
             'status': 'error',
             'message': str(e)
         }), 500
+
+# === SECURE PASSWORD MANAGER API ENDPOINTS ===
+
+@app.route('/api/v1/system/passwords/store', methods=['POST'])
+def store_system_password():
+    """Store a service password in secure password manager"""
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized',
+            'message': 'Run: python3 /root/brln-os/brln-tools/secure_password_manager.py init'
+        }), 503
+    
+    try:
+        data = request.json
+        service_name = data.get('service_name')
+        username = data.get('username', 'admin')
+        password = data.get('password')
+        description = data.get('description', '')
+        port = data.get('port', 0)
+        url = data.get('url', '')
+        
+        if not service_name or not password:
+            return jsonify({'error': 'service_name and password required'}), 400
+        
+        # Store password
+        success = password_api.store_password(
+            service_name=service_name,
+            username=username,
+            password=password,
+            description=description,
+            port=port,
+            url=url
+        )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Password stored for {service_name}',
+                'service_name': service_name
+            })
+        else:
+            return jsonify({'error': 'Failed to store password'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/system/passwords/list', methods=['GET'])
+def list_system_passwords():
+    """List all stored service names (admin only)"""
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized'
+        }), 503
+    
+    try:
+        services = password_api.list_services()
+        return jsonify({
+            'success': True,
+            'services': services,
+            'count': len(services)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/system/passwords/status', methods=['GET'])
+def password_manager_status():
+    """Get secure password manager status"""
+    if not password_api:
+        return jsonify({
+            'available': False,
+            'error': 'Secure password manager API not loaded'
+        })
+    
+    try:
+        status = password_api.get_status()
+        status['available'] = True
+        return jsonify(status)
+    except Exception as e:
+        return jsonify({
+            'available': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/v1/system/passwords/delete/<service_name>', methods=['DELETE'])
+def delete_system_password(service_name):
+    """Delete a service password"""
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized'
+        }), 503
+    
+    try:
+        success = password_api.delete_password(service_name)
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Password deleted for {service_name}'
+            })
+        else:
+            return jsonify({'error': 'Failed to delete password'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/system/passwords/get/<service_name>', methods=['GET'])
+def get_system_password(service_name):
+    """Get a specific service password (requires active session)"""
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized'
+        }), 503
+    
+    try:
+        password = password_api.get_password(service_name)
+        if password:
+            return jsonify({
+                'success': True,
+                'service_name': service_name,
+                'password': password
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Password not found for {service_name}'
+            }), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/system/passwords/unlock', methods=['POST'])
+def unlock_password_session():
+    """
+    Unlock password manager session with master password.
+    This is needed when master password is not auto-loaded from SystemD credentials.
+    """
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized'
+        }), 503
+    
+    try:
+        data = request.json
+        master_password = data.get('master_password')
+        
+        if not master_password:
+            return jsonify({'error': 'master_password required'}), 400
+        
+        # Unlock session
+        success = password_api.unlock_session(master_password)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Session unlocked successfully',
+                'session_timeout': '5 minutes'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid master password'
+            }), 401
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/system/passwords/backup', methods=['GET'])
+def backup_password_database():
+    """Create and download backup of password database"""
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized'
+        }), 503
+    
+    try:
+        import shutil
+        from flask import send_file
+        import io
+        
+        DB_PATH = "/data/brln-secure-passwords.db"
+        
+        if not os.path.exists(DB_PATH):
+            return jsonify({'error': 'Password database not found'}), 404
+        
+        # Create backup filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_filename = f'brln-passwords-backup-{timestamp}.db'
+        
+        # Read database file
+        with open(DB_PATH, 'rb') as f:
+            db_data = f.read()
+        
+        # Create in-memory file
+        backup_file = io.BytesIO(db_data)
+        backup_file.seek(0)
+        
+        # Send file for download
+        return send_file(
+            backup_file,
+            mimetype='application/octet-stream',
+            as_attachment=True,
+            download_name=backup_filename
+        )
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/v1/system/passwords/backup/info', methods=['GET'])
+def get_backup_info():
+    """Get information about password database for backup"""
+    if not password_api or not password_api.is_initialized():
+        return jsonify({
+            'error': 'Secure password manager not initialized'
+        }), 503
+    
+    try:
+        DB_PATH = "/data/brln-secure-passwords.db"
+        
+        if not os.path.exists(DB_PATH):
+            return jsonify({'error': 'Password database not found'}), 404
+        
+        # Get file size
+        file_size = os.path.getsize(DB_PATH)
+        
+        # Get password count
+        status = password_api.get_status()
+        
+        # Get last modified time
+        mtime = os.path.getmtime(DB_PATH)
+        last_modified = datetime.fromtimestamp(mtime).isoformat()
+        
+        return jsonify({
+            'success': True,
+            'database_path': DB_PATH,
+            'file_size': file_size,
+            'file_size_human': f"{file_size / 1024:.1f} KB",
+            'stored_passwords': status.get('stored_passwords', 0),
+            'last_modified': last_modified,
+            'iterations': status.get('iterations', 500000)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=2121, debug=False)

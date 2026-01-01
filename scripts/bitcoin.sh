@@ -9,7 +9,8 @@ install_bitcoind() {
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
   # Define script directory for consistent path resolution
-  SCRIPT_DIR="/home/admin/brln-os"
+  detect_brln_setup quiet
+  SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Create bitcoin user if it doesn't exist
   if ! id "bitcoin" &>/dev/null; then
@@ -125,8 +126,9 @@ install_bitcoind() {
   "
   
   # Store password securely in password manager
-  source "$SCRIPT_DIR/brln-tools/password_manager.sh"
-  store_password_full "bitcoin_rpc" "$RPC_PASS" "Bitcoin Core RPC credentials" "minibolt" 8332 "http://127.0.0.1:8332"
+  ensure_pm_session  # Unlock password manager session
+  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
+  secure_store_password_full "bitcoin_rpc" "$RPC_PASS" "Bitcoin Core RPC credentials" "minibolt" 8332 "http://127.0.0.1:8332"
   echo -e "${GREEN}✓ Credenciais RPC salvas no gerenciador de senhas${NC}"
   
   # Copy or create configuration based on network
@@ -191,7 +193,8 @@ configure_lnd() {
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
   # Define script directory for consistent path resolution
-  SCRIPT_DIR="/home/admin/brln-os"
+  detect_brln_setup quiet
+  SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Create lnd user if it doesn't exist
   if ! id "lnd" &>/dev/null; then
@@ -236,8 +239,9 @@ configure_lnd() {
   "
   
   # Store password securely in password manager
-  source "$SCRIPT_DIR/brln-tools/password_manager.sh"
-  store_password_full "lnd_wallet" "$WALLET_PASS" "LND Wallet Password" "lnd" 8080 "https://127.0.0.1:8080"
+  ensure_pm_session  # Unlock password manager session
+  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
+  secure_store_password_full "lnd_wallet" "$WALLET_PASS" "LND Wallet Password" "lnd" 8080 "https://127.0.0.1:8080"
   echo -e "${GREEN}✓ Senha da carteira LND salva no gerenciador de senhas${NC}"
   
   # Copy or create configuration based on network

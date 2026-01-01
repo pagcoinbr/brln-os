@@ -1,9 +1,9 @@
 #!/bin/bash
-# BRLN-OS Password Manager Menu
+# BRLN-OS Secure Password Manager Menu
 # Interactive menu for managing stored passwords
 
 source "$(dirname "${BASH_SOURCE[0]}")/../scripts/config.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/../brln-tools/password_manager.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../brln-tools/secure_password_manager.sh"
 
 show_password_menu() {
     while true; do
@@ -28,7 +28,7 @@ show_password_menu() {
                 clear
                 echo -e "${CYAN}📋 SENHAS ARMAZENADAS${NC}"
                 echo ""
-                list_passwords
+                secure_list_passwords
                 echo ""
                 read -p "Pressione Enter para continuar..."
                 ;;
@@ -48,7 +48,7 @@ show_password_menu() {
                 port="${port:-0}"
                 
                 echo ""
-                store_password_full "$service_name" "$password" "$description" "$username" "$port" "$url"
+                secure_store_password_full "$service_name" "$password" "$description" "$username" "$port" "$url"
                 echo ""
                 read -p "Pressione Enter para continuar..."
                 ;;
@@ -58,7 +58,7 @@ show_password_menu() {
                 echo ""
                 read -p "Nome do serviço: " service_name
                 echo ""
-                get_password "$service_name"
+                secure_get_password "$service_name"
                 echo ""
                 echo -e "${YELLOW}Nota: Por segurança, apenas informações sobre o serviço são exibidas.${NC}"
                 echo ""

@@ -376,6 +376,27 @@
           </div>
         </div>
 
+      <!-- Password Manager Backup Section -->
+      <h3 style="margin-top: 30px; text-align: center;">🔐 PASSWORD MANAGER BACKUP</h3>
+      <div class="service-grid" style="margin-top: 20px;">
+        <div class="service-row" style="grid-column: 1 / -1;">
+          <div style="flex: 1;">
+            <div style="margin-bottom: 10px;">
+              <strong>Database Size:</strong> <span id="backup-size">Loading...</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <strong>Stored Passwords:</strong> <span id="backup-count">Loading...</span>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <strong>Last Modified:</strong> <span id="backup-date">Loading...</span>
+            </div>
+          </div>
+          <button onclick="downloadBackup()" class="terminal-web-btn" style="margin: 0; max-width: 200px;">
+            ⬇️ Download Backup
+          </button>
+        </div>
+      </div>
+
       <!-- Botão Terminal Web -->
       <div style="text-align: center; margin-top: 30px;">
         <button class="terminal-web-btn">

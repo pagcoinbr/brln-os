@@ -18,6 +18,10 @@ install_nodejs() {
 install_bos() {
   echo -e "${GREEN}⚡ Instalando Balance of Satoshis (bos)...${NC}"
   
+  # Detect BRLN-OS directory
+  detect_brln_setup quiet
+  SCRIPT_DIR="$BRLN_OS_DIR"
+  
   # Check if LND is installed
   if ! command -v lnd &> /dev/null; then
     echo -e "${RED}❌ LND não está instalado. Instale o LND primeiro.${NC}"
@@ -263,9 +267,10 @@ EOFCRED
     
     # Store in password manager
     echo -e "${BLUE}Salvando credenciais...${NC}"
-    source "$SCRIPT_DIR/brln-tools/password_manager.sh"
-    store_password_full "bos_telegram_id" "$telegram_id" "Balance of Satoshis - Telegram User ID" "$atual_user" 0 "https://t.me/${bot_username}"
-    store_password_full "bos_telegram_bot" "$bot_api_key" "Balance of Satoshis - Bot API Key (@${bot_username})" "$atual_user" 0 "https://t.me/BotFather"
+    ensure_pm_session  # Unlock password manager session
+    source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
+    secure_store_password_full "bos_telegram_id" "$telegram_id" "Balance of Satoshis - Telegram User ID" "$atual_user" 0 "https://t.me/${bot_username}"
+    secure_store_password_full "bos_telegram_bot" "$bot_api_key" "Balance of Satoshis - Bot API Key (@${bot_username})" "$atual_user" 0 "https://t.me/BotFather"
     echo -e "${GREEN}✓ Credenciais armazenadas no gerenciador de senhas${NC}"
     
     # Create systemd service
@@ -323,6 +328,10 @@ EOFCRED
 
 install_thunderhub() {
   echo -e "${GREEN}⚡ Instalando ThunderHub...${NC}"
+  
+  # Detect BRLN-OS directory
+  detect_brln_setup quiet
+  SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Check if LND is installed
   if ! command -v lnd &> /dev/null; then
@@ -430,9 +439,10 @@ EOF
   echo -e "${GREEN}✓ Arquivo de configuração criado${NC}"
   
   # Store passwords in password manager
-  source "$SCRIPT_DIR/brln-tools/password_manager.sh"
-  store_password_full "thunderhub_master" "$THUB_MASTER_PASSWORD" "ThunderHub Master Password" "admin" 3000 "http://127.0.0.1:3000"
-  store_password_full "thunderhub_account" "$THUB_ACCOUNT_PASSWORD" "ThunderHub Account Password" "admin" 3000 "http://127.0.0.1:3000"
+  ensure_pm_session  # Unlock password manager session
+  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
+  secure_store_password_full "thunderhub_master" "$THUB_MASTER_PASSWORD" "ThunderHub Master Password" "admin" 3000 "http://127.0.0.1:3000"
+  secure_store_password_full "thunderhub_account" "$THUB_ACCOUNT_PASSWORD" "ThunderHub Account Password" "admin" 3000 "http://127.0.0.1:3000"
   echo -e "${GREEN}✓ Senhas salvas no gerenciador de senhas${NC}"
   
   # Create systemd service
@@ -616,6 +626,10 @@ install_brln_api() {
 install_lndg() {
   echo -e "${GREEN}📊 Instalando LNDg (Lightning Node Dashboard)...${NC}"
   
+  # Detect BRLN-OS directory
+  detect_brln_setup quiet
+  SCRIPT_DIR="$BRLN_OS_DIR"
+  
   # Check if LND is installed
   if ! command -v lnd &> /dev/null; then
     echo -e "${RED}❌ LND não está instalado. Instale o LND primeiro.${NC}"
@@ -664,8 +678,8 @@ install_lndg() {
     echo -e "${GREEN}✓ Senha do admin gerada e salva em data/lndg-admin.txt${NC}"
     
     # Store password securely in password manager
-    source "$SCRIPT_DIR/brln-tools/password_manager.sh"
-    store_password_full "lndg_admin" "$LNDG_PASSWORD" "LNDg Dashboard Admin" "lndg-admin" 8889 "http://127.0.0.1:8889"
+    source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
+    secure_store_password_full "lndg_admin" "$LNDG_PASSWORD" "LNDg Dashboard Admin" "lndg-admin" 8889 "http://127.0.0.1:8889"
     echo -e "${GREEN}✓ Credenciais LNDg salvas no gerenciador de senhas${NC}"
   fi
   

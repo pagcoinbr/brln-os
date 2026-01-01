@@ -184,6 +184,77 @@ update_and_upgrade() {
     echo -e "${GREEN}✅ Sistema atualizado e Apache configurado!${NC}"
 }
 
+# Function to setup secure password manager
+setup_secure_password_manager() {
+    echo -e "${GREEN}🔐 Configurando Gerenciador Seguro de Senhas...${NC}"
+    
+    # Check if secure password manager is already initialized
+    if [[ -f "/data/brln-secure-passwords.db" ]]; then
+        echo -e "${GREEN}✅ Gerenciador de senhas já inicializado${NC}"
+        
+        # Check if SystemD credential already exists
+        if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
+            echo -e "${GREEN}✅ Credencial SystemD já configurada${NC}"
+            return 0
+        fi
+    fi
+    
+    echo -e "${YELLOW}📋 Configurando credenciais criptografadas do SystemD...${NC}"
+    echo -e "${BLUE}💡 Você precisará definir uma senha mestra para o gerenciador de senhas${NC}"
+    echo -e "${BLUE}💡 Esta senha será usada para criptografar todas as credenciais do sistema${NC}"
+    echo
+    
+    # Run the SystemD credentials setup script
+    if [[ -x "$SCRIPTS_DIR/setup-systemd-credentials.sh" ]]; then
+        bash "$SCRIPTS_DIR/setup-systemd-credentials.sh"
+        SETUP_STATUS=$?
+        
+        if [[ $SETUP_STATUS -eq 0 ]]; then
+            echo -e "${GREEN}✅ Gerenciador de senhas configurado com sucesso!${NC}"
+            
+            # Initialize the secure password manager if database doesn't exist
+            if [[ ! -f "/data/brln-secure-passwords.db" ]]; then
+                echo -e "${YELLOW}📦 Inicializando banco de dados do gerenciador de senhas...${NC}"
+                
+                # Get master password from SystemD credential
+                if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
+                    MASTER_PASS=$(sudo systemd-creds decrypt /etc/credstore/brln-master-password.cred - 2>/dev/null)
+                    
+                    if [[ -n "$MASTER_PASS" ]]; then
+                        # Initialize the secure password manager
+                        echo "$MASTER_PASS" | python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" init --master-password-stdin
+                        
+                        # Set proper permissions
+                        sudo chmod 666 /data/brln-secure-passwords.db
+                        sudo chown brln-api:brln-api /data/brln-secure-passwords.db
+                        
+                        echo -e "${GREEN}✅ Banco de dados inicializado${NC}"
+                    else
+                        echo -e "${RED}❌ Erro ao ler credencial do SystemD${NC}"
+                    fi
+                fi
+            fi
+            
+            # Create initial backup
+            echo -e "${YELLOW}📦 Criando backup inicial do gerenciador de senhas...${NC}"
+            if [[ -x "$SCRIPTS_DIR/backup-password-manager.sh" ]]; then
+                bash "$SCRIPTS_DIR/backup-password-manager.sh" backup > /dev/null 2>&1
+                echo -e "${GREEN}✅ Backup inicial criado${NC}"
+            fi
+        else
+            echo -e "${RED}❌ Erro ao configurar credenciais do SystemD${NC}"
+            echo -e "${YELLOW}⚠️ O sistema continuará sem criptografia SystemD${NC}"
+            echo -e "${YELLOW}💡 Você pode configurar manualmente depois com:${NC}"
+            echo -e "${YELLOW}   sudo bash $SCRIPTS_DIR/setup-systemd-credentials.sh${NC}"
+        fi
+    else
+        echo -e "${RED}❌ Script setup-systemd-credentials.sh não encontrado${NC}"
+        echo -e "${YELLOW}💡 Procurando: $SCRIPTS_DIR/setup-systemd-credentials.sh${NC}"
+    fi
+    
+    echo
+}
+
 # Function to install BRLN API with user environment detection
 install_brln_api_with_user_env() {
     echo -e "${GREEN}🔌 Instalando BRLN API...${NC}"
@@ -230,6 +301,9 @@ install_brln_api_with_user_env() {
     
     # Configure systemd service with correct user and paths
     configure_api_service
+    
+    # Setup secure password manager with SystemD credentials
+    setup_secure_password_manager
     
     # Start the API service within script context
     echo -e "${YELLOW}🚀 Iniciando serviço API...${NC}"

@@ -248,3 +248,70 @@ get_brln_os_dir() {
     configure_brln_paths true
     echo "$BRLN_OS_DIR"
 }
+
+# Load master password from SystemD credentials or environment
+# This function should be called before using secure password manager functions
+load_master_password() {
+    # Check if already set in environment
+    if [[ -n "${BRLN_MASTER_PASSWORD:-}" ]]; then
+        return 0
+    fi
+    
+    # Try to load from SystemD credentials (available in services)
+    if [[ -n "${CREDENTIALS_DIRECTORY:-}" ]] && [[ -f "${CREDENTIALS_DIRECTORY}/brln-master-password" ]]; then
+        export BRLN_MASTER_PASSWORD=$(cat "${CREDENTIALS_DIRECTORY}/brln-master-password")
+        return 0
+    fi
+    
+    # Try to load from credstore (if running as root)
+    if [[ -f "/etc/credstore/brln-master-password.cred" ]] && command -v systemd-creds &>/dev/null; then
+        # Decrypt SystemD credential
+        BRLN_MASTER_PASSWORD=$(systemd-creds decrypt /etc/credstore/brln-master-password.cred - 2>/dev/null)
+        if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
+            export BRLN_MASTER_PASSWORD
+            return 0
+        fi
+    fi
+    
+    # No automatic source found
+    return 1
+}
+
+# Ensure password manager session is ready for non-interactive use
+# Attempts to unlock session using available credentials
+ensure_pm_session() {
+    local script_dir="${BRLN_OS_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+    local pm_script="$script_dir/brln-tools/secure_password_manager.sh"
+    
+    # Source password manager if not already loaded
+    if ! declare -f secure_pm_status &>/dev/null; then
+        if [[ -f "$pm_script" ]]; then
+            source "$pm_script"
+        else
+            echo -e "${RED}❌ Password manager script not found${NC}" >&2
+            return 1
+        fi
+    fi
+    
+    # Check if password manager is initialized
+    if ! is_pm_initialized; then
+        echo -e "${YELLOW}⚠️  Password manager not initialized${NC}" >&2
+        echo -e "${YELLOW}⚠️  Passwords will not be stored automatically${NC}" >&2
+        return 1
+    fi
+    
+    # Try to load master password
+    if ! load_master_password; then
+        echo -e "${YELLOW}⚠️  No automatic master password available${NC}" >&2
+        echo -e "${YELLOW}⚠️  You may be prompted for the master password${NC}" >&2
+        return 1
+    fi
+    
+    # Unlock session with loaded password
+    if secure_pm_unlock "$BRLN_MASTER_PASSWORD" >/dev/null 2>&1; then
+        return 0
+    else
+        echo -e "${YELLOW}⚠️  Failed to unlock password manager session${NC}" >&2
+        return 1
+    fi
+}
