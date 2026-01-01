@@ -178,6 +178,14 @@ EOF
 create_brln_api_service() {
     echo -e "${YELLOW}🔌 Creating brln-api.service...${NC}"
     
+    # Determine the correct paths based on current setup
+    local brln_os_dir
+    if [[ -d "/home/admin/brln-os" ]]; then
+        brln_os_dir="/home/admin/brln-os"
+    else
+        brln_os_dir="/root/brln-os"
+    fi
+    
     sudo tee /etc/systemd/system/brln-api.service > /dev/null << EOF
 [Unit]
 Description=BRLN-OS API gRPC - Comando Central
@@ -187,12 +195,12 @@ After=network.target lnd.service
 Type=simple
 User=brln-api
 Group=brln-api
-WorkingDirectory=/home/admin/brln-os/api/v1
-ExecStartPre=/bin/bash /home/admin/brln-os/scripts/setup-api-env.sh
-ExecStart=/home/brln-api/venv/bin/python3 /home/admin/brln-os/api/v1/app.py
+WorkingDirectory=${brln_os_dir}/api/v1
+ExecStartPre=/bin/bash ${brln_os_dir}/scripts/setup-api-env.sh
+ExecStart=/home/brln-api/venv/bin/python3 ${brln_os_dir}/api/v1/app.py
 Restart=always
 RestartSec=10
-Environment=PYTHONPATH=/home/admin/brln-os/api/v1
+Environment=PYTHONPATH=${brln_os_dir}/api/v1
 Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 
 # Security
@@ -394,6 +402,14 @@ EOF
 create_messager_monitor_service() {
     echo -e "${YELLOW}💬 Creating messager-monitor.service...${NC}"
     
+    # Determine the correct paths based on current setup
+    local brln_os_dir
+    if [[ -d "/home/admin/brln-os" ]]; then
+        brln_os_dir="/home/admin/brln-os"
+    else
+        brln_os_dir="/root/brln-os"
+    fi
+    
     sudo tee /etc/systemd/system/messager-monitor.service > /dev/null << EOF
 [Unit]
 Description=Lightning Messager Monitor
@@ -401,13 +417,13 @@ After=lnd.service
 Requires=lnd.service
 
 [Service]
-WorkingDirectory=/home/admin/brln-os/api/v1
-ExecStart=/home/brln-api/venv/bin/python3 /home/admin/brln-os/api/v1/messager_monitor_grpc.py
+WorkingDirectory=${brln_os_dir}/api/v1
+ExecStart=/home/brln-api/venv/bin/python3 ${brln_os_dir}/api/v1/messager_monitor_grpc.py
 User=brln-api
 Group=brln-api
 Restart=always
 RestartSec=10
-Environment=PYTHONPATH=/home/admin/brln-os/api/v1
+Environment=PYTHONPATH=${brln_os_dir}/api/v1
 
 # Security
 NoNewPrivileges=true
