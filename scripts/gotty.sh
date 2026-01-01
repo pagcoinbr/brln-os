@@ -61,17 +61,18 @@ gotty_install() {
   fi
 }
 
-create_gotty_service() {
-  echo -e "${YELLOW}📄 Criando serviço gotty...${NC}"
-  
+setup_gotty_service() {
+  # Source services.sh to get the create_gotty_service function
   source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  
+  # Call the actual service creation function
   create_gotty_service
 
   # Reload systemd and enable service
   sudo systemctl daemon-reload
   sudo systemctl enable gotty-fullauto
   
-  echo -e "${GREEN}"
+  echo -e "${GREEN}✅ Gotty service setup complete${NC}"
 }
 
 terminal_web() {
@@ -80,7 +81,7 @@ terminal_web() {
   # Install Gotty
   if gotty_install; then
     # Create and enable service
-    create_gotty_service
+    setup_gotty_service
     
     # Start the service within script context
     echo -e "${YELLOW}"

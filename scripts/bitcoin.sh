@@ -8,6 +8,9 @@ install_bitcoind() {
   echo -e "${GREEN}₿ Instalando Bitcoin Core...${NC}"
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
+  # Define script directory for consistent path resolution
+  SCRIPT_DIR="/home/admin/brln-os"
+  
   # Create bitcoin user if it doesn't exist
   if ! id "bitcoin" &>/dev/null; then
     echo -e "${BLUE}Criando usuário bitcoin...${NC}"
@@ -162,8 +165,16 @@ install_bitcoind() {
   
   # Install systemd service using services.sh
   echo -e "${BLUE}Instalando serviço systemd...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
-  create_bitcoind_service
+  
+  # Use absolute path to ensure services.sh is found
+  SERVICES_SCRIPT="/home/admin/brln-os/scripts/services.sh"
+  if [[ -f "$SERVICES_SCRIPT" ]]; then
+    source "$SERVICES_SCRIPT"
+    create_bitcoind_service
+  else
+    echo -e "${RED}✗ services.sh not found at $SERVICES_SCRIPT${NC}"
+    return 1
+  fi
   sudo systemctl daemon-reload
   sudo systemctl enable bitcoind
   echo -e "${GREEN}✓ Serviço bitcoind habilitado${NC}"
@@ -178,6 +189,9 @@ install_bitcoind() {
 configure_lnd() {
   echo -e "${GREEN}⚡ Configurando LND...${NC}"
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
+  
+  # Define script directory for consistent path resolution
+  SCRIPT_DIR="/home/admin/brln-os"
   
   # Create lnd user if it doesn't exist
   if ! id "lnd" &>/dev/null; then
@@ -361,8 +375,16 @@ EOF'
   
   # Install systemd service using services.sh
   echo -e "${BLUE}Instalando serviço systemd...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
-  create_lnd_service
+  
+  # Use absolute path to ensure services.sh is found
+  SERVICES_SCRIPT="/home/admin/brln-os/scripts/services.sh"
+  if [[ -f "$SERVICES_SCRIPT" ]]; then
+    source "$SERVICES_SCRIPT"
+    create_lnd_service
+  else
+    echo -e "${RED}✗ services.sh not found at $SERVICES_SCRIPT${NC}"
+    return 1
+  fi
   sudo systemctl daemon-reload
   sudo systemctl enable lnd
   echo -e "${GREEN}✓ Serviço lnd habilitado${NC}"
