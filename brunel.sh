@@ -166,6 +166,29 @@ SUDOERS
     # Set correct permissions on brln-api home directory
     sudo chmod 755 /home/brln-api
     
+    # Setup LND credential permissions for brln-api user
+    echo -e "${BLUE}Configurando permissões para credenciais LND...${NC}"
+    if [ -d "/data/lnd" ]; then
+        # Make TLS cert readable by brln-api
+        sudo chmod 644 /data/lnd/tls.cert 2>/dev/null || true
+        sudo chmod 644 /home/lnd/.lnd/tls.cert 2>/dev/null || true
+        
+        # Add brln-api to lnd group for macaroon access
+        sudo usermod -aG lnd brln-api
+        
+        # Set directory permissions to allow traversal to macaroon
+        sudo chmod 755 /data/lnd/data /data/lnd/data/chain /data/lnd/data/chain/bitcoin /data/lnd/data/chain/bitcoin/* 2>/dev/null || true
+        sudo chmod 755 /home/lnd/.lnd/data /home/lnd/.lnd/data/chain /home/lnd/.lnd/data/chain/bitcoin /home/lnd/.lnd/data/chain/bitcoin/* 2>/dev/null || true
+        
+        # Set macaroon permissions to be readable by lnd group
+        sudo chgrp lnd /data/lnd/data/chain/bitcoin/*/admin.macaroon 2>/dev/null || true
+        sudo chmod 640 /data/lnd/data/chain/bitcoin/*/admin.macaroon 2>/dev/null || true
+        sudo chgrp lnd /home/lnd/.lnd/data/chain/bitcoin/*/admin.macaroon 2>/dev/null || true
+        sudo chmod 640 /home/lnd/.lnd/data/chain/bitcoin/*/admin.macaroon 2>/dev/null || true
+        
+        echo -e "${GREEN}  ✓ Permissões LND configuradas${NC}"
+    fi
+    
     echo -e "${GREEN}✅ Usuário API configurado${NC}"
 }
 
