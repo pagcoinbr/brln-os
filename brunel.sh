@@ -61,7 +61,7 @@ configure_user_environment() {
     # Set compatibility variables for existing code
     atual_user="$ATUAL_USER"
     VENV_DIR="$VENV_DIR_API"
-    API_USER="$ATUAL_USER"
+    API_USER="brln-api"  # API always runs as brln-api user
     
     echo -e "${BLUE}Ambiente virtual: $VENV_DIR${NC}"
     
@@ -131,13 +131,20 @@ setup_api_user() {
     # Add admin user to brln-api group for management access
     sudo adduser $atual_user brln-api || true
     
-    # Give brln-api user read access to the project directory
-    sudo setfacl -R -m u:brln-api:rx /home/admin/brln-os || true
+    # Copy API files to brln-api user's home directory
+    echo -e "${BLUE}Copiando arquivos da API para /home/brln-api/...${NC}"
+    sudo cp -r $SCRIPT_DIR/api /home/brln-api/ 2>/dev/null || true
+    sudo chown -R brln-api:brln-api /home/brln-api/api
+    echo -e "${GREEN}  ✓ Arquivos da API copiados${NC}"
     
-    # Give brln-api user execute permission on expect scripts
-    echo -e "${BLUE}Configurando permissões para scripts expect...${NC}"
-    sudo chmod 755 $SCRIPT_DIR/scripts/*.exp 2>/dev/null || true
-    sudo setfacl -m u:brln-api:rx $SCRIPT_DIR/scripts/*.exp 2>/dev/null || true
+    # Copy scripts directory for expect scripts access
+    echo -e "${BLUE}Copiando scripts necessários...${NC}"
+    sudo mkdir -p /home/brln-api/scripts
+    sudo cp $SCRIPT_DIR/scripts/*.exp /home/brln-api/scripts/ 2>/dev/null || true
+    sudo cp $SCRIPT_DIR/scripts/setup-api-env.sh /home/brln-api/scripts/ 2>/dev/null || true
+    sudo chown -R brln-api:brln-api /home/brln-api/scripts
+    sudo chmod 755 /home/brln-api/scripts/*.exp 2>/dev/null || true
+    echo -e "${GREEN}  ✓ Scripts copiados${NC}"
     
     # Configure sudoers to allow brln-api to run LND commands as lnd user
     echo -e "${BLUE}Configurando sudoers para execução de comandos LND...${NC}"
@@ -155,6 +162,9 @@ SUDOERS
     sudo mkdir -p /data/brln-wallet
     sudo chown -R brln-api:brln-api /data/brln-wallet
     sudo chmod 755 /data/brln-wallet
+    
+    # Set correct permissions on brln-api home directory
+    sudo chmod 755 /home/brln-api
     
     echo -e "${GREEN}✅ Usuário API configurado${NC}"
 }
@@ -209,7 +219,7 @@ setup_secure_password_manager() {
         echo -e "${GREEN}✅ Gerenciador de senhas já inicializado${NC}"
         
         # Check if SystemD credential already exists
-        if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
+        if [[ -f "/etc/credstore/brln-master-password" ]]; then
             echo -e "${GREEN}✅ Credencial SystemD já configurada${NC}"
             return 0
         fi
@@ -233,8 +243,8 @@ setup_secure_password_manager() {
                 echo -e "${YELLOW}📦 Inicializando banco de dados do gerenciador de senhas...${NC}"
                 
                 # Get master password from SystemD credential
-                if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
-                    MASTER_PASS=$(sudo systemd-creds decrypt /etc/credstore/brln-master-password.cred - 2>/dev/null)
+                if [[ -f "/etc/credstore/brln-master-password" ]]; then
+                    MASTER_PASS=$(sudo systemd-creds decrypt /etc/credstore/brln-master-password - 2>/dev/null)
                     
                     if [[ -n "$MASTER_PASS" ]]; then
                         # Initialize the secure password manager

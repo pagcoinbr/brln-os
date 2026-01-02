@@ -6,7 +6,7 @@ set -e
 
 CRED_NAME="brln-master-password"
 CRED_DIR="/etc/credstore"
-CRED_FILE="$CRED_DIR/${CRED_NAME}.cred"
+CRED_FILE="$CRED_DIR/${CRED_NAME}"
 
 echo "=== BRLN-OS SystemD Credentials Setup ==="
 echo
@@ -62,15 +62,21 @@ fi
 echo
 echo "Creating encrypted credential..."
 
+# Create temp file first, then rename (systemd-creds expects no extension in final path)
+TEMP_CRED="${CRED_FILE}.tmp"
+
 # Try TPM2 first, fallback to machine-id encryption
-if sudo systemd-creds encrypt --name="$CRED_NAME" --with-key=tpm2 - "$CRED_FILE" <<< "$MASTER_PASSWORD" 2>/dev/null; then
+if sudo systemd-creds encrypt --name="$CRED_NAME" --with-key=tpm2 - "$TEMP_CRED" <<< "$MASTER_PASSWORD" 2>/dev/null; then
+    sudo mv "$TEMP_CRED" "$CRED_FILE"
     echo "✓ Credential encrypted with TPM2"
     ENCRYPTION_METHOD="TPM2"
-elif sudo systemd-creds encrypt --name="$CRED_NAME" --with-key=host - "$CRED_FILE" <<< "$MASTER_PASSWORD" 2>/dev/null; then
+elif sudo systemd-creds encrypt --name="$CRED_NAME" --with-key=host - "$TEMP_CRED" <<< "$MASTER_PASSWORD" 2>/dev/null; then
+    sudo mv "$TEMP_CRED" "$CRED_FILE"
     echo "✓ Credential encrypted with machine-id"
     ENCRYPTION_METHOD="machine-id"
 else
     echo "✗ Failed to encrypt credential!"
+    rm -f "$TEMP_CRED"
     exit 1
 fi
 
@@ -107,8 +113,8 @@ if [[ -f "$SERVICE_FILE" ]]; then
     if grep -q "LoadCredential=" "$SERVICE_FILE"; then
         echo "  Service already has LoadCredential directive"
     else
-        # Add LoadCredential after [Service]
-        sudo sed -i '/^\[Service\]/a LoadCredential=brln-master-password:/etc/credstore/brln-master-password.cred' "$SERVICE_FILE"
+        # Add LoadCredential after [Service] (without .cred extension)
+        sudo sed -i '/^\[Service\]/a LoadCredential=brln-master-password:/etc/credstore/brln-master-password' "$SERVICE_FILE"
         echo "✓ Added LoadCredential to service file"
     fi
     
@@ -123,7 +129,7 @@ else
     echo
     echo "⚠️  Service file not found: $SERVICE_FILE"
     echo "  You'll need to manually add to your service:"
-    echo "  LoadCredential=brln-master-password:/etc/credstore/brln-master-password.cred"
+    echo "  LoadCredential=brln-master-password:/etc/credstore/brln-master-password"
 fi
 
 echo

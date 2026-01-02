@@ -178,18 +178,14 @@ EOF
 create_brln_api_service() {
     echo -e "${YELLOW}🔌 Creating brln-api.service...${NC}"
     
-    # Determine the correct paths based on current setup
-    local brln_os_dir
-    if [[ -d "/home/admin/brln-os" ]]; then
-        brln_os_dir="/home/admin/brln-os"
-    else
-        brln_os_dir="/root/brln-os"
-    fi
+    # API files are always in brln-api user's home directory
+    local api_dir="/home/brln-api/api/v1"
+    local scripts_dir="/home/brln-api/scripts"
     
-    # Check if SystemD credential exists
+    # Check if SystemD credential exists (without .cred extension)
     local load_credential=""
-    if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
-        load_credential="LoadCredential=brln-master-password:/etc/credstore/brln-master-password.cred"
+    if [[ -f "/etc/credstore/brln-master-password" ]]; then
+        load_credential="LoadCredential=brln-master-password:/etc/credstore/brln-master-password"
         echo -e "${GREEN}✅ SystemD encrypted credentials detected${NC}"
     fi
     
@@ -202,12 +198,11 @@ After=network.target lnd.service
 Type=simple
 User=brln-api
 Group=brln-api
-WorkingDirectory=${brln_os_dir}/api/v1
-ExecStartPre=/bin/bash ${brln_os_dir}/scripts/setup-api-env.sh
-ExecStart=/home/brln-api/venv/bin/python3 ${brln_os_dir}/api/v1/app.py
+WorkingDirectory=${api_dir}
+ExecStart=/home/brln-api/venv/bin/python3 ${api_dir}/app.py
 Restart=always
 RestartSec=10
-Environment=PYTHONPATH=${brln_os_dir}/api/v1
+Environment=PYTHONPATH=${api_dir}
 Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 ${load_credential}
 

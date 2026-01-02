@@ -199,9 +199,9 @@ configure_brln_paths() {
     # Set paths based on user
     if [[ $ATUAL_USER == "root" ]]; then
         USER_HOME="/root"
-        VENV_DIR_API="/root/brln-os-envs/api-v1"
+        VENV_DIR_API="/home/brln-api/venv"  # Create in brln-api home, not root
         VENV_DIR_TOOLS="/root/brln-os-envs/brln-tools"
-        API_USER="root"
+        API_USER="brln-api"  # API always runs as brln-api user
         if [[ "$quiet" != "true" ]]; then
             echo -e "${BLUE}Modo: Root (administrador do sistema)${NC}"
         fi

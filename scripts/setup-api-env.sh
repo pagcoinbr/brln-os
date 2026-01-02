@@ -21,26 +21,19 @@ setup_api_environment() {
     sudo adduser --disabled-password --gecos "" brln-api
   fi
   
-  # Use the dynamically configured venv location (admin user's space)
-  REAL_VENV_DIR="$VENV_DIR_API"
-  SYMLINK_VENV_DIR="/home/brln-api/venv"
+  # Create virtual environment directly in brln-api's home directory
+  VENV_DIR="$VENV_DIR_API"
   
-  # Create virtual environment in admin user space
-  if [[ ! -d "$REAL_VENV_DIR" ]]; then
-    echo "Creating virtual environment at $REAL_VENV_DIR..."
-    mkdir -p "$(dirname "$REAL_VENV_DIR")"
-    python3 -m venv "$REAL_VENV_DIR"
+  # Create virtual environment (as root/current user, will change ownership later)
+  if [[ ! -d "$VENV_DIR" ]]; then
+    echo "Creating virtual environment at $VENV_DIR..."
+    sudo mkdir -p "$(dirname "$VENV_DIR")"
+    sudo python3 -m venv "$VENV_DIR"
+    echo "✓ Virtual environment created"
   fi
   
-  # Create symlink from brln-api home to real venv location
-  if [[ ! -L "$SYMLINK_VENV_DIR" ]]; then
-    sudo mkdir -p "$(dirname "$SYMLINK_VENV_DIR")"
-    sudo ln -sf "$REAL_VENV_DIR" "$SYMLINK_VENV_DIR"
-    echo "Created symlink: $SYMLINK_VENV_DIR -> $REAL_VENV_DIR"
-  fi
-  
-  # Activate virtual environment (using real location)
-  source "$REAL_VENV_DIR/bin/activate"
+  # Activate virtual environment
+  source "$VENV_DIR/bin/activate"
   
   # Upgrade pip
   pip install --upgrade pip
@@ -58,13 +51,13 @@ setup_api_environment() {
     pip install eth-hash[pycryptodome]==0.5.2 pycryptodome==3.20.0
   fi
   
-  # Ensure brln-api user can read the real venv location
-  sudo chown -R $(whoami):$(whoami) "$REAL_VENV_DIR"
-  sudo chmod -R 755 "$REAL_VENV_DIR"
+  # Change ownership to brln-api user so it can use the venv
+  sudo chown -R brln-api:brln-api "$VENV_DIR"
+  sudo chmod -R 755 "$VENV_DIR"
+  echo "✓ Ownership changed to brln-api:brln-api"
   
   echo "API environment setup complete!"
-  echo "Real venv: $REAL_VENV_DIR"
-  echo "Symlink: $SYMLINK_VENV_DIR -> $REAL_VENV_DIR"
+  echo "Venv location: $VENV_DIR"
 }
 
 # Check if running directly
