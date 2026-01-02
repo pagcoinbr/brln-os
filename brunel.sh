@@ -139,6 +139,17 @@ setup_api_user() {
     sudo chmod 755 $SCRIPT_DIR/scripts/*.exp 2>/dev/null || true
     sudo setfacl -m u:brln-api:rx $SCRIPT_DIR/scripts/*.exp 2>/dev/null || true
     
+    # Configure sudoers to allow brln-api to run LND commands as lnd user
+    echo -e "${BLUE}Configurando sudoers para execução de comandos LND...${NC}"
+    sudo tee /etc/sudoers.d/brln-api-lnd > /dev/null << 'SUDOERS'
+# Allow brln-api user to run LND-related commands as lnd user
+brln-api ALL=(lnd) NOPASSWD: /usr/local/bin/lncli
+brln-api ALL=(lnd) NOPASSWD: /root/brln-os/scripts/auto-lnd-*.exp
+brln-api ALL=(lnd) NOPASSWD: /usr/bin/expect
+SUDOERS
+    sudo chmod 440 /etc/sudoers.d/brln-api-lnd
+    echo -e "${GREEN}  ✓ Sudoers configurado para execução como lnd user${NC}"
+    
     # Create API data directory
     echo -e "${BLUE}Configurando diretório de dados da API...${NC}"
     sudo mkdir -p /data/brln-wallet

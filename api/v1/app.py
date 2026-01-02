@@ -4553,7 +4553,7 @@ def save_wallet():
                         print("🔐 Using wallet password in environment variable")
                         
                         result = subprocess.run(
-                            [script_path, extended_master_key],
+                            ['sudo', '-u', 'lnd', script_path, extended_master_key],
                             cwd='/root/brln-os/scripts',
                             capture_output=True,
                             text=True,
@@ -4828,7 +4828,7 @@ def integrate_system_wallet():
                     print("🔐 Using wallet password in environment variable for manual integration")
                     
                     result = subprocess.run(
-                        [script_path, extended_master_key],
+                        ['sudo', '-u', 'lnd', script_path, extended_master_key],
                         cwd='/root/brln-os/scripts',
                         capture_output=True,
                         text=True,
@@ -4949,7 +4949,7 @@ def load_wallet():
                     env['LND_WALLET_PASSWORD'] = password  # Use the wallet password from the modal
                     
                     unlock_result = subprocess.run(
-                        [script_path],
+                        ['sudo', '-u', 'lnd', script_path],
                         cwd='/root/brln-os/scripts',
                         capture_output=True,
                         text=True,
@@ -5004,7 +5004,7 @@ def load_wallet():
                                 print("🔐 Using wallet password in environment variable")
                                 
                                 result = subprocess.run(
-                                    [script_path, extended_master_key],
+                                    ['sudo', '-u', 'lnd', script_path, extended_master_key],
                                     cwd='/root/brln-os/scripts',
                                     capture_output=True,
                                     text=True,
@@ -5435,7 +5435,7 @@ def unlock_lnd_wallet():
         env['LND_WALLET_PASSWORD'] = unlock_password
         
         unlock_result = subprocess.run(
-            [script_path],
+            ['sudo', '-u', 'lnd', script_path],
             cwd='/root/brln-os/scripts',
             capture_output=True,
             text=True,
@@ -5693,13 +5693,13 @@ def lnd_create_wallet_expect():
                 'status': 'error'
             }), 500
         
-        # Execute expect script with password in environment
+        # Execute expect script as lnd user with password in environment
         try:
             env = os.environ.copy()
             env['LND_WALLET_PASSWORD'] = wallet_password
             
             result = subprocess.run(
-                [expect_script, extended_master_key],
+                ['sudo', '-u', 'lnd', expect_script, extended_master_key],
                 cwd='/root/brln-os/scripts',
                 capture_output=True,
                 text=True,
