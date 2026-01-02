@@ -2,9 +2,9 @@
 # BRLN-OS Secure Password Manager v2 Shell Wrapper
 # Enhanced security with ephemeral master password
 
-# Dynamic path resolution
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SECURE_PM_SCRIPT="$SCRIPT_DIR/secure_password_manager.py"
+# Dynamic path resolution (use PM_SCRIPT_DIR to avoid collision with caller's SCRIPT_DIR)
+PM_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SECURE_PM_SCRIPT="$PM_SCRIPT_DIR/secure_password_manager.py"
 
 # Colors for output
 RED='\033[0;31m'
