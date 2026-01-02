@@ -38,6 +38,8 @@ TimeoutStopSec=600
 ####################
 User=bitcoin
 Group=bitcoin
+RuntimeDirectory=bitcoind
+RuntimeDirectoryMode=0755
 
 # Hardening Measures
 ####################
@@ -174,9 +176,53 @@ EOF
     echo -e "${GREEN}✅ psweb.service created${NC}"
 }
 
+# Function to setup brln-api environment and files
+setup_brln_api_files() {
+    echo -e "${YELLOW}📁 Setting up brln-api files and permissions...${NC}"
+    
+    local brln_os_source="${BRLN_OS_DIR:-/root/brln-os}"
+    local brln_api_home="/home/brln-api"
+    
+    # Copy brln-tools directory for password manager access
+    if [[ -d "$brln_os_source/brln-tools" ]]; then
+        sudo cp -r "$brln_os_source/brln-tools" "$brln_api_home/"
+        sudo chown -R brln-api:brln-api "$brln_api_home/brln-tools"
+        echo -e "${GREEN}✅ brln-tools copied to $brln_api_home/brln-tools${NC}"
+    fi
+    
+    # Set password database permissions for brln-api user
+    local password_db="/data/brln-secure-passwords.db"
+    if [[ -f "$password_db" ]]; then
+        sudo chown root:brln-api "$password_db"
+        sudo chmod 640 "$password_db"
+        echo -e "${GREEN}✅ Password database permissions set${NC}"
+    fi
+    
+    # Copy API files
+    if [[ -d "$brln_os_source/api/v1" ]]; then
+        sudo mkdir -p "$brln_api_home/api/v1"
+        sudo cp "$brln_os_source/api/v1/app.py" "$brln_api_home/api/v1/"
+        sudo cp "$brln_os_source/api/v1/"*.py "$brln_api_home/api/v1/" 2>/dev/null || true
+        sudo chown -R brln-api:brln-api "$brln_api_home/api"
+        echo -e "${GREEN}✅ API files copied${NC}"
+    fi
+    
+    # Copy scripts (expect scripts for LND automation)
+    if [[ -d "$brln_os_source/scripts" ]]; then
+        sudo mkdir -p "$brln_api_home/scripts"
+        sudo cp "$brln_os_source/scripts/"*.exp "$brln_api_home/scripts/" 2>/dev/null || true
+        sudo chown -R brln-api:brln-api "$brln_api_home/scripts"
+        sudo chmod +x "$brln_api_home/scripts/"*.exp 2>/dev/null || true
+        echo -e "${GREEN}✅ Expect scripts copied${NC}"
+    fi
+}
+
 # Function to create brln-api.service
 create_brln_api_service() {
     echo -e "${YELLOW}🔌 Creating brln-api.service...${NC}"
+    
+    # Setup files first
+    setup_brln_api_files
     
     # API files are always in brln-api user's home directory
     local api_dir="/home/brln-api/api/v1"
@@ -206,13 +252,24 @@ Environment=PYTHONPATH=${api_dir}
 Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 ${load_credential}
 
-# Security
-NoNewPrivileges=true
+# Security - NoNewPrivileges=false required for sudo to run expect scripts as lnd user
+NoNewPrivileges=false
 PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
+    # Create sudoers file for brln-api to run LND expect scripts and manage password files
+    echo -e "${YELLOW}🔐 Configuring sudoers for brln-api LND scripts...${NC}"
+    cat << 'SUDOERS_EOF' | sudo tee /etc/sudoers.d/brln-api-lnd > /dev/null
+# Allow brln-api to run LND expect scripts as lnd user with environment preservation
+brln-api ALL=(lnd) NOPASSWD:SETENV: /home/brln-api/scripts/auto-lnd-create-masterkey.exp, /home/brln-api/scripts/auto-lnd-unlock.exp, /home/brln-api/scripts/auto-lnd-create.exp, /home/brln-api/scripts/auto-lnd-create-new.exp
+# Allow brln-api to run bash for writing LND password files
+brln-api ALL=(root) NOPASSWD: /usr/bin/bash -c *
+SUDOERS_EOF
+    sudo chmod 440 /etc/sudoers.d/brln-api-lnd
+    echo -e "${GREEN}✅ Sudoers configured for brln-api${NC}"
 
     echo -e "${GREEN}✅ brln-api.service created${NC}"
 }

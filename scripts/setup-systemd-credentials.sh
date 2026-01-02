@@ -86,46 +86,31 @@ while true; do
     break
 done
 
-# Create encrypted credential
+# Create credential file with plaintext password
+# LoadCredential in systemd securely mounts this to /run/credentials/<service>/
+# with proper isolation - only the service can access it
 echo
-echo "Creating encrypted credential..."
+echo "Creating credential file..."
 
-# Create temp file first, then rename (systemd-creds expects no extension in final path)
-TEMP_CRED="${CRED_FILE}.tmp"
-
-# Try TPM2 first, fallback to machine-id encryption
-if sudo systemd-creds encrypt --name="$CRED_NAME" --with-key=tpm2 - "$TEMP_CRED" <<< "$MASTER_PASSWORD" 2>/dev/null; then
-    sudo mv "$TEMP_CRED" "$CRED_FILE"
-    echo "✓ Credential encrypted with TPM2"
-    ENCRYPTION_METHOD="TPM2"
-elif sudo systemd-creds encrypt --name="$CRED_NAME" --with-key=host - "$TEMP_CRED" <<< "$MASTER_PASSWORD" 2>/dev/null; then
-    sudo mv "$TEMP_CRED" "$CRED_FILE"
-    echo "✓ Credential encrypted with machine-id"
-    ENCRYPTION_METHOD="machine-id"
-else
-    echo "✗ Failed to encrypt credential!"
-    rm -f "$TEMP_CRED"
-    exit 1
-fi
+# Store the plaintext password securely
+# The security comes from:
+# 1. File permissions (600, root:root)
+# 2. Directory permissions (700, root:root)  
+# 3. SystemD LoadCredential provides per-service isolation
+echo -n "$MASTER_PASSWORD" | sudo tee "$CRED_FILE" > /dev/null
 
 # Set secure permissions
 sudo chmod 600 "$CRED_FILE"
 sudo chown root:root "$CRED_FILE"
 
 echo
-echo "✓ Encrypted credential created: $CRED_FILE"
-echo "  Encryption: $ENCRYPTION_METHOD"
+echo "✓ Credential created: $CRED_FILE"
+echo "  Permissions: 600 (root:root)"
 echo "  Size: $(du -h "$CRED_FILE" | cut -f1)"
-
-# Verify decryption works
 echo
-echo "Verifying decryption..."
-if sudo systemd-creds decrypt "$CRED_FILE" > /dev/null 2>&1; then
-    echo "✓ Credential can be decrypted"
-else
-    echo "✗ Failed to decrypt credential!"
-    exit 1
-fi
+echo "Note: Security is provided by:"
+echo "  - File/directory permissions restrict direct access"
+echo "  - SystemD LoadCredential provides per-service isolation"
 
 # Update service file
 SERVICE_FILE="/etc/systemd/system/brln-api.service"

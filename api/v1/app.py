@@ -129,7 +129,11 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
 # Secure Password Manager API Integration
-sys.path.insert(0, '/root/brln-os/brln-tools')
+# Use brln-api user's directory when running as service, fallback to root for development
+if os.path.exists('/home/brln-api/brln-tools'):
+    sys.path.insert(0, '/home/brln-api/brln-tools')
+else:
+    sys.path.insert(0, '/root/brln-os/brln-tools')
 try:
     from secure_password_api import SecurePasswordAPI
     HAS_SECURE_PASSWORD_API = True
@@ -4565,8 +4569,8 @@ def save_wallet():
                         print("🔐 Using wallet password in environment variable")
                         
                         result = subprocess.run(
-                            ['sudo', '-u', 'lnd', script_path, extended_master_key],
-                            cwd='/root/brln-os/scripts',
+                            ['sudo', '-E', '-u', 'lnd', script_path, extended_master_key],
+                            cwd='/home/brln-api/scripts',
                             capture_output=True,
                             text=True,
                             timeout=120,
@@ -4834,8 +4838,8 @@ def integrate_system_wallet():
                     print("🔐 Using wallet password in environment variable for manual integration")
                     
                     result = subprocess.run(
-                        ['sudo', '-u', 'lnd', script_path, extended_master_key],
-                        cwd='/root/brln-os/scripts',
+                        ['sudo', '-E', '-u', 'lnd', script_path, extended_master_key],
+                        cwd='/home/brln-api/scripts',
                         capture_output=True,
                         text=True,
                         timeout=120,
@@ -4949,8 +4953,8 @@ def load_wallet():
                     env['LND_WALLET_PASSWORD'] = password  # Use the wallet password from the modal
                     
                     unlock_result = subprocess.run(
-                        ['sudo', '-u', 'lnd', script_path],
-                        cwd='/root/brln-os/scripts',
+                        ['sudo', '-E', '-u', 'lnd', script_path],
+                        cwd='/home/brln-api/scripts',
                         capture_output=True,
                         text=True,
                         timeout=30,
@@ -5004,8 +5008,8 @@ def load_wallet():
                                 print("🔐 Using wallet password in environment variable")
                                 
                                 result = subprocess.run(
-                                    ['sudo', '-u', 'lnd', script_path, extended_master_key],
-                                    cwd='/root/brln-os/scripts',
+                                    ['sudo', '-E', '-u', 'lnd', script_path, extended_master_key],
+                                    cwd='/home/brln-api/scripts',
                                     capture_output=True,
                                     text=True,
                                     timeout=120,
@@ -5411,22 +5415,16 @@ def unlock_lnd_wallet():
         data = request.get_json()
         unlock_password = data.get('password') if data else None
         
-        # If no password provided, try to get from system default wallet
+        # If no password provided, get from secure password manager
         if not unlock_password:
-            default_wallet, error = wallet_manager.get_system_default_wallet()
-            if error or not default_wallet:
+            unlock_password = get_secure_credential('lnd_wallet')
+            if not unlock_password:
                 return jsonify({
-                    'error': 'No password provided and no system default wallet found',
+                    'error': 'LND wallet password not found in password manager',
                     'status': 'error'
                 }), 400
-            
-            # For now, return error asking for password since we can't decrypt without it
-            return jsonify({
-                'error': 'Password required for LND unlock',
-                'status': 'error'
-            }), 400
         
-        print("🔓 Manual LND unlock requested via API with password...")
+        print("🔓 LND unlock requested via API...")
         
         # Run expect script with password in environment variable
         script_path = '/home/brln-api/scripts/auto-lnd-unlock.exp'
@@ -5435,7 +5433,7 @@ def unlock_lnd_wallet():
         env['LND_WALLET_PASSWORD'] = unlock_password
         
         unlock_result = subprocess.run(
-            ['sudo', '-u', 'lnd', script_path],
+            ['sudo', '-E', '-u', 'lnd', script_path],
             cwd='/home/brln-api/scripts',
             capture_output=True,
             text=True,
@@ -5444,13 +5442,13 @@ def unlock_lnd_wallet():
         )
         
         if unlock_result.returncode == 0:
-            print("✅ LND unlocked successfully via manual API call")
+            print("✅ LND unlocked successfully via API call")
             return jsonify({
                 'status': 'success',
                 'message': 'LND wallet unlocked successfully'
             })
         else:
-            print(f"❌ LND unlock failed via manual API call: {unlock_result.stderr}")
+            print(f"❌ LND unlock failed via API call: {unlock_result.stderr}")
             return jsonify({
                 'status': 'error',
                 'error': f'LND unlock failed: {unlock_result.stderr}'
@@ -5663,15 +5661,22 @@ def lnd_create_wallet_expect():
                 'status': 'error'
             }), 400
         
-        wallet_password = data.get('wallet_password')
         extended_master_key = data.get('extended_master_key')
         network = data.get('network', 'testnet')
         
-        if not wallet_password or not extended_master_key:
+        if not extended_master_key:
             return jsonify({
-                'error': 'wallet_password and extended_master_key are required',
+                'error': 'extended_master_key is required',
                 'status': 'error'
             }), 400
+        
+        # Get LND wallet password from secure password manager
+        wallet_password = get_secure_credential('lnd_wallet')
+        if not wallet_password:
+            return jsonify({
+                'error': 'LND wallet password not found in password manager. Please ensure lnd_wallet is stored in the secure password database.',
+                'status': 'error'
+            }), 500
         
         # Validate password length
         if len(wallet_password) < 8:
@@ -5699,8 +5704,8 @@ def lnd_create_wallet_expect():
             env['LND_WALLET_PASSWORD'] = wallet_password
             
             result = subprocess.run(
-                ['sudo', '-u', 'lnd', expect_script, extended_master_key],
-                cwd='/root/brln-os/scripts',
+                ['sudo', '-E', '-u', 'lnd', expect_script, extended_master_key],
+                cwd='/home/brln-api/scripts',
                 capture_output=True,
                 text=True,
                 timeout=60,
@@ -5710,6 +5715,24 @@ def lnd_create_wallet_expect():
             output = result.stdout + result.stderr
             
             if result.returncode == 0:
+                # Write password to LND password files for auto-unlock
+                try:
+                    password_locations = ['/data/lnd/password.txt', '/home/lnd/.lnd/password.txt']
+                    for pwd_file in password_locations:
+                        # Use subprocess to write as root since brln-api may not have direct access
+                        write_result = subprocess.run(
+                            ['sudo', 'bash', '-c', f'echo "{wallet_password}" > {pwd_file} && chown lnd:lnd {pwd_file} && chmod 600 {pwd_file}'],
+                            capture_output=True,
+                            text=True,
+                            timeout=10
+                        )
+                        if write_result.returncode == 0:
+                            print(f"✅ Password file written: {pwd_file}")
+                        else:
+                            print(f"⚠️ Failed to write password file {pwd_file}: {write_result.stderr}")
+                except Exception as pwd_error:
+                    print(f"⚠️ Could not write password files: {pwd_error}")
+                
                 return jsonify({
                     'status': 'success',
                     'message': 'LND wallet created successfully',
