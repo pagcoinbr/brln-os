@@ -275,7 +275,7 @@ EOFCRED
     
     # Create systemd service
     echo -e "${BLUE}Criando serviço systemd...${NC}"
-    source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+    source "$SCRIPT_DIR/scripts/services.sh"
     create_bos_telegram_service
     
     # Enable and start service
@@ -447,7 +447,7 @@ EOF
   
   # Create systemd service
   echo -e "${BLUE}Criando serviço systemd...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  source "$SCRIPT_DIR/scripts/services.sh"
   create_thunderhub_service
   
   # Enable and start service
@@ -685,7 +685,7 @@ install_lndg() {
   
   # Create systemd service for LNDg
   echo -e "${BLUE}Criando serviço systemd para LNDg...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  source "$SCRIPT_DIR/scripts/services.sh"
   create_lndg_service
   
   # Create systemd service for LNDg Controller

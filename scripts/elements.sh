@@ -274,7 +274,7 @@ create_elements_service() {
   echo ""
   
   echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  source "$SCRIPT_DIR/scripts/services.sh"
   create_elementsd_service
 
   if [ $? -eq 0 ]; then

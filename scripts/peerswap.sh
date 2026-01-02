@@ -253,7 +253,7 @@ create_peerswap_service() {
   echo ""
 
   echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  source "$SCRIPT_DIR/scripts/services.sh"
   create_peerswapd_service
 
   if [ $? -eq 0 ]; then
@@ -380,7 +380,7 @@ create_psweb_service() {
   echo ""
 
   echo -e "${BLUE}📄 Criando arquivo de serviço...${NC}"
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  source "$SCRIPT_DIR/scripts/services.sh"
   create_psweb_service
 
   if [ $? -eq 0 ]; then

@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Gotty installation and management functions
-source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
+
+source "$SCRIPT_DIR/scripts/config.sh"
+source "$SCRIPT_DIR/scripts/utils.sh"
 
 gotty_install() {
   echo -e "${GREEN}"
@@ -63,7 +65,7 @@ gotty_install() {
 
 setup_gotty_service() {
   # Source services.sh to get the create_gotty_service function
-  source "$(dirname "${BASH_SOURCE[0]}")/services.sh"
+  source "$SCRIPT_DIR/scripts/services.sh"
   
   # Call the actual service creation function
   create_gotty_service
