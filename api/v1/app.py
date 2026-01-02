@@ -4538,12 +4538,6 @@ def save_wallet():
                         subprocess.run(['sudo', 'systemctl', 'stop', 'lnd'], capture_output=True, timeout=30)
                         print("⏹️ LND service stopped")
                         
-                        # Create password file for expect script using wallet password
-                        password_file = '/root/brln-os/scripts/password.txt'
-                        with open(password_file, 'w') as f:
-                            f.write(db_password)  # Use wallet password for LND
-                        print("🔐 Password file created with wallet password")
-                        
                         # Start LND service
                         subprocess.run(['sudo', 'systemctl', 'start', 'lnd'], capture_output=True, timeout=30)
                         print("▶️ LND service started")
@@ -4552,14 +4546,19 @@ def save_wallet():
                         import time
                         time.sleep(5)
                         
-                        # Run expect script to create wallet
+                        # Run expect script with password in environment
                         script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                        env = os.environ.copy()
+                        env['LND_WALLET_PASSWORD'] = db_password  # Use wallet password for LND
+                        print("🔐 Using wallet password in environment variable")
+                        
                         result = subprocess.run(
                             [script_path, extended_master_key],
                             cwd='/root/brln-os/scripts',
                             capture_output=True,
                             text=True,
-                            timeout=120
+                            timeout=120,
+                            env=env
                         )
                         
                         if result.returncode == 0:
@@ -4814,12 +4813,6 @@ def integrate_system_wallet():
                     subprocess.run(['sudo', 'systemctl', 'stop', 'lnd'], capture_output=True, timeout=30)
                     print("⏹️ LND service stopped for manual integration")
                     
-                    # Create password file for expect script
-                    password_file = '/root/brln-os/scripts/password.txt'
-                    with open(password_file, 'w') as f:
-                        f.write(password)  # Use wallet password for LND
-                    print("🔐 Password file created for manual integration")
-                    
                     # Start LND service
                     subprocess.run(['sudo', 'systemctl', 'start', 'lnd'], capture_output=True, timeout=30)
                     print("▶️ LND service started for manual integration")
@@ -4828,14 +4821,19 @@ def integrate_system_wallet():
                     import time
                     time.sleep(5)
                     
-                    # Run expect script to create wallet
+                    # Run expect script with password in environment
                     script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                    env = os.environ.copy()
+                    env['LND_WALLET_PASSWORD'] = password  # Use wallet password for LND
+                    print("🔐 Using wallet password in environment variable for manual integration")
+                    
                     result = subprocess.run(
                         [script_path, extended_master_key],
                         cwd='/root/brln-os/scripts',
                         capture_output=True,
                         text=True,
-                        timeout=120
+                        timeout=120,
+                        env=env
                     )
                     
                     if result.returncode == 0:
@@ -4945,26 +4943,19 @@ def load_wallet():
                 try:
                     print(f"🔓 Attempting to unlock LND for loaded wallet '{wallet_id}' using wallet password...")
                     
-                    # Create password file for expect script using the wallet password
-                    password_file = '/root/brln-os/scripts/password.txt'
-                    with open(password_file, 'w') as f:
-                        f.write(password)  # Use the wallet password from the modal
-                    
-                    # Run expect script to unlock wallet
+                    # Run expect script with password in environment
                     script_path = '/root/brln-os/scripts/auto-lnd-unlock.exp'
+                    env = os.environ.copy()
+                    env['LND_WALLET_PASSWORD'] = password  # Use the wallet password from the modal
+                    
                     unlock_result = subprocess.run(
                         [script_path],
                         cwd='/root/brln-os/scripts',
                         capture_output=True,
                         text=True,
-                        timeout=30
+                        timeout=30,
+                        env=env
                     )
-                    
-                    # Clean up password file
-                    try:
-                        os.remove(password_file)
-                    except:
-                        pass
                     
                     if unlock_result.returncode == 0:
                         print(f"✅ LND unlocked successfully for wallet '{wallet_id}' using wallet password")
@@ -4998,12 +4989,6 @@ def load_wallet():
                                 subprocess.run(['sudo', 'systemctl', 'stop', 'lnd'], capture_output=True, timeout=30)
                                 print("⏹️ LND service stopped")
                                 
-                                # Create password file for expect script
-                                password_file = '/root/brln-os/scripts/password.txt'
-                                with open(password_file, 'w') as f:
-                                    f.write(unlock_password)  # Use provided password for LND
-                                print("🔐 Password file created")
-                                
                                 # Start LND service
                                 subprocess.run(['sudo', 'systemctl', 'start', 'lnd'], capture_output=True, timeout=30)
                                 print("▶️ LND service started")
@@ -5012,26 +4997,25 @@ def load_wallet():
                                 import time
                                 time.sleep(5)
                                 
-                                # Run expect script to create wallet
+                                # Run expect script with password in environment
                                 script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                                env = os.environ.copy()
+                                env['LND_WALLET_PASSWORD'] = unlock_password  # Use provided password for LND
+                                print("🔐 Using wallet password in environment variable")
+                                
                                 result = subprocess.run(
                                     [script_path, extended_master_key],
                                     cwd='/root/brln-os/scripts',
                                     capture_output=True,
                                     text=True,
-                                    timeout=120
+                                    timeout=120,
+                                    env=env
                                 )
                                 
                                 if result.returncode == 0:
                                     print(f"✅ LND wallet created successfully for loaded wallet '{wallet_id}'")
                                 else:
                                     print(f"❌ LND wallet creation failed for loaded wallet '{wallet_id}': {result.stderr}")
-                                    
-                                # Clean up password file
-                                try:
-                                    os.remove(password_file)
-                                except:
-                                    pass
                                     
                             except Exception as e:
                                 print(f"❌ LND integration failed for loaded wallet '{wallet_id}': {str(e)}")
@@ -5444,26 +5428,20 @@ def unlock_lnd_wallet():
         
         print("🔓 Manual LND unlock requested via API with password...")
         
-        # Create password file for expect script
-        password_file = '/root/brln-os/scripts/password.txt'
-        with open(password_file, 'w') as f:
-            f.write(unlock_password)  # Use provided password
-        
-        # Run expect script to unlock wallet
+        # Run expect script with password in environment variable
         script_path = '/root/brln-os/scripts/auto-lnd-unlock.exp'
+        
+        env = os.environ.copy()
+        env['LND_WALLET_PASSWORD'] = unlock_password
+        
         unlock_result = subprocess.run(
             [script_path],
             cwd='/root/brln-os/scripts',
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
+            env=env
         )
-        
-        # Clean up password file
-        try:
-            os.remove(password_file)
-        except:
-            pass
         
         if unlock_result.returncode == 0:
             print("✅ LND unlocked successfully via manual API call")
@@ -5646,13 +5624,8 @@ def lnd_create_from_api_seed():
         # Generate universal wallet info
         universal_wallet, universal_error = wallet_manager.generate_universal_wallet(seed_phrase, bip39_passphrase)
         
-        # Store password for expect script
-        import tempfile
+        # Password will be passed via environment variable to expect script when needed
         import os
-        password_file = '/root/brln-os/scripts/password.txt'
-        with open(password_file, 'w') as f:
-            f.write(wallet_password)
-        os.chmod(password_file, 0o600)
         
         return jsonify({
             'status': 'success',
@@ -5707,16 +5680,11 @@ def lnd_create_wallet_expect():
                 'status': 'error'
             }), 400
         
-        # Write password to file for expect script
+        # Pass password via environment variable for security
         import os
         import subprocess
         
-        password_file = '/root/brln-os/scripts/password.txt'
-        with open(password_file, 'w') as f:
-            f.write(wallet_password)
-        os.chmod(password_file, 0o600)
-        
-        # Run expect script
+        # Run expect script with password in environment
         expect_script = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
         
         if not os.path.exists(expect_script):
@@ -5728,19 +5696,19 @@ def lnd_create_wallet_expect():
         # Make script executable
         os.chmod(expect_script, 0o755)
         
-        # Execute expect script
+        # Execute expect script with password in environment
         try:
+            env = os.environ.copy()
+            env['LND_WALLET_PASSWORD'] = wallet_password
+            
             result = subprocess.run(
                 [expect_script, extended_master_key],
                 cwd='/root/brln-os/scripts',
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
+                env=env
             )
-            
-            # Clean up password file
-            if os.path.exists(password_file):
-                os.remove(password_file)
             
             output = result.stdout + result.stderr
             

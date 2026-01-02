@@ -2,28 +2,25 @@
 
 # BRLN-OS Automated LND Wallet Creation Script - Generate New Seed
 # Uses expect to automate lncli create with LND-generated seed
-# Reads password from password.txt file for security
+# Reads password from environment variable for security
 
 set timeout 60
 
-# Read password from file
-set password_file "password.txt"
-if {![file exists $password_file]} {
-    puts "❌ Error: password.txt file not found"
+# Read password from environment variable
+if {[info exists env(LND_WALLET_PASSWORD)]} {
+    set wallet_password $env(LND_WALLET_PASSWORD)
+} else {
+    puts "❌ Error: LND_WALLET_PASSWORD environment variable not set"
     exit 1
 }
 
-set fp [open $password_file r]
-set wallet_password [string trim [read $fp]]
-close $fp
-
 if {$wallet_password eq ""} {
-    puts "❌ Error: password.txt is empty"
+    puts "❌ Error: LND_WALLET_PASSWORD is empty"
     exit 1
 }
 
 puts "🚀 Starting automated LND wallet creation with NEW seed..."
-puts "🔐 Reading password from password.txt"
+puts "🔐 Using password from environment variable"
 puts "🆕 LND will generate its own seed"
 
 # Start lncli create
