@@ -4547,7 +4547,7 @@ def save_wallet():
                         time.sleep(5)
                         
                         # Run expect script with password in environment
-                        script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                        script_path = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
                         env = os.environ.copy()
                         env['LND_WALLET_PASSWORD'] = db_password  # Use wallet password for LND
                         print("🔐 Using wallet password in environment variable")
@@ -4822,7 +4822,7 @@ def integrate_system_wallet():
                     time.sleep(5)
                     
                     # Run expect script with password in environment
-                    script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                    script_path = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
                     env = os.environ.copy()
                     env['LND_WALLET_PASSWORD'] = password  # Use wallet password for LND
                     print("🔐 Using wallet password in environment variable for manual integration")
@@ -4944,7 +4944,7 @@ def load_wallet():
                     print(f"🔓 Attempting to unlock LND for loaded wallet '{wallet_id}' using wallet password...")
                     
                     # Run expect script with password in environment
-                    script_path = '/root/brln-os/scripts/auto-lnd-unlock.exp'
+                    script_path = '/home/brln-api/scripts/auto-lnd-unlock.exp'
                     env = os.environ.copy()
                     env['LND_WALLET_PASSWORD'] = password  # Use the wallet password from the modal
                     
@@ -4998,7 +4998,7 @@ def load_wallet():
                                 time.sleep(5)
                                 
                                 # Run expect script with password in environment
-                                script_path = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+                                script_path = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
                                 env = os.environ.copy()
                                 env['LND_WALLET_PASSWORD'] = unlock_password  # Use provided password for LND
                                 print("🔐 Using wallet password in environment variable")
@@ -5429,14 +5429,14 @@ def unlock_lnd_wallet():
         print("🔓 Manual LND unlock requested via API with password...")
         
         # Run expect script with password in environment variable
-        script_path = '/root/brln-os/scripts/auto-lnd-unlock.exp'
+        script_path = '/home/brln-api/scripts/auto-lnd-unlock.exp'
         
         env = os.environ.copy()
         env['LND_WALLET_PASSWORD'] = unlock_password
         
         unlock_result = subprocess.run(
             ['sudo', '-u', 'lnd', script_path],
-            cwd='/root/brln-os/scripts',
+            cwd='/home/brln-api/scripts',
             capture_output=True,
             text=True,
             timeout=30,
@@ -5637,7 +5637,7 @@ def lnd_create_from_api_seed():
             'universal_wallet': universal_wallet if not universal_error else None,
             'automation_ready': True,
             'next_steps': {
-                'automated_lnd_creation': f'cd /root/brln-os/scripts && ./auto-lnd-create-masterkey.exp "{lnd_key_result["extended_master_key"]}"',
+                'automated_lnd_creation': f'cd /home/brln-api/scripts && ./auto-lnd-create-masterkey.exp "{lnd_key_result["extended_master_key"]}"',
                 'manual_lnd_creation': {
                     'command': 'lncli create',
                     'option': 'x (extended master root key)',
@@ -5685,7 +5685,7 @@ def lnd_create_wallet_expect():
         import subprocess
         
         # Run expect script with password in environment
-        expect_script = '/root/brln-os/scripts/auto-lnd-create-masterkey.exp'
+        expect_script = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
         
         if not os.path.exists(expect_script):
             return jsonify({

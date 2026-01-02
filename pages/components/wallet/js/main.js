@@ -1525,7 +1525,7 @@ async function autoConfigureLND() {
     const extendedKey = lndKeys[network].extended_master_key;
     lndScriptOutput.value += `📋 Network: ${network}\n`;
     lndScriptOutput.value += `🔑 Extended Master Key:\n    ${extendedKey}\n\n`;
-    lndScriptOutput.value += '⏳ Executing: /root/brln-os/scripts/auto-lnd-create-masterkey.exp\n';
+    lndScriptOutput.value += '⏳ Executing: /home/brln-api/scripts/auto-lnd-create-masterkey.exp\n';
     lndScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
     lndScriptOutput.scrollTop = lndScriptOutput.scrollHeight;
     
