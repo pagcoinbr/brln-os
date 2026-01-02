@@ -4431,7 +4431,7 @@ def import_wallet():
 
 @app.route('/api/v1/wallet/save', methods=['POST'])
 def save_wallet():
-    """Salvar carteira criptografada com senha de banco de dados"""
+    """Salvar carteira criptografada com senha de banco de dados ou SystemD credentials"""
     try:
         data = request.get_json()
         if not data:
@@ -4441,15 +4441,27 @@ def save_wallet():
             }), 400
         
         mnemonic = data.get('mnemonic', '').strip()
-        db_password = data.get('password', '')  # Database encryption password
+        db_password = data.get('password', '')  # Database encryption password (optional)
         wallet_id = data.get('wallet_id', f'wallet_{int(time.time())}')
         metadata = data.get('metadata', {})
+        use_systemd_credentials = data.get('metadata', {}).get('useSystemdCredentials', False)
         
-        if not mnemonic or not db_password:
+        if not mnemonic:
             return jsonify({
-                'error': 'Mnemonic and database password are required',
+                'error': 'Mnemonic is required',
                 'status': 'error'
             }), 400
+        
+        # If no password provided, use SystemD master password for encryption
+        if not db_password or use_systemd_credentials:
+            db_password = get_master_password_from_credentials()
+            if not db_password:
+                return jsonify({
+                    'error': 'No encryption password provided and SystemD credentials not available',
+                    'status': 'error'
+                }), 400
+            metadata['encrypted_with_systemd_credentials'] = True
+            print("Using SystemD master password for wallet encryption")
         
         # Get BIP39 passphrase and private keys from temporary storage
         bip39_passphrase = ""
@@ -4574,12 +4586,6 @@ def save_wallet():
                                 print(f"⚠️ Admin macaroon not found - LND may still be initializing for wallet '{wallet_id}'")
                         else:
                             print(f"❌ LND wallet creation failed for wallet '{wallet_id}': {result.stderr}")
-                            
-                        # Clean up password file
-                        try:
-                            os.remove(password_file)
-                        except:
-                            pass
                             
                     except Exception as e:
                         print(f"❌ LND integration failed for wallet '{wallet_id}': {str(e)}")
@@ -4849,12 +4855,6 @@ def integrate_system_wallet():
                             print(f"⚠️ Admin macaroon not found - LND may still be initializing for manual integration '{wallet_id}'")
                     else:
                         print(f"❌ LND wallet creation failed for manual integration '{wallet_id}': {result.stderr}")
-                        
-                    # Clean up password file
-                    try:
-                        os.remove(password_file)
-                    except:
-                        pass
                         
                 except Exception as e:
                     print(f"❌ Manual LND integration failed for wallet '{wallet_id}': {str(e)}")
@@ -5724,18 +5724,10 @@ def lnd_create_wallet_expect():
                 }), 500
                 
         except subprocess.TimeoutExpired:
-            # Clean up password file on timeout
-            if os.path.exists(password_file):
-                os.remove(password_file)
             return jsonify({
                 'error': 'Expect script timed out after 60 seconds',
                 'status': 'error'
             }), 500
-        except Exception as script_error:
-            # Clean up password file on error
-            if os.path.exists(password_file):
-                os.remove(password_file)
-            raise script_error
         
     except Exception as e:
         return jsonify({

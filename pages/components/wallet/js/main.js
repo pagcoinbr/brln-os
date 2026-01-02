@@ -44,9 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (skipVerificationBtn) {
     skipVerificationBtn.addEventListener('click', function() {
-      // Skip verification and go directly to password prompt
-      walletService.showNotification('Skipping verification - proceeding to save wallet...', 'info');
-      promptPasswordAndSaveWallet();
+      // Skip verification and save wallet directly with systemd credentials
+      walletService.showNotification('Skipping verification - saving wallet securely...', 'info');
+      saveWalletWithSystemdCredentials();
     });
   }
 });
@@ -1016,10 +1016,10 @@ function validateMnemonicWords() {
   });
   
   if (allCorrect) {
-    walletService.showNotification('Mnemonic verification successful! Now enter a password to secure your wallet.', 'success');
+    walletService.showNotification('Mnemonic verification successful! Saving wallet securely...', 'success');
     
-    // Instead of showing security section, show password prompt and save wallet directly
-    promptPasswordAndSaveWallet();
+    // Save wallet directly using systemd credentials (no password prompt needed)
+    saveWalletWithSystemdCredentials();
     
     // Clear verification data for security
     setTimeout(() => {
@@ -1047,118 +1047,8 @@ function validateMnemonicWords() {
   }
 }
 
-// Prompt for password and save wallet after verification
-function promptPasswordAndSaveWallet() {
-  // Create a custom password prompt for wallet saving
-  const passwordPrompt = document.createElement('div');
-  passwordPrompt.className = 'password-modal';
-  passwordPrompt.id = 'saveWalletModal';
-  passwordPrompt.style.display = 'block';
-  
-  passwordPrompt.innerHTML = `
-    <div class="password-modal-content">
-      <h3>🔐 Secure Your Wallet</h3>
-      <div class="password-modal-body">
-        <p><strong>Database Encryption Password</strong></p>
-        <p>Enter a password to encrypt and securely store your wallet in the database.</p>
-        <div style="background: #e8f5e8; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 4px solid #28a745;">
-          <small><strong>Note:</strong> This is different from your BIP39 passphrase${currentWallet.bip39Passphrase ? ' (which you entered earlier)' : ''}. This password encrypts your wallet data in storage.</small>
-        </div>
-        <div class="wallet-id-info">
-          <strong>Wallet ID:</strong> ${currentWalletId || 'Auto-generated'}
-        </div>
-        
-        <div style="margin: 20px 0;">
-          <label for="saveWalletPassword">Database Encryption Password:</label>
-          <input 
-            type="password" 
-            id="saveWalletPassword" 
-            placeholder="Enter encryption password (min 8 characters)"
-            autocomplete="new-password"
-          />
-        </div>
-        
-        <div style="margin: 15px 0;">
-          <label for="confirmWalletPassword">Confirm Encryption Password:</label>
-          <input 
-            type="password" 
-            id="confirmWalletPassword" 
-            placeholder="Confirm your encryption password"
-            autocomplete="new-password"
-          />
-        </div>
-      </div>
-      
-      <div class="password-modal-actions">
-        <button class="secondary-button" onclick="cancelWalletSave()">
-          Cancel
-        </button>
-        <button class="primary-button" onclick="saveWalletWithPassword()">
-          💾 Save Wallet
-        </button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(passwordPrompt);
-  
-  // Focus on password input
-  setTimeout(() => {
-    document.getElementById('saveWalletPassword').focus();
-  }, 100);
-  
-  // Add enter key listener
-  document.getElementById('saveWalletPassword').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      document.getElementById('confirmWalletPassword').focus();
-    }
-  });
-  
-  document.getElementById('confirmWalletPassword').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      saveWalletWithPassword();
-    }
-  });
-}
-
-// Cancel wallet save and return to verification
-function cancelWalletSave() {
-  const modal = document.getElementById('saveWalletModal');
-  if (modal) {
-    modal.remove();
-  }
-  
-  // Show verification section again
-  const verificationSection = document.getElementById('verificationSection');
-  if (verificationSection) {
-    verificationSection.style.display = 'block';
-  }
-}
-
-// Save wallet with entered password
-async function saveWalletWithPassword() {
-  const password = document.getElementById('saveWalletPassword').value;
-  const confirmPassword = document.getElementById('confirmWalletPassword').value;
-  
-  // Validate passwords
-  if (!password) {
-    walletService.showNotification('Please enter a password', 'warning');
-    document.getElementById('saveWalletPassword').focus();
-    return;
-  }
-  
-  if (password.length < 8) {
-    walletService.showNotification('Password must be at least 8 characters long', 'warning');
-    document.getElementById('saveWalletPassword').focus();
-    return;
-  }
-  
-  if (password !== confirmPassword) {
-    walletService.showNotification('Passwords do not match', 'warning');
-    document.getElementById('confirmWalletPassword').focus();
-    return;
-  }
-  
+// Save wallet using systemd credentials (no password prompt needed)
+async function saveWalletWithSystemdCredentials() {
   if (!currentWallet || !currentWallet.mnemonic) {
     walletService.showNotification('No wallet data to save', 'error');
     return;
@@ -1167,16 +1057,17 @@ async function saveWalletWithPassword() {
   try {
     showLoading(true);
     
-    // Save wallet using API
+    // Save wallet using API with systemd credentials (password handled by backend)
     const metadata = {
       wordCount: currentWallet.wordCount,
       hasBip39Passphrase: !!currentWallet.bip39Passphrase,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      useSystemdCredentials: true
     };
     
     const result = await walletService.saveWallet(
       currentWallet.mnemonic, 
-      password,  // This is the database encryption password
+      null,  // No password - backend will use systemd credentials
       currentWalletId,
       metadata
     );
@@ -1184,25 +1075,24 @@ async function saveWalletWithPassword() {
     if (result && result.wallet_id) {
       currentWalletId = result.wallet_id;
       
-      // Remove password modal
-      const modal = document.getElementById('saveWalletModal');
-      if (modal) {
-        modal.remove();
-      }
+      walletService.showNotification(`Wallet saved securely. Redirecting to home...`, 'success');
       
-      // Hide verification section
-      const verificationSection = document.getElementById('verificationSection');
-      if (verificationSection) {
-        verificationSection.style.display = 'none';
-      }
+      // Notify parent window and set as system default
+      notifyWalletConfigured(currentWalletId);
       
-      // Show current wallet section with the generated addresses
-      showCurrentWalletInfo(currentWallet.addresses);
-      
-      walletService.showNotification(`Wallet saved successfully with ID: ${result.wallet_id}`, 'success');
-      
-      // Update balances
-      setTimeout(() => updateAllBalances(), 1000);
+      // Redirect to home after short delay
+      setTimeout(() => {
+        // If in iframe, notify parent to navigate
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: 'NAVIGATE_TO_HOME',
+            timestamp: new Date().toISOString()
+          }, '*');
+        } else {
+          // Direct navigation if not in iframe
+          window.location.href = '/pages/home/index.html';
+        }
+      }, 2000);
     } else {
       throw new Error('Invalid response from API');
     }
@@ -1214,6 +1104,8 @@ async function saveWalletWithPassword() {
     showLoading(false);
   }
 }
+
+
 
 // Funções de Interface do Usuário
 

@@ -663,6 +663,11 @@
             sessionStorage.setItem('walletJustConfigured', 'true');
             walletManager.loadHomePage();
           }
+          
+          if (event.data && event.data.type === 'NAVIGATE_TO_HOME') {
+            console.log('Main: Received navigation to home signal');
+            walletManager.loadHomePage();
+          }
         });
         
         console.log('Main: Application initialized with wallet management');
