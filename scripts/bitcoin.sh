@@ -168,8 +168,8 @@ install_bitcoind() {
   # Install systemd service using services.sh
   echo -e "${BLUE}Instalando serviço systemd...${NC}"
   
-  # Use absolute path to ensure services.sh is found
-  SERVICES_SCRIPT="/home/admin/brln-os/scripts/services.sh"
+  # Use detected BRLN_OS_DIR path
+  SERVICES_SCRIPT="$SCRIPT_DIR/scripts/services.sh"
   if [[ -f "$SERVICES_SCRIPT" ]]; then
     source "$SERVICES_SCRIPT"
     create_bitcoind_service
@@ -380,8 +380,8 @@ EOF'
   # Install systemd service using services.sh
   echo -e "${BLUE}Instalando serviço systemd...${NC}"
   
-  # Use absolute path to ensure services.sh is found
-  SERVICES_SCRIPT="/home/admin/brln-os/scripts/services.sh"
+  # Use detected BRLN_OS_DIR path
+  SERVICES_SCRIPT="$SCRIPT_DIR/scripts/services.sh"
   if [[ -f "$SERVICES_SCRIPT" ]]; then
     source "$SERVICES_SCRIPT"
     create_lnd_service

@@ -223,7 +223,9 @@ create_gotty_service() {
     
     # Determine the correct paths based on current setup
     local brln_os_dir
-    if [[ -d "/home/admin/brln-os" ]]; then
+    if [[ -n "${BRLN_OS_DIR:-}" ]]; then
+        brln_os_dir="$BRLN_OS_DIR"
+    elif [[ -d "/home/admin/brln-os" ]]; then
         brln_os_dir="/home/admin/brln-os"
     else
         brln_os_dir="/root/brln-os"
@@ -415,7 +417,9 @@ create_messager_monitor_service() {
     
     # Determine the correct paths based on current setup
     local brln_os_dir
-    if [[ -d "/home/admin/brln-os" ]]; then
+    if [[ -n "${BRLN_OS_DIR:-}" ]]; then
+        brln_os_dir="$BRLN_OS_DIR"
+    elif [[ -d "/home/admin/brln-os" ]]; then
         brln_os_dir="/home/admin/brln-os"
     else
         brln_os_dir="/root/brln-os"
