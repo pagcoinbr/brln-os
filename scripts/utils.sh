@@ -264,9 +264,17 @@ load_master_password() {
     fi
     
     # Try to load from credstore (if running as root)
-    if [[ -f "/etc/credstore/brln-master-password.cred" ]] && command -v systemd-creds &>/dev/null; then
+    # Check both with and without .cred extension for compatibility
+    local credfile=""
+    if [[ -f "/etc/credstore/brln-master-password" ]]; then
+        credfile="/etc/credstore/brln-master-password"
+    elif [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
+        credfile="/etc/credstore/brln-master-password.cred"
+    fi
+    
+    if [[ -n "$credfile" ]] && command -v systemd-creds &>/dev/null; then
         # Decrypt SystemD credential
-        BRLN_MASTER_PASSWORD=$(systemd-creds decrypt /etc/credstore/brln-master-password.cred - 2>/dev/null)
+        BRLN_MASTER_PASSWORD=$(systemd-creds decrypt "$credfile" - 2>/dev/null)
         if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
             export BRLN_MASTER_PASSWORD
             return 0
