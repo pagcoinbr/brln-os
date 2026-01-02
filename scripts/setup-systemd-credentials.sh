@@ -160,6 +160,37 @@ else
     echo "  LoadCredential=brln-master-password:/etc/credstore/brln-master-password"
 fi
 
+# Initialize password manager with the same password
+echo
+echo "Initializing password manager..."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PM_SCRIPT="$SCRIPT_DIR/../brln-tools/secure_password_manager.py"
+
+if [[ -f "$PM_SCRIPT" ]]; then
+    # Check if already initialized
+    if python3 "$PM_SCRIPT" status 2>/dev/null | grep -q "Initialized: Yes"; then
+        echo "⚠️  Password manager already initialized"
+        echo "  Testing if password matches..."
+        if python3 "$PM_SCRIPT" unlock "$MASTER_PASSWORD" >/dev/null 2>&1; then
+            echo "✓ Password matches existing password manager"
+        else
+            echo "⚠️  Password does NOT match existing password manager!"
+            read -p "Reset password manager to use new password? (y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                rm -f /data/brln-secure-passwords.db
+                python3 "$PM_SCRIPT" init "$MASTER_PASSWORD"
+            else
+                echo "  Password manager NOT updated. Manual sync required."
+            fi
+        fi
+    else
+        python3 "$PM_SCRIPT" init "$MASTER_PASSWORD"
+    fi
+else
+    echo "⚠️  Password manager script not found: $PM_SCRIPT"
+fi
+
 echo
 echo "=== Setup Complete ==="
 echo
