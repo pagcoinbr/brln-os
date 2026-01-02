@@ -5693,9 +5693,6 @@ def lnd_create_wallet_expect():
                 'status': 'error'
             }), 500
         
-        # Make script executable
-        os.chmod(expect_script, 0o755)
-        
         # Execute expect script with password in environment
         try:
             env = os.environ.copy()

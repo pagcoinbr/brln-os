@@ -134,6 +134,11 @@ setup_api_user() {
     # Give brln-api user read access to the project directory
     sudo setfacl -R -m u:brln-api:rx /home/admin/brln-os || true
     
+    # Give brln-api user execute permission on expect scripts
+    echo -e "${BLUE}Configurando permissões para scripts expect...${NC}"
+    sudo chmod 755 $SCRIPT_DIR/scripts/*.exp 2>/dev/null || true
+    sudo setfacl -m u:brln-api:rx $SCRIPT_DIR/scripts/*.exp 2>/dev/null || true
+    
     # Create API data directory
     echo -e "${BLUE}Configurando diretório de dados da API...${NC}"
     sudo mkdir -p /data/brln-wallet
