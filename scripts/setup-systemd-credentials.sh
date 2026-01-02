@@ -41,22 +41,50 @@ if [[ -f "$CRED_FILE" ]]; then
     fi
 fi
 
-# Prompt for master password
+# Prompt for master password with validation loop
 echo "Enter the master password for secure password manager:"
-read -s -p "Master Password: " MASTER_PASSWORD
-echo
-read -s -p "Confirm Password: " CONFIRM_PASSWORD
-echo
+echo "(Password must be at least 12 characters)"
 
-if [[ "$MASTER_PASSWORD" != "$CONFIRM_PASSWORD" ]]; then
-    echo "✗ Passwords do not match!"
+# Check if we're running in an interactive terminal
+if [[ ! -t 0 ]]; then
+    echo "✗ Not running in an interactive terminal!"
+    echo "  Please run this script directly: sudo bash $0"
     exit 1
 fi
 
-if [[ ${#MASTER_PASSWORD} -lt 12 ]]; then
-    echo "✗ Password must be at least 12 characters!"
-    exit 1
-fi
+# Loop until valid password is entered
+while true; do
+    read -s -p "Master Password: " MASTER_PASSWORD
+    echo
+    read -s -p "Confirm Password: " CONFIRM_PASSWORD
+    echo
+    
+    # Check if passwords match
+    if [[ "$MASTER_PASSWORD" != "$CONFIRM_PASSWORD" ]]; then
+        echo "✗ Passwords do not match! Please try again."
+        echo
+        continue
+    fi
+    
+    # Check if password is empty
+    if [[ -z "$MASTER_PASSWORD" ]]; then
+        echo "✗ Password cannot be empty! Please try again."
+        echo
+        continue
+    fi
+    
+    # Check password length
+    if [[ ${#MASTER_PASSWORD} -lt 12 ]]; then
+        echo "✗ Password must be at least 12 characters! (Received: ${#MASTER_PASSWORD})"
+        echo "  Please try again with a longer password."
+        echo
+        continue
+    fi
+    
+    # Password is valid, break the loop
+    echo "✓ Password accepted (${#MASTER_PASSWORD} characters)"
+    break
+done
 
 # Create encrypted credential
 echo

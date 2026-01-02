@@ -228,11 +228,13 @@ setup_secure_password_manager() {
     echo -e "${YELLOW}📋 Configurando credenciais criptografadas do SystemD...${NC}"
     echo -e "${BLUE}💡 Você precisará definir uma senha mestra para o gerenciador de senhas${NC}"
     echo -e "${BLUE}💡 Esta senha será usada para criptografar todas as credenciais do sistema${NC}"
+    echo -e "${BLUE}💡 A senha deve ter pelo menos 12 caracteres${NC}"
     echo
     
-    # Run the SystemD credentials setup script
+    # Run the SystemD credentials setup script interactively
     if [[ -x "$SCRIPTS_DIR/setup-systemd-credentials.sh" ]]; then
-        bash "$SCRIPTS_DIR/setup-systemd-credentials.sh"
+        # Make sure we're connected to the terminal for password input
+        bash "$SCRIPTS_DIR/setup-systemd-credentials.sh" < /dev/tty
         SETUP_STATUS=$?
         
         if [[ $SETUP_STATUS -eq 0 ]]; then
