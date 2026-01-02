@@ -22,3 +22,37 @@ api/v1/signrpc/signer_pb2.py
 api/v1/walletrpc/walletkit_pb2_grpc.py
 api/v1/walletrpc/walletkit_pb2.py
 scripts/password.txt
+
+# Security: Never commit sensitive data
+*.db
+*.sqlite
+*.sqlite3
+*-passwords.db
+*password*.db
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+.brln_user_key
+*.macaroon
+macaroons.db
+admin.macaroon
+readonly.macaroon
+invoice.macaroon
+
+# Wallet and credential files
+wallet.db
+wallets/
+*wallet*.json
+*seed*.txt
+*mnemonic*.txt
+credentials/
+secrets/
+.env
+.env.*
+tls.cert
+tls.key
+
+
