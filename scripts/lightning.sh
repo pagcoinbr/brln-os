@@ -19,7 +19,7 @@ install_bos() {
   echo -e "${GREEN}⚡ Instalando Balance of Satoshis (bos)...${NC}"
   
   # Detect BRLN-OS directory
-  detect_brln_setup quiet
+  configure_brln_paths quiet
   SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Check if LND is installed
@@ -330,7 +330,7 @@ install_thunderhub() {
   echo -e "${GREEN}⚡ Instalando ThunderHub...${NC}"
   
   # Detect BRLN-OS directory
-  detect_brln_setup quiet
+  configure_brln_paths quiet
   SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Check if LND is installed
@@ -627,7 +627,7 @@ install_lndg() {
   echo -e "${GREEN}📊 Instalando LNDg (Lightning Node Dashboard)...${NC}"
   
   # Detect BRLN-OS directory
-  detect_brln_setup quiet
+  configure_brln_paths quiet
   SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Check if LND is installed

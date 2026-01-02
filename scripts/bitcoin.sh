@@ -9,7 +9,7 @@ install_bitcoind() {
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
   # Define script directory for consistent path resolution
-  detect_brln_setup quiet
+  configure_brln_paths quiet
   SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Create bitcoin user if it doesn't exist
@@ -193,7 +193,7 @@ configure_lnd() {
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
   # Define script directory for consistent path resolution
-  detect_brln_setup quiet
+  configure_brln_paths quiet
   SCRIPT_DIR="$BRLN_OS_DIR"
   
   # Create lnd user if it doesn't exist
