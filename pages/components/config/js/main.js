@@ -10,7 +10,8 @@ function abrirApp(porta) {
 function openTerminalModal() {
   const modal = document.getElementById('terminalModal');
   const iframe = document.getElementById('terminalIframe');
-  const url = '/terminal/';
+  // Use port 3131 for GoTTY terminal
+  const url = `http://${window.location.hostname}:3131/`;
   
   // Definir a URL do iframe
   iframe.src = url;

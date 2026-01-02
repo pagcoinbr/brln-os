@@ -40,6 +40,14 @@ install_elements() {
     echo ""
   fi
 
+  # Add elements user to debian-tor group for Tor control cookie access
+  if getent group debian-tor &>/dev/null; then
+    echo -e "${BLUE}🔐 Adicionando 'elements' ao grupo 'debian-tor'...${NC}"
+    sudo usermod -aG debian-tor elements
+    echo -e "${GREEN}✓ Usuário 'elements' adicionado ao grupo 'debian-tor'${NC}"
+    echo ""
+  fi
+
   # Create data directory (~20GB needed)
   echo -e "${BLUE}📁 Criando diretório para blockchain (~20GB necessários)...${NC}"
   sudo mkdir -p /data/elements
@@ -199,6 +207,51 @@ configure_elements() {
     local_network="192.168.1.0/24"
   fi
 
+  # Detect Bitcoin Core RPC configuration for pegin validation
+  echo -e "${BLUE}🔍 Detectando configuração do Bitcoin Core...${NC}"
+  VALIDATE_PEGIN=0
+  MAINCHAIN_RPC_CONFIG=""
+  
+  # Check if Bitcoin Core is running and cookie exists
+  if [[ -f "/data/bitcoin/.cookie" ]]; then
+    BITCOIN_COOKIE=$(cat /data/bitcoin/.cookie 2>/dev/null)
+    if [[ -n "$BITCOIN_COOKIE" ]]; then
+      IFS=':' read -r BITCOIN_USER BITCOIN_PASS <<< "$BITCOIN_COOKIE"
+      echo -e "${GREEN}✓ Bitcoin Core RPC detectado (cookie auth)${NC}"
+      VALIDATE_PEGIN=1
+      MAINCHAIN_RPC_CONFIG="# Bitcoin Core RPC Configuration (auto-detected)
+mainchainrpchost=127.0.0.1
+mainchainrpcport=8332
+mainchainrpcuser=${BITCOIN_USER}
+mainchainrpcpassword=${BITCOIN_PASS}"
+    fi
+  elif [[ -f "/home/bitcoin/.bitcoin/.cookie" ]]; then
+    BITCOIN_COOKIE=$(sudo cat /home/bitcoin/.bitcoin/.cookie 2>/dev/null)
+    if [[ -n "$BITCOIN_COOKIE" ]]; then
+      IFS=':' read -r BITCOIN_USER BITCOIN_PASS <<< "$BITCOIN_COOKIE"
+      echo -e "${GREEN}✓ Bitcoin Core RPC detectado (cookie auth)${NC}"
+      VALIDATE_PEGIN=1
+      MAINCHAIN_RPC_CONFIG="# Bitcoin Core RPC Configuration (auto-detected)
+mainchainrpchost=127.0.0.1
+mainchainrpcport=8332
+mainchainrpcuser=${BITCOIN_USER}
+mainchainrpcpassword=${BITCOIN_PASS}"
+    fi
+  fi
+  
+  if [[ $VALIDATE_PEGIN -eq 0 ]]; then
+    echo -e "${YELLOW}⚠️  Bitcoin Core não detectado - desabilitando validação de pegin${NC}"
+    echo -e "${YELLOW}   Para habilitar pegins, instale e configure o Bitcoin Core primeiro${NC}"
+    MAINCHAIN_RPC_CONFIG="# Bitcoin Core RPC Configuration
+# Pegin validation disabled - Bitcoin Core not detected
+# To enable, configure these settings and set validatepegin=1
+# mainchainrpchost=127.0.0.1
+# mainchainrpcport=8332
+# mainchainrpcuser=
+# mainchainrpcpassword="
+  fi
+  echo ""
+
   # Create configuration file
   echo -e "${BLUE}📝 Criando arquivo de configuração...${NC}"
   sudo tee /data/elements/elements.conf > /dev/null << EOF
@@ -208,7 +261,7 @@ daemon=0
 server=1
 listen=1
 txindex=1
-validatepegin=1
+validatepegin=${VALIDATE_PEGIN}
 
 # Asset directories (opcional - para rastreamento específico de ativos)
 assetdir=02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189:DePix
@@ -221,11 +274,7 @@ rpcport=7041
 rpcallowip=${local_network}
 rpcbind=0.0.0.0
 
-# RPC conexão remota com Bitcoin Core (opcional - descomente se necessário)
-# mainchainrpchost=bitcoin.br-ln.com
-# mainchainrpcport=8085
-# mainchainrpcuser=
-# mainchainrpcpassword=
+${MAINCHAIN_RPC_CONFIG}
 
 # Fees
 fallbackfee=0.00001
@@ -569,6 +618,186 @@ uninstall_elements() {
   echo ""
 }
 
+# Fix Elements startup issues (Tor permissions and Bitcoin RPC)
+fix_elements_startup() {
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}        🔧 CORREÇÃO DE PROBLEMAS DO ELEMENTS${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  
+  # Check if elements user exists
+  if ! id "elements" &>/dev/null; then
+    echo -e "${RED}❌ Usuário 'elements' não existe. Execute a instalação primeiro.${NC}"
+    return 1
+  fi
+  
+  # Fix 1: Tor Permission Issue
+  echo -e "${YELLOW}📋 Corrigindo Problema 1: Permissão Tor${NC}"
+  echo ""
+  echo -e "${BLUE}Adicionando 'elements' ao grupo 'debian-tor'...${NC}"
+  
+  if getent group debian-tor &>/dev/null; then
+    if sudo usermod -aG debian-tor elements; then
+      echo -e "${GREEN}✓ Usuário 'elements' adicionado ao grupo 'debian-tor'${NC}"
+    else
+      echo -e "${RED}✗ Falha ao adicionar usuário ao grupo debian-tor${NC}"
+    fi
+  else
+    echo -e "${YELLOW}⚠️  Grupo 'debian-tor' não existe (Tor não instalado?)${NC}"
+  fi
+  echo ""
+  
+  # Fix 2: Bitcoin RPC Connection
+  echo -e "${YELLOW}📋 Corrigindo Problema 2: Conexão RPC Bitcoin${NC}"
+  echo ""
+  echo "Escolha uma das seguintes opções:"
+  echo ""
+  echo -e "  ${BLUE}[1]${NC} RECOMENDADO: Desabilitar validação de pegin (setup simples)"
+  echo -e "  ${BLUE}[2]${NC} Configurar conexão RPC Bitcoin (setup completo)"
+  echo -e "  ${BLUE}[3]${NC} Ver configuração atual do Bitcoin"
+  echo -e "  ${BLUE}[0]${NC} Cancelar"
+  echo ""
+  
+  read -p "Selecione opção (0-3): " fix_option
+  
+  case $fix_option in
+    1)
+      echo ""
+      echo -e "${BLUE}Desabilitando validação de pegin no elements.conf...${NC}"
+      
+      if [[ -f /data/elements/elements.conf ]]; then
+        # Backup original config
+        cp /data/elements/elements.conf /data/elements/elements.conf.bak
+        echo -e "${GREEN}✓ Backup criado: /data/elements/elements.conf.bak${NC}"
+        
+        # Replace validatepegin=1 with validatepegin=0
+        sed -i 's/^validatepegin=1/validatepegin=0/' /data/elements/elements.conf
+        echo -e "${GREEN}✓ elements.conf atualizado: validatepegin=0${NC}"
+      else
+        echo -e "${RED}✗ elements.conf não encontrado em /data/elements/elements.conf${NC}"
+        return 1
+      fi
+      ;;
+    2)
+      echo ""
+      echo -e "${BLUE}Configurando conexão RPC Bitcoin...${NC}"
+      
+      # Check Bitcoin Core RPC cookie
+      BITCOIN_COOKIE=""
+      if [[ -f /data/bitcoin/.cookie ]]; then
+        BITCOIN_COOKIE=$(cat /data/bitcoin/.cookie 2>/dev/null)
+      elif [[ -f /home/bitcoin/.bitcoin/.cookie ]]; then
+        BITCOIN_COOKIE=$(sudo cat /home/bitcoin/.bitcoin/.cookie 2>/dev/null)
+      fi
+      
+      if [[ -n "$BITCOIN_COOKIE" ]]; then
+        IFS=':' read -r BITCOIN_USER BITCOIN_PASS <<< "$BITCOIN_COOKIE"
+        
+        echo -e "${GREEN}✓ Credenciais RPC do Bitcoin Core encontradas${NC}"
+        echo -e "  Usuário: ${BLUE}$BITCOIN_USER${NC}"
+        echo -e "  Senha: ${BLUE}[OCULTA]${NC}"
+        
+        # Update Elements config
+        if [[ -f /data/elements/elements.conf ]]; then
+          # Backup original config
+          cp /data/elements/elements.conf /data/elements/elements.conf.bak
+          echo -e "${GREEN}✓ Backup criado: /data/elements/elements.conf.bak${NC}"
+          
+          # Enable pegin validation
+          sed -i 's/^validatepegin=0/validatepegin=1/' /data/elements/elements.conf
+          
+          # Remove old mainchain RPC settings (commented or not)
+          sed -i '/^#.*mainchainrpc/d' /data/elements/elements.conf
+          sed -i '/^mainchainrpc/d' /data/elements/elements.conf
+          
+          # Add new RPC settings before fallbackfee
+          sed -i "/^fallbackfee/i\\
+# Bitcoin Core RPC Configuration (auto-configured)\\
+mainchainrpchost=127.0.0.1\\
+mainchainrpcport=8332\\
+mainchainrpcuser=${BITCOIN_USER}\\
+mainchainrpcpassword=${BITCOIN_PASS}\\
+" /data/elements/elements.conf
+          
+          echo -e "${GREEN}✓ elements.conf atualizado com credenciais RPC Bitcoin${NC}"
+        else
+          echo -e "${RED}✗ elements.conf não encontrado em /data/elements/elements.conf${NC}"
+          return 1
+        fi
+      else
+        echo -e "${YELLOW}⚠️  Cookie RPC do Bitcoin Core não encontrado${NC}"
+        echo -e "   Caminhos verificados:"
+        echo -e "   - /data/bitcoin/.cookie"
+        echo -e "   - /home/bitcoin/.bitcoin/.cookie"
+        echo ""
+        echo -e "${BLUE}Configure manualmente:${NC}"
+        echo -e "   1. Edite /data/elements/elements.conf"
+        echo -e "   2. Descomente e atualize as configurações mainchainrpc*"
+        echo -e "   3. Use as credenciais do Bitcoin Core"
+        return 1
+      fi
+      ;;
+    3)
+      echo ""
+      echo -e "${BLUE}Configuração atual do Bitcoin Core:${NC}"
+      echo ""
+      grep -E "^rpc|^server|^daemon" /data/bitcoin/bitcoin.conf 2>/dev/null || echo "Nenhuma config RPC encontrada"
+      echo ""
+      echo -e "${BLUE}Cookie RPC do Bitcoin Core:${NC}"
+      if [[ -f /data/bitcoin/.cookie ]]; then
+        echo -e "${GREEN}✓ Encontrado em /data/bitcoin/.cookie${NC}"
+      elif [[ -f /home/bitcoin/.bitcoin/.cookie ]]; then
+        echo -e "${GREEN}✓ Encontrado em /home/bitcoin/.bitcoin/.cookie${NC}"
+      else
+        echo -e "${RED}✗ Não encontrado${NC}"
+      fi
+      return 0
+      ;;
+    0)
+      echo -e "${YELLOW}Operação cancelada${NC}"
+      return 0
+      ;;
+    *)
+      echo -e "${RED}Opção inválida${NC}"
+      return 1
+      ;;
+  esac
+  
+  echo ""
+  echo -e "${YELLOW}🔄 Reiniciando daemon Elements...${NC}"
+  echo ""
+  
+  if sudo systemctl restart elementsd; then
+    echo -e "${GREEN}✓ Daemon Elements reiniciado${NC}"
+  else
+    echo -e "${RED}✗ Falha ao reiniciar daemon Elements${NC}"
+    return 1
+  fi
+  
+  echo ""
+  echo -e "${YELLOW}⏳ Aguardando estabilização...${NC}"
+  sleep 3
+  
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}      VERIFICAÇÃO DE STATUS${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+  
+  if systemctl is-active --quiet elementsd; then
+    echo -e "${GREEN}✓ Daemon Elements está EXECUTANDO${NC}"
+  else
+    echo -e "${RED}✗ Daemon Elements NÃO está executando${NC}"
+    echo ""
+    echo -e "${YELLOW}Verifique os logs com:${NC}"
+    echo -e "   ${BLUE}journalctl -u elementsd -n 50 -f${NC}"
+  fi
+  
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+}
+
 # Menu Elements
 elements_menu() {
   while true; do
@@ -587,6 +816,8 @@ elements_menu() {
     echo -e "  ${BLUE}8)${NC} Reiniciar Elements"
     echo -e "  ${BLUE}9)${NC} Desinstalar Elements"
     echo ""
+    echo -e "  ${YELLOW}F)${NC} 🔧 Corrigir Problemas de Inicialização"
+    echo ""
     echo -e "  ${BLUE}0)${NC} Voltar"
     echo ""
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -602,6 +833,7 @@ elements_menu() {
       7) stop_elements ;;
       8) restart_elements ;;
       9) uninstall_elements ;;
+      [Ff]) fix_elements_startup ;;
       0) break ;;
       *) echo -e "${RED}❌ Opção inválida!${NC}" ;;
     esac
@@ -621,4 +853,5 @@ export -f create_elements_wallet
 export -f stop_elements
 export -f restart_elements
 export -f uninstall_elements
+export -f fix_elements_startup
 export -f elements_menu
