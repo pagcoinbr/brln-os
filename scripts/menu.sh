@@ -396,21 +396,10 @@ menu() {
   echo -e "${NC}"
   echo ""
   
-  # Check if installation directories exist
-  local install_disabled=false
-  if [[ -d "/data/lnd" && -d "/data/bitcoin" ]]; then
-    install_disabled=true
-  fi
-  
   echo -e "${YELLOW}┌─ MENU PRINCIPAL ─┐${NC}"
-  
-  if [[ "$install_disabled" == true ]]; then
-    echo -e "${GRAY}1.${NC} 🚀 Instalação Completa ${GRAY}(já realizada)${NC}"
-  else
-    echo -e "${GREEN}1.${NC} 🚀 Instalação Completa"
-  fi
-  
-  echo -e "${GREEN}2.${NC} ⚙️ Configurações"
+  echo -e "${GREEN}1.${NC} ⚙️ Configurações"
+  echo -e "${GREEN}2.${NC} 🛠️ Ferramentas do Sistema"
+  echo -e "${GREEN}3.${NC} 🔧 Utilitários e Manutenção"
   echo ""
   echo -e "${RED}0.${NC} Sair"
   echo ""
@@ -418,21 +407,20 @@ menu() {
   
   read choice
   case $choice in
-    1) 
-      if [[ "$install_disabled" == true ]]; then
-        echo -e "${YELLOW}⚠️ A instalação já foi realizada. Use a opção Configurações.${NC}"
-        sleep 2
-        menu
-      else
-        install_complete_system
-        menu
-      fi
-      ;;
-    2) menu_configuration ;;
+    1) menu_configuration ;;
+    2) menu_system_tools ;;
+    3) menu_utilities ;;
     0) echo -e "${GREEN}👋 Obrigado por usar BRLN-OS!${NC}"; exit 0 ;;
     *) echo "Opção inválida!"; sleep 2; menu ;;
   esac
 }
+
+# Check for --install flag
+if [[ "$1" == "--install" ]]; then
+  echo -e "${GREEN}🚀 Executando instalação completa via flag...${NC}"
+  install_complete_system
+  exit 0
+fi
 
 # Start the main menu
 menu

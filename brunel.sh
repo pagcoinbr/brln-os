@@ -585,5 +585,12 @@ install_brln_api_with_user_env
 
 terminal_web
 
+# Run full system installation via menu.sh --install flag
+echo
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}🚀 Iniciando instalação completa do sistema...${NC}"
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+bash "$SCRIPTS_DIR/menu.sh" --install
+
 # Final Installation Summary Screen
 show_installation_summary
