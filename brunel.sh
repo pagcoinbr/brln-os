@@ -44,6 +44,31 @@ echo -e "${GREEN}Bitcoin dedicated OS${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo
 
+# Network Selection Prompt
+echo -e "${YELLOW}🌐 Escolha a rede Bitcoin:${NC}"
+echo -e "${BLUE}1.${NC} Mainnet (Rede principal - Bitcoin real)"
+echo -e "${BLUE}2.${NC} Testnet (Rede de testes - Bitcoin de teste)"
+echo
+while true; do
+    read -p "Digite sua escolha (1 ou 2): " network_choice
+    case $network_choice in
+        1)
+            export BITCOIN_NETWORK="mainnet"
+            echo -e "${GREEN}✅ Mainnet selecionada${NC}"
+            break
+            ;;
+        2)
+            export BITCOIN_NETWORK="testnet"
+            echo -e "${GREEN}✅ Testnet selecionada${NC}"
+            break
+            ;;
+        *)
+            echo -e "${RED}❌ Opção inválida! Digite 1 ou 2.${NC}"
+            ;;
+    esac
+done
+echo
+
 # Source required scripts
 source "$SCRIPTS_DIR/config.sh"
 source "$SCRIPTS_DIR/utils.sh" 

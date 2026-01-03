@@ -2891,6 +2891,21 @@ def list_unspent(min_confs=0, max_confs=9999999, account=None):
         }
 
 
+@app.route('/api/v1/system/config/network', methods=['GET'])
+def get_network_config():
+    """Retorna a rede Bitcoin configurada (mainnet ou testnet)"""
+    try:
+        return jsonify({
+            'network': BITCOIN_NETWORK,
+            'status': 'success'
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+
 @app.route('/api/v1/system/status', methods=['GET'])
 def system_status():
     """Retorna o status do sistema"""

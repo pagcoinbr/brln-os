@@ -453,11 +453,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Atualizar backup info a cada 30 segundos
   setInterval(loadBackupInfo, 30000);
   
-  // Add click handler for terminal web button
-  const terminalBtn = document.querySelector('.terminal-web-btn');
-  if (terminalBtn) {
-    terminalBtn.addEventListener('click', openTerminalModal);
-  }
+  // Add click handler for terminal web buttons (excluding those with onclick)
+  const terminalBtns = document.querySelectorAll('.terminal-web-btn:not([onclick])');
+  terminalBtns.forEach(btn => {
+    btn.addEventListener('click', openTerminalModal);
+  });
   
   // Add click handler for close button
   const closeBtn = document.querySelector('.terminal-close');

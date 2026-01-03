@@ -1211,18 +1211,25 @@ function displayChainAddresses(addresses) {
 }
 
 // Display LND configuration options
-function displayLNDConfiguration(lndKeys) {
+async function displayLNDConfiguration(lndKeys) {
   const lndExtendedKey = document.getElementById('lndExtendedKey');
-  const lndNetworkSelect = document.getElementById('lndNetworkSelect');
   
   if (!lndExtendedKey || !lndKeys) return;
   
-  // Store LND keys globally for network switching
+  // Store LND keys globally
   window.currentLNDKeys = lndKeys;
   
-  // Set initial network and key display
-  const initialNetwork = lndNetworkSelect.value;
-  updateLNDKeyDisplay(initialNetwork);
+  // Get network from system configuration via API
+  try {
+    const response = await fetch(`${API_BASE_URL}/system/config/network`);
+    const data = await response.json();
+    const network = data.network || 'mainnet'; // Default to mainnet if not available
+    updateLNDKeyDisplay(network);
+  } catch (error) {
+    console.error('Error fetching network config:', error);
+    // Default to mainnet if API call fails
+    updateLNDKeyDisplay('mainnet');
+  }
 }
 
 // Update LND key display based on selected network
@@ -1242,14 +1249,6 @@ function updateLNDKeyDisplay(network) {
 
 // Setup event listeners for universal wallet functionality
 function setupUniversalWalletEventListeners() {
-  // Network selector change
-  const lndNetworkSelect = document.getElementById('lndNetworkSelect');
-  if (lndNetworkSelect) {
-    lndNetworkSelect.addEventListener('change', (e) => {
-      updateLNDKeyDisplay(e.target.value);
-    });
-  }
-  
   // Copy LND key button
   const copyLndKeyBtn = document.getElementById('copyLndKeyBtn');
   if (copyLndKeyBtn) {
@@ -1315,7 +1314,6 @@ function copyLNDKey() {
 // Auto-configure LND with the generated key
 async function autoConfigureLND() {
   try {
-    const lndNetworkSelect = document.getElementById('lndNetworkSelect');
     const automationStatus = document.getElementById('lndAutomationStatus');
     const statusMessage = document.getElementById('lndStatusMessage');
     const progressBar = document.getElementById('lndProgressBar');
@@ -1323,7 +1321,16 @@ async function autoConfigureLND() {
     const lndOutputContainer = document.getElementById('lndOutputContainer');
     const lndScriptOutput = document.getElementById('lndScriptOutput');
     
-    const network = lndNetworkSelect.value;
+    // Get network from system configuration
+    let network = 'mainnet'; // default
+    try {
+      const response = await fetch(`${API_BASE_URL}/system/config/network`);
+      const data = await response.json();
+      network = data.network || 'mainnet';
+    } catch (error) {
+      console.error('Error fetching network config:', error);
+    }
+    
     const lndKeys = window.currentLNDKeys;
     
     if (!lndKeys || !lndKeys[network]) {

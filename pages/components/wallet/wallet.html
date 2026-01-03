@@ -171,13 +171,6 @@
         <div class="lnd-configuration">
           <h4>⚡ Lightning Network (LND) Configuration</h4>
           <div class="lnd-keys-section">
-            <div class="network-selector">
-              <label>Network:</label>
-              <select id="lndNetworkSelect">
-                <option value="testnet">Testnet (Testing)</option>
-                <option value="mainnet">Mainnet (Live)</option>
-              </select>
-            </div>
             <div class="lnd-key-display">
               <label>Extended Master Key:</label>
               <div class="key-container">
@@ -185,22 +178,10 @@
                 <button class="copy-btn" id="copyLndKeyBtn" title="Copy LND key">📋</button>
               </div>
             </div>
-            <div class="lnd-instructions">
-              <h5>💡 How to use with LND:</h5>
-              <ol>
-                <li>Run: <code>lncli create</code></li>
-                <li>Choose option: <strong>x</strong> (extended master root key)</li>
-                <li>Paste the extended key shown above</li>
-                <li>Or use automated setup below ⬇️</li>
-              </ol>
-            </div>
             <div class="lnd-automation">
               <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="action-button lnd-button" id="autoConfigureLndBtn">
                   ⚡ Auto-Configure LND Wallet
-                </button>
-                <button class="action-button terminal-web-btn" id="openTerminalBtn" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);">
-                  🖥️ Terminal Web
                 </button>
               </div>
               <div class="automation-status" id="lndAutomationStatus" style="display: none;">
@@ -288,17 +269,6 @@
   
   </div>
 
-  <!-- Terminal Web Modal -->
-  <div id="terminalModal" class="terminal-modal" style="display: none;">
-    <div class="terminal-modal-content" style="height: 90vh; display: flex; flex-direction: column;">
-      <div class="terminal-modal-header">
-        <span class="terminal-modal-title">🖥️ Terminal Web BRLN-OS</span>
-        <button class="terminal-modal-close" id="closeTerminalModal">&times;</button>
-      </div>
-      <iframe id="terminalFrame" src="about:blank" frameborder="0" style="flex: 1; width: 100%; border: none; border-radius: 0 0 8px 8px; background-color: #000;"></iframe>
-    </div>
-  </div>
-
   <!-- Scripts -->
   <script>
     // Carregar footer da associação
@@ -308,34 +278,6 @@
         document.querySelector('.association-footer-placeholder').innerHTML = data;
       })
       .catch(error => console.error('Erro ao carregar footer:', error));
-
-    // Terminal Web Modal Handlers
-    const terminalModal = document.getElementById('terminalModal');
-    const openTerminalBtn = document.getElementById('openTerminalBtn');
-    const closeTerminalModal = document.getElementById('closeTerminalModal');
-    const terminalFrame = document.getElementById('terminalFrame');
-
-    if (openTerminalBtn) {
-      openTerminalBtn.addEventListener('click', () => {
-        terminalFrame.src = '/terminal/';
-        terminalModal.style.display = 'flex';
-      });
-    }
-
-    if (closeTerminalModal) {
-      closeTerminalModal.addEventListener('click', () => {
-        terminalModal.style.display = 'none';
-        terminalFrame.src = 'about:blank';
-      });
-    }
-
-    // Close modal when clicking outside
-    window.addEventListener('click', (event) => {
-      if (event.target === terminalModal) {
-        terminalModal.style.display = 'none';
-        terminalFrame.src = 'about:blank';
-      }
-    });
   </script>
   <script src="js/main.js"></script>
 </body>
