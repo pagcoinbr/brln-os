@@ -69,6 +69,68 @@ while true; do
 done
 echo
 
+# Master Password Setup
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}🔐 CONFIGURAÇÃO DE SENHA MESTRA${NC}"
+echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo
+echo -e "${BLUE}💡 A senha mestra será usada para criptografar todas as credenciais do sistema${NC}"
+echo -e "${BLUE}💡 Ela será armazenada de forma segura usando SystemD credentials${NC}"
+echo -e "${BLUE}💡 Mínimo de 12 caracteres${NC}"
+echo
+
+# Check if credential already exists
+if [[ -f "/etc/credstore/brln-master-password" ]]; then
+    echo -e "${YELLOW}⚠️  Credencial já existe. Pulando configuração...${NC}"
+    export BRLN_MASTER_PASSWORD_SET=true
+else
+    # Loop until valid password is entered
+    while true; do
+        read -s -p "$(echo -e ${YELLOW})Digite a senha mestra: $(echo -e ${NC})" BRLN_MASTER_PASSWORD
+        echo
+        
+        # Validate password length
+        if [[ ${#BRLN_MASTER_PASSWORD} -lt 12 ]]; then
+            echo -e "${RED}❌ Senha muito curta! Mínimo 12 caracteres.${NC}"
+            continue
+        fi
+        
+        read -s -p "$(echo -e ${YELLOW})Confirme a senha: $(echo -e ${NC})" CONFIRM_PASSWORD
+        echo
+        
+        # Check if passwords match
+        if [[ "$BRLN_MASTER_PASSWORD" != "$CONFIRM_PASSWORD" ]]; then
+            echo -e "${RED}❌ Senhas não coincidem! Tente novamente.${NC}"
+            echo
+            continue
+        fi
+        
+        # Passwords match and are valid
+        break
+    done
+    
+    # Create credential directory
+    sudo mkdir -p /etc/credstore
+    sudo chmod 700 /etc/credstore
+    
+    # Encrypt and store password with systemd-creds
+    echo -e "${YELLOW}🔒 Criptografando senha com SystemD credentials...${NC}"
+    if command -v systemd-creds &> /dev/null; then
+        echo -n "$BRLN_MASTER_PASSWORD" | sudo systemd-creds encrypt --name=brln-master-password - /etc/credstore/brln-master-password
+        sudo chmod 600 /etc/credstore/brln-master-password
+        echo -e "${GREEN}✅ Senha criptografada e armazenada com sucesso!${NC}"
+        export BRLN_MASTER_PASSWORD_SET=true
+    else
+        # Fallback: store as plain text with restricted permissions (not recommended but functional)
+        echo -e "${YELLOW}⚠️  systemd-creds não disponível. Usando armazenamento com permissões restritas...${NC}"
+        echo -n "$BRLN_MASTER_PASSWORD" | sudo tee /etc/credstore/brln-master-password > /dev/null
+        sudo chmod 600 /etc/credstore/brln-master-password
+        echo -e "${GREEN}✅ Senha armazenada (sem criptografia TPM)${NC}"
+        export BRLN_MASTER_PASSWORD_SET=true
+    fi
+fi
+echo
+
 # Source required scripts
 source "$SCRIPTS_DIR/config.sh"
 source "$SCRIPTS_DIR/utils.sh" 
@@ -260,72 +322,46 @@ update_and_upgrade() {
 
 # Function to setup secure password manager
 setup_secure_password_manager() {
-    echo -e "${GREEN}🔐 Configurando Gerenciador Seguro de Senhas...${NC}"
+    echo -e "${GREEN}🔐 Inicializando Gerenciador Seguro de Senhas...${NC}"
     
     # Check if secure password manager is already initialized
     if [[ -f "/data/brln-secure-passwords.db" ]]; then
         echo -e "${GREEN}✅ Gerenciador de senhas já inicializado${NC}"
-        
-        # Check if SystemD credential already exists
-        if [[ -f "/etc/credstore/brln-master-password" ]]; then
-            echo -e "${GREEN}✅ Credencial SystemD já configurada${NC}"
-            return 0
-        fi
+        return 0
     fi
     
-    echo -e "${YELLOW}📋 Configurando credenciais criptografadas do SystemD...${NC}"
-    echo -e "${BLUE}💡 Você precisará definir uma senha mestra para o gerenciador de senhas${NC}"
-    echo -e "${BLUE}💡 Esta senha será usada para criptografar todas as credenciais do sistema${NC}"
-    echo -e "${BLUE}💡 A senha deve ter pelo menos 12 caracteres${NC}"
-    echo
-    
-    # Run the SystemD credentials setup script interactively
-    if [[ -x "$SCRIPTS_DIR/setup-systemd-credentials.sh" ]]; then
-        # Make sure we're connected to the terminal for password input
-        bash "$SCRIPTS_DIR/setup-systemd-credentials.sh" < /dev/tty
-        SETUP_STATUS=$?
+    # Initialize the secure password manager database using collected password
+    if [[ -f "/etc/credstore/brln-master-password" ]]; then
+        echo -e "${YELLOW}📦 Inicializando banco de dados do gerenciador de senhas...${NC}"
         
-        if [[ $SETUP_STATUS -eq 0 ]]; then
-            echo -e "${GREEN}✅ Gerenciador de senhas configurado com sucesso!${NC}"
+        # Decrypt master password
+        if command -v systemd-creds &> /dev/null; then
+            MASTER_PASS=$(sudo systemd-creds decrypt /etc/credstore/brln-master-password - 2>/dev/null)
+        else
+            MASTER_PASS=$(sudo cat /etc/credstore/brln-master-password)
+        fi
+        
+        if [[ -n "$MASTER_PASS" ]]; then
+            # Initialize the secure password manager
+            echo "$MASTER_PASS" | python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" init --master-password-stdin
             
-            # Initialize the secure password manager if database doesn't exist
-            if [[ ! -f "/data/brln-secure-passwords.db" ]]; then
-                echo -e "${YELLOW}📦 Inicializando banco de dados do gerenciador de senhas...${NC}"
-                
-                # Get master password from SystemD credential
-                if [[ -f "/etc/credstore/brln-master-password" ]]; then
-                    MASTER_PASS=$(sudo systemd-creds decrypt /etc/credstore/brln-master-password - 2>/dev/null)
-                    
-                    if [[ -n "$MASTER_PASS" ]]; then
-                        # Initialize the secure password manager
-                        echo "$MASTER_PASS" | python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" init --master-password-stdin
-                        
-                        # Set proper permissions
-                        sudo chmod 666 /data/brln-secure-passwords.db
-                        sudo chown brln-api:brln-api /data/brln-secure-passwords.db
-                        
-                        echo -e "${GREEN}✅ Banco de dados inicializado${NC}"
-                    else
-                        echo -e "${RED}❌ Erro ao ler credencial do SystemD${NC}"
-                    fi
-                fi
-            fi
+            # Set proper permissions
+            sudo chmod 666 /data/brln-secure-passwords.db
+            sudo chown brln-api:brln-api /data/brln-secure-passwords.db 2>/dev/null || true
+            
+            echo -e "${GREEN}✅ Banco de dados inicializado${NC}"
             
             # Create initial backup
-            echo -e "${YELLOW}📦 Criando backup inicial do gerenciador de senhas...${NC}"
+            echo -e "${YELLOW}📦 Criando backup inicial...${NC}"
             if [[ -x "$SCRIPTS_DIR/backup-password-manager.sh" ]]; then
                 bash "$SCRIPTS_DIR/backup-password-manager.sh" backup > /dev/null 2>&1
-                echo -e "${GREEN}✅ Backup inicial criado${NC}"
+                echo -e "${GREEN}✅ Backup criado${NC}"
             fi
         else
-            echo -e "${RED}❌ Erro ao configurar credenciais do SystemD${NC}"
-            echo -e "${YELLOW}⚠️ O sistema continuará sem criptografia SystemD${NC}"
-            echo -e "${YELLOW}💡 Você pode configurar manualmente depois com:${NC}"
-            echo -e "${YELLOW}   sudo bash $SCRIPTS_DIR/setup-systemd-credentials.sh${NC}"
+            echo -e "${RED}❌ Erro ao ler credencial${NC}"
         fi
     else
-        echo -e "${RED}❌ Script setup-systemd-credentials.sh não encontrado${NC}"
-        echo -e "${YELLOW}💡 Procurando: $SCRIPTS_DIR/setup-systemd-credentials.sh${NC}"
+        echo -e "${RED}❌ Credencial não encontrada${NC}"
     fi
     
     echo
