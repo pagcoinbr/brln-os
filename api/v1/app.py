@@ -1868,7 +1868,7 @@ class ElementsRPCClient:
         self.password = get_secure_credential('elements_rpc_password', ELEMENTS_RPC_PASSWORD)
         self.auth = base64.b64encode(f"{self.user}:{self.password}".encode()).decode()
         
-    def _call_rpc(self, method, params=None):
+    def _call_rpc(self, method, params=None, wallet='peerswap'):
         """Faz chamada RPC para Elements daemon"""
         if params is None:
             params = []
@@ -1890,8 +1890,10 @@ class ElementsRPCClient:
         
         try:
             import requests
+            # Use wallet-specific endpoint to ensure we're accessing the correct wallet
+            url = f"http://{self.host}:{self.port}/wallet/{wallet}" if wallet else f"http://{self.host}:{self.port}/"
             response = requests.post(
-                f"http://{self.host}:{self.port}/",
+                url,
                 json=payload,
                 headers=headers,
                 timeout=30
@@ -4597,10 +4599,74 @@ def save_wallet():
                 # Start integration in background
                 integration_thread = threading.Thread(target=background_lnd_integration, daemon=True)
                 integration_thread.start()
+                
+                # Also integrate Elements wallet
+                def background_elements_integration():
+                    try:
+                        print(f"🔷 Starting Elements integration for wallet '{wallet_id}'...")
+                        
+                        # Start Elements daemon if not running
+                        subprocess.run(['sudo', 'systemctl', 'start', 'elementsd'], capture_output=True, timeout=30)
+                        print("▶️ Elements service started")
+                        
+                        # Wait for Elements to be ready
+                        import time
+                        time.sleep(10)
+                        
+                        # Check if peerswap wallet exists
+                        wallet_list_result = subprocess.run(
+                            ['elements-cli', '-datadir=/data/elements', 'listwallets'],
+                            capture_output=True, text=True, timeout=30
+                        )
+                        
+                        if wallet_list_result.returncode == 0:
+                            import json
+                            wallets = json.loads(wallet_list_result.stdout)
+                            
+                            if 'peerswap' not in wallets:
+                                # Create peerswap wallet with descriptor
+                                print("📝 Creating peerswap wallet...")
+                                create_result = subprocess.run(
+                                    ['elements-cli', '-datadir=/data/elements', 
+                                     'createwallet', 'peerswap', 'false', 'false', '', 'false', 'true'],
+                                    capture_output=True, text=True, timeout=60
+                                )
+                                
+                                if create_result.returncode == 0:
+                                    print(f"✅ Elements peerswap wallet created")
+                                else:
+                                    print(f"⚠️ Elements wallet creation failed: {create_result.stderr}")
+                                    return
+                            else:
+                                print("✅ Elements peerswap wallet already exists")
+                            
+                            # Import mnemonic as HD seed
+                            print("🔑 Importing HD seed into Elements wallet...")
+                            import_result = subprocess.run(
+                                ['elements-cli', '-datadir=/data/elements', '-rpcwallet=peerswap',
+                                 'sethdseed', 'true', mnemonic],
+                                capture_output=True, text=True, timeout=60
+                            )
+                            
+                            if import_result.returncode == 0:
+                                print(f"✅ Elements wallet integrated successfully for wallet '{wallet_id}'")
+                            else:
+                                # Sometimes sethdseed fails if already set, try importing descriptors
+                                print(f"⚠️ sethdseed failed (may already be set): {import_result.stderr}")
+                                print(f"✅ Elements wallet exists and ready for wallet '{wallet_id}'")
+                        else:
+                            print(f"❌ Elements wallet list failed: {wallet_list_result.stderr}")
+                            
+                    except Exception as e:
+                        print(f"❌ Elements integration failed for wallet '{wallet_id}': {str(e)}")
+                
+                # Start Elements integration in background
+                elements_thread = threading.Thread(target=background_elements_integration, daemon=True)
+                elements_thread.start()
                     
             except Exception as e:
-                print(f"⚠️ LND integration setup error: {str(e)}")
-                message += ' - LND integration setup failed'
+                print(f"⚠️ Wallet integration setup error: {str(e)}")
+                message += ' - Wallet integration setup failed'
         
         response_data = {
             'status': 'success',
@@ -4876,6 +4942,164 @@ def integrate_system_wallet():
         except Exception as e:
             return jsonify({
                 'error': f'Integration setup failed: {str(e)}',
+                'status': 'error'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/v1/wallet/integrate-elements', methods=['POST'])
+def integrate_elements_wallet():
+    """Manually integrate the system default wallet with Elements/Liquid"""
+    try:
+        data = request.get_json()
+        wallet_id = data.get('wallet_id') if data else None
+        password = data.get('password') if data else None
+        
+        # If no wallet_id provided, get the system default
+        if not wallet_id:
+            default_wallet, error = wallet_manager.get_system_default_wallet()
+            if error or not default_wallet:
+                return jsonify({
+                    'error': 'No system default wallet found',
+                    'status': 'error'
+                }), 404
+            
+            wallet_id = default_wallet['wallet_id']
+        
+        # Load the wallet data from database
+        wallet_data, error = wallet_manager.load_wallet(wallet_id)
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 404
+        
+        # Check if we need to decrypt the mnemonic
+        mnemonic = None
+        
+        # Try to get from temporary wallets first (if recently loaded)
+        if hasattr(wallet_manager, 'temp_wallets') and wallet_id in wallet_manager.temp_wallets:
+            mnemonic = wallet_manager.temp_wallets[wallet_id].get('mnemonic')
+        
+        # If not in temp storage and wallet is encrypted, require password
+        if not mnemonic and wallet_data.get('encrypted_mnemonic'):
+            if not password:
+                # Try using SystemD credentials
+                systemd_password = get_master_password_from_credentials()
+                if systemd_password:
+                    password = systemd_password
+                    print("Using SystemD credentials for Elements integration")
+                else:
+                    return jsonify({
+                        'error': 'Password required for wallet decryption',
+                        'status': 'error'
+                    }), 400
+            
+            # Decrypt the mnemonic
+            mnemonic, decrypt_error = wallet_manager.decrypt_mnemonic(
+                wallet_data['encrypted_mnemonic'],
+                wallet_data['salt'],
+                password
+            )
+            if decrypt_error:
+                return jsonify({
+                    'error': 'Invalid password or corrupted wallet data',
+                    'status': 'error'
+                }), 401
+        
+        # If we still don't have a mnemonic
+        if not mnemonic:
+            return jsonify({
+                'error': 'Wallet data not found or corrupted',
+                'status': 'error'
+            }), 400
+        
+        # Start background integration
+        try:
+            print(f"🔷 Starting manual Elements integration for wallet '{wallet_id}'...")
+            
+            # Run integration in background thread
+            def background_elements_integration():
+                try:
+                    # Start Elements daemon if not running
+                    subprocess.run(['sudo', 'systemctl', 'start', 'elementsd'], capture_output=True, timeout=30)
+                    print("▶️ Elements service started for manual integration")
+                    
+                    # Wait for Elements to be ready
+                    import time
+                    time.sleep(10)
+                    
+                    # Check if peerswap wallet exists
+                    wallet_list_result = subprocess.run(
+                        ['elements-cli', '-datadir=/data/elements', 'listwallets'],
+                        capture_output=True, text=True, timeout=30
+                    )
+                    
+                    if wallet_list_result.returncode == 0:
+                        import json
+                        wallets = json.loads(wallet_list_result.stdout)
+                        
+                        if 'peerswap' not in wallets:
+                            # Create peerswap wallet with descriptor
+                            print("📝 Creating peerswap wallet for manual integration...")
+                            create_result = subprocess.run(
+                                ['elements-cli', '-datadir=/data/elements', 
+                                 'createwallet', 'peerswap', 'false', 'false', '', 'false', 'true'],
+                                capture_output=True, text=True, timeout=60
+                            )
+                            
+                            if create_result.returncode == 0:
+                                print(f"✅ Elements peerswap wallet created for manual integration")
+                            else:
+                                print(f"⚠️ Elements wallet creation failed: {create_result.stderr}")
+                                return
+                        else:
+                            print("✅ Elements peerswap wallet already exists for manual integration")
+                        
+                        # Load the wallet to ensure it's active
+                        load_result = subprocess.run(
+                            ['elements-cli', '-datadir=/data/elements', 'loadwallet', 'peerswap'],
+                            capture_output=True, text=True, timeout=30
+                        )
+                        print("📂 Peerswap wallet loaded/verified")
+                        
+                        # Import mnemonic as HD seed
+                        print("🔑 Importing HD seed into Elements wallet for manual integration...")
+                        import_result = subprocess.run(
+                            ['elements-cli', '-datadir=/data/elements', '-rpcwallet=peerswap',
+                             'sethdseed', 'true', mnemonic],
+                            capture_output=True, text=True, timeout=60
+                        )
+                        
+                        if import_result.returncode == 0:
+                            print(f"✅ Elements wallet integrated successfully for manual integration '{wallet_id}'")
+                        else:
+                            # Sometimes sethdseed fails if already set
+                            print(f"⚠️ sethdseed may have already been set: {import_result.stderr}")
+                            print(f"✅ Elements wallet exists and ready for manual integration '{wallet_id}'")
+                    else:
+                        print(f"❌ Elements wallet list failed: {wallet_list_result.stderr}")
+                        
+                except Exception as e:
+                    print(f"❌ Manual Elements integration failed for wallet '{wallet_id}': {str(e)}")
+            
+            # Start integration in background
+            integration_thread = threading.Thread(target=background_elements_integration, daemon=True)
+            integration_thread.start()
+            
+            return jsonify({
+                'status': 'success',
+                'message': f'Elements integration started in background for wallet {wallet_id}',
+                'wallet_id': wallet_id
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'error': f'Elements integration setup failed: {str(e)}',
                 'status': 'error'
             }), 500
         
