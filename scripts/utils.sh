@@ -272,12 +272,23 @@ load_master_password() {
         credfile="/etc/credstore/brln-master-password.cred"
     fi
     
-    if [[ -n "$credfile" ]] && command -v systemd-creds &>/dev/null; then
-        # Decrypt SystemD credential
-        BRLN_MASTER_PASSWORD=$(systemd-creds decrypt "$credfile" - 2>/dev/null)
-        if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
-            export BRLN_MASTER_PASSWORD
+    if [[ -n "$credfile" ]]; then
+        # First try reading as plaintext (used by LoadCredential and LND password.txt)
+        # Security is provided by file permissions (600) and directory permissions (700)
+        local content
+        content=$(cat "$credfile" 2>/dev/null)
+        if [[ -n "$content" ]]; then
+            export BRLN_MASTER_PASSWORD="$content"
             return 0
+        fi
+        
+        # Fall back to systemd-creds decrypt for encrypted credentials
+        if command -v systemd-creds &>/dev/null; then
+            BRLN_MASTER_PASSWORD=$(systemd-creds decrypt "$credfile" - 2>/dev/null)
+            if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
+                export BRLN_MASTER_PASSWORD
+                return 0
+            fi
         fi
     fi
     

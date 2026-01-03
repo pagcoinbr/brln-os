@@ -179,11 +179,11 @@ fi
 echo
 echo "=== Setup Complete ==="
 echo
-echo "The master password is now securely stored as an encrypted credential."
-echo "The service will load it from: \$CREDENTIALS_DIRECTORY/brln-master-password"
+echo "The master password is now securely stored."
+echo "Services can load it from: \$CREDENTIALS_DIRECTORY/brln-master-password"
 echo
-echo "To view the encrypted credential:"
-echo "  sudo systemd-creds decrypt $CRED_FILE"
+echo "To view the credential:"
+echo "  sudo cat $CRED_FILE"
 echo
 echo "To update the password, run this script again."
 echo
