@@ -336,8 +336,9 @@ install_complete_system() {
   fi
   
   # Execute installation scripts in order
-  echo -e "${YELLOW}⚙️ Configurando sistema...${NC}"
-  update_and_upgrade
+  # NOTE: System update, Apache, GoTTY, and BRLN-API are already configured in brunel.sh
+  # echo -e "${YELLOW}⚙️ Configurando sistema...${NC}"
+  # update_and_upgrade  # Already done in brunel.sh
 
   # Install Tor and I2P first (required for Bitcoin/Lightning privacy features)
   echo -e "${YELLOW}🧅 Instalando Tor...${NC}"
@@ -346,12 +347,13 @@ install_complete_system() {
   echo -e "${YELLOW}🔒 Instalando I2P...${NC}"
   install_i2p
   
-  if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
-    echo -e "${YELLOW}🌐 Configurando Apache...${NC}"
-    setup_apache_web
-  else
-    echo -e "${BLUE}⏭️  Pulando configuração do Apache (já em execução)${NC}"
-  fi
+  # Apache and GoTTY already configured in brunel.sh
+  # if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
+  #   echo -e "${YELLOW}🌐 Configurando Apache...${NC}"
+  #   setup_apache_web
+  # else
+  #   echo -e "${BLUE}⏭️  Pulando configuração do Apache (já em execução)${NC}"
+  # fi
   
   echo -e "${YELLOW}₿ Instalando Bitcoin & Lightning...${NC}"
   install_complete_stack
@@ -364,12 +366,13 @@ install_complete_system() {
     bash "$SCRIPT_DIR/scripts/generate-protobuf.sh"
   fi
   
-  if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
-    echo -e "${YELLOW}💻 Configurando terminal web...${NC}"
-    terminal_web
-  else
-    echo -e "${BLUE}⏭️  Pulando configuração do terminal web (já em execução)${NC}"
-  fi
+  # GoTTY already configured in brunel.sh
+  # if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
+  #   echo -e "${YELLOW}💻 Configurando terminal web...${NC}"
+  #   terminal_web
+  # else
+  #   echo -e "${BLUE}⏭️  Pulando configuração do terminal web (já em execução)${NC}"
+  # fi
   
   echo -e "${YELLOW}🔥 Instalando Elements...${NC}"
   install_elements
@@ -380,7 +383,7 @@ install_complete_system() {
   install_bos
   install_thunderhub
   lnbits_install
-  install_brln_api
+  # install_brln_api  # Already configured in brunel.sh as install_brln_api_with_user_env
   
   echo -e "${YELLOW}🔄 Instalando PeerSwap...${NC}"
   install_peerswap
