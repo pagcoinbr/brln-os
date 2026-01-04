@@ -1268,19 +1268,6 @@ function displayTronConfiguration(addresses) {
     tronAddressElement.textContent = 'Generate wallet first';
   }
 }
-  
-  // Get network from system configuration via API
-  try {
-    const response = await fetch(`${API_BASE_URL}/system/config/network`);
-    const data = await response.json();
-    const network = data.network || 'mainnet'; // Default to mainnet if not available
-    updateLNDKeyDisplay(network);
-  } catch (error) {
-    console.error('Error fetching network config:', error);
-    // Default to mainnet if API call fails
-    updateLNDKeyDisplay('mainnet');
-  }
-}
 
 // Update LND key display based on selected network
 function updateLNDKeyDisplay(network) {
