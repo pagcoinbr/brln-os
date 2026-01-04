@@ -268,6 +268,9 @@ configure_lnd() {
   # Ensure proper ownership of /data/lnd
   ensure_data_ownership "lnd"
   
+  # Ensure LND can read Bitcoin cookie file
+  ensure_lnd_cookie_access
+  
   echo -e "${GREEN}✓ LND configurado${NC}"
 }
 

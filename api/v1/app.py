@@ -2212,9 +2212,22 @@ def get_bitcoind_info():
 
 def get_blockchain_size():
     """Obtém o tamanho da blockchain usando pathlib"""
-    bitcoin_dir = Path.home() / ".bitcoin"
-    if not bitcoin_dir.exists():
-        raise FileNotFoundError(f"Diretório Bitcoin não encontrado: {bitcoin_dir}")
+    # Check multiple possible Bitcoin data directories
+    possible_dirs = [
+        Path("/data/bitcoin"),
+        Path("/home/bitcoin/.bitcoin"),
+        Path.home() / ".bitcoin",
+        Path("/root/.bitcoin")
+    ]
+    
+    bitcoin_dir = None
+    for dir_path in possible_dirs:
+        if dir_path.exists():
+            bitcoin_dir = dir_path
+            break
+    
+    if not bitcoin_dir:
+        raise FileNotFoundError(f"Diretório Bitcoin não encontrado em: {', '.join(str(p) for p in possible_dirs)}")
         
     total_size = sum(f.stat().st_size for f in bitcoin_dir.rglob('*') if f.is_file())
     # Converter para formato legível
@@ -4460,16 +4473,16 @@ def save_wallet():
                 'status': 'error'
             }), 400
         
-        # If no password provided, use SystemD master password for encryption
+        # If no password provided, use master password for encryption
         if not db_password or use_systemd_credentials:
-            db_password = get_master_password_from_credentials()
+            db_password = get_master_password()
             if not db_password:
                 return jsonify({
-                    'error': 'No encryption password provided and SystemD credentials not available',
+                    'error': 'No encryption password provided and master password not available',
                     'status': 'error'
                 }), 400
             metadata['encrypted_with_systemd_credentials'] = True
-            print("Using SystemD master password for wallet encryption")
+            print("Using master password for wallet encryption")
         
         # Get BIP39 passphrase and private keys from temporary storage
         bip39_passphrase = ""
@@ -4990,11 +5003,11 @@ def integrate_elements_wallet():
         # If not in temp storage and wallet is encrypted, require password
         if not mnemonic and wallet_data.get('encrypted_mnemonic'):
             if not password:
-                # Try using SystemD credentials
-                systemd_password = get_master_password_from_credentials()
-                if systemd_password:
-                    password = systemd_password
-                    print("Using SystemD credentials for Elements integration")
+                # Try using master password from environment
+                master_password = get_master_password()
+                if master_password:
+                    password = master_password
+                    print("Using master password from environment for Elements integration")
                 else:
                     return jsonify({
                         'error': 'Password required for wallet decryption',

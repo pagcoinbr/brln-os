@@ -1483,6 +1483,30 @@ select:focus {
   background: linear-gradient(135deg, #e0a800 0%, #dc6502 100%);
 }
 
+.elements-button {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+  color: #495057;
+  font-weight: bold;
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.elements-button:hover {
+  background: linear-gradient(135deg, #00b8e6 0%, #2f6ab5 100%);
+}
+
+.tron-button {
+  background: linear-gradient(135deg, #ff0013 0%, #c70011 100%);
+  color: #495057;
+  font-weight: bold;
+  padding: 12px 24px;
+  font-size: 16px;
+}
+
+.tron-button:hover {
+  background: linear-gradient(135deg, #e60011 0%, #a6000e 100%);
+}
+
 .automation-status {
   margin-top: 15px;
   padding: 15px;

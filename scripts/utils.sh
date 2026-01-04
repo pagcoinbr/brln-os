@@ -142,6 +142,66 @@ ensure_data_ownership() {
   fi
 }
 
+# Function to ensure LND can read Bitcoin cookie file
+# Sets proper group permissions on Bitcoin data directories
+ensure_lnd_cookie_access() {
+  echo -e "${BLUE}Verificando acesso do LND ao cookie do Bitcoin...${NC}"
+  
+  # Determine network based on BITCOIN_NETWORK variable or lnd.conf
+  local network="${BITCOIN_NETWORK:-mainnet}"
+  local cookie_dir="/data/bitcoin"
+  local cookie_file=""
+  
+  # Check for testnet or mainnet cookie location
+  if [[ "$network" == "testnet" ]] || [[ -d "/data/bitcoin/testnet3" ]]; then
+    cookie_dir="/data/bitcoin/testnet3"
+    cookie_file="$cookie_dir/.cookie"
+  elif [[ -d "/data/bitcoin/testnet4" ]]; then
+    cookie_dir="/data/bitcoin/testnet4"
+    cookie_file="$cookie_dir/.cookie"
+  else
+    # Mainnet - cookie is directly in /data/bitcoin
+    cookie_file="/data/bitcoin/.cookie"
+  fi
+  
+  # Ensure lnd user is in bitcoin group
+  if id "lnd" &>/dev/null && getent group bitcoin &>/dev/null; then
+    if ! groups lnd | grep -q "\bbitcoin\b"; then
+      echo -e "${BLUE}Adicionando lnd ao grupo bitcoin...${NC}"
+      sudo usermod -a -G bitcoin lnd
+    fi
+  fi
+  
+  # Set directory permissions to allow group read (750)
+  if [[ -d "/data/bitcoin" ]]; then
+    echo -e "${BLUE}Configurando permissões do diretório Bitcoin...${NC}"
+    sudo chgrp bitcoin /data/bitcoin
+    sudo chmod 750 /data/bitcoin
+    
+    # Also set permissions on network subdirectory if exists
+    if [[ -d "$cookie_dir" ]] && [[ "$cookie_dir" != "/data/bitcoin" ]]; then
+      sudo chgrp bitcoin "$cookie_dir"
+      sudo chmod 750 "$cookie_dir"
+    fi
+  fi
+  
+  # Verify LND can read the cookie
+  if [[ -f "$cookie_file" ]]; then
+    if sudo -u lnd cat "$cookie_file" &>/dev/null; then
+      echo -e "${GREEN}✓ LND pode ler o cookie do Bitcoin em $cookie_file${NC}"
+      return 0
+    else
+      echo -e "${RED}✗ LND não consegue ler o cookie em $cookie_file${NC}"
+      echo -e "${YELLOW}  Verifique as permissões e o grupo do usuário lnd${NC}"
+      return 1
+    fi
+  else
+    echo -e "${YELLOW}⚠ Cookie não encontrado em $cookie_file${NC}"
+    echo -e "${YELLOW}  O Bitcoin precisa estar em execução para criar o cookie${NC}"
+    return 0
+  fi
+}
+
 # Function to verify /data compartmentalization
 verify_data_compartments() {
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

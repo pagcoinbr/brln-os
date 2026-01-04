@@ -634,7 +634,6 @@ async function generateNewWallet() {
         addresses: result.addresses || {},
         private_keys: result.private_keys || {},
         lnd_keys: result.lnd_keys || {},
-        wallet_id: result.wallet_id,
         walletId: result.wallet_id,
         wordCount: wordCount,
         bip39Passphrase: password,  // This is the BIP39 passphrase (13th/25th word)
@@ -642,34 +641,6 @@ async function generateNewWallet() {
         supported_chains: result.supported_chains || []
       };
       currentWalletId = result.wallet_id;
-      
-      // Auto-save wallet to database as system default (unencrypted for easy integration)
-      try {
-        console.log('Auto-saving wallet to database as system default...');
-        const saveResult = await walletService.saveWallet(
-          result.mnemonic,
-          '', // No encryption password for auto-save
-          result.wallet_id
-        );
-        
-        if (saveResult && saveResult.wallet_id) {
-          console.log('Wallet auto-saved successfully:', saveResult.wallet_id);
-          
-          // Set as system default
-          const setDefaultResponse = await fetch(`${API_BASE_URL}/wallet/system-default`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({wallet_id: saveResult.wallet_id})
-          });
-          
-          if (setDefaultResponse.ok) {
-            console.log('Wallet set as system default');
-          }
-        }
-      } catch (saveError) {
-        console.warn('Could not auto-save wallet:', saveError);
-        // Continue anyway - user can still use the wallet
-      }
       
       // Show mnemonic and universal wallet info for user to save
       showUniversalWallet(result);
@@ -1076,27 +1047,46 @@ function validateMnemonicWords() {
   }
 }
 
-// Save wallet using systemd credentials (no password prompt needed)
+// Save wallet - prompt user for encryption password
 async function saveWalletWithSystemdCredentials() {
   if (!currentWallet || !currentWallet.mnemonic) {
     walletService.showNotification('No wallet data to save', 'error');
     return;
   }
   
+  // Prompt user for encryption password
+  const password = prompt(
+    '🔐 Enter an encryption password to secure your wallet:\n\n' +
+    '• This password will be used to encrypt your seed phrase\n' +
+    '• You will need this password to load the wallet later\n' +
+    '• Minimum 8 characters recommended',
+    ''
+  );
+  
+  if (!password) {
+    walletService.showNotification('Password is required to save wallet securely', 'warning');
+    return;
+  }
+  
+  if (password.length < 8) {
+    walletService.showNotification('Password must be at least 8 characters', 'warning');
+    return;
+  }
+  
   try {
     showLoading(true);
     
-    // Save wallet using API with systemd credentials (password handled by backend)
+    // Save wallet using API with user-provided password
     const metadata = {
       wordCount: currentWallet.wordCount,
       hasBip39Passphrase: !!currentWallet.bip39Passphrase,
       createdAt: new Date().toISOString(),
-      useSystemdCredentials: true
+      useSystemdCredentials: false
     };
     
     const result = await walletService.saveWallet(
       currentWallet.mnemonic, 
-      null,  // No password - backend will use systemd credentials
+      password,  // User-provided encryption password
       currentWalletId,
       metadata
     );
