@@ -133,14 +133,38 @@ EOFCRED
   if [[ -f "/data/lnd/tls.cert" ]] && [[ -f "/data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon" ]]; then
     /usr/local/bin/update-bos-credentials
   fi
+  
+  # Test bos functionality
   if bos utxos 2>/dev/null | grep -q "utxos|channel"; then
     echo -e "${GREEN}✓ bos funcionando corretamente${NC}"
   else
     echo -e "${YELLOW}⚠ Aguarde o LND sincronizar completamente para usar bos${NC}"
-  # Interactive Telegram setup
   fi
+  
+  echo ""
+  echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
+  echo -e "${CYAN}💡 Comandos úteis:${NC}"
+  echo -e "${CYAN}   bos --help           - Ver todos os comandos${NC}"
+  echo -e "${CYAN}   bos balance          - Ver saldo${NC}"
+  echo -e "${CYAN}   bos forwards         - Ver forwards${NC}"
+  echo ""
+  echo -e "${YELLOW}💡 Para configurar o Telegram Bot, use o menu de configurações${NC}"
+}
 
-  # Test installation complete
+configure_bos_telegram() {
+  echo -e "${GREEN}⚡ Configurando Balance of Satoshis - Telegram Bot...${NC}"
+  
+  # Detect BRLN-OS directory
+  configure_brln_paths quiet
+  SCRIPT_DIR="$BRLN_OS_DIR"
+  
+  # Check if bos is installed
+  if ! command -v bos &> /dev/null; then
+    echo -e "${RED}❌ Balance of Satoshis não está instalado.${NC}"
+    echo -e "${YELLOW}Por favor, instale primeiro usando o menu de instalação.${NC}"
+    return 1
+  fi
+  
   echo ""
   echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
   echo -e "${GREEN}         📱 CONFIGURAÇÃO DO TELEGRAM BOT${NC}"
@@ -154,175 +178,159 @@ EOFCRED
     sudo apt install -y qrencode
   fi
   
-  read -p "Deseja configurar o Telegram Bot agora? (s/n): " setup_telegram
+  # Step 1: Get Bot API Key
+  echo ""
+  echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+  echo -e "${GREEN}   PASSO 1: Criar seu Bot no Telegram${NC}"
+  echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "${CYAN}1. Abra o Telegram e acesse @BotFather${NC}"
+  echo ""
+  echo -e "${CYAN}   Escaneie este QR Code com seu celular:${NC}"
+  echo ""
+  qrencode -t ANSIUTF8 "https://t.me/BotFather"
+  echo ""
+  echo -e "${CYAN}2. Envie o comando: ${GREEN}/newbot${NC}"
+  echo -e "${CYAN}3. Escolha um nome para seu bot${NC}"
+  echo -e "${CYAN}4. Escolha um username (deve terminar com 'bot')${NC}"
+  echo -e "${CYAN}5. Copie a API Key fornecida${NC}"
+  echo ""
+  echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+  echo ""
   
-  if [[ "$setup_telegram" == "s" || "$setup_telegram" == "S" ]]; then
+  # Get Bot API Key with validation
+  while true; do
+    read -p "Cole aqui a API Key do seu Bot: " bot_api_key
     
-    # Step 1: Get Bot API Key
-    echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}   PASSO 1: Criar seu Bot no Telegram${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo ""
-    echo -e "${CYAN}1. Abra o Telegram e acesse @BotFather${NC}"
-    echo ""
-    echo -e "${CYAN}   Escaneie este QR Code com seu celular:${NC}"
-    echo ""
-    qrencode -t ANSIUTF8 "https://t.me/BotFather"
-    echo ""
-    echo -e "${CYAN}2. Envie o comando: ${GREEN}/newbot${NC}"
-    echo -e "${CYAN}3. Escolha um nome para seu bot${NC}"
-    echo -e "${CYAN}4. Escolha um username (deve terminar com 'bot')${NC}"
-    echo -e "${CYAN}5. Copie a API Key fornecida${NC}"
-    echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo ""
-    
-    # Get Bot API Key with validation
-    while true; do
-      read -p "Cole aqui a API Key do seu Bot: " bot_api_key
-      
-      if [[ -z "$bot_api_key" ]]; then
-        echo -e "${RED}❌ API Key não pode estar vazia!${NC}"
-        continue
-      fi
-      
-      if [[ ! "$bot_api_key" =~ ^[0-9]+:[A-Za-z0-9_-]+$ ]]; then
-        echo -e "${RED}❌ Formato inválido! Exemplo: 123456789:ABCdefGHI...${NC}"
-        continue
-      fi
-      
-      # Test API Key with Telegram
-      echo -e "${BLUE}Validando API Key...${NC}"
-      bot_check=$(curl -s "https://api.telegram.org/bot${bot_api_key}/getMe")
-      
-      if echo "$bot_check" | grep -q '"ok":true'; then
-        bot_username=$(echo "$bot_check" | grep -o '"username":"[^"]*"' | cut -d'"' -f4)
-        bot_name=$(echo "$bot_check" | grep -o '"first_name":"[^"]*"' | cut -d'"' -f4)
-        echo -e "${GREEN}✓ Bot validado: @${bot_username} (${bot_name})${NC}"
-        break
-      else
-        echo -e "${RED}❌ API Key inválida! Verifique e tente novamente.${NC}"
-      fi
-    done
-    
-    # Step 2: Get Telegram ID automatically
-    echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${GREEN}   PASSO 2: Conectar seu Telegram ao Bot${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo ""
-    echo -e "${CYAN}1. Abra o Telegram e acesse: @${bot_username}${NC}"
-    echo ""
-    echo -e "${CYAN}   Escaneie este QR Code com seu celular:${NC}"
-    echo ""
-    qrencode -t ANSIUTF8 "https://t.me/${bot_username}"
-    echo ""
-    echo -e "${CYAN}2. Clique em ${GREEN}START${CYAN} ou envie qualquer mensagem${NC}"
-    echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
-    echo ""
-    echo -e "${BLUE}Aguardando sua mensagem no bot...${NC}"
-    
-    # Clear any old updates
-    curl -s "https://api.telegram.org/bot${bot_api_key}/getUpdates?offset=-1"
-    
-    # Wait for user message and capture Telegram ID
-    telegram_id=""
-    max_attempts=60  # 60 attempts = 5 minutes (5 seconds each)
-    attempt=0
-    
-    while [[ -z "$telegram_id" && $attempt -lt $max_attempts ]]; do
-      # Show progress indicator
-      printf "\r${BLUE}⏳ Aguardando... [%d/%d]${NC}" $((attempt + 1)) $max_attempts
-      
-      # Get updates from Telegram
-      updates=$(curl -s "https://api.telegram.org/bot${bot_api_key}/getUpdates")
-      
-      # Extract telegram ID from the first message
-      telegram_id=$(echo "$updates" | grep -o '"id":[0-9]*' | head -n1 | cut -d':' -f2)
-      
-      if [[ -n "$telegram_id" ]]; then
-        # Get user info
-        user_name=$(echo "$updates" | grep -o '"first_name":"[^"]*"' | head -n1 | cut -d'"' -f4)
-        echo ""
-        echo -e "${GREEN}✓ Conectado! Telegram ID: $telegram_id${NC}"
-        if [[ -n "$user_name" ]]; then
-          echo -e "${GREEN}✓ Usuário: $user_name${NC}"
-        fi
-        break
-      fi
-      
-      sleep 5
-      ((attempt++))
-    done
-    
-    echo ""
-    
-    if [[ -z "$telegram_id" ]]; then
-      echo -e "${RED}❌ Timeout! Não recebemos sua mensagem.${NC}"
-      echo -e "${YELLOW}Configure manualmente depois com: bos telegram${NC}"
-      return 1
+    if [[ -z "$bot_api_key" ]]; then
+      echo -e "${RED}❌ API Key não pode estar vazia!${NC}"
+      continue
     fi
     
-    # Store in password manager
-    echo -e "${BLUE}Salvando credenciais...${NC}"
-    ensure_pm_session  # Unlock password manager session
-    source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
-    secure_store_password_full "bos_telegram_id" "$telegram_id" "Balance of Satoshis - Telegram User ID" "$atual_user" 0 "https://t.me/${bot_username}"
-    secure_store_password_full "bos_telegram_bot" "$bot_api_key" "Balance of Satoshis - Bot API Key (@${bot_username})" "$atual_user" 0 "https://t.me/BotFather"
-    echo -e "${GREEN}✓ Credenciais armazenadas no gerenciador de senhas${NC}"
+    if [[ ! "$bot_api_key" =~ ^[0-9]+:[A-Za-z0-9_-]+$ ]]; then
+      echo -e "${RED}❌ Formato inválido! Exemplo: 123456789:ABCdefGHI...${NC}"
+      continue
+    fi
     
-    # Create systemd service
-    echo -e "${BLUE}Criando serviço systemd...${NC}"
-    source "$SCRIPT_DIR/scripts/services.sh"
-    create_bos_telegram_service
+    # Test API Key with Telegram
+    echo -e "${BLUE}Validando API Key...${NC}"
+    bot_check=$(curl -s "https://api.telegram.org/bot${bot_api_key}/getMe")
     
-    # Enable and start service
-    sudo systemctl daemon-reload
-    sudo systemctl enable bos-telegram.service
-    sudo systemctl start bos-telegram.service
-    
-    sleep 2
-    
-    if systemctl is-active --quiet bos-telegram.service; then
-      echo -e "${GREEN}✓ Serviço bos-telegram iniciado${NC}"
+    if echo "$bot_check" | grep -q '"ok":true'; then
+      bot_username=$(echo "$bot_check" | grep -o '"username":"[^"]*"' | cut -d'"' -f4)
+      bot_name=$(echo "$bot_check" | grep -o '"first_name":"[^"]*"' | cut -d'"' -f4)
+      echo -e "${GREEN}✓ Bot validado: @${bot_username} (${bot_name})${NC}"
+      break
     else
-      echo -e "${YELLOW}⚠ Verificar status: sudo systemctl status bos-telegram${NC}"
+      echo -e "${RED}❌ API Key inválida! Verifique e tente novamente.${NC}"
+    fi
+  done
+  
+  # Step 2: Get Telegram ID automatically
+  echo ""
+  echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+  echo -e "${GREEN}   PASSO 2: Conectar seu Telegram ao Bot${NC}"
+  echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "${CYAN}1. Abra o Telegram e acesse: @${bot_username}${NC}"
+  echo ""
+  echo -e "${CYAN}   Escaneie este QR Code com seu celular:${NC}"
+  echo ""
+  qrencode -t ANSIUTF8 "https://t.me/${bot_username}"
+  echo ""
+  echo -e "${CYAN}2. Clique em ${GREEN}START${CYAN} ou envie qualquer mensagem${NC}"
+  echo ""
+  echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "${BLUE}Aguardando sua mensagem no bot...${NC}"
+  
+  # Clear any old updates
+  curl -s "https://api.telegram.org/bot${bot_api_key}/getUpdates?offset=-1" > /dev/null
+  
+  # Wait for user message and capture Telegram ID
+  telegram_id=""
+  max_attempts=60  # 60 attempts = 5 minutes (5 seconds each)
+  attempt=0
+  
+  while [[ -z "$telegram_id" && $attempt -lt $max_attempts ]]; do
+    # Show progress indicator
+    printf "\r${BLUE}⏳ Aguardando... [%d/%d]${NC}" $((attempt + 1)) $max_attempts
+    
+    # Get updates from Telegram
+    updates=$(curl -s "https://api.telegram.org/bot${bot_api_key}/getUpdates")
+    
+    # Extract telegram ID from the first message
+    telegram_id=$(echo "$updates" | grep -o '"id":[0-9]*' | head -n1 | cut -d':' -f2)
+    
+    if [[ -n "$telegram_id" ]]; then
+      # Get user info
+      user_name=$(echo "$updates" | grep -o '"first_name":"[^"]*"' | head -n1 | cut -d'"' -f4)
+      echo ""
+      echo -e "${GREEN}✓ Conectado! Telegram ID: $telegram_id${NC}"
+      if [[ -n "$user_name" ]]; then
+        echo -e "${GREEN}✓ Usuário: $user_name${NC}"
+      fi
+      break
     fi
     
-    # Send welcome message
-    curl -s -X POST "https://api.telegram.org/bot${bot_api_key}/sendMessage" \
-      -d chat_id="$telegram_id" \
-      -d text="✅ *BRLNBolt conectado com sucesso!*%0A%0ABot Balance of Satoshis ativo.%0A%0ATeste com: \`/balance\`" \
-      -d parse_mode="Markdown"
-    
-    echo ""
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}✅ Configuração do Telegram concluída!${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}🤖 Bot: @${bot_username}${NC}"
-    echo -e "${CYAN}👤 Telegram ID: ${telegram_id}${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${YELLOW}Comandos disponíveis no Telegram:${NC}"
-    echo -e "${CYAN}  /balance     - Ver saldo${NC}"
-    echo -e "${CYAN}  /forwards    - Ver forwards recentes${NC}"
-    echo -e "${CYAN}  /earnings    - Ver ganhos${NC}"
-    echo -e "${CYAN}  /connect     - Conectar outro bot${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    
-  else
-    echo -e "${YELLOW}Configuração do Telegram pulada.${NC}"
-    echo -e "${CYAN}💡 Configure mais tarde com: bos telegram${NC}"
-  fi
+    sleep 5
+    ((attempt++))
+  done
   
   echo ""
-  echo -e "${GREEN}✅ Balance of Satoshis instalado com sucesso!${NC}"
-  echo -e "${CYAN}💡 Comandos úteis:${NC}"
-  echo -e "${CYAN}   bos --help           - Ver todos os comandos${NC}"
-  echo -e "${CYAN}   bos balance          - Ver saldo${NC}"
-  echo -e "${CYAN}   bos forwards         - Ver forwards${NC}"
-  echo -e "${CYAN}   bos telegram         - Configurar Telegram${NC}"
+  
+  if [[ -z "$telegram_id" ]]; then
+    echo -e "${RED}❌ Timeout! Não recebemos sua mensagem.${NC}"
+    echo -e "${YELLOW}Tente novamente ou configure manualmente com: bos telegram${NC}"
+    return 1
+  fi
+  
+  # Store in password manager
+  echo -e "${BLUE}Salvando credenciais...${NC}"
+  ensure_pm_session  # Unlock password manager session
+  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
+  secure_store_password_full "bos_telegram_id" "$telegram_id" "Balance of Satoshis - Telegram User ID" "$atual_user" 0 "https://t.me/${bot_username}"
+  secure_store_password_full "bos_telegram_bot" "$bot_api_key" "Balance of Satoshis - Bot API Key (@${bot_username})" "$atual_user" 0 "https://t.me/BotFather"
+  echo -e "${GREEN}✓ Credenciais armazenadas no gerenciador de senhas${NC}"
+  
+  # Create systemd service
+  echo -e "${BLUE}Criando serviço systemd...${NC}"
+  source "$SCRIPT_DIR/scripts/services.sh"
+  create_bos_telegram_service
+  
+  # Enable and start service
+  sudo systemctl daemon-reload
+  sudo systemctl enable bos-telegram.service
+  sudo systemctl start bos-telegram.service
+  
+  sleep 2
+  
+  if systemctl is-active --quiet bos-telegram.service; then
+    echo -e "${GREEN}✓ Serviço bos-telegram iniciado${NC}"
+  else
+    echo -e "${YELLOW}⚠ Verificar status: sudo systemctl status bos-telegram${NC}"
+  fi
+  
+  # Send welcome message
+  curl -s -X POST "https://api.telegram.org/bot${bot_api_key}/sendMessage" \
+    -d chat_id="$telegram_id" \
+    -d text="✅ *BRLNBolt conectado com sucesso!*%0A%0ABot Balance of Satoshis ativo.%0A%0ATeste com: \`/balance\`" \
+    -d parse_mode="Markdown" > /dev/null
+  
+  echo ""
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${GREEN}✅ Configuração do Telegram concluída!${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${CYAN}🤖 Bot: @${bot_username}${NC}"
+  echo -e "${CYAN}👤 Telegram ID: ${telegram_id}${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${YELLOW}Comandos disponíveis no Telegram:${NC}"
+  echo -e "${CYAN}  /balance     - Ver saldo${NC}"
+  echo -e "${CYAN}  /forwards    - Ver forwards recentes${NC}"
+  echo -e "${CYAN}  /earnings    - Ver ganhos${NC}"
+  echo -e "${CYAN}  /connect     - Conectar outro bot${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
   echo -e "${CYAN}💡 Status: sudo systemctl status bos-telegram${NC}"
 }
 
