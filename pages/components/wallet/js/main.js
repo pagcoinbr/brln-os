@@ -634,6 +634,7 @@ async function generateNewWallet() {
         addresses: result.addresses || {},
         private_keys: result.private_keys || {},
         lnd_keys: result.lnd_keys || {},
+        wallet_id: result.wallet_id,
         walletId: result.wallet_id,
         wordCount: wordCount,
         bip39Passphrase: password,  // This is the BIP39 passphrase (13th/25th word)
@@ -641,6 +642,34 @@ async function generateNewWallet() {
         supported_chains: result.supported_chains || []
       };
       currentWalletId = result.wallet_id;
+      
+      // Auto-save wallet to database as system default (unencrypted for easy integration)
+      try {
+        console.log('Auto-saving wallet to database as system default...');
+        const saveResult = await walletService.saveWallet(
+          result.mnemonic,
+          '', // No encryption password for auto-save
+          result.wallet_id
+        );
+        
+        if (saveResult && saveResult.wallet_id) {
+          console.log('Wallet auto-saved successfully:', saveResult.wallet_id);
+          
+          // Set as system default
+          const setDefaultResponse = await fetch(`${API_BASE_URL}/wallet/system-default`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({wallet_id: saveResult.wallet_id})
+          });
+          
+          if (setDefaultResponse.ok) {
+            console.log('Wallet set as system default');
+          }
+        }
+      } catch (saveError) {
+        console.warn('Could not auto-save wallet:', saveError);
+        // Continue anyway - user can still use the wallet
+      }
       
       // Show mnemonic and universal wallet info for user to save
       showUniversalWallet(result);
