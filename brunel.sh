@@ -358,16 +358,24 @@ setup_lnd_password() {
     # Check if LND password already exists
     if [[ -f "$lnd_password_file" ]]; then
         echo -e "${GREEN}✅ Senha do LND já existe${NC}"
+        # Ensure correct permissions even if file exists
+        sudo chmod 640 "$lnd_password_file"
+        sudo chown lnd:lnd "$lnd_password_file" 2>/dev/null || true
+        # Add brln-api to lnd group for read access
+        sudo usermod -aG lnd brln-api 2>/dev/null || true
         return 0
     fi
     
     # Generate a secure random password for LND (32 characters)
     local lnd_password=$(openssl rand -base64 32 | tr -d '\n/+=' | head -c 32)
     
-    # Write password to file with strict permissions
+    # Write password to file with group-readable permissions for brln-api
     echo -n "$lnd_password" | sudo tee "$lnd_password_file" > /dev/null
-    sudo chmod 600 "$lnd_password_file"
+    sudo chmod 640 "$lnd_password_file"
     sudo chown lnd:lnd "$lnd_password_file" 2>/dev/null || true
+    
+    # Add brln-api to lnd group so it can read the password file
+    sudo usermod -aG lnd brln-api 2>/dev/null || true
     
     echo -e "${GREEN}✅ Senha do LND gerada e salva em $lnd_password_file${NC}"
     

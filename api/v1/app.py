@@ -5641,12 +5641,30 @@ def unlock_lnd_wallet():
         data = request.get_json()
         unlock_password = data.get('password') if data else None
         
-        # If no password provided, get from secure password manager
+        # If no password provided, try to get from password file or password manager
         if not unlock_password:
-            unlock_password = get_secure_credential('lnd_wallet')
+            lnd_password_file = '/data/lnd/password.txt'
+            
+            # First try reading from LND password file
+            if os.path.exists(lnd_password_file):
+                try:
+                    with open(lnd_password_file, 'r') as f:
+                        unlock_password = f.read().strip()
+                        if unlock_password:
+                            print(f"Using LND password from {lnd_password_file}")
+                except Exception as e:
+                    print(f"Warning: Could not read LND password file: {e}")
+            
+            # Fallback to password manager
+            if not unlock_password:
+                unlock_password = get_secure_credential('lnd_wallet')
+                if unlock_password:
+                    print("Using LND password from password manager")
+            
+            # If still not found, return error
             if not unlock_password:
                 return jsonify({
-                    'error': 'LND wallet password not found in password manager',
+                    'error': 'LND wallet password not found. Please provide password or ensure it exists in /data/lnd/password.txt',
                     'status': 'error'
                 }), 400
         
@@ -5896,13 +5914,45 @@ def lnd_create_wallet_expect():
                 'status': 'error'
             }), 400
         
-        # Get LND wallet password from secure password manager
-        wallet_password = get_secure_credential('lnd_wallet')
+        # Get LND wallet password - priority: password file -> password manager -> generate new
+        wallet_password = None
+        lnd_password_file = '/data/lnd/password.txt'
+        
+        # First try reading from LND password file
+        if os.path.exists(lnd_password_file):
+            try:
+                with open(lnd_password_file, 'r') as f:
+                    wallet_password = f.read().strip()
+                    if wallet_password:
+                        print(f"Using LND password from {lnd_password_file}")
+            except Exception as e:
+                print(f"Warning: Could not read LND password file: {e}")
+        
+        # Fallback to password manager
         if not wallet_password:
-            return jsonify({
-                'error': 'LND wallet password not found in password manager. Please ensure lnd_wallet is stored in the secure password database.',
-                'status': 'error'
-            }), 500
+            wallet_password = get_secure_credential('lnd_wallet')
+            if wallet_password:
+                print("Using LND password from password manager")
+        
+        # Generate new password if not found
+        if not wallet_password:
+            import secrets
+            import string
+            alphabet = string.ascii_letters + string.digits
+            wallet_password = ''.join(secrets.choice(alphabet) for _ in range(32))
+            print("Generated new LND wallet password")
+            
+            # Try to save to password file
+            try:
+                os.makedirs(os.path.dirname(lnd_password_file), exist_ok=True)
+                subprocess.run(
+                    ['sudo', 'bash', '-c', f'echo -n "{wallet_password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
+                    check=False,
+                    capture_output=True
+                )
+                print(f"LND password saved to {lnd_password_file}")
+            except Exception as e:
+                print(f"Warning: Could not save LND password to file: {e}")
         
         # Validate password length
         if len(wallet_password) < 8:
