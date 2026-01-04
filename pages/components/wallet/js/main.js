@@ -1168,6 +1168,12 @@ function showUniversalWallet(walletData) {
     // Display Elements/Liquid configuration
     displayElementsConfiguration(walletData.addresses);
     
+    // Display TRON configuration
+    displayTronConfiguration(walletData.addresses);
+    
+    // Display TRON configuration
+    displayTronConfiguration(walletData.addresses);
+    
     // Setup event listeners for universal wallet actions
     setupUniversalWalletEventListeners();
   }
@@ -1248,6 +1254,20 @@ function displayElementsConfiguration(addresses) {
     elementsAddressElement.textContent = 'Generate wallet first';
   }
 }
+
+// Display TRON configuration options
+function displayTronConfiguration(addresses) {
+  const tronAddressElement = document.getElementById('tronAddress');
+  
+  if (!tronAddressElement) return;
+  
+  // Get TRON address from addresses object
+  if (addresses && addresses.tron && addresses.tron.address) {
+    tronAddressElement.textContent = addresses.tron.address;
+  } else {
+    tronAddressElement.textContent = 'Generate wallet first';
+  }
+}
   
   // Get network from system configuration via API
   try {
@@ -1301,6 +1321,18 @@ function setupUniversalWalletEventListeners() {
   const autoConfigureElementsBtn = document.getElementById('autoConfigureElementsBtn');
   if (autoConfigureElementsBtn) {
     autoConfigureElementsBtn.addEventListener('click', autoConfigureElements);
+  }
+  
+  // Copy TRON address button
+  const copyTronAddressBtn = document.getElementById('copyTronAddressBtn');
+  if (copyTronAddressBtn) {
+    copyTronAddressBtn.addEventListener('click', copyTronAddress);
+  }
+  
+  // Auto-configure TRON button
+  const autoConfigureTronBtn = document.getElementById('autoConfigureTronBtn');
+  if (autoConfigureTronBtn) {
+    autoConfigureTronBtn.addEventListener('click', autoConfigureTron);
   }
 }
 
@@ -1693,6 +1725,177 @@ async function autoConfigureElements() {
     }, 3000);
     
     walletService.showNotification('Error configuring Elements: ' + error.message, 'error');
+  }
+}
+
+// Copy TRON address
+function copyTronAddress() {
+  const tronAddress = document.getElementById('tronAddress');
+  const copyBtn = document.getElementById('copyTronAddressBtn');
+  
+  if (!tronAddress) return;
+  
+  const addressText = tronAddress.textContent;
+  if (addressText && addressText !== '-') {
+    navigator.clipboard.writeText(addressText).then(() => {
+      walletService.showNotification('TRON address copied!', 'success');
+      
+      // Visual feedback
+      copyBtn.classList.add('copied');
+      copyBtn.textContent = '✅';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.textContent = '📋';
+      }, 2000);
+    }).catch(error => {
+      console.error('Error copying TRON address:', error);
+      walletService.showNotification('Error copying TRON address', 'error');
+    });
+  }
+}
+
+// Auto-configure TRON wallet
+async function autoConfigureTron() {
+  try {
+    const automationStatus = document.getElementById('tronAutomationStatus');
+    const statusMessage = document.getElementById('tronStatusMessage');
+    const progressBar = document.getElementById('tronProgressBar');
+    const autoConfigureBtn = document.getElementById('autoConfigureTronBtn');
+    const tronOutputContainer = document.getElementById('tronOutputContainer');
+    const tronScriptOutput = document.getElementById('tronScriptOutput');
+    const tronAddressElement = document.getElementById('tronAddress');
+    
+    if (!currentWallet || !currentWallet.wallet_id) {
+      walletService.showNotification('No wallet loaded. Please generate or import a wallet first.', 'error');
+      return;
+    }
+    
+    // Show automation status and output container
+    automationStatus.style.display = 'block';
+    tronOutputContainer.style.display = 'block';
+    autoConfigureBtn.disabled = true;
+    statusMessage.textContent = 'Preparing TRON wallet integration...';
+    progressBar.style.width = '20%';
+    
+    // Clear and initialize output
+    tronScriptOutput.value = '';
+    tronScriptOutput.value += '╔════════════════════════════════════════════════════════════╗\n';
+    tronScriptOutput.value += '║       BRLN-OS TRON WALLET AUTO-CONFIGURATION              ║\n';
+    tronScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+    tronScriptOutput.value += '🚀 Starting TRON wallet integration...\n';
+    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    
+    // Scroll output into view
+    tronOutputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Initialize TRON wallet
+    statusMessage.textContent = 'Initializing TRON wallet...';
+    progressBar.style.width = '40%';
+    
+    tronScriptOutput.value += `📋 Wallet ID: ${currentWallet.wallet_id}\n`;
+    tronScriptOutput.value += `🔗 Network: TRON Mainnet\n\n`;
+    
+    tronScriptOutput.value += '⏳ Calling TRON wallet initialization API...\n';
+    tronScriptOutput.scrollTop = tronScriptOutput.scrollHeight;
+    
+    const response = await fetch(`${API_BASE_URL}/tron/wallet/initialize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        wallet_id: currentWallet.wallet_id
+      })
+    });
+    
+    progressBar.style.width = '60%';
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to initialize TRON wallet');
+    }
+    
+    const result = await response.json();
+    
+    progressBar.style.width = '80%';
+    statusMessage.textContent = 'TRON wallet initialized successfully!';
+    
+    tronScriptOutput.value += '\n✅ TRON wallet initialized successfully!\n';
+    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    
+    if (result.tron_address) {
+      tronScriptOutput.value += `🔑 TRON Address:\n   ${result.tron_address}\n\n`;
+      
+      // Update the address display
+      if (tronAddressElement) {
+        tronAddressElement.textContent = result.tron_address;
+      }
+    }
+    
+    if (result.balance) {
+      tronScriptOutput.value += `💰 Current Balance:\n`;
+      tronScriptOutput.value += `   TRX: ${result.balance.trx || '0'} TRX\n`;
+      tronScriptOutput.value += `   USDT: ${result.balance.usdt || '0'} USDT\n\n`;
+    }
+    
+    if (result.gas_free) {
+      tronScriptOutput.value += `⚡ Gas-Free Features:\n`;
+      tronScriptOutput.value += `   Status: ${result.gas_free.enabled ? 'Enabled ✅' : 'Disabled ❌'}\n`;
+      if (result.gas_free.service_provider) {
+        tronScriptOutput.value += `   Provider: ${result.gas_free.service_provider}\n`;
+      }
+      tronScriptOutput.value += '\n';
+    }
+    
+    tronScriptOutput.value += '📝 Next Steps:\n';
+    tronScriptOutput.value += '   1. Send TRX or USDT to this address\n';
+    tronScriptOutput.value += '   2. Use TRON tools for transactions\n';
+    tronScriptOutput.value += `   3. Check balance: https://tronscan.org/#/address/${result.tron_address || ''}\n\n`;
+    
+    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    tronScriptOutput.value += '✅ SUCCESS: TRON wallet configured!\n';
+    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+    
+    tronScriptOutput.scrollTop = tronScriptOutput.scrollHeight;
+    
+    progressBar.style.width = '100%';
+    
+    setTimeout(() => {
+      automationStatus.style.display = 'none';
+      autoConfigureBtn.disabled = false;
+      walletService.showNotification('TRON wallet configured successfully!', 'success');
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Error auto-configuring TRON:', error);
+    
+    const automationStatus = document.getElementById('tronAutomationStatus');
+    const statusMessage = document.getElementById('tronStatusMessage');
+    const autoConfigureBtn = document.getElementById('autoConfigureTronBtn');
+    const tronScriptOutput = document.getElementById('tronScriptOutput');
+    
+    statusMessage.textContent = 'Error configuring TRON: ' + error.message;
+    if (tronScriptOutput) {
+      tronScriptOutput.value += '\n\n╔════════════════════════════════════════════════════════════╗\n';
+      tronScriptOutput.value += '║                     ERROR OCCURRED                         ║\n';
+      tronScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+      tronScriptOutput.value += '❌ ERROR: ' + error.message + '\n';
+      tronScriptOutput.value += '\nPlease check:\n';
+      tronScriptOutput.value += '  • Wallet has been properly generated\n';
+      tronScriptOutput.value += '  • API server is running\n';
+      tronScriptOutput.value += '  • TRON configuration is set up\n';
+      tronScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      tronScriptOutput.scrollTop = tronScriptOutput.scrollHeight;
+    }
+    
+    setTimeout(() => {
+      automationStatus.style.display = 'none';
+      autoConfigureBtn.disabled = false;
+    }, 3000);
+    
+    walletService.showNotification('Error configuring TRON: ' + error.message, 'error');
   }
 }
 
