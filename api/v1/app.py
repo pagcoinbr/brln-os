@@ -5961,10 +5961,6 @@ def lnd_create_wallet_expect():
                 'status': 'error'
             }), 400
         
-        # Pass password via environment variable for security
-        import os
-        import subprocess
-        
         # Run expect script with password in environment
         expect_script = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
         
