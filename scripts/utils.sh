@@ -249,50 +249,24 @@ get_brln_os_dir() {
     echo "$BRLN_OS_DIR"
 }
 
-# Load master password from SystemD credentials or environment
-# This function should be called before using secure password manager functions
+# Load master password from environment variable
+# The master password is NOT stored on the system - it must be provided by the user
+# During installation, it's temporarily available via BRLN_MASTER_PASSWORD env var
 load_master_password() {
-    # Check if already set in environment
+    # Check if already set in environment (during installation or user session)
     if [[ -n "${BRLN_MASTER_PASSWORD:-}" ]]; then
         return 0
     fi
     
-    # Try to load from SystemD credentials (available in services)
-    if [[ -n "${CREDENTIALS_DIRECTORY:-}" ]] && [[ -f "${CREDENTIALS_DIRECTORY}/brln-master-password" ]]; then
-        export BRLN_MASTER_PASSWORD=$(cat "${CREDENTIALS_DIRECTORY}/brln-master-password")
-        return 0
-    fi
-    
-    # Try to load from credstore (if running as root)
-    # Check both with and without .cred extension for compatibility
-    local credfile=""
-    if [[ -f "/etc/credstore/brln-master-password" ]]; then
-        credfile="/etc/credstore/brln-master-password"
-    elif [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
-        credfile="/etc/credstore/brln-master-password.cred"
-    fi
-    
-    if [[ -n "$credfile" ]]; then
-        # First try reading as plaintext (used by LoadCredential and LND password.txt)
-        # Security is provided by file permissions (600) and directory permissions (700)
-        local content
-        content=$(cat "$credfile" 2>/dev/null)
-        if [[ -n "$content" ]]; then
-            export BRLN_MASTER_PASSWORD="$content"
+    # Check for temporary installation file (only exists during brunel.sh execution)
+    if [[ -n "${TMP_MASTER_PASS_FILE:-}" && -f "${TMP_MASTER_PASS_FILE}" ]]; then
+        export BRLN_MASTER_PASSWORD=$(cat "$TMP_MASTER_PASS_FILE" 2>/dev/null)
+        if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
             return 0
         fi
-        
-        # Fall back to systemd-creds decrypt for encrypted credentials
-        if command -v systemd-creds &>/dev/null; then
-            BRLN_MASTER_PASSWORD=$(systemd-creds decrypt "$credfile" - 2>/dev/null)
-            if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
-                export BRLN_MASTER_PASSWORD
-                return 0
-            fi
-        fi
     fi
     
-    # No automatic source found
+    # No automatic source found - user must provide password interactively
     return 1
 }
 

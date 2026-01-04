@@ -228,13 +228,6 @@ create_brln_api_service() {
     local api_dir="/home/brln-api/api/v1"
     local scripts_dir="/home/brln-api/scripts"
     
-    # Check if SystemD credential exists (without .cred extension)
-    local load_credential=""
-    if [[ -f "/etc/credstore/brln-master-password" ]]; then
-        load_credential="LoadCredential=brln-master-password:/etc/credstore/brln-master-password"
-        echo -e "${GREEN}✅ SystemD encrypted credentials detected${NC}"
-    fi
-    
     sudo tee /etc/systemd/system/brln-api.service > /dev/null << EOF
 [Unit]
 Description=BRLN-OS API gRPC - Comando Central
@@ -250,7 +243,6 @@ Restart=always
 RestartSec=10
 Environment=PYTHONPATH=${api_dir}
 Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
-${load_credential}
 
 # Security - NoNewPrivileges=false required for sudo to run expect scripts as lnd user
 NoNewPrivileges=false

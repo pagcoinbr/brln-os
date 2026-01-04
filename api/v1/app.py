@@ -162,37 +162,24 @@ warnings.filterwarnings("ignore")
 BITCOIN_NETWORK = os.environ.get('BITCOIN_NETWORK', 'mainnet')
 
 # Initialize Secure Password Manager API
-def get_master_password_from_credentials():
+def get_master_password():
     """
-    Get master password from SystemD encrypted credentials or environment variable.
-    Priority: SystemD Credentials -> Environment Variable
+    Get master password from environment variable.
+    The master password is NOT stored on the system - it must be provided by the user.
+    For API usage, set BRLN_MASTER_PASSWORD environment variable when needed.
     """
-    # Try SystemD credentials first
-    credentials_dir = os.environ.get('CREDENTIALS_DIRECTORY')
-    if credentials_dir:
-        cred_file = Path(credentials_dir) / 'brln-master-password'
-        if cred_file.exists():
-            try:
-                with open(cred_file, 'r') as f:
-                    password = f.read().strip()
-                    if password:
-                        print("Master password loaded from SystemD encrypted credentials")
-                        return password
-            except Exception as e:
-                print(f"Warning: Could not read SystemD credential: {e}")
-    
-    # Fallback to environment variable
     env_password = os.environ.get('BRLN_MASTER_PASSWORD')
     if env_password:
         print("Master password loaded from environment variable")
         return env_password
     
-    print("WARNING: Master password not found in SystemD credentials or environment")
+    # Master password not available - this is normal for the API service
+    # User must provide password when accessing password-protected operations
     return None
 
 if HAS_SECURE_PASSWORD_API:
     try:
-        master_password = get_master_password_from_credentials()
+        master_password = get_master_password()
         password_api = SecurePasswordAPI(
             master_password=master_password,
             cache_enabled=True

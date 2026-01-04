@@ -233,11 +233,6 @@ export_passwords() {
     # Copy database
     sudo cp "$DB_PATH" "$TEMP_DIR/"
     
-    # Copy SystemD credential if exists
-    if [[ -f "/etc/credstore/brln-master-password.cred" ]]; then
-        sudo cp "/etc/credstore/brln-master-password.cred" "$TEMP_DIR/"
-    fi
-    
     # Create README
     cat > "$TEMP_DIR/README.txt" << EOF
 BRLN-OS Secure Password Manager Export
@@ -248,16 +243,17 @@ Hostname: $(hostname)
 
 Contents:
 - brln-secure-passwords.db : Encrypted password database
-- brln-master-password.cred : SystemD encrypted master password (if available)
 
 Recovery Instructions:
 1. Extract this archive to a secure location
 2. Restore database: sudo cp brln-secure-passwords.db /data/
 3. Set permissions: sudo chmod 666 /data/brln-secure-passwords.db
-4. If restoring master password: sudo cp brln-master-password.cred /etc/credstore/
-5. Restart service: sudo systemctl restart brln-api
+4. Restart service: sudo systemctl restart brln-api
 
-IMPORTANT: Keep this file in a SECURE location!
+IMPORTANT: 
+- Keep this file in a SECURE location!
+- You will need your master password to access the stored passwords
+- The master password is NOT stored on the system
 EOF
     
     # Create tar archive and encrypt with GPG

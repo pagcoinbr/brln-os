@@ -75,60 +75,43 @@ echo -e "${GREEN}🔐 CONFIGURAÇÃO DE SENHA MESTRA${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo
 echo -e "${BLUE}💡 A senha mestra será usada para criptografar todas as credenciais do sistema${NC}"
-echo -e "${BLUE}💡 Ela será armazenada de forma segura usando SystemD credentials${NC}"
+echo -e "${BLUE}💡 Esta senha NÃO será armazenada - você precisará dela para acessar o sistema${NC}"
 echo -e "${BLUE}💡 Mínimo de 12 caracteres${NC}"
 echo
 
-# Check if credential already exists
-if [[ -f "/etc/credstore/brln-master-password" ]]; then
-    echo -e "${YELLOW}⚠️  Credencial já existe. Pulando configuração...${NC}"
-    export BRLN_MASTER_PASSWORD_SET=true
-else
-    # Loop until valid password is entered
-    while true; do
-        read -s -p "$(echo -e ${YELLOW})Digite a senha mestra: $(echo -e ${NC})" BRLN_MASTER_PASSWORD
-        echo
-        
-        # Validate password length
-        if [[ ${#BRLN_MASTER_PASSWORD} -lt 12 ]]; then
-            echo -e "${RED}❌ Senha muito curta! Mínimo 12 caracteres.${NC}"
-            continue
-        fi
-        
-        read -s -p "$(echo -e ${YELLOW})Confirme a senha: $(echo -e ${NC})" CONFIRM_PASSWORD
-        echo
-        
-        # Check if passwords match
-        if [[ "$BRLN_MASTER_PASSWORD" != "$CONFIRM_PASSWORD" ]]; then
-            echo -e "${RED}❌ Senhas não coincidem! Tente novamente.${NC}"
-            echo
-            continue
-        fi
-        
-        # Passwords match and are valid
-        break
-    done
+# Loop until valid password is entered
+while true; do
+    read -s -p "$(echo -e ${YELLOW})Digite a senha mestra: $(echo -e ${NC})" BRLN_MASTER_PASSWORD
+    echo
     
-    # Create credential directory
-    sudo mkdir -p /etc/credstore
-    sudo chmod 700 /etc/credstore
-    
-    # Encrypt and store password with systemd-creds
-    echo -e "${YELLOW}🔒 Criptografando senha com SystemD credentials...${NC}"
-    if command -v systemd-creds &> /dev/null; then
-        echo -n "$BRLN_MASTER_PASSWORD" | sudo systemd-creds encrypt --name=brln-master-password - /etc/credstore/brln-master-password
-        sudo chmod 600 /etc/credstore/brln-master-password
-        echo -e "${GREEN}✅ Senha criptografada e armazenada com sucesso!${NC}"
-        export BRLN_MASTER_PASSWORD_SET=true
-    else
-        # Fallback: store as plain text with restricted permissions (not recommended but functional)
-        echo -e "${YELLOW}⚠️  systemd-creds não disponível. Usando armazenamento com permissões restritas...${NC}"
-        echo -n "$BRLN_MASTER_PASSWORD" | sudo tee /etc/credstore/brln-master-password > /dev/null
-        sudo chmod 600 /etc/credstore/brln-master-password
-        echo -e "${GREEN}✅ Senha armazenada (sem criptografia TPM)${NC}"
-        export BRLN_MASTER_PASSWORD_SET=true
+    # Validate password length
+    if [[ ${#BRLN_MASTER_PASSWORD} -lt 12 ]]; then
+        echo -e "${RED}❌ Senha muito curta! Mínimo 12 caracteres.${NC}"
+        continue
     fi
-fi
+    
+    read -s -p "$(echo -e ${YELLOW})Confirme a senha: $(echo -e ${NC})" CONFIRM_PASSWORD
+    echo
+    
+    # Check if passwords match
+    if [[ "$BRLN_MASTER_PASSWORD" != "$CONFIRM_PASSWORD" ]]; then
+        echo -e "${RED}❌ Senhas não coincidem! Tente novamente.${NC}"
+        echo
+        continue
+    fi
+    
+    # Passwords match and are valid
+    break
+done
+
+# Store password temporarily in /tmp for installation use only (removed after installation)
+TMP_MASTER_PASS_FILE="/tmp/.brln_master_pass_$$"
+echo -n "$BRLN_MASTER_PASSWORD" > "$TMP_MASTER_PASS_FILE"
+chmod 600 "$TMP_MASTER_PASS_FILE"
+export BRLN_MASTER_PASSWORD
+export TMP_MASTER_PASS_FILE
+echo -e "${GREEN}✅ Senha mestra configurada para instalação${NC}"
+echo -e "${YELLOW}⚠️  A senha será removida do sistema após a instalação${NC}"
 echo
 
 # Source required scripts
@@ -327,23 +310,18 @@ setup_secure_password_manager() {
     # Check if secure password manager is already initialized
     if [[ -f "/data/brln-secure-passwords.db" ]]; then
         echo -e "${GREEN}✅ Gerenciador de senhas já inicializado${NC}"
-        return 0
-    fi
-    
-    # Initialize the secure password manager database using collected password
-    if [[ -f "/etc/credstore/brln-master-password" ]]; then
-        echo -e "${YELLOW}📦 Inicializando banco de dados do gerenciador de senhas...${NC}"
-        
-        # Decrypt master password
-        if command -v systemd-creds &> /dev/null; then
-            MASTER_PASS=$(sudo systemd-creds decrypt /etc/credstore/brln-master-password - 2>/dev/null)
-        else
-            MASTER_PASS=$(sudo cat /etc/credstore/brln-master-password)
+    else
+        # Initialize using the master password from environment or temp file
+        local MASTER_PASS="${BRLN_MASTER_PASSWORD:-}"
+        if [[ -z "$MASTER_PASS" && -f "${TMP_MASTER_PASS_FILE:-}" ]]; then
+            MASTER_PASS=$(cat "$TMP_MASTER_PASS_FILE")
         fi
         
         if [[ -n "$MASTER_PASS" ]]; then
+            echo -e "${YELLOW}📦 Inicializando banco de dados do gerenciador de senhas...${NC}"
+            
             # Initialize the secure password manager
-            echo "$MASTER_PASS" | python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" init --master-password-stdin
+            python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" init "$MASTER_PASS"
             
             # Set proper permissions
             sudo chmod 666 /data/brln-secure-passwords.db
@@ -358,13 +336,51 @@ setup_secure_password_manager() {
                 echo -e "${GREEN}✅ Backup criado${NC}"
             fi
         else
-            echo -e "${RED}❌ Erro ao ler credencial${NC}"
+            echo -e "${RED}❌ Senha mestra não disponível${NC}"
+            return 1
         fi
-    else
-        echo -e "${RED}❌ Credencial não encontrada${NC}"
     fi
     
+    # Generate and store LND-specific password
+    echo -e "${YELLOW}🔑 Configurando senha do LND...${NC}"
+    setup_lnd_password
+    
     echo
+}
+
+# Function to generate and setup LND password
+setup_lnd_password() {
+    local lnd_password_file="/data/lnd/password.txt"
+    
+    # Create LND data directory if it doesn't exist
+    sudo mkdir -p /data/lnd
+    
+    # Check if LND password already exists
+    if [[ -f "$lnd_password_file" ]]; then
+        echo -e "${GREEN}✅ Senha do LND já existe${NC}"
+        return 0
+    fi
+    
+    # Generate a secure random password for LND (32 characters)
+    local lnd_password=$(openssl rand -base64 32 | tr -d '\n/+=' | head -c 32)
+    
+    # Write password to file with strict permissions
+    echo -n "$lnd_password" | sudo tee "$lnd_password_file" > /dev/null
+    sudo chmod 600 "$lnd_password_file"
+    sudo chown lnd:lnd "$lnd_password_file" 2>/dev/null || true
+    
+    echo -e "${GREEN}✅ Senha do LND gerada e salva em $lnd_password_file${NC}"
+    
+    # Store in password manager if available
+    local MASTER_PASS="${BRLN_MASTER_PASSWORD:-}"
+    if [[ -z "$MASTER_PASS" && -f "${TMP_MASTER_PASS_FILE:-}" ]]; then
+        MASTER_PASS=$(cat "$TMP_MASTER_PASS_FILE")
+    fi
+    
+    if [[ -n "$MASTER_PASS" && -f "/data/brln-secure-passwords.db" ]]; then
+        python3 "$SCRIPT_DIR/brln-tools/secure_password_manager.py" store "lnd-wallet" "lnd" "$lnd_password" "LND Wallet Password" 0 "" "$MASTER_PASS" 2>/dev/null || true
+        echo -e "${GREEN}✅ Senha do LND armazenada no gerenciador de senhas${NC}"
+    fi
 }
 
 # Function to install BRLN API with user environment detection
@@ -607,6 +623,22 @@ show_installation_summary() {
     # Clean up temp file
     rm -f "$tailscale_qr_file"
 }
+
+# Cleanup function to remove temporary password file
+cleanup_temp_password() {
+    if [[ -f "${TMP_MASTER_PASS_FILE:-}" ]]; then
+        # Securely overwrite before deleting
+        dd if=/dev/urandom of="$TMP_MASTER_PASS_FILE" bs=1 count=100 conv=notrunc 2>/dev/null || true
+        rm -f "$TMP_MASTER_PASS_FILE"
+        echo -e "${GREEN}✅ Arquivo temporário de senha removido com segurança${NC}"
+    fi
+    # Unset password from environment
+    unset BRLN_MASTER_PASSWORD
+    unset TMP_MASTER_PASS_FILE
+}
+
+# Register cleanup on exit
+trap cleanup_temp_password EXIT
 
 # Main execution flow
 update_and_upgrade

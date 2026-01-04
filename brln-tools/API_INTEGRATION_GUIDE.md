@@ -132,13 +132,11 @@ Set master password in environment:
 # Option A: Export for session
 export BRLN_MASTER_PASSWORD="your_master_password"
 
-# Option B: Add to systemd service
-[Service]
-Environment="BRLN_MASTER_PASSWORD=your_master_password"
-
-# Option C: Use .env file (with python-dotenv)
+# Option B: Use .env file (with python-dotenv)
 echo "BRLN_MASTER_PASSWORD=your_master_password" > .env
 ```
+
+**Note:** The master password is NOT stored on the system. It must be provided by the user when accessing the system. During installation, it's temporarily available via environment variable.
 
 ### 7. Security Best Practices
 
