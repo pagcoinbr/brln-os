@@ -2191,12 +2191,66 @@ def manage_systemd_service(service_name, action):
     output, code = run_command(command)
     return code == 0, output
 
+def detect_bitcoin_network():
+    """Detecta qual rede o Bitcoin está rodando (mainnet, testnet, signet, regtest)"""
+    # Check bitcoin.conf for network settings
+    possible_configs = [
+        Path("/data/bitcoin/bitcoin.conf"),
+        Path("/home/bitcoin/.bitcoin/bitcoin.conf"),
+        Path.home() / ".bitcoin" / "bitcoin.conf",
+        Path("/root/.bitcoin/bitcoin.conf")
+    ]
+    
+    for config_path in possible_configs:
+        if config_path.exists():
+            try:
+                content = config_path.read_text()
+                # Check for network settings in config
+                if 'testnet=1' in content or 'chain=test' in content:
+                    return 'testnet'
+                elif 'signet=1' in content or 'chain=signet' in content:
+                    return 'signet'
+                elif 'regtest=1' in content or 'chain=regtest' in content:
+                    return 'regtest'
+            except:
+                pass
+    
+    # Also check for network data directories
+    bitcoin_dir = Path("/data/bitcoin")
+    if not bitcoin_dir.exists():
+        bitcoin_dir = Path("/home/bitcoin/.bitcoin")
+    
+    if bitcoin_dir.exists():
+        if (bitcoin_dir / "testnet3").exists() or (bitcoin_dir / "testnet4").exists():
+            return 'testnet'
+        elif (bitcoin_dir / "signet").exists():
+            return 'signet'
+        elif (bitcoin_dir / "regtest").exists():
+            return 'regtest'
+    
+    return 'mainnet'
+
+def get_bitcoin_cli_command():
+    """Retorna o comando bitcoin-cli com as flags corretas para a rede detectada"""
+    network = detect_bitcoin_network()
+    base_cmd = "bitcoin-cli -datadir=/data/bitcoin"
+    
+    if network == 'testnet':
+        return f"{base_cmd} -testnet"
+    elif network == 'signet':
+        return f"{base_cmd} -signet"
+    elif network == 'regtest':
+        return f"{base_cmd} -regtest"
+    else:
+        return base_cmd
+
 def get_bitcoind_info():
     """Obtém informações do Bitcoin Core"""
     if not get_service_status('bitcoind.service'):
         raise RuntimeError("Serviço bitcoind não está rodando")
-        
-    output, code = run_command("bitcoin-cli getblockchaininfo 2>/dev/null")
+    
+    bitcoin_cli = get_bitcoin_cli_command()
+    output, code = run_command(f"{bitcoin_cli} getblockchaininfo 2>/dev/null")
     if code != 0 or not output:
         raise RuntimeError("Não foi possível obter informações do Bitcoin Core via RPC")
         
