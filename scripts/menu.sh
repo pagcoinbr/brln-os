@@ -400,9 +400,10 @@ menu() {
   echo ""
   
   echo -e "${YELLOW}┌─ MENU PRINCIPAL ─┐${NC}"
-  echo -e "${GREEN}1.${NC} ⚙️ Configurações"
-  echo -e "${GREEN}2.${NC} 🛠️ Ferramentas do Sistema"
-  echo -e "${GREEN}3.${NC} 🔧 Utilitários e Manutenção"
+  echo -e "${GREEN}1.${NC} 💰 Gerenciador de Carteiras"
+  echo -e "${GREEN}2.${NC} ⚙️ Configurações"
+  echo -e "${GREEN}3.${NC} 🛠️ Ferramentas do Sistema"
+  echo -e "${GREEN}4.${NC} 🔧 Utilitários e Manutenção"
   echo ""
   echo -e "${RED}0.${NC} Sair"
   echo ""
@@ -410,9 +411,10 @@ menu() {
   
   read choice
   case $choice in
-    1) menu_configuration ;;
-    2) menu_system_tools ;;
-    3) menu_utilities ;;
+    1) bash "$SCRIPT_DIR/scripts/wallet-manager.sh"; menu ;;
+    2) menu_configuration ;;
+    3) menu_system_tools ;;
+    4) menu_utilities ;;
     0) echo -e "${GREEN}👋 Obrigado por usar BRLN-OS!${NC}"; exit 0 ;;
     *) echo "Opção inválida!"; sleep 2; menu ;;
   esac

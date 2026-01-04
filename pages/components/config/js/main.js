@@ -10,8 +10,8 @@ function abrirApp(porta) {
 function openTerminalModal() {
   const modal = document.getElementById('terminalModal');
   const iframe = document.getElementById('terminalIframe');
-  // Use port 3131 for GoTTY terminal
-  const url = `http://${window.location.hostname}:3131/`;
+  // Use HTTPS proxy path for GoTTY terminal (avoids mixed content)
+  const url = `${window.location.protocol}//${window.location.host}/terminal/`;
   
   // Definir a URL do iframe
   iframe.src = url;
@@ -41,6 +41,15 @@ function closeTerminalModal() {
 // Make functions globally accessible
 window.openTerminalModal = openTerminalModal;
 window.closeTerminalModal = closeTerminalModal;
+
+// Função para abrir página de carteira com integrations
+function openWalletPage() {
+  // Navigate to wallet page with parameter to show integrations
+  const walletUrl = `${window.location.protocol}//${window.location.host}/pages/components/wallet/wallet.html?showIntegrations=true`;
+  window.open(walletUrl, '_blank');
+}
+
+window.openWalletPage = openWalletPage;
 
 // Setup close button handler
 document.addEventListener('DOMContentLoaded', function() {

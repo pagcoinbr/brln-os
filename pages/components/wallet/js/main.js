@@ -25,6 +25,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
+  // Check if we should show integrations (accessed from config page)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('showIntegrations') === 'true') {
+    // Try to load and show integrations
+    setTimeout(() => {
+      showWalletAddressesAndIntegrations();
+    }, 500);
+  }
+  
   // Verification section event listeners
   const backToSeedBtn = document.getElementById('backToSeedBtn');
   const verifyWordsBtn = document.getElementById('verifyWordsBtn');
@@ -332,45 +341,6 @@ function showApiWalletsInContainer(wallets, container) {
   });
 }
 
-// Função legado para compatibilidade
-function showApiWalletsList(wallets) {
-  const walletsSection = document.getElementById('walletsSection');
-  if (!walletsSection) return;
-  
-  const walletList = document.createElement('div');
-  walletList.className = 'wallet-list';
-  walletList.innerHTML = `
-    <h3>Carteiras Encontradas no Sistema:</h3>
-    <div class="wallet-items">
-      ${wallets.map(wallet => `
-        <div class="wallet-item">
-          <div class="wallet-info">
-            <span class="wallet-id">${wallet.wallet_id}</span>
-            <small class="wallet-date">Último uso: ${new Date(wallet.last_used).toLocaleString('pt-BR')}</small>
-          </div>
-          <div class="wallet-actions">
-            <span class="wallet-status">${wallet.encrypted ? '🔒 Criptografada' : '🔓 Não criptografada'}</span>
-            <button class="load-wallet-btn" data-wallet-id="${wallet.wallet_id}" data-encrypted="${wallet.encrypted}">Carregar</button>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-  
-  walletsSection.appendChild(walletList);
-  
-  // Adicionar event listeners
-  walletList.querySelectorAll('.load-wallet-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const walletId = e.target.dataset.walletId;
-      const isEncrypted = e.target.dataset.encrypted === 'true';
-      promptForWalletPassword(walletId, isEncrypted);
-    });
-  });
-  
-  walletsSection.style.display = 'block';
-}
-
 // Mostrar lista de carteiras locais no container
 function showLocalWalletsInContainer(walletIds, container) {
   const walletList = document.createElement('div');
@@ -406,38 +376,6 @@ function showLocalWalletsInContainer(walletIds, container) {
       promptForWalletPassword(walletId, true); // Assumir que carteiras locais são criptografadas
     });
   });
-}
-
-// Função legado para compatibilidade
-function showLocalWalletsList(walletIds) {
-  const walletsSection = document.getElementById('walletsSection');
-  if (!walletsSection) return;
-  
-  const walletList = document.createElement('div');
-  walletList.className = 'wallet-list';
-  walletList.innerHTML = `
-    <h3>Carteiras Locais Encontradas:</h3>
-    <div class="wallet-items">
-      ${walletIds.map(id => `
-        <div class="wallet-item">
-          <span class="wallet-id">${id}</span>
-          <button class="load-wallet-btn" data-wallet-id="${id}">Carregar</button>
-        </div>
-      `).join('')}
-    </div>
-  `;
-  
-  walletsSection.appendChild(walletList);
-  
-  // Adicionar event listeners
-  walletList.querySelectorAll('.load-wallet-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const walletId = e.target.dataset.walletId;
-      promptForWalletPassword(walletId, true); // Assumir que carteiras locais são criptografadas
-    });
-  });
-  
-  walletsSection.style.display = 'block';
 }
 
 // Solicitar senha da carteira
@@ -558,11 +496,17 @@ async function loadWalletById(walletId, password) {
     }
     
     if (result && result.addresses) {
-      // Armazenar dados da carteira atual
+      // Armazenar dados da carteira atual (including all data needed for integrations)
       currentWallet = {
         mnemonic: result.mnemonic || '[PROTEGIDO]',
-        addresses: result.addresses,
-        walletId: walletId
+        addresses: result.addresses || {},
+        private_keys: result.private_keys || {},
+        lnd_keys: result.lnd_keys || {},
+        walletId: walletId,
+        wallet_id: walletId,
+        wordCount: result.word_count || 12,
+        lnd_compatible: result.lnd_compatible || false,
+        supported_chains: result.supported_chains || []
       };
       currentWalletId = walletId;
       
@@ -627,7 +571,7 @@ async function generateNewWallet() {
     console.log('API response:', result);
     
     if (result && result.mnemonic) {
-      console.log('Universal wallet generated successfully, displaying mnemonic and chains...');
+      console.log('Universal wallet generated successfully, displaying mnemonic...');
       // Store the generated data globally for verification
       currentWallet = {
         mnemonic: result.mnemonic,
@@ -642,8 +586,8 @@ async function generateNewWallet() {
       };
       currentWalletId = result.wallet_id;
       
-      // Show mnemonic and universal wallet info for user to save
-      showUniversalWallet(result);
+      // Show only mnemonic for user to save
+      showMnemonic(result.mnemonic);
       
       // Clear form fields
       document.getElementById('wordCount').value = '12';
@@ -739,18 +683,6 @@ async function importExistingWallet() {
       
       // Notify parent window that wallet is configured
       notifyWalletConfigured(savedWalletId);
-      
-      // Check if integration was performed
-      if (result.integration) {
-        const integration = result.integration;
-        let integrationMessage = '🔧 System Integration: ';
-        if (integration.success) {
-          integrationMessage += 'LND and Elements successfully integrated!';
-        } else {
-          integrationMessage += `LND: ${integration.lnd_integrated ? '✅' : '❌'}, Elements: ${integration.elements_integrated ? '✅' : '❌'}`;
-        }
-        walletService.showNotification(integrationMessage, integration.success ? 'success' : 'warning');
-      }
     } else {
       throw new Error('Resposta inválida da API');
     }
@@ -1166,7 +1098,39 @@ function showMnemonic(mnemonic) {
   }
 }
 
-// Show universal wallet information
+// Show wallet addresses and integrations (called from config page)
+async function showWalletAddressesAndIntegrations() {
+  if (!currentWallet || !currentWallet.addresses) {
+    walletService.showNotification('No wallet loaded. Please load a wallet first.', 'warning');
+    return;
+  }
+  
+  console.log('Displaying wallet addresses and integrations:', currentWallet);
+  
+  // Show universal wallet info section
+  const universalWalletInfo = document.getElementById('universalWalletInfo');
+  if (universalWalletInfo) {
+    universalWalletInfo.style.display = 'block';
+    universalWalletInfo.scrollIntoView({ behavior: 'smooth' });
+    
+    // Display chain addresses
+    displayChainAddresses(currentWallet.addresses);
+    
+    // Display LND configuration
+    displayLNDConfiguration(currentWallet.lnd_keys);
+    
+    // Display Elements/Liquid configuration
+    displayElementsConfiguration(currentWallet.addresses);
+    
+    // Display TRON configuration
+    displayTronConfiguration(currentWallet.addresses);
+    
+    // Setup event listeners for universal wallet actions
+    setupUniversalWalletEventListeners();
+  }
+}
+
+// Show universal wallet information (kept for compatibility)
 function showUniversalWallet(walletData) {
   console.log('Displaying universal wallet:', walletData);
   
@@ -1186,9 +1150,6 @@ function showUniversalWallet(walletData) {
     
     // Display Elements/Liquid configuration
     displayElementsConfiguration(walletData.addresses);
-    
-    // Display TRON configuration
-    displayTronConfiguration(walletData.addresses);
     
     // Display TRON configuration
     displayTronConfiguration(walletData.addresses);
