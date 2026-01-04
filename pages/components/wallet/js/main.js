@@ -1165,6 +1165,9 @@ function showUniversalWallet(walletData) {
     // Display LND configuration
     displayLNDConfiguration(walletData.lnd_keys);
     
+    // Display Elements/Liquid configuration
+    displayElementsConfiguration(walletData.addresses);
+    
     // Setup event listeners for universal wallet actions
     setupUniversalWalletEventListeners();
   }
@@ -1232,6 +1235,33 @@ async function displayLNDConfiguration(lndKeys) {
   }
 }
 
+// Display Elements/Liquid configuration options
+function displayElementsConfiguration(addresses) {
+  const elementsAddressElement = document.getElementById('elementsAddress');
+  
+  if (!elementsAddressElement) return;
+  
+  // Get liquid address from addresses object
+  if (addresses && addresses.liquid && addresses.liquid.address) {
+    elementsAddressElement.textContent = addresses.liquid.address;
+  } else {
+    elementsAddressElement.textContent = 'Generate wallet first';
+  }
+}
+  
+  // Get network from system configuration via API
+  try {
+    const response = await fetch(`${API_BASE_URL}/system/config/network`);
+    const data = await response.json();
+    const network = data.network || 'mainnet'; // Default to mainnet if not available
+    updateLNDKeyDisplay(network);
+  } catch (error) {
+    console.error('Error fetching network config:', error);
+    // Default to mainnet if API call fails
+    updateLNDKeyDisplay('mainnet');
+  }
+}
+
 // Update LND key display based on selected network
 function updateLNDKeyDisplay(network) {
   const lndExtendedKey = document.getElementById('lndExtendedKey');
@@ -1259,6 +1289,18 @@ function setupUniversalWalletEventListeners() {
   const autoConfigureLndBtn = document.getElementById('autoConfigureLndBtn');
   if (autoConfigureLndBtn) {
     autoConfigureLndBtn.addEventListener('click', autoConfigureLND);
+  }
+  
+  // Copy Elements address button
+  const copyElementsAddressBtn = document.getElementById('copyElementsAddressBtn');
+  if (copyElementsAddressBtn) {
+    copyElementsAddressBtn.addEventListener('click', copyElementsAddress);
+  }
+  
+  // Auto-configure Elements button
+  const autoConfigureElementsBtn = document.getElementById('autoConfigureElementsBtn');
+  if (autoConfigureElementsBtn) {
+    autoConfigureElementsBtn.addEventListener('click', autoConfigureElements);
   }
 }
 
@@ -1497,6 +1539,160 @@ async function autoConfigureLND() {
     }, 3000);
     
     walletService.showNotification('Error configuring LND: ' + error.message, 'error');
+  }
+}
+
+// Copy Elements/Liquid address
+function copyElementsAddress() {
+  const elementsAddress = document.getElementById('elementsAddress');
+  const copyBtn = document.getElementById('copyElementsAddressBtn');
+  
+  if (!elementsAddress) return;
+  
+  const addressText = elementsAddress.textContent;
+  if (addressText && addressText !== '-') {
+    navigator.clipboard.writeText(addressText).then(() => {
+      walletService.showNotification('Liquid address copied!', 'success');
+      
+      // Visual feedback
+      copyBtn.classList.add('copied');
+      copyBtn.textContent = '✅';
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.textContent = '📋';
+      }, 2000);
+    }).catch(error => {
+      console.error('Error copying Liquid address:', error);
+      walletService.showNotification('Error copying Liquid address', 'error');
+    });
+  }
+}
+
+// Auto-configure Elements/Liquid with the wallet
+async function autoConfigureElements() {
+  try {
+    const automationStatus = document.getElementById('elementsAutomationStatus');
+    const statusMessage = document.getElementById('elementsStatusMessage');
+    const progressBar = document.getElementById('elementsProgressBar');
+    const autoConfigureBtn = document.getElementById('autoConfigureElementsBtn');
+    const elementsOutputContainer = document.getElementById('elementsOutputContainer');
+    const elementsScriptOutput = document.getElementById('elementsScriptOutput');
+    const elementsAddressElement = document.getElementById('elementsAddress');
+    
+    if (!currentWallet || !currentWallet.mnemonic) {
+      walletService.showNotification('No wallet loaded. Please generate or import a wallet first.', 'error');
+      return;
+    }
+    
+    // Show automation status and output container
+    automationStatus.style.display = 'block';
+    elementsOutputContainer.style.display = 'block';
+    autoConfigureBtn.disabled = true;
+    statusMessage.textContent = 'Preparing Elements/Liquid wallet integration...';
+    progressBar.style.width = '20%';
+    
+    // Clear and initialize output
+    elementsScriptOutput.value = '';
+    elementsScriptOutput.value += '╔════════════════════════════════════════════════════════════╗\n';
+    elementsScriptOutput.value += '║    BRLN-OS LIQUID/ELEMENTS WALLET AUTO-CONFIGURATION      ║\n';
+    elementsScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+    elementsScriptOutput.value += '🚀 Starting Elements/Liquid wallet integration...\n';
+    elementsScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    
+    // Scroll output into view
+    elementsOutputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Integrate wallet with Elements
+    statusMessage.textContent = 'Integrating wallet with Elements...';
+    progressBar.style.width = '40%';
+    
+    elementsScriptOutput.value += `📋 Wallet ID: ${currentWallet.wallet_id || 'N/A'}\n`;
+    elementsScriptOutput.value += '⏳ Importing wallet into Elements daemon...\n\n';
+    elementsScriptOutput.scrollTop = elementsScriptOutput.scrollHeight;
+    
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Call API to integrate wallet
+    const response = await fetch(`${API_BASE_URL}/wallet/integrate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        wallet_id: currentWallet.wallet_id,
+        password: currentWallet.encryption_password || '' // Send encryption password if available
+      })
+    });
+    
+    const result = await response.json();
+    
+    progressBar.style.width = '80%';
+    
+    if (response.ok && result.status === 'success') {
+      statusMessage.textContent = 'Elements wallet integrated successfully!';
+      progressBar.style.width = '100%';
+      
+      // Display integration output
+      elementsScriptOutput.value += '\n╔════════════════════════════════════════════════════════════╗\n';
+      elementsScriptOutput.value += '║              INTEGRATION OUTPUT                            ║\n';
+      elementsScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+      
+      if (result.elements_integrated) {
+        elementsScriptOutput.value += '✅ Elements/Liquid: INTEGRATED\n';
+        if (result.elements_address) {
+          elementsScriptOutput.value += `💧 Liquid Address: ${result.elements_address}\n`;
+          // Update the address display
+          if (elementsAddressElement) {
+            elementsAddressElement.textContent = result.elements_address;
+          }
+        }
+      } else {
+        elementsScriptOutput.value += '⚠️  Elements/Liquid: Not integrated (may not be running)\n';
+      }
+      
+      elementsScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      elementsScriptOutput.value += '✅ SUCCESS: Elements/Liquid wallet integrated!\n';
+      elementsScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      
+      // Auto-scroll to bottom
+      elementsScriptOutput.scrollTop = elementsScriptOutput.scrollHeight;
+      
+      setTimeout(() => {
+        automationStatus.style.display = 'none';
+        autoConfigureBtn.disabled = false;
+        walletService.showNotification('Elements/Liquid wallet integrated successfully!', 'success');
+      }, 3000);
+      
+    } else {
+      throw new Error(result.error || result.message || 'Failed to integrate Elements wallet');
+    }
+    
+  } catch (error) {
+    console.error('Error auto-configuring Elements:', error);
+    
+    const automationStatus = document.getElementById('elementsAutomationStatus');
+    const statusMessage = document.getElementById('elementsStatusMessage');
+    const autoConfigureBtn = document.getElementById('autoConfigureElementsBtn');
+    const elementsScriptOutput = document.getElementById('elementsScriptOutput');
+    
+    statusMessage.textContent = 'Error configuring Elements: ' + error.message;
+    if (elementsScriptOutput) {
+      elementsScriptOutput.value += '\n\n╔════════════════════════════════════════════════════════════╗\n';
+      elementsScriptOutput.value += '║                     ERROR OCCURRED                         ║\n';
+      elementsScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
+      elementsScriptOutput.value += '❌ ERROR: ' + error.message + '\n';
+      elementsScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      elementsScriptOutput.scrollTop = elementsScriptOutput.scrollHeight;
+    }
+    
+    setTimeout(() => {
+      automationStatus.style.display = 'none';
+      autoConfigureBtn.disabled = false;
+    }, 3000);
+    
+    walletService.showNotification('Error configuring Elements: ' + error.message, 'error');
   }
 }
 
