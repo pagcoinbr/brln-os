@@ -322,3 +322,24 @@ case "${1:-help}" in
         exit 1
         ;;
 esac
+
+# ============================================================================
+# RESUMO DO SCRIPT BACKUP-PASSWORD-MANAGER.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Ferramenta para backup, restauração, listagem e exportação do banco de dados
+#   do gerenciador seguro de senhas BRLN-OS (SQLite). Garante integridade via
+#   checksum e oferece exportação criptografada com GPG.
+#
+# PRINCIPAIS FUNÇÕES:
+# - backup_database(): Cria backup com timestamp, checksum e mantém permissões
+# - restore_database(): Restaura um backup interativo com verificação de checksum
+# - cleanup_old_backups(): Remove backups antigos (mantém os 10 mais recentes)
+# - list_backups(), export_passwords(): Listagem e exportação (tar + GPG)
+#
+# USO:
+# - $0 backup | restore | list | export | cleanup
+#
+# ============================================================================
+

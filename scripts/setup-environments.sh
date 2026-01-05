@@ -102,3 +102,17 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     esac
   fi
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT SETUP-ENVIRONMENTS.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script mestre para criação de ambientes virtuais (API, Tools, Wallet) e
+#   verificação rápida de dependências dos ambientes do BRLN-OS.
+#
+# FUNCIONALIDADES:
+# - setup_all_environments(), check_environments(), menus interativos para
+#   configuração de ambientes Python usados por outros componentes
+#
+# ============================================================================

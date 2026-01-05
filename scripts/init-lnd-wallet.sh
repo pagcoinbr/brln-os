@@ -124,3 +124,23 @@ main() {
 
 # Run main function
 main "$@"
+
+# ============================================================================
+# RESUMO DO SCRIPT INIT-LND-WALLET.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script para gerar seed via API e automatizar a criação/inicialização da
+#   carteira LND usando lncli. Inclui passos de verificação pós-criação.
+#
+# PRINCIPAIS FUNÇÕES:
+# - generate_seed(): Gera seed via API local (porta 2121 ou 5000) e armazena
+#   valores em variáveis de ambiente para uso pelo usuário
+# - init_lnd_wallet(): Verifica status do serviço LND e executa 'lncli create'
+# - test_lnd_connection(): Verifica conexão com LND e exibe informações básicas
+#
+# USO RECOMENDADO:
+# - Executar este script após API BRLN-OS estar operacional para gerar seed
+#   e iniciar o processo de criação da carteira LND
+#
+# ============================================================================

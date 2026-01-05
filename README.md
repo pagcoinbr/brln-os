@@ -110,7 +110,11 @@ A principal motivação é **proteger a privacidade e a liberdade** das pessoas,
 
 ### Passo 5: Instalar o BRLN-OS
 
-Uma vez conectado via SSH, execute estes comandos para iniciar a instalação:
+Uma vez conectado via SSH, execute este comando:
+```bash
+sudo su
+```
+Após ter logado como usuário root execute:
 
 ```bash
 git clone https://github.com/pagcoinbr/brln-os.git && cd brln-os && bash brunel.sh
@@ -181,6 +185,27 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 ---
 
 ## 📁 Estrutura do Projeto
+
+O BRLN-OS está organizado em diretórios especializados, cada um com uma função específica no ecossistema do nó Bitcoin multi-funcional:
+
+### 🏗️ **Componentes Principais**
+
+**`api/`** - Comunicação Backend  
+Contém a API que atua como ponte entre o frontend e os serviços do nó. Comunica via gRPC com o LND e através de outras interfaces com os nodes (Bitcoin Core, Elements) e sistema operacional para alimentar o frontend com dados em tempo real.
+
+**`brln-tools/`** - Ferramentas Utilitárias  
+Conjunto de ferramentas auxiliares em Python, incluindo o gerenciador de senhas que criptografa e gerencia a base de dados com informações sensíveis, além de outras utilidades para manutenção e operação do sistema.
+
+**`conf_files/`** - Arquivos de Configuração  
+Armazena os arquivos de configuração modelo (lnd.conf, bitcoin.conf, elements.conf, etc.) que são copiados e aplicados durante o processo de instalação, garantindo configurações otimizadas para cada serviço.
+
+**`pages/`** - Interface Frontend  
+Todas as páginas web organizadas por categoria funcional. O frontend utiliza um sistema de iframe com uma barra superior persistente (header.html) que permanece visível independente da página carregada, proporcionando navegação contínua entre as diferentes funcionalidades.
+
+**`scripts/`** - Scripts de Automação  
+Scripts shell modulares responsáveis pela instalação inicial, configuração e manutenção do sistema. Cada script tem uma função específica na orquestração dos serviços que compõem o nó.
+
+### 📋 **Estrutura Detalhada**
 
 ```text
 brln-os/

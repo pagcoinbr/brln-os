@@ -621,3 +621,31 @@ show_apache_network_status() {
   echo "🔍 Portas Apache ativas:"
   sudo netstat -tlnp | grep apache2 | grep :443 || echo "❌ Apache não está ouvindo na porta 443"
 }
+
+# ============================================================================
+# RESUMO DO SCRIPT APACHE.SH
+# ============================================================================
+#
+# DESCRIÇÃO GERAL:
+# - Conjunto abrangente de funções para instalar, configurar e manter o Apache
+#   Web Server como proxy reverso, configurar SSL, copiar arquivos do projeto
+#   e gerenciar sites/virtual hosts usados pelo BRLN-OS.
+#
+# DEPENDÊNCIAS:
+# - utils.sh, config.sh, services.sh e ferramentas: openssl, a2enmod, ufw
+#
+# PRINCIPAIS FUNÇÕES:
+# - configure_apache_local_ports(): Ajusta Listen/ports para localhost/rede/Tailscale
+# - setup_apache_web(), deploy_to_apache(), copy_brln_files_to_apache(): Instala
+#   e implanta frontend sob /var/www/html
+# - setup_basic_proxy(), setup_ssl_proxy_config(), setup_apache_ssl(): Cria
+#   configurações de proxy, SSL e redirecionamentos HTTP→HTTPS
+# - apache_maintenance(), update_apache_network_config(), show_apache_network_status():
+#   Ferramentas de manutenção e verificação da configuração atual
+#
+# FLUXO RECOMENDADO:
+# 1. Configurar portas locais com configure_apache_local_ports()
+# 2. Implantar arquivos com deploy_to_apache()/copy_brln_files_to_apache()
+# 3. Configurar SSL com setup_apache_ssl() e ajustar proxies conforme necessário
+#
+# ============================================================================

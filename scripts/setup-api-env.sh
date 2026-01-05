@@ -64,3 +64,21 @@ setup_api_environment() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_api_environment
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT SETUP-API-ENV.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Prepara e popula o ambiente virtual para a API BRLN (instala dependências
+#   Python, cria venv e ajusta permissões para o usuário brln-api).
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - Cria usuário brln-api (se necessário), cria venv, instala requirements
+# - Ajusta propriedade e permissões do venv para uso pelo serviço
+#
+# USO:
+# - Executar antes de habilitar ou reiniciar o serviço brln-api
+#
+# ============================================================================
+

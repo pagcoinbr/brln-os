@@ -719,3 +719,21 @@ export -f show_peerswap_status
 export -f create_elements_wallet_for_peerswap
 export -f stop_peerswap
 export -f peerswap_menu
+
+# ============================================================================
+# RESUMO DO SCRIPT PEERSWAP.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Automatiza instalação, configuração e gerenciamento do PeerSwap (daemons de
+#   swap entre Bitcoin/Elements) e sua interface web (psweb).
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - install_peerswap(): Clona e compila o PeerSwap, configura usuário e dependências
+# - configure_peerswap(): Gera peerswap.conf com caminhos para tls + macaroons
+# - start/stop/status/service creation: Integra com systemd e psweb
+#
+# USO:
+# - Executar para habilitar swaps líquidos e componentes relacionados no BRLN-OS
+#
+# ============================================================================

@@ -48,3 +48,21 @@ setup_tools_environment() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_tools_environment
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT SETUP-TOOLS-ENV.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Cria/atualiza ambiente virtual para as ferramentas BRLN-Tools (bots Telegram,
+#   utilitários) e instala dependências via requirements.txt.
+#
+# FUNCIONALIDADE PRINCIPAL:
+# - setup_tools_environment(): Cria venv, ativa-o, instala pacotes listados em
+#   REQUIREMENTS_FILE_TOOLS ou um conjunto mínimo de dependências essenciais.
+#
+# USO:
+# - Executar diretamente para configurar o ambiente de ferramentas do sistema
+#   (por exemplo, antes de rodar bots e scripts auxiliares).
+#
+# ============================================================================

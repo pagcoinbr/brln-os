@@ -523,3 +523,20 @@ case "${1:-maintenance}" in
         exit 1
         ;;
 esac
+
+# ============================================================================
+# RESUMO DO SCRIPT MAINTENANCE.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Rotinas de manutenção para frontend e API (deploy, verificação de servidores,
+#   configuração SSL e atualizações de dependências).
+#
+# FUNCIONALIDADES:
+# - frontend_maintenance(), check_and_manage_webservers(), deploy_frontend_files(),
+#   verify_frontend_status(), maintain_api_services()
+#
+# USO:
+# - Executar como: bash scripts/maintenance.sh [maintenance|deploy|api|check|ssl-only]
+#
+# ============================================================================

@@ -289,3 +289,40 @@ tailscale_vpn() {
   echo -e "${GREEN}✅ Tailscale instalado!${NC}"
   echo -e "${BLUE}💡 Execute 'sudo tailscale up' para conectar à sua rede Tailscale${NC}"
 }
+
+# ============================================================================
+# RESUMO DAS FUNÇÕES DO SCRIPT SYSTEM.SH
+# ============================================================================
+#
+# DESCRIÇÃO GERAL:
+# - Funções para manutenção e configuração do sistema, incluindo atualizações,
+#   firewall (UFW), instalação e configuração de serviços de rede (Tor, I2P,
+#   Tailscale) e configuração de ambiente Python para APIs.
+#
+# DEPENDÊNCIAS:
+# - scripts/config.sh, scripts/utils.sh, scripts/apache.sh
+# - apt, systemd, curl, OpenSSL, ufw
+#
+# PRINCIPAIS FUNÇÕES:
+# - update_and_upgrade(): Atualiza repositório, instala python3-venv, configura
+#   ambiente Flask, adiciona entrada no crontab e garante permissões sudo para
+#   gerenciamento de serviços.
+# - setup_ufw_firewall(): Instala e configura UFW, define políticas padrão,
+#   habilita SSH e restringe tráfego por rede local.
+# - install_tor(): Adiciona repositório Tor, instala e configura Tor (ControlPort,
+#   serviços systemd e verificação das portas 9050/9051).
+# - install_i2p(): Adiciona repositório e instala i2pd, habilita e verifica o serviço.
+# - tailscale_vpn(): Instala o cliente Tailscale e instrui o usuário a executar
+#   'sudo tailscale up' para ativação.
+#
+# FLUXO RECOMENDADO:
+# 1. Executar update_and_upgrade() para preparar o sistema
+# 2. Configurar UFW com setup_ufw_firewall()
+# 3. Instalar e testar Tor/I2P conforme necessário
+# 4. Instalar Tailscale com tailscale_vpn() e conectar
+#
+# INTEGRAÇÃO:
+# - Projetado para administrar recursos de sistema usados por serviços BRLN-OS
+# - Trabalha com systemd e Apache configurado por outros scripts
+#
+# ============================================================================

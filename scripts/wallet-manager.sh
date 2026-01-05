@@ -596,3 +596,27 @@ main_menu() {
 
 # Run main menu
 main_menu
+
+# ============================================================================
+# RESUMO DO SCRIPT WALLET-MANAGER.SH
+# ============================================================================
+#
+# DESCRIÇÃO GERAL:
+# - Interface interativa para gerenciar carteiras e operações relacionadas ao
+#   Bitcoin, LND, Elements/Liquid e integrações (TRON). Fornece menus para criar
+#   wallets, verificar sincronização e executar operações comuns.
+#
+# PRINCIPAIS FUNÇÕES / MENUS:
+# - detect_network(): Detecta a rede Bitcoin em uso (mainnet/testnet/signet/regtest)
+# - check_bitcoin_sync(): Verifica status de sincronização do Bitcoin Core
+# - check_lnd_status(), create_lnd_wallet_new(), create_lnd_wallet_restore(),
+#   unlock_lnd_wallet(): Funções para criar/recuperar/desbloquear carteira LND
+# - configure_elements_wallet(), configure_tron_wallet(): Integrações com Elements
+# - main_menu(), lnd_wallet_menu(): Interação principal com o usuário
+#
+# USO RECOMENDADO:
+# - Executar após a sincronização inicial do Bitcoin para criar e configurar
+#   carteiras via interface textual
+#
+# ============================================================================
+

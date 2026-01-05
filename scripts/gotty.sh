@@ -108,3 +108,24 @@ terminal_web() {
     return 1
   fi
 }
+
+# ============================================================================
+# RESUMO DO SCRIPT GOTTY.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script para instalar e gerir o serviço Gotty que expõe um terminal via Web.
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - gotty_install(): Faz download adequado para a arquitetura, instala e verifica
+#   a versão do binário Gotty.
+# - setup_gotty_service(): Gera o service unit via services.sh e habilita o serviço
+#   systemd (gotty-fullauto).
+# - terminal_web(): Fluxo completo de instalação + criação/arranque do serviço
+#   e verificações de status (inclui tentativa de matar processos conflitantes).
+#
+# NOTAS:
+# - Usa systemd e deve ser executado com permissões sudo quando necessário.
+# - Evita conflitos e tenta garantir que o serviço esteja ativo após a instalação.
+#
+# ============================================================================

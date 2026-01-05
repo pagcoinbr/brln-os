@@ -16,6 +16,9 @@ NC='\033[0m'
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 SCRIPTS_DIR="$SCRIPT_DIR/scripts"
 
+# Source services script
+source "$SCRIPTS_DIR/services.sh" 2>/dev/null || true
+
 # Add current directory to PATH if not already there
 if [[ ":$PATH:" != *":$SCRIPT_DIR:"* ]]; then
     export PATH="$SCRIPT_DIR:$PATH"
@@ -67,6 +70,26 @@ while true; do
             ;;
     esac
 done
+touch "$HOME/local_install.log"
+echo $network_choice >> "$HOME/local_install.log"
+
+# Export network choice permanently to bashrc
+echo -e "${YELLOW}💾 Salvando configuração de rede permanentemente...${NC}"
+BASHRC_FILE="$HOME/.bashrc"
+
+# Remove any existing BRLN network configuration to avoid duplicates
+sed -i '/# BRLN-OS Network Configuration/,/# End BRLN-OS Network Configuration/d' "$BASHRC_FILE"
+
+# Add new configuration block
+cat >> "$BASHRC_FILE" << EOF
+
+# BRLN-OS Network Configuration
+export BRLN_NETWORK_CHOICE="$network_choice"
+export BITCOIN_NETWORK="$BITCOIN_NETWORK"
+# End BRLN-OS Network Configuration
+EOF
+
+echo -e "${GREEN}✅ Configuração salva em $BASHRC_FILE${NC}"
 echo
 
 # Master Password Setup
@@ -569,15 +592,6 @@ show_installation_summary() {
     
     # QR Code Section - Tailscale QR on left, Local HTTPS text on right
     echo
-    center_text "🌐 TAILSCALE QR CODE" "${GREEN}"
-    if [[ -n "$tailscale_ip" ]]; then
-        center_text "https://$tailscale_ip" "${YELLOW}"
-    elif [[ -n "$tailscale_auth" ]]; then
-        center_text "Login na Tailnet" "${YELLOW}"
-    else
-        center_text "Indisponível" "${YELLOW}"
-    fi
-    echo
     center_text "🏠 ACESSO LOCAL (HTTPS)" "${GREEN}"
     center_text "https://$local_ip" "${YELLOW}"
     echo
@@ -594,7 +608,7 @@ show_installation_summary() {
     fi
 
     if [[ -n "$tailscale_url" ]]; then
-        qrencode -t ANSIUTF8 -m 1 -l M "$tailscale_url" > "$tailscale_qr_file" 2>/dev/null
+        qrencode -t ANSIUTF8 -m 4 -l M "$tailscale_url" > "$tailscale_qr_file" 2>/dev/null
         
         # Display Tailscale QR code centered (properly handling ANSI codes)
         if [[ -s "$tailscale_qr_file" ]]; then
@@ -632,25 +646,67 @@ show_installation_summary() {
     rm -f "$tailscale_qr_file"
 }
 
-# Cleanup function to remove temporary password file
-cleanup_temp_password() {
-    if [[ -f "${TMP_MASTER_PASS_FILE:-}" ]]; then
-        # Securely overwrite before deleting
-        dd if=/dev/urandom of="$TMP_MASTER_PASS_FILE" bs=1 count=100 conv=notrunc 2>/dev/null || true
-        rm -f "$TMP_MASTER_PASS_FILE"
-        echo -e "${GREEN}✅ Arquivo temporário de senha removido com segurança${NC}"
-    fi
-    # Unset password from environment
-    unset BRLN_MASTER_PASSWORD
-    unset TMP_MASTER_PASS_FILE
+# Function to install and start background installation service
+install_background_service() {
+    echo
+    echo -e "${YELLOW}🔄 Configurando serviço de instalação em background...${NC}"
+    
+    # Create the service dynamically
+    create_background_install_service
+    
+    # Reload systemd and enable service
+    systemctl daemon-reload
+    systemctl enable brln-background-install.service
+    
+    # Start the service in background
+    systemctl start brln-background-install.service
+    
+    echo -e "${GREEN}✓ Serviço de instalação em background iniciado!${NC}"
+    echo -e "${BLUE}ℹ O serviço irá monitorar a sincronização e instalar LND, LNDG, PeerSwap e PSweb automaticamente${NC}"
+    echo -e "${BLUE}ℹ O serviço será removido automaticamente quando concluir${NC}"
+    echo
+    echo -e "${YELLOW}Para acompanhar o progresso, use:${NC}"
+    echo -e "${CYAN}  journalctl -u brln-background-install.service -f${NC}"
+    echo
+    sleep 3
 }
 
-# Register cleanup on exit
-trap cleanup_temp_password EXIT
+install_complete_system() {
+  echo -e "${GREEN}🚀 Iniciando instalação completa do sistema...${NC}"
+  echo -e "${BLUE}📋 Executando scripts na ordem correta...${NC}"
+  
+  # Detect if running from web terminal (GoTTY)
+  SKIP_WEB_SERVICES=false
+  if [[ -n "$GOTTY_CLIENT_ADDRESS" ]] || pgrep -f "gotty.*menu.sh"; then
+    SKIP_WEB_SERVICES=true
+    echo -e "${YELLOW}⚠️  Detectado terminal web - Apache e GoTTY serão ignorados para evitar desconexão${NC}"
+    sleep 2
+  fi
+
+  # Install Tor and I2P first (required for Bitcoin/Lightning privacy features)
+  echo -e "${YELLOW}🧅 Instalando Tor...${NC}"
+  install_tor
+  
+  echo -e "${YELLOW}🔒 Instalando I2P...${NC}"
+  install_i2p
+  
+  echo -e "${YELLOW}₿ Instalando Bitcoin...${NC}"
+  install_complete_stack
+  
+  echo -e "${YELLOW}🔧 Gerando protobuf...${NC}"
+  cd "$SCRIPT_DIR"
+  bash "$SCRIPT_DIR/scripts/gen-proto.sh"
+  
+  echo -e "${YELLOW}⚡ Configurando BoS...${NC}"
+  install_nodejs
+  install_bos
+  
+  echo -e "${GREEN}✅ Instalação completa finalizada!${NC}"
+  read -p "Pressione Enter para continuar..."
+}
 
 # Main execution flow
 update_and_upgrade
-tailscale_vpn
 configure_ssl_complete
 configure_secure_firewall
 
@@ -661,12 +717,34 @@ install_brln_api_with_user_env
 
 terminal_web
 
-# Run full system installation via menu.sh --install flag
-echo
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}🚀 Iniciando instalação completa do sistema...${NC}"
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-bash "$SCRIPTS_DIR/menu.sh" --install
+tailscale_vpn
+
+# Start background installation service
+install_background_service
 
 # Final Installation Summary Screen
 show_installation_summary
+
+# ============================================================================
+# RESUMO DO SCRIPT BRUNEL.SH
+# ============================================================================
+#
+# DESCRIÇÃO GERAL:
+# - Script principal de instalação e orquestração (installer) do BRLN-OS. Controla
+#   todo o fluxo interativo de instalação, seleção de rede, criação de usuário,
+#   configuração de senha mestra e chama sub-rotinas de configuração do sistema.
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - Seleção de rede (mainnet/testnet), configuração de senha mestra e exportação
+# - Chamadas de alto nível para: update_and_upgrade(), setup_secure_password_manager(),
+#   install_brln_api_with_user_env(), configure_ssl_complete(), entre outras
+# - Execução sequencial das etapas de instalação e resumo final
+#
+# USO:
+# - Executar como entrypoint de instalação: bash brunel.sh
+#
+# NOTAS:
+# - Mantém variáveis temporárias durante a instalação (ex.: TMP_MASTER_PASS_FILE)
+# - Muitos passos dependem de privilégios sudo
+#
+# ============================================================================

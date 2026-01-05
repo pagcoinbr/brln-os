@@ -254,3 +254,29 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     echo "Environment variable:"
     echo "  BRLN_MASTER_PASSWORD - Set to avoid password prompts"
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT secure_password_manager.sh
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Wrapper shell para o gerenciador seguro de senhas BRLN-OS (implementado em
+#   Python). Fornece funções shell para inicializar, desbloquear, armazenar e
+#   recuperar senhas de forma não interativa.
+#
+# PRINCIPAIS FUNÇÕES:
+# - is_pm_initialized(), secure_pm_init(), secure_pm_unlock(), secure_pm_lock()
+# - secure_store_password_full(), secure_store_password(), secure_get_password()
+# - secure_list_passwords(), secure_delete_password(), secure_pm_change_password()
+# - secure_pm_setup(): Assistente interativo para inicialização com senha mestre
+#
+# USO:
+# - Preferencialmente este script é SOURCED (source secure_password_manager.sh)
+#   para expor as funções no ambiente do chamador.
+#
+# SEGURANÇA:
+# - O master password NÃO é armazenado; recomenda-se uso de variáveis de ambiente
+#   temporárias durante scripts automatizados.
+#
+# ============================================================================
+

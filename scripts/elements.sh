@@ -855,3 +855,21 @@ export -f restart_elements
 export -f uninstall_elements
 export -f fix_elements_startup
 export -f elements_menu
+
+# ============================================================================
+# RESUMO DO SCRIPT ELEMENTS.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Instala e configura Elements Core (Liquid), gerencia serviços e wallets
+#   e fornece ferramentas de diagnóstico e correção de problemas.
+#
+# PRINCIPAIS FUNCIONALIDADES:
+# - install_elements(), configure_elements(), create_elements_service()
+# - start_elements(), create_elements_wallet(), restart_elements(), uninstall_elements()
+# - fix_elements_startup(): Correções comuns como permissões Tor e configuração RPC
+#
+# REQUERIMENTOS:
+# - Espaço em disco (≈20GB), usuário 'elements', integração com Bitcoin Core RPC
+#
+# ============================================================================

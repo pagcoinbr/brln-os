@@ -160,32 +160,10 @@ install_bitcoind() {
       sudo ln -s /data/bitcoin /root/.bitcoin || true
     fi
   else
-    if [ ! -L /home/$atual_user/.bitcoin ]; then
-      sudo ln -s /data/bitcoin /home/$atual_user/.bitcoin || true
+    if [ ! -L /home/admin/.bitcoin ]; then
+      sudo ln -s /data/bitcoin /home/admin/.bitcoin || true
     fi
   fi
-  
-  # Install systemd service using services.sh
-  echo -e "${BLUE}Instalando serviço systemd...${NC}"
-  
-  # Use detected BRLN_OS_DIR path
-  SERVICES_SCRIPT="$SCRIPT_DIR/scripts/services.sh"
-  if [[ -f "$SERVICES_SCRIPT" ]]; then
-    source "$SERVICES_SCRIPT"
-    create_bitcoind_service
-  else
-    echo -e "${RED}✗ services.sh not found at $SERVICES_SCRIPT${NC}"
-    return 1
-  fi
-  sudo systemctl daemon-reload
-  sudo systemctl enable bitcoind
-  echo -e "${GREEN}✓ Serviço bitcoind habilitado${NC}"
-  
-  echo -e "${GREEN}✅ Bitcoin Core instalado com sucesso!${NC}"
-  echo -e "${CYAN}💡 Credenciais RPC armazenadas no gerenciador de senhas${NC}"
-  echo -e "${CYAN}💡 Consultar: Menu > Configurações > Gerenciador de Senhas${NC}"
-  echo -e "${CYAN}💡 Use 'sudo systemctl start bitcoind' para iniciar o serviço${NC}"
-  echo -e "${CYAN}💡 Use 'journalctl -fu bitcoind' para monitorar os logs${NC}"
 }
 
 configure_lnd() {
@@ -404,14 +382,48 @@ EOF'
 }
 
 install_complete_stack() {
-  echo -e "${GREEN}🔄 Instalando stack completo Bitcoin + Lightning...${NC}"
+  echo -e "${GREEN}🔄 Instalando Bitcoin Core...${NC}"
   
   # Install Bitcoin Core
   install_bitcoind
   
-  # Install LND
-  download_lnd
-  
-  echo -e "${GREEN}✅ Stack completo instalado!${NC}"
-  echo -e "${BLUE}💡 Use 'systemctl start bitcoind' e 'systemctl start lnd' para iniciar os serviços${NC}"
+  # Install systemd service using services.sh
+  echo -e "${BLUE}Instalando serviço systemd...${NC}"
+
+  # Use detected BRLN_OS_DIR path
+  SERVICES_SCRIPT="$SCRIPT_DIR/scripts/services.sh"
+  if [[ -f "$SERVICES_SCRIPT" ]]; then
+    source "$SERVICES_SCRIPT"
+    create_bitcoind_service
+  else
+    echo -e "${RED}✗ services.sh not found at $SERVICES_SCRIPT${NC}"
+    return 1
+  fi
+  echo -e "${GREEN}✅ Bitcoin Core completo instalado!${NC}"
+  sudo systemctl start bitcoind
+  echo -e "${CYAN}💡 Aguardando bitcoind iniciar...${NC}"
+  sleep 10
+  sudo systemctl enable bitcoind
+  sudo systemctl status bitcoind --no-pager
 }
+
+
+
+# ============================================================================
+# RESUMO DO SCRIPT BITCOIN.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Funções para instalar e configurar Bitcoin Core (bitcoind), gerar RPC creds
+#   e integrar com LND (rpcauth, permissões, grupos de usuários).
+#
+# PRINCIPAIS FUNÇÕES:
+# - install_bitcoind(): Baixa, verifica checksum/GPG, instala bitcoind/bitcoin-cli
+# - configure_lnd()/download_lnd(): Integração e configuração inicial do LND
+# - install_complete_stack(): Orquestra instalação completa (bitcoind + serviços)
+#
+# SEGURANÇA E INTEGRAÇÃO:
+# - Gera rpcauth para RPC, cria usuário 'bitcoin', ajusta permissões de /data
+# - Integra com systemd via services.sh
+#
+# ============================================================================

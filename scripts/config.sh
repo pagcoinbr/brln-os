@@ -72,3 +72,26 @@ get_network_cidr() {
 }
 
 subnet=$(get_network_cidr)
+
+# ============================================================================
+# RESUMO DO SCRIPT CONFIG.SH
+# ============================================================================
+#
+# DESCRIÇÃO GERAL:
+# - Definições de variáveis de configuração globais e detecção de ambiente para
+#   todo o BRLN-OS (versões, paths, cores, rede, detectores de arquitetura)
+#
+# PRINCIPAIS VARIÁVEIS:
+# - BITCOIN_NETWORK: mainnet | testnet
+# - LND_VERSION, BTC_VERSION, VERSION_THUB: versões de componentes
+# - SCRIPT_DIR, REPO_DIR, SERVICES_DIR: caminhos do projeto
+# - FLASKVENV_DIR, VENV_DIRs: diretórios de ambientes virtuais
+# - Cores: RED, GREEN, YELLOW, BLUE, etc.
+#
+# FUNÇÕES NOTÁVEIS:
+# - get_network_cidr(): Detecta rede local em formato CIDR
+#
+# USO:
+# - Carregado no início dos scripts para padronizar comportamento e caminhos
+#
+# ============================================================================

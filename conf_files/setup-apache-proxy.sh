@@ -74,6 +74,27 @@ if [ $? -eq 0 ]; then
     echo ""
     
 else
+
+# ============================================================================
+# RESUMO DO SCRIPT setup-apache-proxy.sh
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script simplificado para configurar um proxy reverso Apache para o BRLN-OS,
+#   habilitando módulos e copiando configurações específicas do projeto.
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - Verifica instalação do Apache e módulos necessários (proxy, headers, ssl)
+# - Faz backup das configurações atuais e instala sites do BRLN (/conf_files)
+# - Configura firewall local para permitir acesso HTTP/HTTPS a partir da
+#   sub-rede local
+#
+# USO:
+# - Rodar em máquinas onde o Apache será o front-end; útil para ambientes
+#   que precisam de suporte a iframes e SameSite cookie fixes
+#
+# ============================================================================
+
     echo "❌ Erro na configuração Apache. Verifique os logs:"
     echo "   sudo tail -f /var/log/apache2/error.log"
     exit 1

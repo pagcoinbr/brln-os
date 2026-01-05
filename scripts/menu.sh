@@ -11,6 +11,12 @@ source "$(dirname "${BASH_SOURCE[0]}")/elements.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/peerswap.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/system.sh"
 
+
+
+run_logs_and_config() {
+  bash "$SCRIPT_DIR/scripts/logs-and-config.sh"
+}
+
 # Configuration functions for the Configuration submenu
 run_utils() {
   echo -e "${GREEN}🛠️ Executando utilitários do sistema...${NC}"
@@ -20,8 +26,9 @@ run_utils() {
   echo -e "${GREEN}2.${NC} Limpar arquivos temporários"
   echo -e "${GREEN}3.${NC} Verificar status dos serviços"
   echo -e "${GREEN}4.${NC} Atualizar sistema"
+  echo -e "${GREEN}5.${NC} Gerar Protocol Buffers"
   echo ""
-  echo -n "Escolha uma opção (1-4): "
+  echo -n "Escolha uma opção (1-5): "
   read util_choice
   
   case $util_choice in
@@ -45,14 +52,20 @@ run_utils() {
       update_and_upgrade
       echo -e "${GREEN}✅ Sistema atualizado!${NC}"
       ;;
+    5)
+      echo -e "${YELLOW}🔨 Gerando Protocol Buffers...${NC}"
+      if [[ -f "$SCRIPT_DIR/scripts/gen-proto.sh" ]]; then
+        cd "$SCRIPT_DIR"
+        bash "scripts/gen-proto.sh"
+        echo -e "${GREEN}✅ Protocol Buffers gerados!${NC}"
+      else
+        echo -e "${RED}❌ Arquivo gen-proto.sh não encontrado${NC}"
+      fi
+      ;;
     *)
       echo -e "${RED}❌ Opção inválida!${NC}"
       ;;
   esac
-}
-
-run_logs_and_config() {
-  bash "$SCRIPT_DIR/scripts/logs-and-config.sh"
 }
 
 run_services_manager() {
@@ -113,68 +126,6 @@ run_services_manager() {
       ;;
     *)
       echo -e "${RED}❌ Opção inválida${NC}"
-      ;;
-  esac
-}
-
-run_generate_protobuf() {
-  echo -e "${GREEN}🗂️ Gerador de Protocol Buffers${NC}"
-  echo ""
-  
-  # Verificar se os diretórios existem
-  API_DIR="$SCRIPT_DIR/api/v1"
-  PROTO_DIR="$API_DIR/proto"
-  
-  if [[ ! -d "$API_DIR" ]]; then
-    echo -e "${RED}❌ Diretório da API não encontrado: $API_DIR${NC}"
-    return 1
-  fi
-  
-  if [[ ! -d "$PROTO_DIR" ]]; then
-    echo -e "${RED}❌ Diretório proto não encontrado: $PROTO_DIR${NC}"
-    return 1
-  fi
-  
-  echo -e "${BLUE}📋 Opções de geração:${NC}"
-  echo -e "${GREEN}1.${NC} Gerar usando generate-protobuf.sh (completo)"
-  echo -e "${GREEN}2.${NC} Gerar usando gen-proto.sh (simples)"
-  echo -e "${GREEN}3.${NC} Verificar arquivos proto existentes"
-  echo ""
-  echo -n "Escolha uma opção (1-3): "
-  read proto_choice
-  
-  case $proto_choice in
-    1)
-      echo -e "${YELLOW}🔨 Executando geração completa...${NC}"
-      if [[ -f "$SCRIPT_DIR/scripts/generate-protobuf.sh" ]]; then
-        cd "$SCRIPT_DIR"
-        bash "scripts/generate-protobuf.sh"
-        echo -e "${GREEN}✅ Geração completa concluída!${NC}"
-      else
-        echo -e "${RED}❌ Arquivo generate-protobuf.sh não encontrado${NC}"
-      fi
-      ;;
-    2)
-      echo -e "${YELLOW}🔨 Executando geração simples...${NC}"
-      if [[ -f "$SCRIPT_DIR/scripts/gen-proto.sh" ]]; then
-        cd "$SCRIPT_DIR"
-        bash "scripts/gen-proto.sh"
-        echo -e "${GREEN}✅ Geração simples concluída!${NC}"
-      else
-        echo -e "${RED}❌ Arquivo gen-proto.sh não encontrado${NC}"
-      fi
-      ;;
-    3)
-      echo -e "${YELLOW}📁 Verificando arquivos proto...${NC}"
-      echo -e "${BLUE}Arquivos .proto encontrados:${NC}"
-      find "$PROTO_DIR" -name "*.proto" -type f | sed 's|.*/||' | sort || echo "Nenhum arquivo .proto encontrado"
-      echo ""
-      echo -e "${BLUE}Arquivos _pb2.py gerados:${NC}"
-      find "$API_DIR" -name "*_pb2.py" -type f | sed 's|.*/||' | sort || echo "Nenhum arquivo _pb2.py encontrado"
-      echo -e "${GREEN}✅ Verificação concluída!${NC}"
-      ;;
-    *)
-      echo -e "${RED}❌ Opção inválida!${NC}"
       ;;
   esac
 }
@@ -240,10 +191,9 @@ menu_configuration() {
   echo ""
   echo -e "${YELLOW}┌─ Opções de Configuração ─┐${NC}"
   echo -e "${GREEN}1.${NC} 🛠️ Utilitários"
-  echo -e "${GREEN}2.${NC} 🗂️ Gerar Protocol Buffers"
-  echo -e "${GREEN}3.${NC} 🔐 Gerenciador de Senhas"
-  echo -e "${GREEN}4.${NC} ⚙️ Gerenciar Serviços Systemd"
-  echo -e "${GREEN}5.${NC} 📊 Logs e Configurações"
+  echo -e "${GREEN}2.${NC} � Gerenciador de Senhas"
+  echo -e "${GREEN}3.${NC} ⚙️ Gerenciar Serviços Systemd"
+  echo -e "${GREEN}4.${NC} 📊 Logs e Configurações"
   echo ""
   echo -e "${BLUE}0.${NC} Voltar ao menu principal"
   echo ""
@@ -252,10 +202,9 @@ menu_configuration() {
   read choice
   case $choice in
     1) run_utils; read -p "Pressione Enter para continuar..."; menu_configuration ;;
-    2) run_generate_protobuf; read -p "Pressione Enter para continuar..."; menu_configuration ;;
-    3) source "$SCRIPT_DIR/scripts/password_manager_menu.sh"; show_password_menu; menu_configuration ;;
-    4) run_services_manager; read -p "Pressione Enter para continuar..."; menu_configuration ;;
-    5) run_logs_and_config; menu_configuration ;;
+    2) source "$SCRIPT_DIR/scripts/password_manager_menu.sh"; show_password_menu; menu_configuration ;;
+    3) run_services_manager; read -p "Pressione Enter para continuar..."; menu_configuration ;;
+    4) run_logs_and_config; menu_configuration ;;
     0) menu ;;
     *) echo "Opção inválida!"; sleep 2; menu_configuration ;;
   esac
@@ -284,112 +233,12 @@ menu_utilities() {
   case $choice in
     1) update_and_upgrade; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     2) echo -e "${GREEN}🧹 Limpando arquivos temporários...${NC}"; sudo apt autoremove -y && sudo apt autoclean; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    3) cd "$SCRIPT_DIR" && if [[ -f "scripts/gen-proto.sh" ]]; then bash scripts/gen-proto.sh; elif [[ -f "scripts/generate-protobuf.sh" ]]; then bash scripts/generate-protobuf.sh; fi; read -p "Pressione Enter para continuar..."; menu_utilities ;;
+    3) cd "$SCRIPT_DIR" && if [[ -f "scripts/gen-proto.sh" ]]; then bash scripts/gen-proto.sh; else echo -e "${RED}❌ gen-proto.sh não encontrado${NC}"; fi; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     4) echo -e "${GREEN}📊 Status dos serviços:${NC}"; systemctl status bitcoind lnd elementsd --no-pager -l; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     5) echo -e "${GREEN}📋 Logs recentes:${NC}"; journalctl -u bitcoind -u lnd -u elementsd --since "1 hour ago" --no-pager; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     0) menu_configuration ;;
     *) echo "Opção inválida!"; sleep 2; menu_utilities ;;
   esac
-}
-
-menu_utilities() {
-  clear
-  echo -e "${CYAN}"
-  echo "╔══════════════════════════════════════════════════════════════════════╗"
-  echo "║                    🔧 UTILITÁRIOS E MANUTENÇÃO 🔧                   ║"
-  echo "╚══════════════════════════════════════════════════════════════════════╝"
-  echo -e "${NC}"
-  echo ""
-  echo -e "${YELLOW}┌─ Utilitários do Sistema ─┐${NC}"
-  echo -e "${GREEN}1.${NC} 🔄 Atualizar Sistema"
-  echo -e "${GREEN}2.${NC} 🧹 Limpar arquivos temporários"
-  echo -e "${GREEN}3.${NC} 📋 Gerar/Atualizar Protobuf"
-  echo -e "${GREEN}4.${NC} 🔍 Verificar status dos serviços"
-  echo -e "${GREEN}5.${NC} 📊 Monitoramento de logs"
-  echo ""
-  echo -e "${BLUE}0.${NC} Voltar"
-  echo ""
-  echo -n "Escolha uma opção: "
-  
-  read choice
-  case $choice in
-    1) update_and_upgrade; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    2) echo -e "${GREEN}🧹 Limpando arquivos temporários...${NC}"; sudo apt autoremove -y && sudo apt autoclean; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    3) cd "$SCRIPT_DIR" && if [[ -f "scripts/gen-proto.sh" ]]; then bash scripts/gen-proto.sh; elif [[ -f "scripts/generate-protobuf.sh" ]]; then bash scripts/generate-protobuf.sh; fi; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    4) echo -e "${GREEN}📊 Status dos serviços:${NC}"; systemctl status bitcoind lnd elementsd --no-pager -l; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    5) echo -e "${GREEN}📋 Logs recentes:${NC}"; journalctl -u bitcoind -u lnd -u elementsd --since "1 hour ago" --no-pager; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    0) menu_configuration ;;
-    *) echo "Opção inválida!"; sleep 2; menu_utilities ;;
-  esac
-}
-
-install_complete_system() {
-  echo -e "${GREEN}🚀 Iniciando instalação completa do sistema...${NC}"
-  echo -e "${BLUE}📋 Executando scripts na ordem correta...${NC}"
-  
-  # Detect if running from web terminal (GoTTY)
-  SKIP_WEB_SERVICES=false
-  if [[ -n "$GOTTY_CLIENT_ADDRESS" ]] || pgrep -f "gotty.*menu.sh"; then
-    SKIP_WEB_SERVICES=true
-    echo -e "${YELLOW}⚠️  Detectado terminal web - Apache e GoTTY serão ignorados para evitar desconexão${NC}"
-    sleep 2
-  fi
-  
-  # Execute installation scripts in order
-  # NOTE: System update, Apache, GoTTY, and BRLN-API are already configured in brunel.sh
-  # echo -e "${YELLOW}⚙️ Configurando sistema...${NC}"
-  # update_and_upgrade  # Already done in brunel.sh
-
-  # Install Tor and I2P first (required for Bitcoin/Lightning privacy features)
-  echo -e "${YELLOW}🧅 Instalando Tor...${NC}"
-  install_tor
-  
-  echo -e "${YELLOW}🔒 Instalando I2P...${NC}"
-  install_i2p
-  
-  # Apache and GoTTY already configured in brunel.sh
-  # if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
-  #   echo -e "${YELLOW}🌐 Configurando Apache...${NC}"
-  #   setup_apache_web
-  # else
-  #   echo -e "${BLUE}⏭️  Pulando configuração do Apache (já em execução)${NC}"
-  # fi
-  
-  echo -e "${YELLOW}₿ Instalando Bitcoin & Lightning...${NC}"
-  install_complete_stack
-  
-  echo -e "${YELLOW}🔧 Gerando protobuf...${NC}"
-  cd "$SCRIPT_DIR"
-  if [[ -f "$SCRIPT_DIR/scripts/gen-proto.sh" ]]; then
-    bash "$SCRIPT_DIR/scripts/gen-proto.sh"
-  elif [[ -f "$SCRIPT_DIR/scripts/generate-protobuf.sh" ]]; then
-    bash "$SCRIPT_DIR/scripts/generate-protobuf.sh"
-  fi
-  
-  # GoTTY already configured in brunel.sh
-  # if [[ "$SKIP_WEB_SERVICES" == "false" ]]; then
-  #   echo -e "${YELLOW}💻 Configurando terminal web...${NC}"
-  #   terminal_web
-  # else
-  #   echo -e "${BLUE}⏭️  Pulando configuração do terminal web (já em execução)${NC}"
-  # fi
-  
-  echo -e "${YELLOW}🔥 Instalando Elements...${NC}"
-  install_elements
-  configure_elements
-  create_elements_service
-  
-  echo -e "${YELLOW}⚡ Configurando Lightning Apps...${NC}"
-  install_bos
-  install_thunderhub
-  lnbits_install
-  # install_brln_api  # Already configured in brunel.sh as install_brln_api_with_user_env
-  
-  echo -e "${YELLOW}🔄 Instalando PeerSwap...${NC}"
-  install_peerswap
-  
-  echo -e "${GREEN}✅ Instalação completa finalizada!${NC}"
-  read -p "Pressione Enter para continuar..."
 }
 
 menu() {
@@ -420,12 +269,24 @@ menu() {
   esac
 }
 
-# Check for --install flag
-if [[ "$1" == "--install" ]]; then
-  echo -e "${GREEN}🚀 Executando instalação completa via flag...${NC}"
-  install_complete_system
-  exit 0
-fi
-
-# Start the main menu
 menu
+
+# ============================================================================
+# RESUMO DO SCRIPT MENU.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Sistema de menus interativos que reúne todas as ferramentas e submenus do
+#   BRLN-OS (configuração, serviços, manutenção, utilitários).
+#
+# CARACTERÍSTICAS:
+# - Integra e chama scripts: apache.sh, gotty.sh, bitcoin.sh, lightning.sh,
+#   elements.sh, peerswap.sh, system.sh, etc.
+# - Fornece navegação por funções administrativas sem necessidade de lembrar
+#   comandos diretos.
+#
+# USO:
+# - Executar diretamente: bash scripts/menu.sh ou executar o binário principal
+#   (brunel.sh) que chama este menu.
+#
+# ============================================================================

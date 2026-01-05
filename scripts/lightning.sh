@@ -334,241 +334,6 @@ configure_bos_telegram() {
   echo -e "${CYAN}💡 Status: sudo systemctl status bos-telegram${NC}"
 }
 
-install_thunderhub() {
-  echo -e "${GREEN}⚡ Instalando ThunderHub...${NC}"
-  
-  # Detect BRLN-OS directory
-  configure_brln_paths quiet
-  SCRIPT_DIR="$BRLN_OS_DIR"
-  
-  # Check if LND is installed
-  if ! command -v lnd &> /dev/null; then
-    echo -e "${RED}❌ LND não está instalado. Instale o LND primeiro.${NC}"
-    return 1
-  fi
-  
-  # Check Node.js and NPM
-  echo -e "${BLUE}Verificando Node.js e NPM...${NC}"
-  if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-    echo -e "${BLUE}Instalando Node.js...${NC}"
-    install_nodejs
-  fi
-  
-  NODE_VERSION=$(node -v)
-  NPM_VERSION=$(npm -v)
-  echo -e "${GREEN}✓ Node.js: $NODE_VERSION${NC}"
-  echo -e "${GREEN}✓ NPM: $NPM_VERSION${NC}"
-  
-  # Get ThunderHub version from config
-  VERSION=$VERSION_THUB
-  
-  # Import developer's GPG key
-  echo -e "${BLUE}Importando chave GPG do desenvolvedor...${NC}"
-  curl -s https://github.com/apotdevin.gpg | gpg --import || true
-  
-  # Clone repository
-  echo -e "${BLUE}Clonando ThunderHub v${VERSION}...${NC}"
-  cd ~
-  
-  if [[ -d "thunderhub" ]]; then
-    echo -e "${YELLOW}⚠ Diretório thunderhub já existe. Removendo...${NC}"
-    rm -rf thunderhub
-  fi
-  
-  git clone --branch v${VERSION} https://github.com/apotdevin/thunderhub.git
-  cd thunderhub
-  
-  # Verify commit signature
-  echo -e "${BLUE}Verificando assinatura do commit...${NC}"
-  if git verify-commit v${VERSION} 2>&1 | grep -q "Good signature"; then
-    echo -e "${GREEN}✓ Assinatura GPG verificada${NC}"
-  else
-    echo -e "${YELLOW}⚠ Aviso: Não foi possível verificar a assinatura GPG${NC}"
-  fi
-  
-  # Install dependencies
-  echo -e "${BLUE}Instalando dependências NPM (isso pode demorar)...${NC}"
-  npm install
-  
-  if [[ $? -eq 0 ]]; then
-    echo -e "${GREEN}✓ Dependências instaladas${NC}"
-  else
-    echo -e "${RED}❌ Erro ao instalar dependências${NC}"
-    return 1
-  fi
-  
-  # Disable telemetry (optional)
-  echo -e "${BLUE}Desativando telemetria do Next.js...${NC}"
-  npx next telemetry disable || true
-  
-  # Build
-  echo -e "${BLUE}Compilando ThunderHub (isso pode demorar vários minutos)...${NC}"
-  npm run build > /tmp/thunderhub-build.log 2>&1
-  
-  if [[ $? -eq 0 ]]; then
-    echo -e "${GREEN}✓ ThunderHub compilado com sucesso${NC}"
-  else
-    echo -e "${RED}❌ Erro ao compilar ThunderHub${NC}"
-    echo -e "${YELLOW}Veja os logs em: /tmp/thunderhub-build.log${NC}"
-    return 1
-  fi
-  
-  # Verify version
-  INSTALLED_VERSION=$(head -n 3 $HOME/thunderhub/package.json | grep version | cut -d'"' -f4)
-  echo -e "${GREEN}✓ ThunderHub v${INSTALLED_VERSION} instalado${NC}"
-  
-  # Configure
-  echo -e "${BLUE}Configurando ThunderHub...${NC}"
-  
-  # Copy environment file
-  cp .env .env.local
-  
-  # Update config path
-  sed -i "s|ACCOUNT_CONFIG_PATH=.*|ACCOUNT_CONFIG_PATH='$HOME/thunderhub/thubConfig.yaml'|" .env.local
-  
-  # Generate master password for ThunderHub
-  THUB_MASTER_PASSWORD=$(openssl rand -base64 24)
-  THUB_ACCOUNT_PASSWORD=$(openssl rand -base64 16)
-  
-  # Create thubConfig.yaml
-  cat > thubConfig.yaml << EOF
-masterPassword: '${THUB_MASTER_PASSWORD}'
-accounts:
-  - name: 'BRLNBolt'
-    serverUrl: '127.0.0.1:10009'
-    macaroonPath: '/data/lnd/data/chain/bitcoin/${BITCOIN_NETWORK}/admin.macaroon'
-    certificatePath: '/data/lnd/tls.cert'
-    password: '${THUB_ACCOUNT_PASSWORD}'
-backupsEnabled: true
-healthCheckPingEnabled: true
-EOF
-  
-  chmod 600 thubConfig.yaml
-  echo -e "${GREEN}✓ Arquivo de configuração criado${NC}"
-  
-  # Store passwords in password manager
-  ensure_pm_session  # Unlock password manager session
-  source "$SCRIPT_DIR/brln-tools/secure_password_manager.sh"
-  secure_store_password_full "thunderhub_master" "$THUB_MASTER_PASSWORD" "ThunderHub Master Password" "admin" 3000 "http://127.0.0.1:3000"
-  secure_store_password_full "thunderhub_account" "$THUB_ACCOUNT_PASSWORD" "ThunderHub Account Password" "admin" 3000 "http://127.0.0.1:3000"
-  echo -e "${GREEN}✓ Senhas salvas no gerenciador de senhas${NC}"
-  
-  # Create systemd service
-  echo -e "${BLUE}Criando serviço systemd...${NC}"
-  source "$SCRIPT_DIR/scripts/services.sh"
-  create_thunderhub_service
-  
-  # Enable and start service
-  echo -e "${BLUE}Habilitando e iniciando serviço...${NC}"
-  sudo systemctl daemon-reload
-  sudo systemctl enable thunderhub.service
-  sudo systemctl start thunderhub.service
-  
-  # Wait a moment and check status
-  sleep 3
-  
-  if systemctl is-active --quiet thunderhub.service; then
-    echo -e "${GREEN}✓ Serviço thunderhub iniciado${NC}"
-  else
-    echo -e "${YELLOW}⚠ Verificar status: sudo systemctl status thunderhub.service${NC}"
-  fi
-  
-  echo -e "${GREEN}✅ ThunderHub instalado com sucesso!${NC}"
-  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${CYAN}⚡ ThunderHub Dashboard${NC}"
-  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${CYAN}🌐 URL: http://$(hostname -I | awk '{print $1}'):3000${NC}"
-  echo -e "${CYAN}🔑 Master Password: ${THUB_MASTER_PASSWORD}${NC}"
-  echo -e "${CYAN}🔑 Account Password: ${THUB_ACCOUNT_PASSWORD}${NC}"
-  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-  echo -e "${GREEN}✓ Senhas armazenadas no gerenciador de senhas${NC}"
-  echo -e "${CYAN}💡 Consultar senhas: Menu > Configurações > Gerenciador de Senhas${NC}"
-  echo -e "${CYAN}💡 Logs: journalctl -fu thunderhub${NC}"
-  echo -e "${CYAN}💡 Config: $HOME/thunderhub/thubConfig.yaml${NC}"
-  echo -e "${CYAN}💡 Status: sudo systemctl status thunderhub${NC}"
-}
-
-lnbits_install() {
-  echo -e "${GREEN}⚡ Instalando LNbits...${NC}"
-  
-  # Create lnbits user
-  if ! id "lnbits" &>/dev/null; then
-    echo -e "${BLUE}👤 Criando usuário lnbits...${NC}"
-    sudo useradd -r -m -s /bin/bash lnbits
-    echo -e "${GREEN}✓ Usuário lnbits criado${NC}"
-  else
-    echo -e "${YELLOW}⚠ Usuário lnbits já existe${NC}"
-  fi
-  
-  # Install Python dependencies
-  echo -e "${BLUE}📦 Instalando dependências Python...${NC}"
-  sudo apt install python3-pip python3-venv -y
-  
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Erro ao instalar dependências Python${NC}"
-    return 1
-  fi
-  
-  # Clone LNbits
-  echo -e "${BLUE}📥 Clonando repositório LNbits...${NC}"
-  cd /home/lnbits
-  
-  if [ -d "lnbits" ]; then
-    echo -e "${YELLOW}⚠ Diretório lnbits já existe, removendo...${NC}"
-    sudo rm -rf lnbits
-  fi
-  
-  sudo -u lnbits git clone https://github.com/lnbits/lnbits.git
-  
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Erro ao clonar repositório LNbits${NC}"
-    return 1
-  fi
-  
-  cd lnbits
-  
-  # Setup virtual environment
-  echo -e "${BLUE}🐍 Criando ambiente virtual...${NC}"
-  sudo -u lnbits python3 -m venv venv
-  
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Erro ao criar ambiente virtual${NC}"
-    return 1
-  fi
-  
-  echo -e "${BLUE}📦 Instalando dependências LNbits...${NC}"
-  echo -e "${YELLOW}⏳ Isto pode demorar alguns minutos...${NC}"
-  sudo -u lnbits ./venv/bin/pip install --upgrade pip
-  sudo -u lnbits ./venv/bin/pip install -r requirements.txt
-  
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}❌ Erro ao instalar dependências do LNbits${NC}"
-    echo -e "${BLUE}💡 Tentando com --no-cache-dir...${NC}"
-    sudo -u lnbits ./venv/bin/pip install --no-cache-dir -r requirements.txt
-    
-    if [ $? -ne 0 ]; then
-      echo -e "${RED}❌ Falha na instalação das dependências. Verifique os logs acima.${NC}"
-      return 1
-    fi
-  fi
-  
-  # Install systemd service
-  echo -e "${BLUE}🔧 Configurando serviço systemd...${NC}"
-  if [[ -f "$SERVICES_DIR/lnbits.service" ]]; then
-    safe_cp "$SERVICES_DIR/lnbits.service" /etc/systemd/system/lnbits.service
-    sudo systemctl daemon-reload
-    sudo systemctl enable lnbits
-    echo -e "${GREEN}✓ Serviço systemd configurado${NC}"
-  else
-    echo -e "${YELLOW}⚠ Arquivo de serviço não encontrado: $SERVICES_DIR/lnbits.service${NC}"
-  fi
-  
-  echo -e "${GREEN}✅ LNbits instalado com sucesso!${NC}"
-  echo -e "${CYAN}💡 Iniciar com: sudo systemctl start lnbits${NC}"
-  echo -e "${CYAN}💡 Status: sudo systemctl status lnbits${NC}"
-  echo -e "${CYAN}💡 Logs: journalctl -fu lnbits${NC}"
-}
-
 setup_lightning_monitor() {
   echo -e "${GREEN}📊 Configurando Lightning Monitor...${NC}"
   
@@ -596,7 +361,37 @@ setup_lightning_monitor() {
     sudo systemctl enable lightning-monitor
   fi
   
+  # Create and enable messager-monitor service for keysend notifications
+  echo -e "${BLUE}💬 Configurando Lightning Messager Monitor (Keysend)...${NC}"
+  source "$SCRIPT_DIR/scripts/services.sh"
+  create_messager_monitor_service
+  
+  # Reload systemd and enable service
+  sudo systemctl daemon-reload
+  sudo systemctl enable messager-monitor.service
+  
+  # Start messager-monitor service
+  echo -e "${BLUE}▶️  Iniciando serviço de notificações...${NC}"
+  sudo systemctl start messager-monitor.service
+  
+  # Wait a moment and check status
+  sleep 2
+  
+  if systemctl is-active --quiet messager-monitor.service; then
+    echo -e "${GREEN}✓ Serviço messager-monitor iniciado${NC}"
+    echo -e "${GREEN}✓ Notificações de mensagens Lightning ativas${NC}"
+  else
+    echo -e "${YELLOW}⚠ Verificar status: sudo systemctl status messager-monitor${NC}"
+  fi
+  
   echo -e "${GREEN}✅ Lightning Monitor configurado!${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${CYAN}💬 Monitor de Mensagens Lightning${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${CYAN}📊 Endpoint API: POST /api/v1/lightning/chat/keysends/check${NC}"
+  echo -e "${CYAN}🔍 Status: sudo systemctl status messager-monitor${NC}"
+  echo -e "${CYAN}📋 Logs: sudo journalctl -fu messager-monitor${NC}"
+  echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 }
 
 install_brln_api() {
@@ -742,3 +537,143 @@ install_lndg() {
   echo -e "${CYAN}💡 Logs Controller: sudo tail -f /var/log/lndg-controller.log${NC}"
   echo -e "${CYAN}💡 Status: sudo systemctl status lndg lndg-controller${NC}"
 }
+
+# ============================================================================
+# RESUMO DAS FUNÇÕES DO SCRIPT LIGHTNING.SH
+# ============================================================================
+#
+# Este script contém funções para instalação e configuração de aplicações
+# Lightning Network no sistema BRLN-OS. Todas as funções são projetadas para
+# trabalhar em conjunto com a configuração do sistema e usar o gerenciador
+# de senhas integrado.
+#
+# DEPENDÊNCIAS:
+# - config.sh: Configurações globais do sistema
+# - utils.sh: Utilitários e funções auxiliares
+# - services.sh: Criação de serviços systemd
+# - secure_password_manager.sh: Gerenciamento seguro de senhas
+#
+# ============================================================================
+# LISTA DE FUNÇÕES DISPONÍVEIS:
+# ============================================================================
+#
+# 1. install_nodejs()
+#    DESCRIÇÃO: Instala Node.js LTS no sistema
+#    FUNCIONALIDADE:
+#    - Verifica se Node.js já está instalado
+#    - Adiciona repositório NodeSource oficial
+#    - Instala a versão LTS do Node.js com npm
+#    - Confirma instalação com verificação de comando
+#    REQUERIMENTOS: Conexão com internet, permissões sudo
+#    STATUS: Função auxiliar para outras instalações
+#
+# 2. install_bos()
+#    DESCRIÇÃO: Instala Balance of Satoshis (BOS) - ferramenta avançada para LND
+#    FUNCIONALIDADE:
+#    - Verifica se LND está instalado (pré-requisito obrigatório)
+#    - Instala Node.js 21.x se necessário
+#    - Configura npm para instalação global sem sudo
+#    - Instala Balance of Satoshis via npm global
+#    - Configura variáveis de ambiente (BOS_DEFAULT_LND_PATH)
+#    - Cria diretório de configuração BOS
+#    - Gera credenciais base64 para LND (cert e macaroon)
+#    - Cria arquivo credentials.json para autenticação
+#    - Configura cron job para atualização automática de credenciais (3h AM)
+#    - Instala jq como dependência
+#    - Testa funcionalidade básica do BOS
+#    REQUERIMENTOS: LND instalado, Node.js, permissões sudo
+#    INTEGRAÇÃO: Gerenciador de senhas, cron jobs, systemd
+#
+# 3. configure_bos_telegram()
+#    DESCRIÇÃO: Configura bot Telegram para Balance of Satoshis
+#    FUNCIONALIDADE:
+#    - Verifica se BOS está instalado (pré-requisito)
+#    - Instala qrencode para geração de QR codes
+#    - Interface guiada para criação de bot via @BotFather
+#    - Validação automática de API Key do Telegram
+#    - Geração de QR codes para facilitar acesso mobile
+#    - Captura automática do Telegram ID do usuário
+#    - Armazenamento seguro de credenciais no gerenciador de senhas
+#    - Criação e configuração de serviço systemd (bos-telegram)
+#    - Envio automático de mensagem de boas-vindas
+#    - Interface visual completa com cores e formatação
+#    REQUERIMENTOS: BOS instalado, conexão internet, Telegram
+#    INTEGRAÇÃO: Password manager, systemd services, Telegram API
+#
+# 4. setup_lightning_monitor()
+#    DESCRIÇÃO: Configura monitor Lightning Network com Flask
+#    FUNCIONALIDADE:
+#    - Cria ambiente virtual Python para Flask API
+#    - Ativa ambiente virtual automaticamente
+#    - Instala dependências Flask do requirements.txt
+#    - Configura serviço systemd lightning-monitor
+#    - Habilita serviço para inicialização automática
+#    REQUERIMENTOS: Python3, pip, venv
+#    INTEGRAÇÃO: Flask API, systemd
+#
+# 5. install_brln_api()
+#    DESCRIÇÃO: Instala API BRLN completa com gRPC
+#    FUNCIONALIDADE:
+#    - Executa setup_lightning_monitor() para base Flask
+#    - Instala dependências gRPC (grpcio, grpcio-tools)
+#    - Gera arquivos Python gRPC a partir de arquivos .proto
+#    - Configura serviço systemd brln-api
+#    - Habilita API para inicialização automática
+#    REQUERIMENTOS: Flask environment, proto files
+#    INTEGRAÇÃO: gRPC, protobuf, systemd, Flask
+#
+# 6. install_lndg()
+#    DESCRIÇÃO: Instala LNDg - Dashboard web completo para Lightning Node
+#    FUNCIONALIDADE:
+#    - Verifica se LND está instalado (pré-requisito obrigatório)
+#    - Instala dependências sistema (python3, pip, virtualenv, git)
+#    - Clona repositório oficial LNDg do GitHub
+#    - Cria ambiente virtual Python isolado
+#    - Instala todas as dependências Python do requirements.txt
+#    - Instala whitenoise para servir arquivos estáticos
+#    - Inicializa configurações Django com whitenoise
+#    - Gera senha de admin automaticamente
+#    - Armazena credenciais no gerenciador de senhas seguro
+#    - Cria dois serviços systemd (lndg e lndg-controller)
+#    - Configura arquivos de log com permissões corretas
+#    - Inicia serviços e verifica funcionamento
+#    - Fornece informações completas de acesso (URL, usuário, senha)
+#    - Interface visual detalhada com todas as informações necessárias
+#    REQUERIMENTOS: LND instalado, Python3, Git, permissões sudo
+#    INTEGRAÇÃO: Django, systemd, password manager, GitHub
+#    PORTAS: 8889 (interface web)
+#    USUÁRIO: lndg-admin
+#
+# ============================================================================
+# FLUXO DE INSTALAÇÃO RECOMENDADO:
+# ============================================================================
+# 1. Instalar LND (pré-requisito para BOS e LNDg)
+# 2. install_nodejs() - se necessário
+# 3. install_bos() - ferramentas avançadas LND
+# 4. configure_bos_telegram() - notificações mobile
+# 5. install_lndg() - dashboard web completo
+# 6. setup_lightning_monitor() - monitoramento API
+# 7. install_brln_api() - API completa com gRPC
+#
+# ============================================================================
+# INTEGRAÇÃO COM SISTEMA BRLN-OS:
+# ============================================================================
+# - Todas as funções utilizam configurações globais (config.sh)
+# - Senhas e credenciais armazenadas no gerenciador seguro
+# - Serviços systemd para execução automática
+# - Logs centralizados e padronizados
+# - Interface visual consistente com cores e emojis
+# - Verificações de pré-requisitos em todas as instalações
+# - Suporte a diferentes redes Bitcoin (mainnet/testnet)
+# - Integração com sistema de permissões e usuários
+#
+# ============================================================================
+# PORTAS E SERVIÇOS:
+# ============================================================================
+# - LNDg Dashboard: 8889 (HTTP)
+# - Flask API: Configurável via environment
+# - gRPC API: Configurável via proto files
+# - Telegram Bot: Sem porta (usa Telegram API)
+# - BOS: Command line + cron jobs
+#
+# ============================================================================

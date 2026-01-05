@@ -223,3 +223,22 @@ fi
 
 echo ""
 echo -e "${GREEN}🎉 Instalação gRPC completa!${NC}"
+
+# ============================================================================
+# RESUMO DO SCRIPT API/V1/INSTALL.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script de instalação legada/auxiliar para a API BRLN gRPC. Atualmente está
+#   documentado e redirecionado para o instalador central (brunel.sh), mas
+#   ainda contém passos de compilação de proto e configuração de serviço.
+#
+# PRINCIPAIS PASSOS:
+# - Criação de venv, instalação de dependências, download/compilação de proto
+# - Ajuste de imports e deploy do serviço systemd (brln-api)
+#
+# OBS:
+# - Use preferencialmente o fluxo via brunel.sh para instalação integrada
+#
+# ============================================================================
+

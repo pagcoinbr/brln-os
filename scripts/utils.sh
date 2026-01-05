@@ -61,12 +61,28 @@ configure_ufw() {
   sudo ufw default allow outgoing
 }
 
+get_local_network() {
+    # Get the default route interface
+    local iface=$(ip route | grep default | awk '{print $5}' | head -n1)
+    
+    if [[ -z "$iface" ]]; then
+        echo "192.168.0.0/16"  # fallback
+        return 1
+    fi
+    
+    # Get the IP and netmask, convert to CIDR
+    local ip=$(ip addr show "$iface" | grep "inet " | awk '{print $2}')
+    echo "$ip"  # Returns something like "192.168.1.100/24"
+}
+
 configure_secure_firewall() {
   echo -e "${YELLOW}🔒 Configurando firewall para acesso local...${NC}"
   
   # Get current SSH port (default 22)
   ssh_port=$(sudo ss -tlnp | grep sshd | awk '{print $4}' | cut -d':' -f2 | head -n1)
   ssh_port=${ssh_port:-22}
+  get_local_network
+  local_network=$(get_local_network)
   
   # Reset UFW to default settings
   sudo ufw --force reset
@@ -85,12 +101,7 @@ configure_secure_firewall() {
   sudo ufw allow from 127.0.0.1 to any port 443 proto tcp comment 'HTTPS from localhost'
   
   # Allow from private network ranges (RFC 1918)
-  sudo ufw allow from 192.168.0.0/16 to any port 443 proto tcp comment 'HTTPS from 192.168.x.x'
-  sudo ufw allow from 10.0.0.0/8 to any port 443 proto tcp comment 'HTTPS from 10.x.x.x'
-  sudo ufw allow from 172.16.0.0/12 to any port 443 proto tcp comment 'HTTPS from 172.16-31.x.x'
-  
-  # Allow from Tailscale network (100.64.0.0/10 - CGNAT range used by Tailscale)
-  sudo ufw allow from 100.64.0.0/10 to any port 443 proto tcp comment 'HTTPS from Tailscale VPN'
+  sudo ufw allow from $local_network to any port 443 proto tcp comment 'HTTPS from local network'
   
   # Enable UFW
   sudo ufw --force enable
@@ -368,3 +379,32 @@ ensure_pm_session() {
         return 1
     fi
 }
+
+# ============================================================================
+# RESUMO DAS FUNÇÕES DO SCRIPT UTILS.SH
+# ============================================================================
+#
+# DESCRIÇÃO GERAL:
+# - Conjunto de utilitários reutilizáveis usados por outros scripts BRLN-OS:
+#   manipulação de arquivos, spinner debug, gerenciamento de UFW, detecção de
+#   caminhos e integração com o gerenciador de senhas.
+#
+# PRINCIPAIS FUNÇÕES:
+# - center_text(): Impressão centralizada com contagem de colunas do terminal
+# - safe_cp(): Cópia segura com verificação de existência do arquivo
+# - spinner(): Spinner simplificado para aguardar processos (modo debug)
+# - configure_secure_firewall(), close_ports_except_ssh(), configure_ufw(): Funções
+#   para configurar políticas de firewall (UFW)
+# - ensure_data_ownership(), ensure_lnd_cookie_access(), verify_data_compartments():
+#   Ajustes de permissões e verificação de propriedade de /data
+# - configure_brln_paths(), detect_current_user(): Detecção de paths e variáveis
+#   de ambiente compartilhadas por todo o projeto
+# - ensure_pm_session(): Integração com o gerenciador de senhas para operações
+#   não interativas
+#
+# NOTAS:
+# - Essas funções são amplamente usadas por outros scripts; alterá-las pode afetar
+#   várias operações do sistema. Prefira adicionar funções novas ao invés de
+#   modificar o comportamento padrão sempre que possível.
+#
+# ============================================================================

@@ -321,3 +321,23 @@ else
     echo -e "${RED}❌ Protocol buffer generation failed!${NC}"
     exit 1
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT GEN-PROTO.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script para baixar arquivos .proto do repositório LND e gerar os módulos
+#   Python gRPC (_pb2.py, _pb2_grpc.py) usados pela API BRLN.
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - check_dependencies(): Verifica dependências essenciais (curl, python3, pip3)
+# - Download de lightning.proto e arquivos adicionais (signrpc, chainrpc, etc.)
+# - Compilação via grpc_tools.protoc e correção de imports nos arquivos gerados
+# - Teste de importação e permissões dos arquivos gerados
+#
+# USO:
+# - Executar quando arquivos .proto forem atualizados; usar --force-download para
+#   forçar re-download.
+#
+# ============================================================================

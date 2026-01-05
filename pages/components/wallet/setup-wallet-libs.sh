@@ -263,6 +263,26 @@ done
 echo ""
 echo "🔐 BRLN-OS Multichain Wallet setup complete!"
 echo "📁 Libraries installed in: $WALLET_LIB_DIR"
+
+# ============================================================================
+# RESUMO DO SCRIPT setup-wallet-libs.sh
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Faz o download local de bibliotecas JS/crypto necessárias para a wallet
+#   multichain e prepara uma palavra-lista (BIP39) para uso no frontend.
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - Baixa: bip39 (browser), bitcoinjs-lib, ethers, buffer, crypto-js
+# - Cria bip39-wordlist.js com wordlist embutida para uso offline no frontend
+# - Verifica se os arquivos foram baixados corretamente e reporta tamanhos
+#
+# USO:
+# - Executar durante deploy/frontend setup; recomendado executar com conexão
+#   para baixar dependências e depois servir via Apache com HTTPS
+#
+# ============================================================================
+
 echo ""
 echo "Next steps:"
 echo "1. Update wallet.html to use local libraries"

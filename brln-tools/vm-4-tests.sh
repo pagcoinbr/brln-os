@@ -31,3 +31,20 @@ multipass launch --name "$VM_NAME" --memory 4G --disk 25G
 
 echo "🎉 VM '$VM_NAME' criada com sucesso!"
 echo "🔑 Acesse o root com: multipass exec $VM_NAME -- sudo -i"
+
+# ============================================================================
+# RESUMO DO SCRIPT vm-4-tests.sh
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Script utilitário para criar/gerenciar uma VM de teste (Multipass) chamada
+#   'brlnbolt' com 4GB RAM e 25GB de disco, para testes isolados do sistema.
+#
+# FUNCIONALIDADES PRINCIPAIS:
+# - Instala Snap/Mulitpass se necessário, remove VM anterior, cria nova instância
+# - Fornece instruções de acesso e uso para ambiente de testes isolado
+#
+# USO:
+# - Executar em máquinas de desenvolvimento/CI para replicar ambiente de testes
+#
+# ============================================================================

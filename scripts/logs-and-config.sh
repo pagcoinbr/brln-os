@@ -693,3 +693,17 @@ export -f main
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT LOGS-AND-CONFIG.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Ferramenta interativa para ver logs (journalctl), editar arquivos de
+#   configuração, reiniciar serviços e explorar diretórios de dados.
+#
+# CARACTERÍSTICAS:
+# - Mapeia serviços para caminhos de configuração, permite edição segura de
+#   arquivos e oferece status detalhado de serviços e configs
+#
+# ============================================================================

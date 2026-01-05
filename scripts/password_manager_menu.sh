@@ -95,3 +95,18 @@ show_password_menu() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     show_password_menu
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT PASSWORD_MANAGER_MENU.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Interface interativa para gerenciar entradas do gerenciador de senhas BRLN-OS
+#   (listar, adicionar, buscar e deletar senhas) usando as funções do wrapper
+#   secure_password_manager.sh.
+#
+# USO:
+# - Executar para operar o gerenciador de senhas via menu amigável no terminal
+#
+# ============================================================================
+

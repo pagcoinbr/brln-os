@@ -38,3 +38,13 @@ setup_wallet_environment() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   setup_wallet_environment
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT SETUP-WALLET-ENV.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Prepara ambiente virtual e dependências para scripts de integração de
+#   carteiras (mnemonic, cryptography, bip32, base58, ecdsa).
+#
+# ============================================================================

@@ -500,6 +500,53 @@ EOF
     echo -e "${GREEN}✅ messager-monitor.service created${NC}"
 }
 
+# Function to create brln-background-install.service
+create_background_install_service() {
+    echo -e "${YELLOW}🔄 Creating brln-background-install.service...${NC}"
+    
+    # Determine the correct paths based on current setup
+    local brln_os_dir
+    if [[ -n "${BRLN_OS_DIR:-}" ]]; then
+        brln_os_dir="$BRLN_OS_DIR"
+    elif [[ -d "/home/admin/brln-os" ]]; then
+        brln_os_dir="/home/admin/brln-os"
+    else
+        brln_os_dir="/root/brln-os"
+    fi
+    
+    # Get network choice from bitcoin.conf or default to mainnet
+    local network="mainnet"
+    if grep -q "testnet=1" /data/bitcoin/bitcoin.conf 2>/dev/null; then
+        network="testnet"
+    fi
+    
+    sudo tee /etc/systemd/system/brln-background-install.service > /dev/null << EOF
+[Unit]
+Description=BRLN Background Installation Monitor
+After=network.target bitcoind.service
+Wants=bitcoind.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=${brln_os_dir}
+ExecStart=/bin/bash ${brln_os_dir}/scripts/install_in_background.sh ${network}
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal
+Restart=no
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    echo -e "${GREEN}✅ brln-background-install.service created${NC}"
+}
+
 # Function to create all services
 create_all_services() {
     echo -e "${BLUE}🔧 Creating all BRLN-OS services...${NC}"
@@ -690,3 +737,21 @@ export -f create_service
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     main "$@"
 fi
+
+# ============================================================================
+# RESUMO DO SCRIPT SERVICES.SH
+# ============================================================================
+#
+# DESCRIÇÃO:
+# - Gerador dinâmico de units systemd para os serviços do BRLN-OS. Evita manter
+#   múltiplos arquivos estáticos em favor de templates gerados em runtime.
+#
+# PRINCIPAIS SERVIÇOS GERADOS:
+# - bitcoind.service, lnd.service, elementsd.service, peerswapd.service,
+#   psweb.service, brln-api.service, gotty-fullauto, lndg, lndg-controller, etc.
+#
+# CARACTERÍSTICAS:
+# - Unidades criadas com medidas de hardening (PrivateTmp, ProtectSystem, NoNewPrivileges)
+# - Permite criação/atualização programática de serviços via chamadas do script
+#
+# ============================================================================
