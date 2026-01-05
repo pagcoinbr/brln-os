@@ -520,6 +520,7 @@ create_background_install_service() {
         network="testnet"
     fi
     
+    # Create the service file
     sudo tee /etc/systemd/system/brln-background-install.service > /dev/null << EOF
 [Unit]
 Description=BRLN Background Installation Monitor
@@ -531,10 +532,8 @@ Type=oneshot
 User=root
 WorkingDirectory=${brln_os_dir}
 ExecStart=/bin/bash ${brln_os_dir}/scripts/install_in_background.sh ${network}
-RemainAfterExit=no
 StandardOutput=journal
 StandardError=journal
-Restart=no
 
 # Security settings
 NoNewPrivileges=true
@@ -545,6 +544,28 @@ WantedBy=multi-user.target
 EOF
 
     echo -e "${GREEN}✅ brln-background-install.service created${NC}"
+    
+    # Create the timer file
+    echo -e "${YELLOW}🔄 Creating brln-background-install.timer...${NC}"
+    
+    sudo tee /etc/systemd/system/brln-background-install.timer > /dev/null << EOF
+[Unit]
+Description=BRLN Background Installation Monitor Timer
+Requires=brln-background-install.service
+
+[Timer]
+# Wait 5 minutes after boot before first check
+OnBootSec=5min
+# Then check every hour
+OnUnitActiveSec=1h
+# If system was off, run check after boot
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    echo -e "${GREEN}✅ brln-background-install.timer created${NC}"
 }
 
 # Function to create all services

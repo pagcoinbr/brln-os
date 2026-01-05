@@ -1,58 +1,68 @@
-# BRLN Background Installation Service
+# BRLN Background Installation Monitor
 
 ## Overview
-The BRLN Background Installation Service is a systemd daemon that monitors blockchain synchronization and automatically installs remaining components (LND, LNDG, PeerSwap, PSweb) when the system is ready.
+The BRLN Background Installation Monitor is a cron-based task that periodically checks blockchain synchronization and automatically installs remaining components (LND, LNDG, PeerSwap, PSweb) when the system is ready.
 
 ## Features
-- **Automatic Monitoring**: Continuously checks Bitcoin blockchain sync status
+- **Periodic Monitoring**: Checks Bitcoin blockchain sync status every hour via cron
 - **Smart Installation**: Installs LND when blockchain is synced, then waits for LND graph sync
-- **Auto-Cleanup**: Removes itself automatically when all installations complete
+- **Auto-Cleanup**: Removes cron job automatically when all installations complete
 - **Network Aware**: Supports both mainnet and testnet configurations
+- **Lock File Protection**: Prevents multiple instances from running simultaneously
+- **Detailed Logging**: All activities logged to `/var/log/brln-background-install.log`
 
 ## Installation Flow
 
-1. **Initial Setup**: Service is installed and started after `show_installation_summary()` in brunel.sh
-2. **Blockchain Monitoring**: Checks blockchain sync every hour
-3. **LND Installation**: Downloads and installs LND when blockchain is fully synced
-4. **Graph Sync Wait**: Monitors LND graph synchronization
-5. **Final Components**: Installs LNDG, PeerSwap, and PSweb
-6. **Self-Removal**: Disables and removes the service automatically
+1. **Initial Setup**: Cron job is installed after `show_installation_summary()` in brunel.sh
+2. **Hourly Checks**: Cron runs the script every hour (0 * * * *)
+3. **Blockchain Monitoring**: Checks blockchain sync status
+4. **LND Installation**: Downloads and installs LND when blockchain is fully synced
+5. **Graph Sync Wait**: Monitors LND graph synchronization
+6. **Final Components**: Installs LNDG, PeerSwap, and PSweb
+7. **Self-Removal**: Removes cron job automatically
 
-## Service Management
+## Cron Management
 
-### Check Service Status
+### Check Cron Job Status
 ```bash
-systemctl status brln-background-install.service
+crontab -l | grep install_in_background
 ```
 
 ### View Live Logs
 ```bash
-journalctl -u brln-background-install.service -f
+tail -f /var/log/brln-background-install.log
 ```
 
 ### View All Logs
 ```bash
-journalctl -u brln-background-install.service
+cat /var/log/brln-background-install.log
 ```
 
-### Manual Service Control (if needed)
+### Manual Control
 
-Stop the service:
+Remove cron job manually:
 ```bash
-systemctl stop brln-background-install.service
+crontab -l | grep -v "install_in_background.sh" | crontab -
 ```
 
-Restart the service:
+Run script manually:
 ```bash
-systemctl restart brln-background-install.service
+/bin/bash /root/brln-os/scripts/install_in_background.sh mainnet
+```
+
+Check if script is running:
+```bash
+ps aux | grep install_in_background
+# or check lock file
+cat /tmp/brln_background_install.lock
 ```
 
 ## Files
 
-- **Service File**: Dynamically created at `/etc/systemd/system/brln-background-install.service`
-- **Creation Function**: `create_background_install_service()` in [scripts/services.sh](../scripts/services.sh)
 - **Script**: `/root/brln-os/scripts/install_in_background.sh`
-- **Template** (deprecated): `/root/brln-os/conf_files/brln-background-install.service`
+- **Log File**: `/var/log/brln-background-install.log`
+- **Lock File**: `/tmp/brln_background_install.lock`
+- **Cron Job**: Installed in root's crontab
 
 ## Network Detection
 
@@ -78,18 +88,21 @@ The service automatically detects the network configuration:
 
 ## Troubleshooting
 
-### Service Won't Start
-Check logs for errors:
+### Cron Job Won't Run
+Check cron service:
 ```bash
-journalctl -u brln-background-install.service -n 50
+systemctl status cron
 ```
 
-### Manual Cleanup (if service fails to auto-remove)
+Check logs for errors:
 ```bash
-systemctl stop brln-background-install.service
-systemctl disable brln-background-install.service
-rm /etc/systemd/system/brln-background-install.service
-systemctl daemon-reload
+tail -f /var/log/brln-background-install.log
+```
+
+### Manual Cleanup (if cron fails to auto-remove)
+```bash
+crontab -l | grep -v "install_in_background.sh" | crontab -
+rm -f /tmp/brln_background_install.lock
 ```
 
 ### Re-run Manually
@@ -100,26 +113,34 @@ bash scripts/install_in_background.sh mainnet
 bash scripts/install_in_background.sh testnet
 ```
 
+### Check Lock File
+If script won't run, check for stale lock:
+```bash
+cat /tmp/brln_background_install.lock
+# If PID doesn't exist, remove it:
+rm -f /tmp/brln_background_install.lock
+```
+
 ## Timing Expectations
 
 - **Blockchain Sync**: Hours to days (depends on hardware and network)
+- **Cron Check Interval**: Every hour
 - **LND Download**: 5-10 minutes
 - **LND Graph Sync**: 30 minutes to several hours
 - **Component Installation**: 10-20 minutes total
 
 ## Security
 
-The service runs with:
-- `NoNewPrivileges=true` - Cannot gain new privileges
-- `PrivateTmp=true` - Isolated temporary directory
-- Root access required for system-wide installations
+- Lock file prevents multiple instances
+- Detailed logging for audit trail
+- Runs as root (required for system-wide installations)
+- Auto-cleanup when complete
 
 ## Auto-Removal
 
-When all installations complete successfully, the service:
-1. Stops itself
-2. Disables itself from auto-start
-3. Removes the service file
-4. Reloads systemd daemon
+When all installations complete successfully, the script:
+1. Removes the cron job from crontab
+2. Cleans up lock file
+3. Logs completion message
 
 No manual cleanup required!

@@ -649,24 +649,41 @@ show_installation_summary() {
 # Function to install and start background installation service
 install_background_service() {
     echo
-    echo -e "${YELLOW}🔄 Configurando serviço de instalação em background...${NC}"
+    echo -e "${YELLOW}🔄 Configurando monitoramento de instalação em background...${NC}"
     
-    # Create the service dynamically
-    create_background_install_service
+    # Get the network choice from global variable or detect it
+    local network="${BITCOIN_NETWORK:-mainnet}"
+    if grep -q "testnet=1" /data/bitcoin/bitcoin.conf 2>/dev/null; then
+        network="testnet"
+    fi
     
-    # Reload systemd and enable service
-    systemctl daemon-reload
-    systemctl enable brln-background-install.service
+    # Create log file with proper permissions
+    sudo touch /var/log/brln-background-install.log
+    sudo chmod 644 /var/log/brln-background-install.log
     
-    # Start the service in background
-    systemctl start brln-background-install.service
+    # Add cron job to run every hour
+    local cron_cmd="0 * * * * /bin/bash $SCRIPT_DIR/scripts/install_in_background.sh $network >> /var/log/brln-background-install.log 2>&1"
     
-    echo -e "${GREEN}✓ Serviço de instalação em background iniciado!${NC}"
-    echo -e "${BLUE}ℹ O serviço irá monitorar a sincronização e instalar LND, LNDG, PeerSwap e PSweb automaticamente${NC}"
-    echo -e "${BLUE}ℹ O serviço será removido automaticamente quando concluir${NC}"
+    # Check if cron job already exists
+    if crontab -l 2>/dev/null | grep -q "install_in_background.sh"; then
+        echo -e "${YELLOW}⚠ Cron job já existe${NC}"
+    else
+        # Add cron job
+        (crontab -l 2>/dev/null; echo "$cron_cmd") | crontab -
+        echo -e "${GREEN}✓ Cron job instalado (executa a cada hora)${NC}"
+    fi
+    
+    # Run immediately for the first check
+    echo -e "${YELLOW}⚡ Executando verificação inicial...${NC}"
+    /bin/bash "$SCRIPT_DIR/scripts/install_in_background.sh" "$network" >> /var/log/brln-background-install.log 2>&1 &
+    
+    echo -e "${GREEN}✓ Monitoramento em background configurado!${NC}"
+    echo -e "${BLUE}ℹ O script verificará a sincronização a cada hora${NC}"
+    echo -e "${BLUE}ℹ Instalará LND, LNDG, PeerSwap e PSweb automaticamente quando pronto${NC}"
+    echo -e "${BLUE}ℹ O cron job será removido automaticamente quando concluir${NC}"
     echo
     echo -e "${YELLOW}Para acompanhar o progresso, use:${NC}"
-    echo -e "${CYAN}  journalctl -u brln-background-install.service -f${NC}"
+    echo -e "${CYAN}  tail -f /var/log/brln-background-install.log${NC}"
     echo
     sleep 3
 }

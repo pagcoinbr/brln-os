@@ -1,11 +1,40 @@
 #!/bin/bash
 
+# Lock file to prevent multiple instances
+LOCK_FILE="/tmp/brln_background_install.lock"
+LOG_FILE="/var/log/brln-background-install.log"
+
+# Function to log with timestamp
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+# Check if another instance is running
+if [ -f "$LOCK_FILE" ]; then
+    pid=$(cat "$LOCK_FILE")
+    if ps -p "$pid" > /dev/null 2>&1; then
+        log_message "Another instance is already running (PID: $pid). Exiting."
+        exit 0
+    else
+        log_message "Removing stale lock file"
+        rm -f "$LOCK_FILE"
+    fi
+fi
+
+# Create lock file
+echo $$ > "$LOCK_FILE"
+
+# Ensure lock file is removed on exit
+trap "rm -f '$LOCK_FILE'" EXIT
+
 # Source required scripts
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/config.sh" 2>/dev/null || true
 source "$SCRIPT_DIR/utils.sh" 2>/dev/null || true
 source "$SCRIPT_DIR/bitcoin.sh" 2>/dev/null || true
 source "$SCRIPT_DIR/peerswap.sh" 2>/dev/null || true
+
+log_message "Starting background installation check..."
 
 # Function to check if Bitcoin blockchain is fully downloaded
 # Usage: check_blockchain_sync "mainnet" or check_blockchain_sync "testnet"
@@ -17,14 +46,14 @@ check_blockchain_sync() {
     # Set the appropriate data directory based on network
     if [ "$network" = "testnet" ]; then
         conf_arg="-testnet"
-        echo "Checking testnet blockchain sync status..."
+        log_message "Checking testnet blockchain sync status..."
     else
-        echo "Checking mainnet blockchain sync status..."
+        log_message "Checking mainnet blockchain sync status..."
     fi
     
     # Check if bitcoin-cli is available
     if ! command -v bitcoin-cli &> /dev/null; then
-        echo "Error: bitcoin-cli not found. Please ensure Bitcoin Core is installed."
+        log_message "Error: bitcoin-cli not found. Please ensure Bitcoin Core is installed."
         return 1
     fi
     
@@ -33,8 +62,8 @@ check_blockchain_sync() {
     blockchain_info=$(bitcoin-cli $conf_arg getblockchaininfo 2>&1)
     
     if [ $? -ne 0 ]; then
-        echo "Error: Failed to connect to Bitcoin daemon"
-        echo "$blockchain_info"
+        log_message "Error: Failed to connect to Bitcoin daemon"
+        log_message "$blockchain_info"
         return 1
     fi
     
@@ -51,23 +80,22 @@ check_blockchain_sync() {
     fi
     
     # Display status information
-    echo "----------------------------------------"
-    echo "Network: $network"
-    echo "Current blocks: $blocks"
-    echo "Total headers: $headers"
-    echo "Sync progress: ${sync_percentage}%"
-    echo "Verification progress: $(awk "BEGIN {printf \"%.2f\", $verification_progress * 100}")%"
-    echo "Initial Block Download: $initial_block_download"
-    echo "----------------------------------------"
+    log_message "----------------------------------------"
+    log_message "Network: $network"
+    log_message "Current blocks: $blocks"
+    log_message "Total headers: $headers"
+    log_message "Sync progress: ${sync_percentage}%"
+    log_message "Verification progress: $(awk "BEGIN {printf \"%.2f\", $verification_progress * 100}")%"
+    log_message "Initial Block Download: $initial_block_download"
+    log_message "----------------------------------------"
     
     # Check if blockchain is fully synced
     if [ "$blocks" = "$headers" ] && [ "$initial_block_download" = "false" ]; then
-        echo "✓ Blockchain is fully synchronized!"
+        log_message "✓ Blockchain is fully synchronized!"
         return 0
     else
         local remaining_blocks=$((headers - blocks))
-        echo "⚠ Blockchain is still syncing..."
-        echo "Remaining blocks: $remaining_blocks"
+        log_message "⚠ Blockchain is still syncing... Remaining blocks: $remaining_blocks"
         return 2
     fi
 }
@@ -75,17 +103,25 @@ check_blockchain_sync() {
 check_lnd_sync () {
     local network_choice="$1"
 
-    graphsync=$(lncli getinfo --network="$network_choice" | grep -oP '"synced_to_graph":\s*\K(true|false)')
+    graphsync=$(lncli getinfo --network="$network_choice" 2>/dev/null | grep -oP '"synced_to_graph":\s*\K(true|false)')
     if [ "$graphsync" = "true" ]; then
-        echo "LND graph is fully synchronized!"
+        log_message "LND graph is fully synchronized!"
         return 0
     else
-        echo "LND graph is still syncing..."
+        log_message "LND graph is still syncing..."
         return 1
     fi
 }
 
-background_install () {
+# Function to remove cron job
+remove_cron_job() {
+    log_message "Removing cron job..."
+    crontab -l 2>/dev/null | grep -v "install_in_background.sh" | crontab -
+    log_message "✓ Cron job removed successfully!"
+}
+
+# Main installation orchestration
+run_installation() {
     local network_choice="$1"
     
     # If network not provided, try to detect from bitcoin.conf or lnd.conf
@@ -97,38 +133,38 @@ background_install () {
         fi
     fi
     
-    echo "Starting background installation for network: $network_choice"
+    log_message "Starting background installation for network: $network_choice"
 
     check_blockchain_sync "$network_choice"
-    if [ $? -eq 0 ]; then
-        echo "Blockchain sync completed successfully, downloading and installing LND..."
+    local sync_status=$?
+    
+    if [ $sync_status -eq 0 ]; then
+        log_message "Blockchain sync completed successfully, downloading and installing LND..."
         download_lnd
         sleep 10
         check_lnd_sync "$network_choice"
         if [ $? -eq 0 ]; then
-            echo "LND graph sync completed successfully, proceeding with further installations..."
+            log_message "LND graph sync completed successfully, proceeding with further installations..."
             install_lndg
             install_peerswap
             install_psweb
-            echo "✓ All installations completed successfully!"
+            log_message "✓ All installations completed successfully!"
             
-            # Disable and remove the background service
-            echo "Cleaning up background installation service..."
-            systemctl stop brln-background-install.service 2>/dev/null || true
-            systemctl disable brln-background-install.service 2>/dev/null || true
-            rm -f /etc/systemd/system/brln-background-install.service
-            systemctl daemon-reload
-            echo "✓ Background service removed successfully!"
+            # Remove cron job
+            remove_cron_job
             
+            # Clean up lock file
+            rm -f "$LOCK_FILE"
+            
+            log_message "✓ Background installation completed and cron job removed!"
             exit 0
         else
-            echo "LND graph is not yet synced. Will check again in 1 hour."
-            sleep 3600  # Wait for 1 hour before rechecking
-            background_install "$network_choice"
+            log_message "LND graph is not yet synced. Will check again on next cron run."
+            exit 0
         fi
-        else
-        sleep 3600  # Wait for 1 hour before rechecking
-        background_install "$network_choice"
+    else
+        log_message "Blockchain not yet synced. Will check again on next cron run."
+        exit 0
     fi
 }
 
@@ -142,19 +178,22 @@ if [ -z "$NETWORK_CHOICE" ]; then
     fi
 fi
 
-echo "Starting background installation monitor for $NETWORK_CHOICE network..."
-background_install "$NETWORK_CHOICE"
+log_message "Background installation monitor started for $NETWORK_CHOICE network"
+run_installation "$NETWORK_CHOICE"
 
 # ============================================================================
 # RESUMO DO SCRIPT INSTALL_IN_BACKGROUND.SH
 # ============================================================================
 #
 # DESCRIÇÃO:
-# - Script para monitorar sincronização do blockchain em background e executar
-#   instalações (ex.: download/install LND) quando estiver pronto.
+# - Script para monitorar sincronização do blockchain via CRON e executar
+#   instalações (LND, LNDG, PeerSwap, PSweb) quando estiver pronto.
 #
 # FUNCIONALIDADES:
-# - check_blockchain_sync(), check_lnd_sync(), background_install(): Loop de
-#   verificação e acionamento automático quando pré-condições forem atendidas
+# - check_blockchain_sync(), check_lnd_sync(), run_installation(): Verificação
+#   periódica via cron (a cada hora) e acionamento automático
+# - Lock file para evitar múltiplas instâncias
+# - Auto-remoção do cron job quando concluir
+# - Log detalhado em /var/log/brln-background-install.log
 #
 # ============================================================================
