@@ -4,7 +4,64 @@
 source "$(dirname "${BASH_SOURCE[0]}")/config.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
 
+set_conf_value() {
+  local key="$1"
+  local value="$2"
+  local file="$3"
+
+  if grep -q "^${key}=" "$file" 2>/dev/null; then
+    sudo sed -i "s|^${key}=.*|${key}=${value}|" "$file"
+  else
+    echo "${key}=${value}" | sudo tee -a "$file" > /dev/null
+  fi
+}
+
+apply_prune_settings() {
+  local conf="/data/bitcoin/bitcoin.conf"
+  if [[ ! -f "$conf" ]]; then
+    return 0
+  fi
+
+  if [[ "$BITCOIN_PRUNED" == "1" ]]; then
+    set_conf_value "prune" "${BITCOIN_PRUNE_SIZE:-550}" "$conf"
+    set_conf_value "txindex" "0" "$conf"
+    set_conf_value "blockfilterindex" "0" "$conf"
+    set_conf_value "peerblockfilters" "0" "$conf"
+    set_conf_value "coinstatsindex" "0" "$conf"
+  else
+    set_conf_value "prune" "0" "$conf"
+  fi
+}
+
+configure_lnd_bitcoind_backend() {
+  local conf="/data/lnd/lnd.conf"
+  if [[ ! -f "$conf" ]]; then
+    return 0
+  fi
+
+  if is_remote_bitcoin; then
+    set_conf_value "bitcoind.rpchost" "$BITCOIN_RPC_HOST" "$conf"
+    set_conf_value "bitcoind.rpcport" "$BITCOIN_RPC_PORT" "$conf"
+    set_conf_value "bitcoind.rpcuser" "$BITCOIN_RPC_USER" "$conf"
+    set_conf_value "bitcoind.rpcpass" "$BITCOIN_RPC_PASSWORD" "$conf"
+    set_conf_value "bitcoind.zmqpubrawblock" "$BITCOIN_ZMQ_BLOCK" "$conf"
+    set_conf_value "bitcoind.zmqpubrawtx" "$BITCOIN_ZMQ_TX" "$conf"
+  else
+    if [[ -f /home/bitcoin/.bitcoin/.rpcpass ]]; then
+      local rpc_pass
+      rpc_pass=$(sudo cat /home/bitcoin/.bitcoin/.rpcpass)
+      set_conf_value "bitcoind.rpcpass" "$rpc_pass" "$conf"
+    fi
+    set_conf_value "bitcoind.zmqpubrawblock" "$BITCOIN_ZMQ_BLOCK" "$conf"
+    set_conf_value "bitcoind.zmqpubrawtx" "$BITCOIN_ZMQ_TX" "$conf"
+  fi
+}
+
 install_bitcoind() {
+  if is_remote_bitcoin; then
+    echo -e "${YELLOW}Backend remoto selecionado - pulando instalacao local do Bitcoin Core${NC}"
+    return 0
+  fi
   echo -e "${GREEN}₿ Instalando Bitcoin Core...${NC}"
   echo -e "${CYAN}📡 Rede: ${BITCOIN_NETWORK^^}${NC}"
   
@@ -150,6 +207,8 @@ install_bitcoind() {
     echo -e "${YELLOW}  Por favor, crie manualmente o arquivo de configuração${NC}"
   fi
   
+  apply_prune_settings
+
   # Ensure proper ownership of /data/bitcoin
   ensure_data_ownership "bitcoin"
   
@@ -220,10 +279,15 @@ configure_lnd() {
     if [ ! -L /home/lnd/.lnd ]; then
       ln -s /data/lnd /home/lnd/.lnd
     fi
-    if [ ! -L /home/lnd/.bitcoin ]; then
-      ln -s /data/bitcoin /home/lnd/.bitcoin
-    fi
   '
+
+  if ! is_remote_bitcoin; then
+    sudo -u lnd bash -c '
+      if [ ! -L /home/lnd/.bitcoin ]; then
+        ln -s /data/bitcoin /home/lnd/.bitcoin
+      fi
+    '
+  fi
   
   # Create wallet password file
   echo -e "${BLUE}Criando arquivo de senha da carteira...${NC}"
@@ -252,12 +316,6 @@ configure_lnd() {
     echo -e "${BLUE}Copiando arquivo de configuração (MAINNET)...${NC}"
     sudo cp "$SCRIPT_DIR/conf_files/lnd.conf" /data/lnd/lnd.conf
     
-    # Get Bitcoin RPC credentials if available
-    if [[ -f /home/bitcoin/.bitcoin/.rpcpass ]]; then
-      RPC_PASS=$(sudo cat /home/bitcoin/.bitcoin/.rpcpass)
-      sudo sed -i "s|bitcoind.rpcpass=.*|bitcoind.rpcpass=$RPC_PASS|" /data/lnd/lnd.conf
-    fi
-    
     sudo chown lnd:lnd /data/lnd/lnd.conf
     sudo chmod 640 /data/lnd/lnd.conf
   else
@@ -265,11 +323,15 @@ configure_lnd() {
     echo -e "${YELLOW}  Por favor, crie manualmente o arquivo de configuração${NC}"
   fi
   
+  configure_lnd_bitcoind_backend
+
   # Ensure proper ownership of /data/lnd
   ensure_data_ownership "lnd"
   
-  # Ensure LND can read Bitcoin cookie file
-  ensure_lnd_cookie_access
+  # Ensure LND can read Bitcoin cookie file (local backend only)
+  if ! is_remote_bitcoin; then
+    ensure_lnd_cookie_access
+  fi
   
   echo -e "${GREEN}✓ LND configurado${NC}"
 }
@@ -277,8 +339,9 @@ configure_lnd() {
 download_lnd() {
   echo -e "${GREEN}⚡ Baixando e instalando LND...${NC}"
   
-  # Configure Bitcoin Core for LND (add ZMQ settings)
-  echo -e "${BLUE}Configurando Bitcoin Core para LND (ZMQ)...${NC}"
+  if ! is_remote_bitcoin; then
+    # Configure Bitcoin Core for LND (add ZMQ settings)
+    echo -e "${BLUE}Configurando Bitcoin Core para LND (ZMQ)...${NC}"
   if [[ -f /data/bitcoin/bitcoin.conf ]]; then
     # Check if ZMQ is already configured
     if ! grep -q "zmqpubrawblock" /data/bitcoin/bitcoin.conf; then
@@ -305,7 +368,8 @@ EOF'
       echo -e "${GREEN}✓ ZMQ já está configurado${NC}"
     fi
   fi
-  
+  fi
+
   cd /tmp
   
   # Detect architecture and set download file

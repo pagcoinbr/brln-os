@@ -4,7 +4,7 @@ Auto Wallet Integration Module
 =============================
 
 This module provides functions to automatically integrate newly created wallets
-with LND and Elements services when they are saved as system default.
+with LND services when they are saved as system default.
 """
 
 import subprocess
@@ -16,8 +16,8 @@ import sqlite3
 from pathlib import Path
 
 # Configuration
-LND_DATA_PATH = "/data/lnd/data/chain/bitcoin/testnet"
-ELEMENTS_DATA_PATH = "/data/elements/liquidtestnet"
+BITCOIN_NETWORK = os.environ.get("BITCOIN_NETWORK", "mainnet")
+LND_DATA_PATH = f"/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}"
 BACKUP_SUFFIX = f".backup-{int(time.time())}"
 
 def backup_existing_wallets():
@@ -34,14 +34,6 @@ def backup_existing_wallets():
             shutil.copy2(lnd_wallet_path, backup_path)
             backups_created.append(backup_path)
             print(f"   ✅ LND wallet backed up to: {backup_path}")
-        
-        # Backup Elements wallet directory
-        elements_wallet_dir = f"{ELEMENTS_DATA_PATH}/wallets"
-        if os.path.exists(elements_wallet_dir):
-            backup_path = f"{elements_wallet_dir}{BACKUP_SUFFIX}"
-            shutil.copytree(elements_wallet_dir, backup_path)
-            backups_created.append(backup_path)
-            print(f"   ✅ Elements wallets backed up to: {backup_path}")
     
     except Exception as e:
         print(f"⚠️ Warning during backup: {str(e)}")
@@ -49,10 +41,10 @@ def backup_existing_wallets():
     return backups_created
 
 def stop_services():
-    """Stop LND and Elements services"""
+    """Stop LND and related services"""
     print("⏹️ Stopping services for wallet replacement...")
     
-    services = ["lnd", "elementsd", "messager-monitor"]
+    services = ["lnd", "messager-monitor"]
     stopped_services = []
     
     for service in services:
@@ -239,108 +231,58 @@ def restore_lnd_wallet_via_api(session, lnd_rest_url, mnemonic, lnd_password):
         print(f"   ❌ Restore error: {str(e)}")
         return False
 
-def integrate_elements_wallet(mnemonic):
-    """Replace Elements wallet with unified mnemonic"""
-    print("🔷 Integrating Elements wallet...")
-    
-    try:
-        # Start Elements daemon
-        subprocess.run(["sudo", "systemctl", "start", "elementsd"], check=True)
-        print("   🔄 Elements daemon started")
-        
-        # Wait for Elements to start
-        time.sleep(15)
-        
-        # Remove existing peerswap wallet
-        peerswap_wallet_path = f"{ELEMENTS_DATA_PATH}/wallets/peerswap"
-        if os.path.exists(peerswap_wallet_path):
-            shutil.rmtree(peerswap_wallet_path)
-            print("   🗑️ Removed existing peerswap wallet")
-        
-        # Create new peerswap wallet
-        cmd = ["elements-cli", "-datadir=/data/elements", 
-               "createwallet", "peerswap", "false", "false", "", "false", "true"]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-        
-        if result.returncode != 0:
-            print(f"   ❌ Failed to create Elements wallet: {result.stderr}")
-            return False
-        
-        print("   ✅ Elements wallet created")
-        
-        # Import the unified mnemonic
-        cmd = ["elements-cli", "-datadir=/data/elements", "-rpcwallet=peerswap", 
-               "sethdseed", "true", mnemonic]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-        
-        if result.returncode == 0:
-            print("   ✅ Elements wallet integrated successfully")
-            return True
-        else:
-            print(f"   ❌ Elements integration failed: {result.stderr}")
-            return False
-            
-    except Exception as e:
-        print(f"   ❌ Elements integration error: {str(e)}")
-        return False
-
 def auto_integrate_wallet(mnemonic, wallet_id):
     """
-    Automatically integrate a newly created wallet with LND and Elements
+    Automatically integrate a newly created wallet with LND
     Called when a wallet is saved as system default
     """
-    print(f"🚀 Auto-integrating wallet '{wallet_id}' with system services...")
-    
+    print(f"?Ys? Auto-integrating wallet '{wallet_id}' with system services...")
+
     # Step 1: Create backups
     backups = backup_existing_wallets()
-    
+
     # Step 2: Stop services
     stopped_services = stop_services()
-    
+
     # Step 3: Integrate LND
     lnd_success = integrate_lnd_wallet(mnemonic)
-    
-    # Step 4: Integrate Elements  
-    elements_success = integrate_elements_wallet(mnemonic)
-    
-    # Step 5: Start dependent services
+
+    # Step 4: Start dependent services
     if "lnd" in stopped_services:
         stopped_services.remove("lnd")  # LND already started in integration
-    if "elementsd" in stopped_services:
-        stopped_services.remove("elementsd")  # Elements already started in integration
-    
+
     start_services(stopped_services)
-    
+
     # Create integration log
     log_entry = {
         "timestamp": int(time.time()),
         "wallet_id": wallet_id,
         "lnd_integrated": lnd_success,
-        "elements_integrated": elements_success,
-        "backups_created": backups
-    }
-    
-    log_file = "/data/wallet-integration.log"
-    with open(log_file, "a") as f:
-        f.write(json.dumps(log_entry) + "\\n")
-    
-    success = lnd_success and elements_success
-    
-    if success:
-        print(f"🎉 Wallet '{wallet_id}' successfully integrated with all services!")
-    else:
-        print(f"⚠️ Wallet '{wallet_id}' integration completed with some issues")
-    
-    return {
-        "success": success,
-        "lnd_integrated": lnd_success,
-        "elements_integrated": elements_success,
         "backups_created": backups
     }
 
+    log_file = "/data/wallet-integration.log"
+    with open(log_file, "a") as f:
+        f.write(json.dumps(log_entry) + "
+")
+
+    success = lnd_success
+
+    if success:
+        print(f"?YZ% Wallet '{wallet_id}' successfully integrated with all services!")
+    else:
+        print(f"?s???? Wallet '{wallet_id}' integration completed with some issues")
+
+    return {
+        "success": success,
+        "lnd_integrated": lnd_success,
+        "backups_created": backups
+    }
+
+
 def check_integration_dependencies():
     """Check if required tools are available for integration"""
-    required_tools = ["elements-cli"]
+    required_tools = []
     missing = []
     
     for tool in required_tools:

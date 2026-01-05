@@ -1,8 +1,10 @@
-# BRLN-OS: User & Application Matrix
+﻿# BRLN-OS: User & Application Matrix
 
-## 📊 Complete System Overview
+## Overview
 
-This document provides a comprehensive overview of all system users, applications, and their relationships in BRLN-OS.
+This document lists system users, services, and how they relate in BRLN-OS.
+Note: when `BITCOIN_BACKEND=remote`, the `bitcoin` user and `bitcoind.service`
+are not created and `/data/bitcoin` is not used.
 
 ---
 
@@ -10,10 +12,8 @@ This document provides a comprehensive overview of all system users, application
 
 | User | Purpose | Created By | Groups |
 |------|---------|------------|--------|
-| `bitcoin` | Bitcoin Core daemon | bitcoin.sh | bitcoin, debian-tor |
+| `bitcoin` | Bitcoin Core daemon (local backend only) | bitcoin.sh | bitcoin, debian-tor |
 | `lnd` | Lightning Network Daemon | bitcoin.sh | lnd, bitcoin, debian-tor |
-| `elements` | Elements/Liquid daemon | elements.sh | elements |
-| `peerswap` | PeerSwap & PeerSwap Web | peerswap.sh | peerswap |
 | `brln-api` | BRLN-OS API service | brunel.sh | brln-api |
 | `$atual_user` (admin) | Lightning apps & management | - | bitcoin, lnd, brln-api |
 | `root` | System services | - | - |
@@ -22,20 +22,19 @@ This document provides a comprehensive overview of all system users, application
 
 ## Applications by User
 
-### 🟠 User: `bitcoin`
+### User: `bitcoin` (local backend only)
 
 **Bitcoin Core (bitcoind)** - v29.1
 - **Binary:** `/usr/local/bin/bitcoind`, `/usr/local/bin/bitcoin-cli`
 - **Data Directory:** `/data/bitcoin/`
 - **Configuration:** `/data/bitcoin/bitcoin.conf`
 - **Service:** `bitcoind.service`
-- **Groups:** `bitcoin`, `debian-tor`
 - **Ports:** 8332 (RPC), 8333 (P2P)
 - **Credentials:** Stored in password manager
 
 ---
 
-### ⚡ User: `lnd`
+### User: `lnd`
 
 **Lightning Network Daemon (lnd)** - v0.20.0
 - **Binary:** `/usr/local/bin/lnd`, `/usr/local/bin/lncli`
@@ -46,53 +45,11 @@ This document provides a comprehensive overview of all system users, application
 - **Ports:** 9735 (P2P), 10009 (gRPC), 8080 (REST)
 - **Wallet Password:** Stored in password manager
 - **Access:** Admin user added to `lnd` group
-- **ZMQ Integration:** Connected to Bitcoin Core
+- **ZMQ Integration:** Connected to local bitcoind or remote ZMQ endpoints
 
 ---
 
-### 🔥 User: `elements`
-
-**Elements Core (elementsd)** - v23.3.1
-- **Binary:** `/usr/local/bin/elementsd`, `/usr/local/bin/elements-cli`
-- **Data Directory:** `/data/elements/`
-- **Configuration:** `/data/elements/elements.conf`
-- **Service:** `elementsd.service`
-- **Chain:** Liquid mainnet (liquidv1)
-- **Ports:** 7041 (RPC), 7042 (P2P)
-- **RPC Credentials:** Stored in password manager
-- **Features:**
-  - Transaction indexing (txindex=1)
-  - Peg-in validation (validatepegin=1)
-  - Asset directories for DePix and USDT
-
----
-
-### 🔄 User: `peerswap`
-
-**PeerSwap Daemon (peerswapd)** - v4.0rc1
-- **Binary:** `/home/peerswap/go/bin/peerswapd`
-- **CLI:** `/home/peerswap/go/bin/pscli`
-- **Configuration:** `/home/peerswap/.peerswap/peerswap.conf`
-- **Service:** `peerswapd.service`
-- **Source:** Compiled from GitHub (ElementsProject/peerswap)
-- **Features:**
-  - Liquid swaps enabled
-  - Bitcoin swaps disabled
-  - Elements wallet: peerswap
-
-**PeerSwap Web UI (psweb)**
-- **Binary:** `/home/peerswap/go/bin/psweb`
-- **Service:** `psweb.service`
-- **Port:** 1984
-- **Source:** Compiled from GitHub (Impa10r/peerswap-web)
-- **Features:**
-  - Liquid Peg-in interface
-  - Channel rebalancing with L-BTC
-  - Auto-fee management
-
----
-
-### � User: `brln-api`
+### User: `brln-api`
 
 **BRLN-OS API Service** - Flask + gRPC
 - **Binary:** `/home/brln-api/venv/bin/python3`
@@ -107,13 +64,12 @@ This document provides a comprehensive overview of all system users, application
   - Wallet management and generation
   - System status monitoring
   - Lightning Network gRPC interface
-  - Multi-blockchain support (Bitcoin, Elements, TRON)
   - Encrypted wallet storage
   - Chat database for Lightning messaging
 
 ---
 
-### �👤 User: `$atual_user` (admin/main user)
+### User: `$atual_user` (admin/main user)
 
 **Balance of Satoshis (bos)**
 - **Binary:** `~/.npm-global/bin/bos`
@@ -125,19 +81,6 @@ This document provides a comprehensive overview of all system users, application
   - Auto-capture Telegram ID
   - Node management CLI
 - **Credentials:** Telegram API key stored in password manager
-
-**ThunderHub**
-- **Location:** `/home/$atual_user/thunderhub/`
-- **Service:** `thunderhub.service`
-- **Port:** 3000
-- **User:** `$atual_user`
-- **Installation:** Git clone + npm
-- **Version:** From config.sh (VERSION_THUB)
-- **Features:**
-  - Web-based Lightning dashboard
-  - GPG signature verification
-  - Master/account password generation
-- **Credentials:** Stored in password manager
 
 **LNDg (Lightning Node Dashboard)**
 - **Location:** `/home/$atual_user/lndg/`
@@ -154,7 +97,7 @@ This document provides a comprehensive overview of all system users, application
 
 ---
 
-### 🔒 User: `root`
+### User: `root`
 
 **GoTTY (Web Terminal)**
 - **Service:** `gotty-fullauto.service`
@@ -168,8 +111,6 @@ This document provides a comprehensive overview of all system users, application
 ---
 
 ## System Services (No Dedicated User)
-
-### 🔐 Security & Privacy
 
 **UFW (Uncomplicated Firewall)**
 - Managed via: `ufw` commands
@@ -202,24 +143,18 @@ This document provides a comprehensive overview of all system users, application
 
 ```
 bitcoin group:
-├── bitcoin (owner)
-├── lnd (member) - needs access to RPC
-└── $atual_user (member) - admin access
+  bitcoin (owner)
+  lnd (member) - needs access to RPC
+  $atual_user (member) - admin access
 
 lnd group:
-├── lnd (owner)
-└── $atual_user (member) - admin access, Lightning apps
+  lnd (owner)
+  $atual_user (member) - admin access, Lightning apps
 
 debian-tor group:
-├── debian-tor (owner)
-├── bitcoin (member) - Tor integration
-└── lnd (member) - Tor integration
-
-elements group:
-└── elements (owner)
-
-peerswap group:
-└── peerswap (owner)
+  debian-tor (owner)
+  bitcoin (member) - Tor integration
+  lnd (member) - Tor integration
 ```
 
 ---
@@ -228,69 +163,39 @@ peerswap group:
 
 ```
 /data/
-├── bitcoin/                    # owned by bitcoin:bitcoin (750)
-│   ├── bitcoin.conf            # 640
-│   ├── blocks/
-│   ├── chainstate/
-│   └── .rpcpass                # 600
-│
-├── lnd/                        # owned by lnd:lnd (750)
-│   ├── lnd.conf                # 640
-│   ├── tls.cert
-│   ├── tls.key
-│   ├── wallet.db
-│   └── data/
-│       └── chain/bitcoin/mainnet/
-│           └── admin.macaroon
-│
-├── elements/                   # owned by elements:elements (750)
-│   ├── elements.conf           # 600
-│   ├── liquidv1/
-│   └── wallets/
-│       └── peerswap/
-│
-└── brln-passwords.db           # owned by root:root (600)
-    # SQLite database with bcrypt hashed passwords
+|-- bitcoin/                    # owned by bitcoin:bitcoin (750) [local backend only]
+|   |-- bitcoin.conf            # 640
+|   |-- blocks/
+|   |-- chainstate/
+|   `-- .rpcpass                # 600
+|
+|-- lnd/                        # owned by lnd:lnd (750)
+|   |-- lnd.conf                # 640
+|   |-- tls.cert
+|   |-- tls.key
+|   |-- wallet.db
+|   `-- data/
+|       `-- chain/bitcoin/mainnet/
+|           `-- admin.macaroon
+|
+`-- brln-passwords.db           # owned by root:root (600)
+    # SQLite database with encrypted secrets (Fernet)
 
 /home/$atual_user/
-├── thunderhub/                 # Lightning web UI
-│   ├── .env.local
-│   ├── package.json
-│   └── node_modules/
-│
-├── lndg/                       # Lightning dashboard
-│   ├── .venv/                  # Python virtualenv
-│   ├── data/
-│   │   └── lndg-admin.txt      # admin password
-│   └── manage.py
-│
-├── .bos/                       # BOS configuration
-│   └── <nodename>/
-│       └── credentials.json    # 600
-│
-├── .npm-global/                # npm global packages
-│   └── bin/
-│       └── bos
-│
-├── .lnd -> /data/lnd           # symlink
-└── .bitcoin -> /data/bitcoin   # symlink
-
-/home/peerswap/
-├── peerswap/                   # source code
-│   ├── Makefile
-│   └── build/
-│
-├── peerswap-web/               # web UI source
-│   └── Makefile
-│
-├── go/
-│   └── bin/
-│       ├── peerswapd
-│       ├── pscli
-│       └── psweb
-│
-└── .peerswap/
-    └── peerswap.conf           # 600
+|-- .env.local
+|-- lndg/
+|   |-- .venv/
+|   |-- data/
+|   |   `-- lndg-admin.txt
+|   `-- manage.py
+|-- .bos/
+|   `-- <nodename>/
+|       `-- credentials.json
+|-- .npm-global/
+|   `-- bin/
+|       `-- bos
+|-- .lnd -> /data/lnd           # symlink
+`-- .bitcoin -> /data/bitcoin   # symlink (local backend only)
 ```
 
 ---
@@ -298,23 +203,15 @@ peerswap group:
 ## Service Dependencies
 
 ```
-Network Dependencies:
-bitcoind.service
-    ↓
+bitcoind.service (local)
+    |
+    v
 lnd.service
-    ↓
-├── thunderhub.service
-├── lndg.service
-│   └── lndg-controller.service
-├── bos-telegram.service
-└── peerswapd.service
-        ↓
-    psweb.service
-
-Elements Chain:
-elementsd.service
-    ↓
-peerswapd.service (uses Elements wallet)
+    |
+    v
+lndg.service
+lndg-controller.service
+bos-telegram.service
 ```
 
 ---
@@ -323,16 +220,12 @@ peerswapd.service (uses Elements wallet)
 
 | Service | Port | Protocol | Access |
 |---------|------|----------|--------|
-| Bitcoin RPC | 8332 | TCP | localhost |
+| Bitcoin RPC | 8332 | TCP | localhost (local backend) |
 | Bitcoin P2P | 8333 | TCP | public |
 | LND gRPC | 10009 | TCP | localhost |
 | LND REST | 8080 | TCP | localhost |
 | LND P2P | 9735 | TCP | public |
-| Elements RPC | 7041 | TCP | localhost |
-| Elements P2P | 7042 | TCP | public |
-| ThunderHub | 3000 | TCP | LAN |
 | LNDg | 8889 | TCP | LAN |
-| PeerSwap Web | 1984 | TCP | LAN |
 | GoTTY | 8998 | TCP | LAN |
 | Tor SOCKS | 9050 | TCP | localhost |
 | Tor Control | 9051 | TCP | localhost |
@@ -346,21 +239,17 @@ peerswapd.service (uses Elements wallet)
 All credentials are stored securely in the password manager:
 
 **Location:** `/data/brln-passwords.db`  
-**Hashing:** bcrypt (12 rounds)  
-**Access:** CLI via password_manager.py  
+**Encryption:** Fernet with PBKDF2-derived key (no password hash stored)  
+**Access:** CLI via secure_password_manager.py  
 **Menu:** password_manager_menu.sh
 
 ### Stored Credentials:
 
 1. **bitcoin_rpc** - Bitcoin Core RPC password
 2. **lnd_wallet** - LND wallet unlock password
-3. **elements_rpc_user** - Elements RPC username
-4. **elements_rpc_password** - Elements RPC password
-5. **lndg_admin** - LNDg dashboard admin password
-6. **thunderhub_master** - ThunderHub master password
-7. **thunderhub_account** - ThunderHub account password
-8. **bos_telegram_id** - BOS Telegram user ID
-9. **bos_telegram_bot** - BOS Telegram bot API key
+3. **lndg_admin** - LNDg dashboard admin password
+4. **bos_telegram_id** - BOS Telegram user ID
+5. **bos_telegram_bot** - BOS Telegram bot API key
 
 Each entry includes:
 - Service name
@@ -378,41 +267,9 @@ Each entry includes:
 | Script | Purpose | Users Created |
 |--------|---------|---------------|
 | bitcoin.sh | Bitcoin Core + LND | bitcoin, lnd |
-| elements.sh | Elements/Liquid | elements |
 | lightning.sh | Lightning apps | - |
-| peerswap.sh | PeerSwap + Web UI | peerswap |
 | system.sh | Security (UFW, Tor, I2P) | - |
 | gotty.sh | Web terminal | - |
-
----
-
-## Security Summary
-
-✅ **Principle of Least Privilege**
-- Each daemon runs as dedicated user
-- Group-based access control
-- Minimal permission grants
-
-✅ **Credential Management**
-- Centralized password storage
-- bcrypt hashing (12 rounds)
-- No plain text passwords in configs
-
-✅ **Network Security**
-- UFW firewall configured
-- Tor integration for privacy
-- I2P support for anonymity
-- Fail2ban for brute force protection
-
-✅ **Service Isolation**
-- Systemd service confinement
-- User/group separation
-- Process isolation via systemd directives
-
-✅ **File Permissions**
-- Sensitive configs: 600 (owner only)
-- Data directories: 750 (owner + group)
-- Binaries: 755 (world executable)
 
 ---
 
@@ -420,23 +277,20 @@ Each entry includes:
 
 ### Pre-Installation
 - [ ] System updated: `sudo apt update && sudo apt upgrade`
-- [ ] Sufficient disk space (~500GB recommended)
+- [ ] Sufficient disk space (full node ~1TB, pruned node less)
 - [ ] Stable internet connection
 
 ### Post-Installation
-- [ ] All users created: `bitcoin`, `lnd`, `elements`, `peerswap`
 - [ ] All services enabled: `systemctl list-units --type=service`
 - [ ] Password manager populated: Check via menu
 - [ ] Firewall configured: `sudo ufw status`
 - [ ] Tor running: `systemctl status tor`
-- [ ] Bitcoin syncing: `bitcoin-cli getblockchaininfo`
+- [ ] Bitcoin syncing (local backend): `bitcoin-cli getblockchaininfo`
+- [ ] Bitcoin RPC reachable (remote backend): `curl` or `bitcoin-cli -rpc*` from LND host
 - [ ] LND syncing: `lncli getinfo`
-- [ ] Elements syncing: `elements-cli getblockchaininfo`
 
 ### Network Access
-- [ ] ThunderHub accessible: `http://<IP>:3000`
 - [ ] LNDg accessible: `http://<IP>:8889`
-- [ ] PeerSwap Web accessible: `http://<IP>:1984`
 - [ ] GoTTY accessible: `http://<IP>:8998`
 
 ---
@@ -447,10 +301,6 @@ Each entry includes:
 ```bash
 sudo systemctl status bitcoind
 sudo systemctl status lnd
-sudo systemctl status elementsd
-sudo systemctl status peerswapd
-sudo systemctl status psweb
-sudo systemctl status thunderhub
 sudo systemctl status lndg
 ```
 
@@ -458,8 +308,6 @@ sudo systemctl status lndg
 ```bash
 journalctl -u bitcoind -f
 journalctl -u lnd -f
-journalctl -u elementsd -f
-journalctl -u peerswapd -f
 ```
 
 ### View Credentials
@@ -471,7 +319,7 @@ cd /root/brln-os/scripts
 
 ### Verify Group Memberships
 ```bash
-groups bitcoin  # should show: bitcoin debian-tor
+groups bitcoin  # should show: bitcoin debian-tor (local backend)
 groups lnd      # should show: lnd bitcoin debian-tor
 id $atual_user  # should show bitcoin and lnd groups
 ```
@@ -491,9 +339,8 @@ id $atual_user  # should show bitcoin and lnd groups
 - **Critical:** `/data/brln-passwords.db`
 - **Critical:** `/data/lnd/data/chain/bitcoin/mainnet/wallet.db`
 - **Critical:** LND seed phrase (24 words)
-- **Important:** `/data/bitcoin/bitcoin.conf`
+- **Important:** `/data/bitcoin/bitcoin.conf` (local backend)
 - **Important:** `/data/lnd/lnd.conf`
-- **Important:** `/data/elements/elements.conf`
 
 ---
 
@@ -509,7 +356,6 @@ id $atual_user  # should show bitcoin and lnd groups
 
 ### Why Lightning Apps Run as Admin User?
 
-The Lightning applications (LNDg, ThunderHub, BOS) run as the admin user because:
 - They need interactive access to LND macaroons
 - They require web interface access from admin context
 - They benefit from simplified credential management
@@ -518,7 +364,7 @@ The Lightning applications (LNDg, ThunderHub, BOS) run as the admin user because
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** December 29, 2025  
+**Document Version:** 1.1  
+**Last Updated:** January 4, 2026  
 **Maintained By:** BRLN-OS Development Team  
 **License:** Same as BRLN-OS project

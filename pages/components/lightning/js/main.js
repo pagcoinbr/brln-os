@@ -24,11 +24,6 @@ document.addEventListener('DOMContentLoaded', function() {
   loadConversationsFromStorage();
 });
 
-function abrirApp(porta) {
-  const ip = window.location.hostname;
-  window.open(`https://${ip}:${porta}`, '_blank');
-}
-
 function initializePage() {
   // Carregar todos os dados iniciais
   updateAllData();

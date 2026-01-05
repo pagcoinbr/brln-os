@@ -18,5 +18,3 @@ ecdsa==0.19.0
 eth-hash[pycryptodome]==0.5.2
 pycryptodome==3.20.0
 
-# TRON support (optional, for advanced features)
-# tronpy==0.4.0  # Uncomment if you need full TRON SDK support

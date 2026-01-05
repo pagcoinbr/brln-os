@@ -9,9 +9,25 @@ I2P_REPO_HELPER=https://repo.i2pd.xyz/.help/add_repo
 # Network selection: mainnet or testnet
 BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 
+# Bitcoin backend configuration (local or remote)
+BITCOIN_BACKEND_CONFIG=${BITCOIN_BACKEND_CONFIG:-/data/brln-config/bitcoin-backend.env}
+if [[ -f "$BITCOIN_BACKEND_CONFIG" ]]; then
+  # shellcheck source=/dev/null
+  source "$BITCOIN_BACKEND_CONFIG"
+fi
+
+BITCOIN_BACKEND=${BITCOIN_BACKEND:-local}
+BITCOIN_PRUNED=${BITCOIN_PRUNED:-0}
+BITCOIN_PRUNE_SIZE=${BITCOIN_PRUNE_SIZE:-550}
+BITCOIN_RPC_HOST=${BITCOIN_RPC_HOST:-127.0.0.1}
+BITCOIN_RPC_PORT=${BITCOIN_RPC_PORT:-8332}
+BITCOIN_RPC_USER=${BITCOIN_RPC_USER:-minibolt}
+BITCOIN_RPC_PASSWORD=${BITCOIN_RPC_PASSWORD:-}
+BITCOIN_ZMQ_BLOCK=${BITCOIN_ZMQ_BLOCK:-tcp://127.0.0.1:28332}
+BITCOIN_ZMQ_TX=${BITCOIN_ZMQ_TX:-tcp://127.0.0.1:28333}
+
 LND_VERSION=0.20.0
 BTC_VERSION=30.0
-VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 
 # Smart path detection
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

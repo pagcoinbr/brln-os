@@ -66,8 +66,8 @@ create_lnd_service() {
 
 [Unit]
 Description=Lightning Network Daemon
-Requires=bitcoind.service
-After=bitcoind.service
+After=network-online.target
+Wants=bitcoind.service
 
 [Service]
 ExecStart=/usr/local/bin/lnd
@@ -98,82 +98,6 @@ WantedBy=multi-user.target
 EOF
 
     echo -e "${GREEN}✅ lnd.service created${NC}"
-}
-
-# Function to create elementsd.service
-create_elementsd_service() {
-    echo -e "${YELLOW}🔷 Creating elementsd.service...${NC}"
-    
-    sudo tee /etc/systemd/system/elementsd.service > /dev/null << EOF
-[Unit]
-Description=Elements daemon on mainnet
-# Requires=bitcoind.service
-# After=bitcoind.service
-
-[Service]
-ExecStart=/usr/local/bin/elementsd -datadir=/data/elements/
-User=elements
-Group=elements
-Restart=on-failure
-TimeoutStartSec=infinity
-TimeoutStopSec=600
-
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-MemoryDenyWriteExecute=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    echo -e "${GREEN}✅ elementsd.service created${NC}"
-}
-
-# Function to create peerswapd.service
-create_peerswapd_service() {
-    echo -e "${YELLOW}🔄 Creating peerswapd.service...${NC}"
-    
-    sudo tee /etc/systemd/system/peerswapd.service > /dev/null << EOF
-[Unit]
-Description=Peer Swap Daemon
-
-[Service]
-ExecStart=/home/peerswap/go/bin/peerswapd
-User=peerswap
-Restart=always
-RestartSec=60
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    echo -e "${GREEN}✅ peerswapd.service created${NC}"
-}
-
-# Function to create psweb.service
-create_psweb_service() {
-    echo -e "${YELLOW}🌐 Creating psweb.service...${NC}"
-    
-    sudo tee /etc/systemd/system/psweb.service > /dev/null << EOF
-[Unit]
-Description=PeerSwap Web UI
-
-[Service]
-ExecStart=/home/peerswap/go/bin/psweb
-User=peerswap
-Type=simple
-KillMode=process
-TimeoutSec=180
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    echo -e "${GREEN}✅ psweb.service created${NC}"
 }
 
 # Function to setup brln-api environment and files
@@ -241,6 +165,7 @@ WorkingDirectory=${api_dir}
 ExecStart=/home/brln-api/venv/bin/python3 ${api_dir}/app.py
 Restart=always
 RestartSec=10
+EnvironmentFile=-/data/brln-config/bitcoin-backend.env
 Environment=PYTHONPATH=${api_dir}
 Environment=BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 
@@ -333,76 +258,6 @@ WantedBy=multi-user.target
 EOF
 
     echo -e "${GREEN}✅ bos-telegram.service created${NC}"
-}
-
-# Function to create thunderhub.service
-create_thunderhub_service() {
-    echo -e "${YELLOW}⚡ Creating thunderhub.service...${NC}"
-    
-    sudo tee /etc/systemd/system/thunderhub.service > /dev/null << EOF
-# BRLN Bolt: systemd unit for Thunderhub
-# /etc/systemd/system/thunderhub.service
-
-[Unit]
-Description=ThunderHub
-Requires=lnd.service
-After=lnd.service
-
-[Service]
-WorkingDirectory=${HOME}/thunderhub
-ExecStart=/usr/bin/npm run start
-
-User=${atual_user}
-Group=${atual_user}
-
-# Process management
-####################
-TimeoutSec=300
-
-# Hardening Measures
-####################
-PrivateTmp=true
-ProtectSystem=full
-NoNewPrivileges=true
-PrivateDevices=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    echo -e "${GREEN}✅ thunderhub.service created${NC}"
-}
-
-# Function to create lnbits.service
-create_lnbits_service() {
-    echo -e "${YELLOW}⚡ Creating lnbits.service...${NC}"
-    
-    sudo tee /etc/systemd/system/lnbits.service > /dev/null << EOF
-# BRLN-OS: systemd unit for LNbits
-# /etc/systemd/system/lnbits.service
-
-[Unit]
-Description=LNbits
-Wants=lnd.service
-After=lnd.service
-
-[Service]
-WorkingDirectory=${HOME}/lnbits
-ExecStart=${HOME}/lnbits/.venv/bin/python -m uvicorn lnbits.__main__:app --host 0.0.0.0 --port 5000
-User=${atual_user}
-Restart=always
-TimeoutSec=120
-RestartSec=30
-StandardOutput=journal
-StandardError=journal
-
-Environment=LNBITS_DATA_FOLDER=${HOME}/lnbits/.env
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    echo -e "${GREEN}✅ lnbits.service created${NC}"
 }
 
 # Function to create lndg.service
@@ -507,14 +362,9 @@ create_all_services() {
     
     create_bitcoind_service
     create_lnd_service
-    create_elementsd_service
-    create_peerswapd_service
-    create_psweb_service
     create_brln_api_service
     create_gotty_service
     create_bos_telegram_service
-    create_thunderhub_service
-    create_lnbits_service
     create_lndg_service
     create_lndg_controller_service
     create_messager_monitor_service
@@ -534,16 +384,7 @@ create_service() {
             ;;
         lnd|lightning)
             create_lnd_service
-            ;;
-        elementsd|elements)
-            create_elementsd_service
-            ;;
-        peerswapd|peerswap)
-            create_peerswapd_service
-            ;;
-        psweb|peerswap-web)
-            create_psweb_service
-            ;;
+        ;;
         brln-api|api)
             create_brln_api_service
             ;;
@@ -552,13 +393,7 @@ create_service() {
             ;;
         bos-telegram|bos)
             create_bos_telegram_service
-            ;;
-        thunderhub|thub)
-            create_thunderhub_service
-            ;;
-        lnbits)
-            create_lnbits_service
-            ;;
+        ;;
         lndg)
             create_lndg_service
             ;;
@@ -571,8 +406,6 @@ create_service() {
         *)
             echo -e "${RED}❌ Unknown service: $service_name${NC}"
             echo -e "${YELLOW}Available services:${NC}"
-            echo "  bitcoind, lnd, elementsd, peerswapd, psweb, brln-api,"
-            echo "  gotty, bos-telegram, thunderhub, lnbits, lndg, lndg-controller, messager-monitor"
             return 1
             ;;
     esac
@@ -595,14 +428,9 @@ Commands:
 Available Services:
   bitcoind               Bitcoin Core daemon
   lnd                    Lightning Network daemon
-  elementsd              Elements/Liquid daemon  
-  peerswapd              PeerSwap daemon
-  psweb                  PeerSwap Web UI
   brln-api               BRLN-OS API service
   gotty                  Terminal web interface
   bos-telegram           Balance of Satoshis Telegram bot
-  thunderhub             ThunderHub Lightning wallet
-  lnbits                 LNbits Lightning wallet
   lndg                   Lightning Network Dashboard
   lndg-controller        LNDG backend controller
   messager-monitor       Lightning message monitor
@@ -622,18 +450,13 @@ list_services() {
     echo -e "${GREEN}Core Services:${NC}"
     echo "  • bitcoind - Bitcoin Core daemon"
     echo "  • lnd - Lightning Network daemon"
-    echo "  • elementsd - Elements/Liquid daemon"
     echo ""
     echo -e "${GREEN}Application Services:${NC}"
     echo "  • brln-api - BRLN-OS API service"
     echo "  • messager-monitor - Lightning message monitor"
-    echo "  • peerswapd - PeerSwap daemon"
-    echo "  • psweb - PeerSwap Web UI"
     echo ""
     echo -e "${GREEN}Web Services:${NC}"
     echo "  • gotty - Terminal web interface"
-    echo "  • thunderhub - ThunderHub Lightning wallet"
-    echo "  • lnbits - LNbits Lightning wallet"
     echo "  • lndg - Lightning Network Dashboard"
     echo "  • lndg-controller - LNDG backend controller"
     echo ""
@@ -672,14 +495,9 @@ main() {
 # Export functions for use by other scripts
 export -f create_bitcoind_service
 export -f create_lnd_service
-export -f create_elementsd_service
-export -f create_peerswapd_service
-export -f create_psweb_service
 export -f create_brln_api_service
 export -f create_gotty_service
 export -f create_bos_telegram_service
-export -f create_thunderhub_service
-export -f create_lnbits_service
 export -f create_lndg_service
 export -f create_lndg_controller_service
 export -f create_messager_monitor_service

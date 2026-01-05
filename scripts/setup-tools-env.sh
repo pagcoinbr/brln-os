@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # BRLN-Tools - Dependency Management
-# Environment setup for BRLN Tools (Telegram bots, etc.)
+# Environment setup for BRLN Tools (password manager and helpers)
 
 # Import common functions
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,7 +38,7 @@ setup_tools_environment() {
   else
     echo "Requirements file not found: $REQUIREMENTS_FILE"
     # Install essential dependencies
-    pip install pyTelegramBotAPI>=4.14.1 requests>=2.25.1 schedule>=1.2.1 telebot>=0.0.5
+    pip install cryptography>=41.0.0
   fi
   
   echo "BRLN-Tools environment setup complete!"

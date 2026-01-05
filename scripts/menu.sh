@@ -7,9 +7,27 @@ source "$(dirname "${BASH_SOURCE[0]}")/apache.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/gotty.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/bitcoin.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/lightning.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/elements.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/peerswap.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/system.sh"
+
+get_core_services() {
+  if is_remote_bitcoin; then
+    echo "lnd"
+  else
+    echo "bitcoind lnd"
+  fi
+}
+
+show_core_services_status() {
+  local services
+  services=($(get_core_services))
+  systemctl status "${services[@]}" --no-pager -l || echo "Alguns serviços podem não estar instalados"
+}
+
+show_core_services_logs() {
+  local services
+  services=($(get_core_services))
+  journalctl -u "${services[@]}" --since "1 hour ago" --no-pager
+}
 
 # Configuration functions for the Configuration submenu
 run_utils() {
@@ -37,7 +55,7 @@ run_utils() {
       ;;
     3)
       echo -e "${YELLOW}📊 Verificando status dos serviços...${NC}"
-      systemctl status bitcoind lnd elementsd --no-pager -l || echo "Alguns serviços podem não estar instalados"
+      show_core_services_status
       echo -e "${GREEN}✅ Verificação concluída!${NC}"
       ;;
     4)
@@ -86,8 +104,8 @@ run_services_manager() {
     3)
       echo ""
       echo -e "${BLUE}Serviços disponíveis:${NC}"
-      echo "bitcoind, lnd, elementsd, peerswapd, psweb, brln-api,"
-      echo "gotty, bos-telegram, thunderhub, lnbits, lndg, lndg-controller, messager-monitor"
+      echo "bitcoind, lnd, brln-api,"
+      echo "gotty, bos-telegram, lndg, lndg-controller, messager-monitor"
       echo ""
       echo -n "Digite o nome do serviço: "
       read service_name
@@ -100,7 +118,7 @@ run_services_manager() {
       echo ""
       echo -e "${BLUE}📊 Status dos serviços BRLN-OS:${NC}"
       echo ""
-      services=("bitcoind" "lnd" "elementsd" "peerswapd" "psweb" "brln-api" "gotty-fullauto" "bos-telegram" "thunderhub" "lnbits" "lndg" "lndg-controller" "messager-monitor")
+      services=("bitcoind" "lnd" "brln-api" "gotty-fullauto" "bos-telegram" "lndg" "lndg-controller" "messager-monitor")
       for service in "${services[@]}"; do
         status=$(systemctl is-active "$service" 2>/dev/null || echo "not-found")
         case "$status" in
@@ -285,39 +303,8 @@ menu_utilities() {
     1) update_and_upgrade; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     2) echo -e "${GREEN}🧹 Limpando arquivos temporários...${NC}"; sudo apt autoremove -y && sudo apt autoclean; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     3) cd "$SCRIPT_DIR" && if [[ -f "scripts/gen-proto.sh" ]]; then bash scripts/gen-proto.sh; elif [[ -f "scripts/generate-protobuf.sh" ]]; then bash scripts/generate-protobuf.sh; fi; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    4) echo -e "${GREEN}📊 Status dos serviços:${NC}"; systemctl status bitcoind lnd elementsd --no-pager -l; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    5) echo -e "${GREEN}📋 Logs recentes:${NC}"; journalctl -u bitcoind -u lnd -u elementsd --since "1 hour ago" --no-pager; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    0) menu_configuration ;;
-    *) echo "Opção inválida!"; sleep 2; menu_utilities ;;
-  esac
-}
-
-menu_utilities() {
-  clear
-  echo -e "${CYAN}"
-  echo "╔══════════════════════════════════════════════════════════════════════╗"
-  echo "║                    🔧 UTILITÁRIOS E MANUTENÇÃO 🔧                   ║"
-  echo "╚══════════════════════════════════════════════════════════════════════╝"
-  echo -e "${NC}"
-  echo ""
-  echo -e "${YELLOW}┌─ Utilitários do Sistema ─┐${NC}"
-  echo -e "${GREEN}1.${NC} 🔄 Atualizar Sistema"
-  echo -e "${GREEN}2.${NC} 🧹 Limpar arquivos temporários"
-  echo -e "${GREEN}3.${NC} 📋 Gerar/Atualizar Protobuf"
-  echo -e "${GREEN}4.${NC} 🔍 Verificar status dos serviços"
-  echo -e "${GREEN}5.${NC} 📊 Monitoramento de logs"
-  echo ""
-  echo -e "${BLUE}0.${NC} Voltar"
-  echo ""
-  echo -n "Escolha uma opção: "
-  
-  read choice
-  case $choice in
-    1) update_and_upgrade; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    2) echo -e "${GREEN}🧹 Limpando arquivos temporários...${NC}"; sudo apt autoremove -y && sudo apt autoclean; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    3) cd "$SCRIPT_DIR" && if [[ -f "scripts/gen-proto.sh" ]]; then bash scripts/gen-proto.sh; elif [[ -f "scripts/generate-protobuf.sh" ]]; then bash scripts/generate-protobuf.sh; fi; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    4) echo -e "${GREEN}📊 Status dos serviços:${NC}"; systemctl status bitcoind lnd elementsd --no-pager -l; read -p "Pressione Enter para continuar..."; menu_utilities ;;
-    5) echo -e "${GREEN}📋 Logs recentes:${NC}"; journalctl -u bitcoind -u lnd -u elementsd --since "1 hour ago" --no-pager; read -p "Pressione Enter para continuar..."; menu_utilities ;;
+    4) echo -e "${GREEN}📊 Status dos serviços:${NC}"; show_core_services_status; read -p "Pressione Enter para continuar..."; menu_utilities ;;
+    5) echo -e "${GREEN}📋 Logs recentes:${NC}"; show_core_services_logs; read -p "Pressione Enter para continuar..."; menu_utilities ;;
     0) menu_configuration ;;
     *) echo "Opção inválida!"; sleep 2; menu_utilities ;;
   esac
@@ -374,19 +361,12 @@ install_complete_system() {
   #   echo -e "${BLUE}⏭️  Pulando configuração do terminal web (já em execução)${NC}"
   # fi
   
-  echo -e "${YELLOW}🔥 Instalando Elements...${NC}"
-  install_elements
-  configure_elements
-  create_elements_service
   
   echo -e "${YELLOW}⚡ Configurando Lightning Apps...${NC}"
   install_bos
-  install_thunderhub
-  lnbits_install
+  install_lndg
   # install_brln_api  # Already configured in brunel.sh as install_brln_api_with_user_env
   
-  echo -e "${YELLOW}🔄 Instalando PeerSwap...${NC}"
-  install_peerswap
   
   echo -e "${GREEN}✅ Instalação completa finalizada!${NC}"
   read -p "Pressione Enter para continuar..."

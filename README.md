@@ -6,16 +6,14 @@
 
 [![Bitcoin](https://img.shields.io/badge/Bitcoin-₿-FF9900?style=for-the-badge&logo=bitcoin&logoColor=white)](https://bitcoin.org)
 [![Lightning](https://img.shields.io/badge/Lightning-⚡-792EE5?style=for-the-badge&logo=lightning&logoColor=white)](https://lightning.network)
-[![Liquid](https://img.shields.io/badge/Liquid-₿-blue?style=for-the-badge&logo=liquid&logoColor=white)](https://liquid.net)
-[![TRON](https://img.shields.io/badge/TRON-TRX-E50914?style=for-the-badge&logo=tron&logoColor=white)](https://tron.network)
 [![Linux](https://img.shields.io/badge/Linux-Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com)
 [![Open Source](https://img.shields.io/badge/Open%20Source-MIT-yellow?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
 
-**BRLN-OS** é uma distribuição Aplicação completa que transforma qualquer servidor Linux em um nó completo de Bitcoin + Lightning + Liquid, focada em soberania individual, privacidade financeira e usabilidade para o público brasileiro e além.
+**BRLN-OS** é uma distribuição Aplicação completa que transforma qualquer servidor Linux em um nó completo de Bitcoin + Lightning, focada em soberania individual, privacidade financeira e usabilidade para o público brasileiro e além.
 
 <img width="1541" height="915" alt="Interface Principal do BRLN-OS" src="https://github.com/user-attachments/assets/530a8642-38b6-4f77-85c9-1f53ced2aa7a" />
 
-Ela automatiza a instalação, configuração e integração do **Bitcoin Core**, **LND**, **Elements** e um conjunto completo de ferramentas e sistemas de monitoramento, expondo tudo através de uma interface web própria, sem depender de terceiros.
+Ela automatiza a instalacao, configuracao e integracao do **Bitcoin Core** (local ou remoto), **LND** e um conjunto completo de ferramentas e sistemas de monitoramento, expondo tudo atraves de uma interface web propria, sem depender de terceiros.
 
 ---
 
@@ -25,20 +23,16 @@ Ela automatiza a instalação, configuração e integração do **Bitcoin Core**
 
 </div>
 
-## 📑 Índice
+## ?? ?ndice
 
 - [Por Que Este Projeto Existe](#-por-que-este-projeto-existe)
-- [Guia de Instalação](#-guia-de-instalação)
-- [Visão Geral da Arquitetura](#-visão-geral-da-arquitetura)
-- [Principais Componentes](#-principais-componentes)
+- [Guia de Instala??o](#-guia-de-instala??o)
+- [Vis?o Geral da Arquitetura](#-vis?o-geral-da-arquitetura)
 - [Requisitos de Sistema](#-requisitos-de-sistema)
-- [Início Rápido](#-início-rápido)
 - [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Privacidade e Segurança](#-privacidade-e-segurança)
-- [Atualização do Sistema](#-atualização-do-sistema)
-- [Créditos e Projetos Relacionados](#-créditos-e-projetos-relacionados)
+- [Cr?ditos e Projetos Relacionados](#-cr?ditos-e-projetos-relacionados)
 - [Comunidade e Suporte](#-comunidade-e-suporte)
-- [Licença](#-licença)
+- [Licen?a](#-licen?a)
 
 ---
 
@@ -120,6 +114,8 @@ Estes comandos irão:
 - Clonar o repositório do BRLN-OS
 - Iniciar o script de instalação com menu interativo
 
+Durante a instalacao, voce pode escolher Bitcoin local (full ou pruned, default pruned) ou Bitcoin remoto via RPC + ZMQ.
+
 ### Passo 6: Configuração Inicial
 
 Quando você acessar pela primeira vez a interface web em `https://SEU_ENDERECO_IP`:
@@ -132,14 +128,13 @@ Quando você acessar pela primeira vez a interface web em `https://SEU_ENDERECO_
 
 O BRLN-OS oferece:
 
-**Bitcoin Core** Tor e I2P  
-**LND** como nó Lightning  
-**Elements** como nó Liquid  
-**Aplicações Lightning**: ThunderHub, LNbits, LNDg, Balance of Satoshis e Simple LNWallet  
-**Interface Web em Português** servida via Apache  
+**Bitcoin Core** (local ou remoto) com opcao pruned/full  
+**LND** como no Lightning  
+**Aplicacoes Lightning**: LNDg e Balance of Satoshis  
+**Interface Web em Portugues** servida via Apache  
 **API BRLN** (Flask + gRPC) para fornecer status do sistema, carteira e operar seu node via HTTP  
 **Terminal Web** para acesso limitado ao terminal para debug, via navegador  
-**Serviços gerenciados pelo systemd** resiliente e nativo.
+**Servicos gerenciados pelo systemd** resiliente e nativo.
 
 <img width="1487" height="912" alt="Arquitetura do Sistema" src="https://github.com/user-attachments/assets/b1c1eb9b-49b4-40bb-864f-aab7b89d97d2" />
 
@@ -184,96 +179,76 @@ Tudo é projetado para rodar localmente, atrás de Tor e/ou VPN, reduzindo a nec
 
 ```text
 brln-os/
-├── brunel.sh                  # Script principal: instalação, menu e updates
-├── main.html                  # Página principal da interface web
-├── README.md / README_EN.md   # Documentação em PT e EN
-├── INSTALLATION_TUTORIAL.md   # Guia detalhado de instalação
-├── LOGIN_FLOW_CHANGES.md      # Notas sobre fluxo de login/autenticação
-├── LICENSE                    # Licença MIT
-├── .env.example               # Exemplo de variáveis de ambiente (API / serviços)
-├── pages/                     # Interface web (HTML/CSS/JS)
-│   ├── home/                  # Página inicial, cards de status do nó
-│   └── components/            # Componentes reutilizáveis da interface
-│       ├── header/            # Cabeçalho e navegação
-│       ├── footer/            # Rodapé institucional/associação
-│       ├── bitcoin/           # Interface on-chain de Bitcoin
-│       ├── lightning/         # Interface Lightning (canais, pagamentos)
-│       ├── elements/          # Interface Elements/Liquid
-│       ├── wallet/            # Gerenciador de carteira HD (BIP39, seeds)
-│       ├── tron/              # Integração TRON (carteira e gas-free)
-│       └── config/            # Painel de configuração / administração
-├── scripts/                   # Scripts shell modulares
-│   ├── config.sh              # Configuração global, paths e arquitetura
-│   ├── utils.sh               # Funções utilitárias (spinner, safe_cp, firewall, etc.)
-│   ├── menu.sh                # Menu interativo principal (TUI)
-│   ├── bitcoin.sh             # Bitcoin Core + diretórios, usuários, permissões
-│   ├── lightning.sh           # LND, LNbits, LNDg, ThunderHub, BOS, Simple LNWallet
-│   ├── elements.sh            # Elements/Liquid e serviços relacionados
-│   ├── apache.sh              # Apache, virtual hosts, SSL, proxy da interface/API
-│   ├── system.sh              # Tor, I2P, Tailscale, firewall, cron, sudoers
-│   ├── peerswap.sh            # Integração PeerSwap (LND + psweb)
-│   ├── gotty.sh               # Terminal web (gotty) e ferramentas administrativas
-│   ├── setup-environments.sh  # Criação dos ambientes virtuais Python
-│   ├── setup-api-env.sh       # Ambiente virtual específico da API v1
-│   ├── setup-tools-env.sh     # Ambiente virtual das ferramentas brln-tools
-│   ├── setup-wallet-env.sh    # Ambiente para carteiras auxiliares
-│   ├── setup-tron-wallet.py   # Script Python de configuração da carteira TRON
-│   ├── auto_wallet_integration.py  # Automatização de integração de wallets
-│   ├── init-lnd-wallet.sh     # Inicialização da carteira LND
-│   ├── auto-lnd-create*.exp   # Scripts Expect para criação/gerenciamento da carteira LND
-│   ├── maintenance.sh         # Rotinas de manutenção (logs, pods, updates)
-│   ├── password_manager_menu.sh    # Menu TUI para o gerenciador de senhas
-│   ├── gen-proto.sh           # Wrapper para geração de stubs gRPC
-│   ├── generate-protobuf.sh   # Geração de arquivos *_pb2*.py a partir dos .proto
-│   ├── bitcoin.sh             # Instalação e configuração do Bitcoin Core
-│   └── USER_APPLICATION_MATRIX.md   # Matriz de funcionalidades por aplicação
-├── api/
-│   └── v1/
-│       ├── app.py             # API Flask + gRPC
-│       ├── requirements.txt   # Dependências da API BRLN v1
-│       ├── install.sh         # Setup automatizado do ambiente da API
-│       ├── HD_WALLET_GUIDE.md # Guia da carteira HD e fluxos de seed
-│       ├── proto/             # Arquivos .proto do LND (chain, invoices, router, etc.)
-│       ├── *_pb2*.py          # Stubs gRPC gerados (lightning, router, wallet, etc.)
-│       ├── chainrpc/          # Bindings gRPC específicos de blockchain
-│       ├── invoicesrpc/       # Bindings gRPC para invoices Lightning
-│       ├── peersrpc/          # Bindings gRPC para peers e conexões
-│       ├── routerrpc/         # Bindings gRPC para roteamento de pagamentos
-│       ├── signrpc/           # Bindings gRPC para operações de assinatura
-│       └── walletrpc/         # Bindings gRPC para operações de carteira
-├── conf_files/                # Arquivos de configuração de serviços
-│   ├── bitcoin.conf           # Bitcoin Core (Tor, I2P, peers, pruning)
-│   ├── elements.conf          # Elements/Liquid
-│   ├── lnd.conf               # LND (canal, fees, backends)
-│   ├── brln-apache.conf       # VirtualHost Apache da interface BRLN-OS
-│   ├── brln-ssl-api.conf      # VirtualHost Apache para API (HTTPS)
-│   ├── README-Apache-Proxy.md # Guia de configuração de proxy reverso Apache
-│   ├── setup-apache-proxy.sh  # Script de aplicação das configs de proxy
-│   └── testnet/               # Configurações específicas para ambiente testnet
-├── services/                  # Arquivos unit do systemd
-│   ├── bitcoind.service       # Daemon do Bitcoin Core
-│   ├── lnd.service            # Lightning Network Daemon (LND)
-│   ├── lnbits.service         # Servidor LNbits
-│   ├── lndg.service           # Dashboard LNDg
-│   ├── lndg-controller.service# Controlador de tarefas LNDg
-│   ├── thunderhub.service     # Dashboard web ThunderHub
-│   ├── simple-lnwallet.service# Simple LNWallet (interface Lightning minimalista)
-│   ├── bos-telegram.service   # Bot Telegram do Balance of Satoshis
-│   ├── brln-api.service       # API BRLN (Flask + gRPC)
-│   ├── elementsd.service      # Daemon Elements/Liquid
-│   ├── gotty-fullauto.service # Terminal web gotty e auxiliares
-│   └── messager-monitor.service # Monitor de mensagens/alertas Lightning
-├── brln-tools/                # Ferramentas auxiliares em Python
-│   ├── bip39-tool.py          # Ferramenta de geração/validação de seeds BIP39
-│   ├── bip39_wordlist.txt     # Wordlist oficial BIP39 (PT/EN)
-│   ├── password_manager.py    # Gerenciador de senhas (CLI/TUI)
-│   ├── password_manager.sh    # Wrapper shell para o gerenciador de senhas
-│   ├── boskeysend.py          # Helper para operações BOS keysend
-│   ├── swap-wallet21.py       # Ferramentas de swap / wallet auxiliar
-│   ├── config.ini             # Configuração das ferramentas brln-tools
-│   ├── requirements.txt       # Dependências Python dessas ferramentas
-│   └── vm-4-tests.sh          # Script auxiliar para ambiente de testes/VM
-└── favicon.ico                # Ícone da interface web BRLN-OS
+|-- brunel.sh                  # script principal: instalacao, menu e updates
+|-- main.html                  # pagina principal da interface web
+|-- README.md                  # documentacao principal
+|-- LICENSE                    # licenca MIT
+|-- favicon.ico                # icone da interface
+|-- api/
+|   `-- v1/
+|       |-- app.py             # API Flask + gRPC
+|       |-- requirements.txt   # dependencias da API
+|       |-- install.sh         # setup do ambiente da API
+|       |-- HD_WALLET_GUIDE.md # guia da carteira HD
+|       |-- LOGIN_FLOW_CHANGES.md # notas do fluxo de login
+|       `-- messager_monitor_grpc.py # monitor gRPC de mensagens
+|-- brln-tools/
+|   |-- secure_password_manager.py   # gerenciador de senhas
+|   |-- secure_password_manager.sh   # wrapper shell
+|   |-- secure_password_api.py       # API do gerenciador
+|   |-- API_INTEGRATION_GUIDE.md     # guia de integracao
+|   `-- requirements.txt             # dependencias das ferramentas
+|-- conf_files/
+|   |-- bitcoin.conf
+|   |-- lnd.conf
+|   |-- brln-apache.conf
+|   |-- brln-ssl-api.conf
+|   |-- README-Apache-Proxy.md
+|   |-- setup-apache-proxy.sh
+|   `-- testnet/
+|       |-- bitcoin.conf
+|       `-- lnd.conf
+|-- pages/
+|   |-- home/                  # pagina inicial e assets
+|   `-- components/
+|       |-- bitcoin/           # interface on-chain
+|       |-- lightning/         # interface Lightning
+|       |-- wallet/            # gerenciador de carteira HD
+|       |-- tools/             # ferramentas (LNDg, BOS)
+|       |-- config/            # painel de configuracao
+|       |-- header.html
+|       |-- header.css
+|       |-- association-footer.html
+|       |-- association-footer.css
+|       `-- pages-style.css
+`-- scripts/
+    |-- config.sh
+    |-- utils.sh
+    |-- menu.sh
+    |-- bitcoin.sh
+    |-- lightning.sh
+    |-- apache.sh
+    |-- system.sh
+    |-- gotty.sh
+    |-- services.sh
+    |-- logs-and-config.sh
+    |-- maintenance.sh
+    |-- setup-environments.sh
+    |-- setup-api-env.sh
+    |-- setup-tools-env.sh
+    |-- setup-wallet-env.sh
+    |-- auto_wallet_integration.py
+    |-- init-lnd-wallet.sh
+    |-- auto-lnd-create.exp
+    |-- auto-lnd-create-new.exp
+    |-- auto-lnd-create-masterkey.exp
+    |-- auto-lnd-unlock.exp
+    |-- generate-protobuf.sh
+    |-- gen-proto.sh
+    |-- backup-password-manager.sh
+    |-- password_manager_menu.sh
+    |-- USER_APPLICATION_MATRIX.md
+    `-- wallet-manager.sh
 ```
 
 ---
@@ -284,11 +259,8 @@ O BRLN-OS integra ou se inspira em vários projetos open source:
 
 - **[Bitcoin Core](https://github.com/bitcoin/bitcoin)** – Implementação de referência
 - **[LND](https://github.com/lightningnetwork/lnd)** – Lightning Network Daemon da Lightning Labs
-- **[ThunderHub](https://github.com/apotdevin/thunderhub)** – Interface web moderna para LND
-- **[LNbits](https://github.com/lnbits/lnbits)** – Camada bancária sobre Lightning
 - **[LNDg](https://github.com/cryptosharks131/lndg)** – Dashboard avançado para LND
 - **[Balance of Satoshis](https://github.com/alexbosworth/balanceofsatoshis)** – Ferramenta CLI de administração do LND
-- **[Simple LNWallet](https://github.com/jvxis/simple-lnwallet-go)** – Carteira Lightning minimalista
 - **[Gotty](https://github.com/yudai/gotty)** – Terminal baseado na web
 - **[Tailscale](https://github.com/tailscale/tailscale)** – Rede VPN em malha
 

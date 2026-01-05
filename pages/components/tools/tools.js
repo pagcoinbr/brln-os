@@ -5,11 +5,7 @@
 // Abrir aplicativo na mesma página usando proxy reverso
 function abrirApp(porta) {
   const proxyPaths = {
-    8889: '/lndg/',
-    3000: '/thunderhub/',
-    5000: '/lnbits/',
-    35671: '/simple-lnwallet/',
-    1984: '/peerswap/'
+    8889: '/lndg/'
   };
   
   const url = proxyPaths[porta] || `http://${window.location.hostname}:${porta}`;

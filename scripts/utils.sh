@@ -61,6 +61,10 @@ configure_ufw() {
   sudo ufw default allow outgoing
 }
 
+is_remote_bitcoin() {
+  [[ "${BITCOIN_BACKEND}" == "remote" ]]
+}
+
 configure_secure_firewall() {
   echo -e "${YELLOW}🔒 Configurando firewall para acesso local...${NC}"
   
@@ -131,7 +135,7 @@ close_ports_except_ssh() {
 
 # Function to ensure proper ownership of /data subdirectories
 ensure_data_ownership() {
-  local service="$1"  # bitcoin, lnd, elements, etc.
+  local service="$1"  # bitcoin, lnd, brln-api, etc.
   local user="${2:-$service}"
   local group="${3:-$service}"
   

@@ -273,13 +273,6 @@ deploy_frontend_files() {
         sudo cp -r "$SCRIPT_DIR/pages"/* /var/www/html/pages/
     fi
     
-    # Deploy simple-lnwallet if exists
-    if [[ -d "$SCRIPT_DIR/simple-lnwallet" ]]; then
-        echo -e "${BLUE}📱 Copiando simple-lnwallet...${NC}"
-        sudo rm -rf /var/www/html/simple-lnwallet
-        sudo cp -r "$SCRIPT_DIR/simple-lnwallet" /var/www/html/
-    fi
-    
     # Deploy static assets
     echo -e "${BLUE}📦 Copiando assets estáticos...${NC}"
     for asset in favicon.ico *.css *.js *.png *.jpg *.jpeg *.gif *.svg; do

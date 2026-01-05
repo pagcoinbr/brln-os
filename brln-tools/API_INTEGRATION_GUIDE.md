@@ -29,11 +29,11 @@ password_api = SecurePasswordAPI(master_password="your_master_password")
 
 #### Retrieve Password
 ```python
-# Get Elements RPC password
-elements_password = password_api.get_password('elements_rpc_password')
+# Get Bitcoin RPC password
+bitcoin_password = password_api.get_password('bitcoin_rpc')
 
-if elements_password:
-    print(f"Password: {elements_password}")
+if bitcoin_password:
+    print(f"Password: {bitcoin_password}")
 else:
     print("Password not found")
 ```
@@ -73,14 +73,14 @@ password_api = SecurePasswordAPI(
 )
 
 # Load dynamic credentials
-ELEMENTS_RPC_USER = password_api.get_password('elements_rpc_user') or 'elements'
-ELEMENTS_RPC_PASSWORD = password_api.get_password('elements_rpc_password') or 'changeme'
+BITCOIN_RPC_USER = password_api.get_password('bitcoin_rpc_user') or 'minibolt'
+BITCOIN_RPC_PASSWORD = password_api.get_password('bitcoin_rpc') or 'changeme'
 
 @app.route('/api/config')
 def get_config():
     return jsonify({
-        'elements_user': ELEMENTS_RPC_USER,
-        'has_password': ELEMENTS_RPC_PASSWORD != 'changeme'
+        'bitcoin_user': BITCOIN_RPC_USER,
+        'has_password': BITCOIN_RPC_PASSWORD != 'changeme'
     })
 ```
 
@@ -185,11 +185,7 @@ if is_initialized():
     pass
 ```
 
-### 9. Complete Flask Integration Example
-
-See: `/root/brln-os/brln-tools/api_integration_examples.py`
-
-### 10. Testing
+### 9. Testing
 
 Run the test suite:
 ```bash
@@ -197,7 +193,7 @@ cd /root/brln-os/brln-tools
 BRLN_MASTER_PASSWORD="your_password" python3 secure_password_api.py
 ```
 
-### 11. Troubleshooting
+### 10. Troubleshooting
 
 **Problem:** "Master password required"
 - **Solution:** Set `BRLN_MASTER_PASSWORD` environment variable
@@ -211,19 +207,17 @@ BRLN_MASTER_PASSWORD="your_password" python3 secure_password_api.py
 **Problem:** Slow password retrieval
 - **Solution:** Enable caching: `SecurePasswordAPI(cache_enabled=True)`
 
-### 12. Migration from Hardcoded Credentials
+### 11. Migration from Hardcoded Credentials
 
 Before:
 ```python
-ELEMENTS_RPC_PASSWORD = "test"
+BITCOIN_RPC_PASSWORD = "test"
 ```
 
 After:
 ```python
 from secure_password_api import get_password
-ELEMENTS_RPC_PASSWORD = get_password('elements_rpc_password') or 'test'
+BITCOIN_RPC_PASSWORD = get_password('bitcoin_rpc') or 'test'
 ```
 
 ---
-
-For more examples, see `api_integration_examples.py`

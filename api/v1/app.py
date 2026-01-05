@@ -41,7 +41,7 @@ HD Wallet Management:
 - GET  /api/v1/wallet/list                      - Listar todas as wallets salvas
 - GET  /api/v1/wallet/system-default            - Obter wallet padrão do sistema
 - POST /api/v1/wallet/system-default            - Definir wallet padrão do sistema
-- POST /api/v1/wallet/integrate                 - Integrar wallet com LND e Elements
+- POST /api/v1/wallet/integrate                 - Integrar wallet com LND
 - POST /api/v1/wallet/load                      - Carregar e descriptografar wallet
 - GET  /api/v1/wallet/addresses/<wallet_id>     - Obter endereços derivados
 - GET  /api/v1/wallet/balance/<chain>/<addr>    - Obter saldo de chain específica
@@ -50,13 +50,6 @@ HD Wallet Management:
 - POST /api/v1/wallet/export-backup             - Exportar backup completo para recuperação
 - POST /api/v1/wallet/bip39-to-lnd              - Converter BIP39 para LND master key
 
-Elements/Liquid Network:
-- GET  /api/v1/elements/balances                - Obter saldos de todos os assets
-- POST /api/v1/elements/addresses               - Gerar novo endereço Liquid
-- POST /api/v1/elements/send                    - Enviar asset para endereço
-- GET  /api/v1/elements/utxos                   - Listar UTXOs Liquid não gastos
-- GET  /api/v1/elements/transactions            - Listar transações Liquid recentes
-- GET  /api/v1/elements/info                    - Informações da blockchain Liquid
 
 Lightning Chat System:
 - GET  /api/v1/lightning/chat/conversations     - Listar todas as conversas ativas
@@ -78,14 +71,6 @@ LND Wallet Initialization:
 - POST /api/v1/lnd/wallet/create-from-api       - Criar wallet LND usando seed da API
 - POST /api/v1/lnd/wallet/create-expect         - Criar wallet LND usando expect script
 
-TRON GasFree Wallet:
-- POST /api/v1/tron/wallet/initialize           - Inicializar wallet TRON
-- GET  /api/v1/tron/wallet/address              - Obter endereço wallet TRON
-- GET  /api/v1/tron/wallet/balance              - Obter saldo TRON/USDT
-- POST /api/v1/tron/wallet/send                 - Enviar USDT via gas-free
-- GET  /api/v1/tron/wallet/transactions         - Histórico de transações TRON
-- POST /api/v1/tron/config/save                 - Salvar configuração TRON
-- GET  /api/v1/tron/config/load                 - Carregar configuração TRON
 """
 
 # Environment Virtual Check
@@ -159,7 +144,35 @@ except ImportError as e:
 warnings.filterwarnings("ignore")
 
 # Network configuration
-BITCOIN_NETWORK = os.environ.get('BITCOIN_NETWORK', 'mainnet')
+BITCOIN_BACKEND_CONFIG = "/data/brln-config/bitcoin-backend.env"
+
+def load_bitcoin_backend_env():
+    env = {}
+    if os.path.exists(BITCOIN_BACKEND_CONFIG):
+        with open(BITCOIN_BACKEND_CONFIG, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    env[key.strip()] = value.strip()
+    return env
+
+BITCOIN_BACKEND_ENV = load_bitcoin_backend_env()
+
+def get_backend_value(key, default=None):
+    return os.environ.get(key, BITCOIN_BACKEND_ENV.get(key, default))
+
+BITCOIN_NETWORK = get_backend_value('BITCOIN_NETWORK', 'mainnet')
+BITCOIN_BACKEND = get_backend_value('BITCOIN_BACKEND', 'local')
+BITCOIN_RPC_HOST = get_backend_value('BITCOIN_RPC_HOST', '127.0.0.1')
+BITCOIN_RPC_PORT = get_backend_value('BITCOIN_RPC_PORT', '8332')
+BITCOIN_RPC_USER = get_backend_value('BITCOIN_RPC_USER', 'minibolt')
+BITCOIN_RPC_PASSWORD = get_backend_value('BITCOIN_RPC_PASSWORD', '')
+
+def is_remote_bitcoin():
+    return BITCOIN_BACKEND == 'remote'
 
 # Initialize Secure Password Manager API
 def get_master_password():
@@ -226,16 +239,7 @@ LND_GRPC_PORT = "10009"
 MACAROON_PATH = f"/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon"
 TLS_CERT_PATH = "/data/lnd/tls.cert"
 
-# Configurações Elements/Liquid
-ELEMENTS_RPC_HOST = "localhost"
-ELEMENTS_RPC_PORT = "7041"
-# Load credentials from secure password manager
-ELEMENTS_RPC_USER = get_secure_credential('elements_rpc_user', 'elements')
-ELEMENTS_RPC_PASSWORD = get_secure_credential('elements_rpc_password', 'changeme_elements')
 
-if ELEMENTS_RPC_PASSWORD == 'changeme_elements':
-    print("WARNING: Using default Elements RPC password - please configure secure credentials")
-    print("Store password: secure_store_password 'elements_rpc_password' 'admin' 'your_secure_password'")
 
 # Configurações do Wallet HD
 WALLET_DATA_DIR = "/data/brln-wallet"
@@ -276,26 +280,8 @@ SUPPORTED_CHAINS = {
             'https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
         ]
     },
-    'liquid': {
-        'name': 'Liquid Network',
-        'symbol': 'L-BTC',
-        'coin_type': 1776,
-        'path': "m/44'/1776'/0'/0/0",
-        'api_urls': [
-            'https://liquid.network/api/address/',
-            'https://blockstream.info/liquid/api/address/'
-        ]
-    },
-    'tron': {
-        'name': 'TRON',
-        'symbol': 'TRX',
-        'coin_type': 195,
-        'path': "m/44'/195'/0'/0/0",
-        'api_urls': [
-            'https://api.trongrid.io/wallet/getaccount',
-            'https://apilist.tronscanapi.com/api/account'
-        ]
-    },
+
+
     'solana': {
         'name': 'Solana',
         'symbol': 'SOL',
@@ -431,27 +417,7 @@ class WalletManager:
             )
         ''')
         
-        # Tabela para configuração TRON Gas-Free
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS tron_config (
-                id INTEGER PRIMARY KEY DEFAULT 1,
-                tron_address TEXT,
-                encrypted_private_key BLOB,
-                salt BLOB,
-                tron_api_url TEXT DEFAULT 'https://api.trongrid.io',
-                tron_api_key TEXT,
-                gasfree_api_key TEXT,
-                gasfree_api_secret TEXT,
-                gasfree_endpoint TEXT DEFAULT 'https://open.gasfree.io/tron/',
-                gasfree_verifying_contract TEXT DEFAULT 'TFFAMLQZybALab4uxHA9RBE7pxhUAjfF3U',
-                gasfree_service_provider TEXT DEFAULT 'TLntW9Z59LYY5KEi9cmwk3PKjQga828ird',
-                usdt_contract_address TEXT DEFAULT 'TR7NHqjeKQxGTCi8z8ZY4pL8otSzgjLj6t',
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                CHECK (id = 1)
-            )
-        ''')
-        
+                
         conn.commit()
         conn.close()
     
@@ -821,11 +787,6 @@ class WalletManager:
             elif chain_id == 'ethereum':
                 return self._generate_ethereum_address(public_key)
             
-            elif chain_id == 'liquid':
-                return self._generate_liquid_address(public_key)
-            
-            elif chain_id == 'tron':
-                return self._generate_tron_address(public_key)
             
             elif chain_id == 'solana':
                 return self._generate_solana_address(public_key)
@@ -889,68 +850,7 @@ class WalletManager:
         except Exception as e:
             return f"Ethereum address error: {str(e)}"
     
-    def _generate_liquid_address(self, public_key):
-        """Gera endereço Liquid (similar ao Bitcoin mas com prefixo diferente)"""
-        try:
-            import hashlib
-            import base58
-            
-            # SHA256 hash do public key
-            sha256_hash = hashlib.sha256(public_key).digest()
-            
-            # RIPEMD160 hash do SHA256
-            ripe = hashlib.new('ripemd160')
-            ripe.update(sha256_hash)
-            ripemd160_hash = ripe.digest()
-            
-            # Liquid usa versão diferente (0x39 para mainnet)
-            versioned_payload = b'\x39' + ripemd160_hash
-            
-            # Checksum SHA256 duplo
-            checksum = hashlib.sha256(hashlib.sha256(versioned_payload).digest()).digest()[:4]
-            
-            # Endereço final
-            address_bytes = versioned_payload + checksum
-            address = base58.b58encode(address_bytes).decode('ascii')
-            
-            return address
-            
-        except Exception as e:
-            return f"Liquid address error: {str(e)}"
-    
-    def _generate_tron_address(self, public_key):
-        """Gera endereço TRON"""
-        try:
-            import hashlib
-            import base58
-            
-            # Remover primeiro byte se presente
-            if len(public_key) == 65 and public_key[0] == 0x04:
-                public_key = public_key[1:]
-            
-            # Keccak256 hash do public key
-            keccak = hashlib.sha3_256(public_key)
-            hash_bytes = keccak.digest()
-            
-            # Pegar últimos 20 bytes
-            address_bytes = hash_bytes[-20:]
-            
-            # Adicionar prefixo TRON (0x41)
-            tron_address = b'\x41' + address_bytes
-            
-            # Checksum SHA256 duplo
-            checksum = hashlib.sha256(hashlib.sha256(tron_address).digest()).digest()[:4]
-            
-            # Endereço final com checksum
-            final_address = tron_address + checksum
-            address = base58.b58encode(final_address).decode('ascii')
-            
-            return address
-            
-        except Exception as e:
-            return f"TRON address error: {str(e)}"
-    
-    def _generate_solana_address(self, public_key):
+            def _generate_solana_address(self, public_key):
         """Gera endereço Solana"""
         try:
             import base58
@@ -1840,104 +1740,6 @@ lnd_grpc_client = LNDgRPCClient()
 
 # === CLIENTE RPC ELEMENTS/LIQUID ===
 
-class ElementsRPCClient:
-    """Cliente RPC para Elements/Liquid daemon"""
-    
-    def __init__(self):
-        self.host = ELEMENTS_RPC_HOST
-        self.port = ELEMENTS_RPC_PORT
-        # Load credentials dynamically on init
-        self._update_credentials()
-    
-    def _update_credentials(self):
-        """Update credentials from secure password manager"""
-        self.user = get_secure_credential('elements_rpc_user', ELEMENTS_RPC_USER)
-        self.password = get_secure_credential('elements_rpc_password', ELEMENTS_RPC_PASSWORD)
-        self.auth = base64.b64encode(f"{self.user}:{self.password}".encode()).decode()
-        
-    def _call_rpc(self, method, params=None, wallet='peerswap'):
-        """Faz chamada RPC para Elements daemon"""
-        if params is None:
-            params = []
-        
-        # Refresh credentials before each call (supports password rotation)
-        self._update_credentials()
-            
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Basic {self.auth}'
-        }
-        
-        payload = {
-            "jsonrpc": "1.0",
-            "id": "python-elements-rpc",
-            "method": method,
-            "params": params
-        }
-        
-        try:
-            import requests
-            # Use wallet-specific endpoint to ensure we're accessing the correct wallet
-            url = f"http://{self.host}:{self.port}/wallet/{wallet}" if wallet else f"http://{self.host}:{self.port}/"
-            response = requests.post(
-                url,
-                json=payload,
-                headers=headers,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                if 'error' in result and result['error'] is not None:
-                    return None, f"Elements RPC Error: {result['error']}"
-                return result.get('result'), None
-            else:
-                return None, f"HTTP Error {response.status_code}: {response.text}"
-                
-        except requests.exceptions.RequestException as e:
-            return None, f"Connection Error: {str(e)}"
-        except Exception as e:
-            return None, f"Unexpected Error: {str(e)}"
-    
-    def get_balances(self):
-        """Obtém saldos de todos os assets"""
-        return self._call_rpc("getbalances")
-    
-    def get_asset_labels(self):
-        """Obtém labels/nomes dos assets conhecidos"""
-        return self._call_rpc("dumpassetlabels")
-    
-    def get_new_address(self, label="", address_type="bech32"):
-        """Gera novo endereço Liquid"""
-        return self._call_rpc("getnewaddress", [label, address_type])
-    
-    def send_to_address(self, address, amount, asset_label=None, subtract_fee=False):
-        """Envia asset para endereço"""
-        params = [address, amount]
-        if asset_label:
-            # Adicionar parâmetros opcionais até chegar no assetlabel
-            params.extend(["", "", subtract_fee, True, None, "unset", True, asset_label])
-        return self._call_rpc("sendtoaddress", params)
-    
-    def list_unspent(self, minconf=1, maxconf=9999999, asset=None):
-        """Lista UTXOs não gastos"""
-        params = [minconf, maxconf]
-        if asset:
-            params.append([])  # addresses
-            params.append(True)  # include_unsafe
-            params.append({"asset": asset})  # query_options
-        return self._call_rpc("listunspent", params)
-    
-    def list_transactions(self, count=30, skip=0):
-        """Lista transações recentes"""
-        return self._call_rpc("listtransactions", ["*", count, skip])
-    
-    def get_blockchain_info(self):
-        """Obtém informações da blockchain"""
-        return self._call_rpc("getblockchaininfo")
-
-# Singleton para reusar conexão Elements RPC
-elements_rpc_client = ElementsRPCClient()
 
 # === SISTEMA DE CHAT LIGHTNING ===
 
@@ -2118,14 +1920,10 @@ init_chat_database()
 
 # Mapeamento de serviços
 SERVICE_MAPPING = {
-    'lnbits': 'lnbits.service',
-    'thunderhub': 'thunderhub.service',
-    'simple': 'simple-lnwallet.service',
     'lndg': 'lndg.service',
     'lndg-controller': 'lndg-controller.service',
     'lnd': 'lnd.service',
     'bitcoind': 'bitcoind.service',
-    'elementsd': 'elementsd.service',
     'bos-telegram': 'bos-telegram.service',
     'tor': 'tor@default.service',
     'gotty-fullauto': 'gotty-fullauto.service'
@@ -2192,6 +1990,9 @@ def manage_systemd_service(service_name, action):
     return code == 0, output
 
 def detect_bitcoin_network():
+    if BITCOIN_NETWORK:
+        return BITCOIN_NETWORK
+
     """Detecta qual rede o Bitcoin está rodando (mainnet, testnet, signet, regtest)"""
     # Check bitcoin.conf for network settings
     possible_configs = [
@@ -2230,6 +2031,32 @@ def detect_bitcoin_network():
     
     return 'mainnet'
 
+def bitcoin_rpc_call(method, params=None, timeout=10):
+    if not BITCOIN_RPC_USER or not BITCOIN_RPC_PASSWORD:
+        return None, 'Bitcoin RPC credentials not configured'
+
+    payload = {
+        'jsonrpc': '1.0',
+        'id': 'brln-api',
+        'method': method,
+        'params': params or []
+    }
+
+    try:
+        response = requests.post(
+            f"http://{BITCOIN_RPC_HOST}:{BITCOIN_RPC_PORT}",
+            json=payload,
+            auth=(BITCOIN_RPC_USER, BITCOIN_RPC_PASSWORD),
+            timeout=timeout
+        )
+        response.raise_for_status()
+        result = response.json()
+        if result.get('error'):
+            return None, result['error']
+        return result.get('result'), None
+    except Exception as exc:
+        return None, str(exc)
+
 def get_bitcoin_cli_command():
     """Retorna o comando bitcoin-cli com as flags corretas para a rede detectada"""
     network = detect_bitcoin_network()
@@ -2245,15 +2072,25 @@ def get_bitcoin_cli_command():
         return base_cmd
 
 def get_bitcoind_info():
-    """Obtém informações do Bitcoin Core"""
+    """Obt?m informa??es do Bitcoin Core"""
+    if is_remote_bitcoin():
+        info, error = bitcoin_rpc_call('getblockchaininfo')
+        if error:
+            raise RuntimeError(f"N?o foi poss?vel obter informa??es via RPC: {error}")
+        return {
+            'status': 'running',
+            'blocks': info.get('blocks', 0),
+            'progress': round(info.get('verificationprogress', 0) * 100, 2)
+        }
+
     if not get_service_status('bitcoind.service'):
-        raise RuntimeError("Serviço bitcoind não está rodando")
-    
+        raise RuntimeError("Servi?o bitcoind n?o est? rodando")
+
     bitcoin_cli = get_bitcoin_cli_command()
     output, code = run_command(f"{bitcoin_cli} getblockchaininfo 2>/dev/null")
     if code != 0 or not output:
-        raise RuntimeError("Não foi possível obter informações do Bitcoin Core via RPC")
-        
+        raise RuntimeError("N?o foi poss?vel obter informa??es do Bitcoin Core via RPC")
+
     try:
         info = json.loads(output)
         return {
@@ -2262,7 +2099,7 @@ def get_bitcoind_info():
             'progress': round(info.get('verificationprogress', 0) * 100, 2)
         }
     except json.JSONDecodeError as e:
-        raise RuntimeError(f"Resposta inválida do Bitcoin Core: {str(e)}")
+        raise RuntimeError(f"Resposta inv?lida do Bitcoin Core: {str(e)}")
 
 def get_blockchain_size():
     """Obtém o tamanho da blockchain usando pathlib"""
@@ -2993,10 +2830,13 @@ def system_status():
         tor_active = get_service_status('tor@default.service')
         
         # Blockchain (pode gerar exceção)
-        try:
-            blockchain_size = get_blockchain_size()
-        except Exception as e:
-            blockchain_size = f"Error: {str(e)}"
+        if is_remote_bitcoin():
+            blockchain_size = "remote"
+        else:
+            try:
+                blockchain_size = get_blockchain_size()
+            except Exception as e:
+                blockchain_size = f"Error: {str(e)}"
         
         response_data = {
             'cpu': {
@@ -3893,337 +3733,17 @@ def check_received_keysends():
             'status': 'error'
         }), 500
 
-# === ENDPOINTS ELEMENTS/LIQUID ===
+# === BITCOIN CORE ENDPOINTS ===
 
-@app.route('/api/v1/elements/balances', methods=['GET'])
-def get_elements_balances():
-    """Obter saldos de todos os assets Elements/Liquid"""
-    try:
-        # Obter saldos
-        balances_result, balances_error = elements_rpc_client.get_balances()
-        if balances_error:
-            return jsonify({
-                'error': f'Erro ao obter saldos: {balances_error}',
-                'status': 'error'
-            }), 500
-        
-        # Obter labels dos assets
-        labels_result, labels_error = elements_rpc_client.get_asset_labels()
-        if labels_error:
-            print(f"Warning: Não foi possível obter labels dos assets: {labels_error}")
-            labels_result = {}
-        
-        # Asset IDs conhecidos
-        known_assets = {
-            "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d": "L-BTC",
-            "02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189": "DePix", 
-            "ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2": "USDT"
-        }
-        
-        # Processar saldos
-        processed_balances = {}
-        if 'mine' in balances_result:
-            mine_balances = balances_result['mine']
-            
-            # Processar cada categoria (trusted, untrusted_pending, immature)
-            for category, assets in mine_balances.items():
-                if isinstance(assets, dict):
-                    for asset_name, amount in assets.items():
-                        # Determinar chave e informações do asset
-                        if asset_name == "bitcoin" or asset_name == "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d":
-                            key = 'lbtc'
-                            symbol = 'L-BTC'
-                            name = 'Liquid Bitcoin'
-                            asset_id = '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d'
-                        elif asset_name == "02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189":
-                            key = 'depix'
-                            symbol = 'DePix'
-                            name = labels_result.get(asset_name, 'DePix')
-                            asset_id = asset_name
-                        elif asset_name == "ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2":
-                            key = 'usdt'
-                            symbol = 'USDT'
-                            name = labels_result.get(asset_name, 'Tether')
-                            asset_id = asset_name
-                        else:
-                            key = asset_name[:8] if len(asset_name) > 8 else asset_name
-                            symbol = known_assets.get(asset_name, asset_name)
-                            name = labels_result.get(asset_name, symbol)
-                            asset_id = asset_name
-                        
-                        # Inicializar balance se não existir
-                        if key not in processed_balances:
-                            processed_balances[key] = {
-                                'asset_id': asset_id,
-                                'symbol': symbol,
-                                'name': name,
-                                'trusted': 0,
-                                'untrusted_pending': 0,
-                                'immature': 0
-                            }
-                        
-                        # Atualizar valor para a categoria
-                        processed_balances[key][category] = amount
-        
-        return jsonify({
-            'balances': processed_balances,
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
 
-@app.route('/api/v1/elements/addresses', methods=['POST'])
-def generate_elements_address():
-    """Gerar novo endereço Elements/Liquid"""
-    try:
-        data = request.get_json() or {}
-        label = data.get('label', '')
-        address_type = data.get('type', 'bech32')  # 'bech32' para confidencial, outros para não-confidencial
-        
-        # Gerar endereço
-        result, error = elements_rpc_client.get_new_address(label, address_type)
-        if error:
-            return jsonify({
-                'error': f'Erro ao gerar endereço: {error}',
-                'status': 'error'
-            }), 500
-        
-        return jsonify({
-            'address': result,
-            'type': address_type,
-            'label': label,
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
 
-@app.route('/api/v1/elements/send', methods=['POST'])
-def send_elements_asset():
-    """Enviar asset Elements/Liquid"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'error': 'Dados JSON requeridos',
-                'status': 'error'
-            }), 400
-        
-        address = data.get('address')
-        amount = data.get('amount')
-        asset = data.get('asset', 'lbtc')  # padrão L-BTC
-        subtract_fee = data.get('subtract_fee', False)
-        
-        if not address or not amount:
-            return jsonify({
-                'error': 'address e amount são requeridos',
-                'status': 'error'
-            }), 400
-        
-        # Mapear asset para label
-        asset_labels = {
-            'lbtc': None,  # Asset nativo, não precisa de label
-            'depix': 'DePix',
-            'usdt': 'USDT'
-        }
-        
-        asset_label = asset_labels.get(asset)
-        
-        # Enviar transação
-        result, error = elements_rpc_client.send_to_address(
-            address, amount, asset_label, subtract_fee
-        )
-        
-        if error:
-            return jsonify({
-                'error': f'Erro ao enviar transação: {error}',
-                'status': 'error'
-            }), 500
-        
-        return jsonify({
-            'txid': result,
-            'address': address,
-            'amount': amount,
-            'asset': asset,
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
 
-@app.route('/api/v1/elements/utxos', methods=['GET'])
-def get_elements_utxos():
-    """Listar UTXOs Elements/Liquid"""
-    try:
-        # Parâmetros de query
-        asset_filter = request.args.get('asset')  # 'lbtc', 'depix', 'usdt', ou asset_id
-        minconf = int(request.args.get('minconf', 1))
-        maxconf = int(request.args.get('maxconf', 9999999))
-        
-        # Mapear asset para ID se necessário
-        asset_ids = {
-            'lbtc': '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d',
-            'depix': '02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189',
-            'usdt': 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2'
-        }
-        
-        asset_id = asset_ids.get(asset_filter, asset_filter) if asset_filter else None
-        
-        # Listar UTXOs
-        result, error = elements_rpc_client.list_unspent(minconf, maxconf, asset_id)
-        if error:
-            return jsonify({
-                'error': f'Erro ao listar UTXOs: {error}',
-                'status': 'error'
-            }), 500
-        
-        # Processar UTXOs
-        processed_utxos = []
-        for utxo in result:
-            asset_id = utxo.get('asset', '')
-            
-            # Determinar tipo de asset
-            if asset_id == '6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d':
-                asset_type = 'lbtc'
-                symbol = 'L-BTC'
-            elif asset_id == '02f22f8d9c76ab41661a2729e4752e2c5d1a263012141b86ea98af5472df5189':
-                asset_type = 'depix'
-                symbol = 'DePix'
-            elif asset_id == 'ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2':
-                asset_type = 'usdt'
-                symbol = 'USDT'
-            else:
-                asset_type = 'unknown'
-                symbol = asset_id[:8] if asset_id else 'Unknown'
-            
-            processed_utxos.append({
-                'txid': utxo.get('txid'),
-                'vout': utxo.get('vout'),
-                'address': utxo.get('address'),
-                'amount': utxo.get('amount', 0),
-                'asset': asset_type,
-                'asset_id': asset_id,
-                'symbol': symbol,
-                'confirmations': utxo.get('confirmations', 0),
-                'spendable': utxo.get('spendable', False),
-                'safe': utxo.get('safe', False)
-            })
-        
-        return jsonify({
-            'utxos': processed_utxos,
-            'count': len(processed_utxos),
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
 
-@app.route('/api/v1/elements/transactions', methods=['GET'])
-def get_elements_transactions():
-    """Listar transações Elements/Liquid"""
-    try:
-        # Parâmetros de query
-        count = int(request.args.get('limit', 30))
-        skip = int(request.args.get('skip', 0))
-        
-        # Listar transações
-        result, error = elements_rpc_client.list_transactions(count, skip)
-        if error:
-            return jsonify({
-                'error': f'Erro ao listar transações: {error}',
-                'status': 'error'
-            }), 500
-        
-        # Processar transações
-        processed_txs = []
-        for tx in result:
-            # Obter informações básicas
-            txid = tx.get('txid')
-            category = tx.get('category')
-            amount = tx.get('amount', 0)
-            fee = tx.get('fee', 0)
-            confirmations = tx.get('confirmations', 0)
-            time = tx.get('time', 0)
-            address = tx.get('address', '')
-            
-            # TODO: Elements pode não ter informações de asset em listtransactions
-            # Pode ser necessário usar getrawtransaction para mais detalhes
-            asset_type = 'lbtc'  # Assumir L-BTC por padrão
-            symbol = 'L-BTC'
-            
-            processed_txs.append({
-                'txid': txid,
-                'category': category,
-                'amount': amount,
-                'fee': fee,
-                'asset': asset_type,
-                'symbol': symbol,
-                'confirmations': confirmations,
-                'time': time,
-                'address': address
-            })
-        
-        return jsonify({
-            'transactions': processed_txs,
-            'count': len(processed_txs),
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
 
-@app.route('/api/v1/elements/info', methods=['GET'])
-def get_elements_info():
-    """Obter informações da blockchain Elements/Liquid"""
-    try:
-        result, error = elements_rpc_client.get_blockchain_info()
-        if error:
-            return jsonify({
-                'error': f'Erro ao obter informações: {error}',
-                'status': 'error'
-            }), 500
-        
-        return jsonify({
-            'chain': result.get('chain'),
-            'blocks': result.get('blocks'),
-            'headers': result.get('headers'),
-            'bestblockhash': result.get('bestblockhash'),
-            'difficulty': result.get('difficulty'),
-            'mediantime': result.get('mediantime'),
-            'verificationprogress': result.get('verificationprogress'),
-            'chainwork': result.get('chainwork'),
-            'size_on_disk': result.get('size_on_disk'),
-            'pruned': result.get('pruned', False),
-            'status': 'success'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
-
-# === BITCOIN CORE PROXY ENDPOINTS ===
 
 @app.route('/api/v1/bitcoin/info', methods=['GET'])
 def get_bitcoin_info():
-    """Proxy para obter informações do Bitcoin Core local"""
+    """Proxy para obter informacoes do Bitcoin Core (local ou remoto)"""
     try:
         bitcoin_info = get_bitcoind_info()
         
@@ -4242,35 +3762,40 @@ def get_bitcoin_info():
 
 @app.route('/api/v1/bitcoin/block/height', methods=['GET'])
 def get_bitcoin_block_height():
-    """Endpoint específico para obter altura do bloco atual do Bitcoin"""
+    """Endpoint espec?fico para obter altura do bloco atual do Bitcoin"""
     try:
-        if not get_service_status('bitcoind.service'):
-            return jsonify({
-                'error': 'Serviço bitcoind não está rodando',
-                'status': 'error'
-            }), 503
-        
-        # Obter apenas a altura do bloco
-        output, code = run_command("bitcoin-cli getblockcount 2>/dev/null")
-        if code != 0 or not output:
-            return jsonify({
-                'error': 'Não foi possível obter altura do bloco do Bitcoin Core',
-                'status': 'error'
-            }), 500
-        
-        try:
-            block_height = int(output.strip())
+        if is_remote_bitcoin():
+            result, error = bitcoin_rpc_call('getblockcount')
+            if error:
+                return jsonify({
+                    'error': f'RPC error: {error}',
+                    'status': 'error'
+                }), 503
             return jsonify({
                 'status': 'success',
-                'block_height': block_height,
-                'source': 'bitcoin-core-local'
+                'height': result
             })
-        except ValueError:
+
+        if not get_service_status('bitcoind.service'):
             return jsonify({
-                'error': 'Resposta inválida do Bitcoin Core',
+                'error': 'Servi?o bitcoind n?o est? rodando',
                 'status': 'error'
-            }), 500
-        
+            }), 503
+
+        bitcoin_cli = get_bitcoin_cli_command()
+        output, code = run_command(f"{bitcoin_cli} getblockcount 2>/dev/null")
+        if code != 0 or not output:
+            return jsonify({
+                'error': 'N?o foi poss?vel obter altura do bloco do Bitcoin Core',
+                'status': 'error'
+            }), 503
+
+        height = int(output.strip())
+        return jsonify({
+            'status': 'success',
+            'height': height
+        })
+
     except Exception as e:
         return jsonify({
             'error': str(e),
@@ -4279,29 +3804,52 @@ def get_bitcoin_block_height():
 
 @app.route('/api/v1/bitcoin/block/<block_hash>', methods=['GET'])
 def get_bitcoin_block(block_hash):
-    """Obter informações de um bloco específico"""
+    """Obter informacoes de um bloco especifico"""
     try:
-        if not get_service_status('bitcoind.service'):
-            return jsonify({
-                'error': 'Serviço bitcoind não está rodando',
-                'status': 'error'
-            }), 503
-        
-        # Validação básica do hash
+        # Validacao basica do hash
         if len(block_hash) != 64 or not all(c in '0123456789abcdefABCDEF' for c in block_hash):
             return jsonify({
-                'error': 'Hash de bloco inválido',
+                'error': 'Hash de bloco invalido',
                 'status': 'error'
             }), 400
-        
-        # Obter informações do bloco
-        output, code = run_command(f"bitcoin-cli getblock {block_hash} 1 2>/dev/null")
+
+        if is_remote_bitcoin():
+            block_info, error = bitcoin_rpc_call('getblock', [block_hash, 1])
+            if error:
+                return jsonify({
+                    'error': f'RPC error: {error}',
+                    'status': 'error'
+                }), 503
+
+            return jsonify({
+                'status': 'success',
+                'block': {
+                    'hash': block_info.get('hash'),
+                    'height': block_info.get('height'),
+                    'time': block_info.get('time'),
+                    'size': block_info.get('size'),
+                    'tx_count': len(block_info.get('tx', [])),
+                    'difficulty': block_info.get('difficulty'),
+                    'previousblockhash': block_info.get('previousblockhash'),
+                    'nextblockhash': block_info.get('nextblockhash')
+                },
+                'source': 'bitcoin-core-remote'
+            })
+
+        if not get_service_status('bitcoind.service'):
+            return jsonify({
+                'error': 'Servico bitcoind nao esta rodando',
+                'status': 'error'
+            }), 503
+
+        bitcoin_cli = get_bitcoin_cli_command()
+        output, code = run_command(f"{bitcoin_cli} getblock {block_hash} 1 2>/dev/null")
         if code != 0 or not output:
             return jsonify({
-                'error': 'Não foi possível obter informações do bloco',
+                'error': 'Nao foi possivel obter informacoes do bloco',
                 'status': 'error'
             }), 500
-        
+
         try:
             block_info = json.loads(output)
             return jsonify({
@@ -4320,15 +3868,16 @@ def get_bitcoin_block(block_hash):
             })
         except json.JSONDecodeError:
             return jsonify({
-                'error': 'Resposta inválida do Bitcoin Core',
+                'error': 'Resposta invalida do Bitcoin Core',
                 'status': 'error'
             }), 500
-        
+
     except Exception as e:
         return jsonify({
             'error': str(e),
             'status': 'error'
         }), 500
+
 
 # === WALLET MANAGEMENT ENDPOINTS ===
 
@@ -4669,70 +4218,7 @@ def save_wallet():
                 integration_thread = threading.Thread(target=background_lnd_integration, daemon=True)
                 integration_thread.start()
                 
-                # Also integrate Elements wallet
-                def background_elements_integration():
-                    try:
-                        print(f"🔷 Starting Elements integration for wallet '{wallet_id}'...")
-                        
-                        # Start Elements daemon if not running
-                        subprocess.run(['sudo', 'systemctl', 'start', 'elementsd'], capture_output=True, timeout=30)
-                        print("▶️ Elements service started")
-                        
-                        # Wait for Elements to be ready
-                        import time
-                        time.sleep(10)
-                        
-                        # Check if peerswap wallet exists
-                        wallet_list_result = subprocess.run(
-                            ['elements-cli', '-datadir=/data/elements', 'listwallets'],
-                            capture_output=True, text=True, timeout=30
-                        )
-                        
-                        if wallet_list_result.returncode == 0:
-                            import json
-                            wallets = json.loads(wallet_list_result.stdout)
-                            
-                            if 'peerswap' not in wallets:
-                                # Create peerswap wallet with descriptor
-                                print("📝 Creating peerswap wallet...")
-                                create_result = subprocess.run(
-                                    ['elements-cli', '-datadir=/data/elements', 
-                                     'createwallet', 'peerswap', 'false', 'false', '', 'false', 'true'],
-                                    capture_output=True, text=True, timeout=60
-                                )
-                                
-                                if create_result.returncode == 0:
-                                    print(f"✅ Elements peerswap wallet created")
-                                else:
-                                    print(f"⚠️ Elements wallet creation failed: {create_result.stderr}")
-                                    return
-                            else:
-                                print("✅ Elements peerswap wallet already exists")
-                            
-                            # Import mnemonic as HD seed
-                            print("🔑 Importing HD seed into Elements wallet...")
-                            import_result = subprocess.run(
-                                ['elements-cli', '-datadir=/data/elements', '-rpcwallet=peerswap',
-                                 'sethdseed', 'true', mnemonic],
-                                capture_output=True, text=True, timeout=60
-                            )
-                            
-                            if import_result.returncode == 0:
-                                print(f"✅ Elements wallet integrated successfully for wallet '{wallet_id}'")
-                            else:
-                                # Sometimes sethdseed fails if already set, try importing descriptors
-                                print(f"⚠️ sethdseed failed (may already be set): {import_result.stderr}")
-                                print(f"✅ Elements wallet exists and ready for wallet '{wallet_id}'")
-                        else:
-                            print(f"❌ Elements wallet list failed: {wallet_list_result.stderr}")
-                            
-                    except Exception as e:
-                        print(f"❌ Elements integration failed for wallet '{wallet_id}': {str(e)}")
-                
-                # Start Elements integration in background
-                elements_thread = threading.Thread(target=background_elements_integration, daemon=True)
-                elements_thread.start()
-                    
+                                    
             except Exception as e:
                 print(f"⚠️ Wallet integration setup error: {str(e)}")
                 message += ' - Wallet integration setup failed'
@@ -4861,7 +4347,7 @@ def set_system_default():
 
 @app.route('/api/v1/wallet/integrate', methods=['POST'])
 def integrate_system_wallet():
-    """Manually integrate the system default wallet with LND and Elements"""
+    """Manually integrate the system default wallet with LND"""
     try:
         data = request.get_json()
         wallet_id = data.get('wallet_id') if data else None
@@ -5020,163 +4506,6 @@ def integrate_system_wallet():
             'status': 'error'
         }), 500
 
-@app.route('/api/v1/wallet/integrate-elements', methods=['POST'])
-def integrate_elements_wallet():
-    """Manually integrate the system default wallet with Elements/Liquid"""
-    try:
-        data = request.get_json()
-        wallet_id = data.get('wallet_id') if data else None
-        password = data.get('password') if data else None
-        
-        # If no wallet_id provided, get the system default
-        if not wallet_id:
-            default_wallet, error = wallet_manager.get_system_default_wallet()
-            if error or not default_wallet:
-                return jsonify({
-                    'error': 'No system default wallet found',
-                    'status': 'error'
-                }), 404
-            
-            wallet_id = default_wallet['wallet_id']
-        
-        # Load the wallet data from database
-        wallet_data, error = wallet_manager.load_wallet(wallet_id)
-        if error:
-            return jsonify({
-                'error': error,
-                'status': 'error'
-            }), 404
-        
-        # Check if we need to decrypt the mnemonic
-        mnemonic = None
-        
-        # Try to get from temporary wallets first (if recently loaded)
-        if hasattr(wallet_manager, 'temp_wallets') and wallet_id in wallet_manager.temp_wallets:
-            mnemonic = wallet_manager.temp_wallets[wallet_id].get('mnemonic')
-        
-        # If not in temp storage and wallet is encrypted, require password
-        if not mnemonic and wallet_data.get('encrypted_mnemonic'):
-            if not password:
-                # Try using master password from environment
-                master_password = get_master_password()
-                if master_password:
-                    password = master_password
-                    print("Using master password from environment for Elements integration")
-                else:
-                    return jsonify({
-                        'error': 'Password required for wallet decryption',
-                        'status': 'error'
-                    }), 400
-            
-            # Decrypt the mnemonic
-            mnemonic, decrypt_error = wallet_manager.decrypt_mnemonic(
-                wallet_data['encrypted_mnemonic'],
-                wallet_data['salt'],
-                password
-            )
-            if decrypt_error:
-                return jsonify({
-                    'error': 'Invalid password or corrupted wallet data',
-                    'status': 'error'
-                }), 401
-        
-        # If we still don't have a mnemonic
-        if not mnemonic:
-            return jsonify({
-                'error': 'Wallet data not found or corrupted',
-                'status': 'error'
-            }), 400
-        
-        # Start background integration
-        try:
-            print(f"🔷 Starting manual Elements integration for wallet '{wallet_id}'...")
-            
-            # Run integration in background thread
-            def background_elements_integration():
-                try:
-                    # Start Elements daemon if not running
-                    subprocess.run(['sudo', 'systemctl', 'start', 'elementsd'], capture_output=True, timeout=30)
-                    print("▶️ Elements service started for manual integration")
-                    
-                    # Wait for Elements to be ready
-                    import time
-                    time.sleep(10)
-                    
-                    # Check if peerswap wallet exists
-                    wallet_list_result = subprocess.run(
-                        ['elements-cli', '-datadir=/data/elements', 'listwallets'],
-                        capture_output=True, text=True, timeout=30
-                    )
-                    
-                    if wallet_list_result.returncode == 0:
-                        import json
-                        wallets = json.loads(wallet_list_result.stdout)
-                        
-                        if 'peerswap' not in wallets:
-                            # Create peerswap wallet with descriptor
-                            print("📝 Creating peerswap wallet for manual integration...")
-                            create_result = subprocess.run(
-                                ['elements-cli', '-datadir=/data/elements', 
-                                 'createwallet', 'peerswap', 'false', 'false', '', 'false', 'true'],
-                                capture_output=True, text=True, timeout=60
-                            )
-                            
-                            if create_result.returncode == 0:
-                                print(f"✅ Elements peerswap wallet created for manual integration")
-                            else:
-                                print(f"⚠️ Elements wallet creation failed: {create_result.stderr}")
-                                return
-                        else:
-                            print("✅ Elements peerswap wallet already exists for manual integration")
-                        
-                        # Load the wallet to ensure it's active
-                        load_result = subprocess.run(
-                            ['elements-cli', '-datadir=/data/elements', 'loadwallet', 'peerswap'],
-                            capture_output=True, text=True, timeout=30
-                        )
-                        print("📂 Peerswap wallet loaded/verified")
-                        
-                        # Import mnemonic as HD seed
-                        print("🔑 Importing HD seed into Elements wallet for manual integration...")
-                        import_result = subprocess.run(
-                            ['elements-cli', '-datadir=/data/elements', '-rpcwallet=peerswap',
-                             'sethdseed', 'true', mnemonic],
-                            capture_output=True, text=True, timeout=60
-                        )
-                        
-                        if import_result.returncode == 0:
-                            print(f"✅ Elements wallet integrated successfully for manual integration '{wallet_id}'")
-                        else:
-                            # Sometimes sethdseed fails if already set
-                            print(f"⚠️ sethdseed may have already been set: {import_result.stderr}")
-                            print(f"✅ Elements wallet exists and ready for manual integration '{wallet_id}'")
-                    else:
-                        print(f"❌ Elements wallet list failed: {wallet_list_result.stderr}")
-                        
-                except Exception as e:
-                    print(f"❌ Manual Elements integration failed for wallet '{wallet_id}': {str(e)}")
-            
-            # Start integration in background
-            integration_thread = threading.Thread(target=background_elements_integration, daemon=True)
-            integration_thread.start()
-            
-            return jsonify({
-                'status': 'success',
-                'message': f'Elements integration started in background for wallet {wallet_id}',
-                'wallet_id': wallet_id
-            })
-            
-        except Exception as e:
-            return jsonify({
-                'error': f'Elements integration setup failed: {str(e)}',
-                'status': 'error'
-            }), 500
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
 
 @app.route('/api/v1/wallet/load', methods=['POST'])
 def load_wallet():
@@ -5407,26 +4736,6 @@ def get_chain_balance(chain_id, address):
             except:
                 pass
         
-        # Para Liquid, tentar API local primeiro
-        elif chain_id == 'liquid':
-            try:
-                balances_result, _ = elements_rpc_client.get_balances()
-                if balances_result and 'mine' in balances_result:
-                    mine_balances = balances_result['mine']
-                    if 'trusted' in mine_balances:
-                        for asset_name, amount in mine_balances['trusted'].items():
-                            if asset_name == "bitcoin" or "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d" in asset_name:
-                                return jsonify({
-                                    'status': 'success',
-                                    'chain': chain_id,
-                                    'address': address,
-                                    'balance': f"{amount:.8f}",
-                                    'symbol': 'L-BTC',
-                                    'source': 'local_api'
-                                })
-            except:
-                pass
-        
         # Fallback para APIs públicas
         chain_config = SUPPORTED_CHAINS[chain_id]
         
@@ -5462,25 +4771,6 @@ def get_chain_balance(chain_id, address):
                                     'balance': f"{balance_eth:.18f}",
                                     'symbol': 'ETH',
                                     'source': 'etherscan'
-                                })
-                
-                elif chain_id == 'tron':
-                    if 'trongrid' in api_url:
-                        response = requests.post(api_url, 
-                            json={"address": address, "visible": True}, 
-                            timeout=10)
-                        if response.status_code == 200:
-                            data = response.json()
-                            if not data.get('Error'):
-                                balance_sun = data.get('balance', 0)
-                                balance_trx = balance_sun / 1000000
-                                return jsonify({
-                                    'status': 'success',
-                                    'chain': chain_id,
-                                    'address': address,
-                                    'balance': f"{balance_trx:.6f}",
-                                    'symbol': 'TRX',
-                                    'source': 'trongrid'
                                 })
                 
                 elif chain_id == 'solana':
@@ -6098,629 +5388,14 @@ def lnd_create_wallet_expect():
         }), 500
 
 # ============================================================================
-# TRON GAS-FREE WALLET ENDPOINTS
 # ============================================================================
 
-@app.route('/api/v1/tron/wallet/initialize', methods=['POST'])
-def tron_initialize_wallet():
-    """Initialize TRON wallet from system wallet seed phrase"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'status': 'error',
-                'message': 'No data provided'
-            }), 400
-        
-        password = data.get('password')
-        if not password:
-            return jsonify({
-                'status': 'error',
-                'message': 'Password is required'
-            }), 400
-        
-        # Get system wallet
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT encrypted_mnemonic, salt FROM wallets 
-            WHERE is_system_default = 1 
-            LIMIT 1
-        """)
-        
-        result = cursor.fetchone()
-        
-        if not result:
-            conn.close()
-            return jsonify({
-                'status': 'error',
-                'message': 'System wallet not found. Please create a system wallet first.'
-            }), 404
-        
-        encrypted_mnemonic, salt = result
-        
-        # Decrypt mnemonic
-        try:
-            mnemonic = decrypt_data(encrypted_mnemonic, password, salt)
-        except Exception as e:
-            conn.close()
-            return jsonify({
-                'status': 'error',
-                'message': 'Invalid password or decryption failed'
-            }), 401
-        
-        # Derive TRON address and private key
-        addresses, addr_error = wallet_manager.derive_addresses(mnemonic, "")
-        if addr_error:
-            conn.close()
-            return jsonify({
-                'status': 'error',
-                'message': f'Failed to derive addresses: {addr_error}'
-            }), 500
-        
-        private_keys, privkey_error = wallet_manager.derive_private_keys(mnemonic, "")
-        if privkey_error:
-            conn.close()
-            return jsonify({
-                'status': 'error',
-                'message': f'Failed to derive private keys: {privkey_error}'
-            }), 500
-        
-        # Extract TRON data from nested dictionaries
-        tron_addr_data = addresses.get('tron', {})
-        tron_key_data = private_keys.get('tron', {})
-        
-        # Get actual address and private key strings
-        if isinstance(tron_addr_data, dict):
-            tron_address = tron_addr_data.get('address')
-        else:
-            tron_address = tron_addr_data
-            
-        if isinstance(tron_key_data, dict):
-            tron_private_key = tron_key_data.get('private_key')
-        else:
-            tron_private_key = tron_key_data
-        
-        if not tron_address or not tron_private_key:
-            conn.close()
-            return jsonify({
-                'status': 'error',
-                'message': f'Failed to derive TRON data. Address: {tron_address}, Key: {bool(tron_private_key)}'
-            }), 500
-        
-        # Encrypt private key (ensure it's a string)
-        encrypted_key, key_salt = encrypt_data(str(tron_private_key), password)
-        
-        # Check if config exists
-        cursor.execute("SELECT id FROM tron_config WHERE id = 1")
-        exists = cursor.fetchone()
-        
-        if exists:
-            # Update existing
-            cursor.execute("""
-                UPDATE tron_config 
-                SET tron_address = ?, encrypted_private_key = ?, salt = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = 1
-            """, (tron_address, encrypted_key, key_salt))
-        else:
-            # Insert new
-            cursor.execute("""
-                INSERT INTO tron_config 
-                (id, tron_address, encrypted_private_key, salt)
-                VALUES (1, ?, ?, ?)
-            """, (tron_address, encrypted_key, key_salt))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'TRON wallet initialized successfully',
-            'address': tron_address
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-@app.route('/api/v1/tron/wallet/address', methods=['GET'])
-def tron_get_wallet_address():
-    """Get TRON gas-free wallet address"""
-    try:
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT tron_address, gasfree_endpoint, gasfree_api_key, gasfree_api_secret 
-            FROM tron_config 
-            WHERE id = 1
-        """)
-        
-        result = cursor.fetchone()
-        conn.close()
-        
-        if not result or not result[0]:
-            return jsonify({
-                'status': 'error',
-                'message': 'TRON wallet not configured. Please configure in settings.'
-            }), 404
-        
-        eoa_address = result[0]
-        gasfree_endpoint = result[1] or 'https://open.gasfree.io/tron/'
-        gasfree_api_key = result[2]
-        gasfree_api_secret = result[3]
-        
-        # Get gasFreeAddress from GasFree API
-        try:
-            import hmac
-            import hashlib
-            import base64
-            import time
-            
-            method = 'GET'
-            path = f'/tron/api/v1/address/{eoa_address}'
-            timestamp = int(time.time())
-            message = f"{method}{path}{timestamp}"
-            
-            signature = base64.b64encode(
-                hmac.new(
-                    gasfree_api_secret.encode('utf-8'),
-                    message.encode('utf-8'),
-                    hashlib.sha256
-                ).digest()
-            ).decode('utf-8')
-            
-            headers = {
-                'Timestamp': str(timestamp),
-                'Authorization': f'ApiKey {gasfree_api_key}:{signature}'
-            }
-            
-            response = requests.get(
-                f'{gasfree_endpoint}api/v1/address/{eoa_address}',
-                headers=headers,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('code') == 200 and data.get('data'):
-                    gasfree_address = data['data'].get('gasFreeAddress')
-                    if gasfree_address:
-                        return jsonify({
-                            'status': 'success',
-                            'address': gasfree_address,
-                            'eoa_address': eoa_address
-                        })
-            
-            # Fallback to EOA address if GasFree API fails
-            return jsonify({
-                'status': 'success',
-                'address': eoa_address,
-                'warning': 'Could not fetch GasFree address, showing EOA address'
-            })
-            
-        except Exception as e:
-            # Fallback to EOA address
-            return jsonify({
-                'status': 'success',
-                'address': eoa_address,
-                'warning': f'GasFree API error: {str(e)}'
-            })
-            
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-@app.route('/api/v1/tron/wallet/balance', methods=['GET'])
-def tron_get_balance():
-    """Get TRON wallet balance from GasFree account"""
-    try:
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT tron_address, tron_api_url, tron_api_key, gasfree_endpoint, gasfree_api_key, gasfree_api_secret 
-            FROM tron_config 
-            WHERE id = 1
-        """)
-        
-        result = cursor.fetchone()
-        conn.close()
-        
-        if not result or not result[0]:
-            return jsonify({
-                'status': 'error',
-                'message': 'TRON wallet not configured'
-            }), 404
-        
-        eoa_address = result[0]
-        api_url = result[1] or 'https://api.trongrid.io'
-        api_key = result[2]
-        gasfree_endpoint = result[3] or 'https://open.gasfree.io/tron/'
-        gasfree_api_key = result[4]
-        gasfree_api_secret = result[5]
-        
-        # Get balance from GasFree API
-        try:
-            import hmac
-            import hashlib
-            import base64
-            import time
-            
-            method = 'GET'
-            path = f'/tron/api/v1/address/{eoa_address}'
-            timestamp = int(time.time())
-            message = f"{method}{path}{timestamp}"
-            
-            signature = base64.b64encode(
-                hmac.new(
-                    gasfree_api_secret.encode('utf-8'),
-                    message.encode('utf-8'),
-                    hashlib.sha256
-                ).digest()
-            ).decode('utf-8')
-            
-            headers = {
-                'Timestamp': str(timestamp),
-                'Authorization': f'ApiKey {gasfree_api_key}:{signature}'
-            }
-            
-            response = requests.get(
-                f'{gasfree_endpoint}api/v1/address/{eoa_address}',
-                headers=headers,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                if data.get('code') == 200 and data.get('data'):
-                    gasfree_data = data['data']
-                    gasfree_address = gasfree_data.get('gasFreeAddress')
-                    assets = gasfree_data.get('assets', [])
-                    
-                    # Find USDT balance
-                    usdt_balance = 0
-                    usdt_contract = 'TR7NHqjeKQxGTCi8z8ZY4pL8otSzgjLj6t'
-                    
-                    if gasfree_address:
-                        # Query balance from gasFreeAddress on chain
-                        headers_tron = {}
-                        if api_key:
-                            headers_tron['TRON-PRO-API-KEY'] = api_key
-                        
-                        trigger_response = requests.post(
-                            f'{api_url}/wallet/triggerconstantcontract',
-                            json={
-                                'owner_address': gasfree_address,
-                                'contract_address': usdt_contract,
-                                'function_selector': 'balanceOf(address)',
-                                'parameter': gasfree_address.replace('T', '41').ljust(64, '0'),
-                                'visible': True
-                            },
-                            headers=headers_tron,
-                            timeout=10
-                        )
-                        
-                        if trigger_response.status_code == 200:
-                            trigger_data = trigger_response.json()
-                            if trigger_data.get('result', {}).get('result'):
-                                constant_result = trigger_data.get('constant_result', [])
-                                if constant_result:
-                                    balance_hex = constant_result[0]
-                                    usdt_balance = int(balance_hex, 16) / 1000000
-                    
-                    return jsonify({
-                        'status': 'success',
-                        'address': gasfree_address,
-                        'usdt_balance': usdt_balance
-                    })
-            
-            # Fallback: return 0 balance if GasFree API fails
-            return jsonify({
-                'status': 'success',
-                'address': eoa_address,
-                'usdt_balance': 0,
-                'warning': 'Could not fetch GasFree balance'
-            })
-            
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': f'Error fetching balance: {str(e)}'
-            }), 500
-        
-        return jsonify({
-            'status': 'success',
-            'address': eoa_address,
-            'usdt_balance': 0
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-@app.route('/api/v1/tron/wallet/send', methods=['POST'])
-def tron_send_usdt():
-    """Send USDT via gas-free protocol"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'status': 'error',
-                'message': 'No data provided'
-            }), 400
-        
-        to_address = data.get('to_address')
-        amount = float(data.get('amount', 0))
-        password = data.get('password')
-        
-        if not to_address or not amount or not password:
-            return jsonify({
-                'status': 'error',
-                'message': 'Missing required parameters'
-            }), 400
-        
-        if amount < 1.01:
-            return jsonify({
-                'status': 'error',
-                'message': 'Minimum amount is 1.01 USDT (1 USDT gas-free fee + 0.01 USDT transfer)'
-            }), 400
-        
-        # Get wallet config
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT tron_address, encrypted_private_key, salt,
-                   tron_api_url, tron_api_key,
-                   gasfree_api_key, gasfree_api_secret, gasfree_endpoint,
-                   gasfree_verifying_contract, gasfree_service_provider
-            FROM tron_config 
-            WHERE id = 1
-        """)
-        
-        result = cursor.fetchone()
-        conn.close()
-        
-        if not result:
-            return jsonify({
-                'status': 'error',
-                'message': 'TRON wallet not configured'
-            }), 404
-        
-        from_address = result[0]
-        encrypted_key = result[1]
-        salt = result[2]
-        api_url = result[3] or 'https://api.trongrid.io'
-        api_key = result[4]
-        gasfree_api_key = result[5]
-        gasfree_api_secret = result[6]
-        gasfree_endpoint = result[7] or 'https://open.gasfree.io/tron/'
-        verifying_contract = result[8] or 'TFFAMLQZybALab4uxHA9RBE7pxhUAjfF3U'
-        service_provider = result[9] or 'TLntW9Z59LYY5KEi9cmwk3PKjQga828ird'
-        
-        # Decrypt private key
-        try:
-            private_key = decrypt_data(encrypted_key, password, salt)
-        except Exception as e:
-            return jsonify({
-                'status': 'error',
-                'message': 'Invalid password or decryption failed'
-            }), 401
-        
-        # Calculate net amount (deduct 1 USDT gas-free fee)
-        net_amount = amount - 1.0
-        usdt_amount_in_sun = int(net_amount * 1000000)  # USDT has 6 decimals
-        
-        # Here we would integrate with the TRON gas-free protocol
-        # For now, return a mock transaction
-        txid = f"mock_tx_{secrets.token_hex(32)}"
-        
-        # In production, you would:
-        # 1. Create unsigned USDT transfer transaction
-        # 2. Sign it with gas-free protocol signature
-        # 3. Submit to gas-free endpoint
-        # 4. Return actual transaction ID
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'Transaction sent successfully',
-            'txid': txid,
-            'from_address': from_address,
-            'to_address': to_address,
-            'amount': net_amount,
-            'fee': 1.0,
-            'total': amount
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-@app.route('/api/v1/tron/wallet/transactions', methods=['GET'])
-def tron_get_transactions():
-    """Get TRON transaction history"""
-    try:
-        limit = int(request.args.get('limit', 30))
-        
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT tron_address, tron_api_url, tron_api_key 
-            FROM tron_config 
-            WHERE id = 1
-        """)
-        
-        result = cursor.fetchone()
-        conn.close()
-        
-        if not result or not result[0]:
-            return jsonify({
-                'status': 'error',
-                'message': 'TRON wallet not configured'
-            }), 404
-        
-        address = result[0]
-        api_url = result[1] or 'https://api.trongrid.io'
-        api_key = result[2]
-        
-        headers = {}
-        if api_key:
-            headers['TRON-PRO-API-KEY'] = api_key
-        
-        # Get TRC20 transfers (USDT)
-        usdt_contract = 'TR7NHqjeKQxGTCi8z8ZY4pL8otSzgjLj6t'
-        
-        response = requests.get(
-            f'{api_url}/v1/accounts/{address}/transactions/trc20',
-            params={
-                'limit': limit,
-                'contract_address': usdt_contract
-            },
-            headers=headers,
-            timeout=10
-        )
-        
-        transactions = []
-        if response.status_code == 200:
-            data = response.json()
-            for tx in data.get('data', []):
-                transactions.append({
-                    'txid': tx.get('transaction_id'),
-                    'from_address': tx.get('from'),
-                    'to_address': tx.get('to'),
-                    'amount': float(tx.get('value', 0)) / 1000000,  # Convert to USDT
-                    'timestamp': tx.get('block_timestamp', 0) // 1000,
-                    'status': 'confirmed' if tx.get('result') == 'SUCCESS' else 'failed'
-                })
-        
-        return jsonify({
-            'status': 'success',
-            'transactions': transactions,
-            'count': len(transactions)
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-@app.route('/api/v1/tron/config/save', methods=['POST'])
-def tron_save_config():
-    """Save TRON configuration (encrypted)"""
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({
-                'status': 'error',
-                'message': 'No data provided'
-            }), 400
-        
-        password = data.get('password')
-        if not password:
-            return jsonify({
-                'status': 'error',
-                'message': 'Password is required'
-            }), 400
-        
-        tron_api_url = data.get('tron_api_url', 'https://api.trongrid.io')
-        tron_api_key = data.get('tron_api_key', '')
-        gasfree_api_key = data.get('gasfree_api_key', '')
-        gasfree_api_secret = data.get('gasfree_api_secret', '')
-        gasfree_endpoint = data.get('gasfree_endpoint', 'https://open.gasfree.io/tron/')
-        
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        # Check if config exists
-        cursor.execute("SELECT id FROM tron_config WHERE id = 1")
-        exists = cursor.fetchone()
-        
-        if exists:
-            # Update existing config
-            cursor.execute("""
-                UPDATE tron_config 
-                SET tron_api_url = ?, tron_api_key = ?,
-                    gasfree_api_key = ?, gasfree_api_secret = ?,
-                    gasfree_endpoint = ?
-                WHERE id = 1
-            """, (tron_api_url, tron_api_key, gasfree_api_key, 
-                  gasfree_api_secret, gasfree_endpoint))
-        else:
-            # Insert new config
-            cursor.execute("""
-                INSERT INTO tron_config 
-                (id, tron_api_url, tron_api_key, gasfree_api_key, 
-                 gasfree_api_secret, gasfree_endpoint)
-                VALUES (1, ?, ?, ?, ?, ?)
-            """, (tron_api_url, tron_api_key, gasfree_api_key, 
-                  gasfree_api_secret, gasfree_endpoint))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            'status': 'success',
-            'message': 'Configuration saved successfully'
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
-@app.route('/api/v1/tron/config/load', methods=['GET'])
-def tron_load_config():
-    """Load TRON configuration (non-sensitive data only)"""
-    try:
-        conn = sqlite3.connect(WALLET_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            SELECT tron_api_url, tron_api_key, 
-                   gasfree_api_key, gasfree_endpoint
-            FROM tron_config 
-            WHERE id = 1
-        """)
-        
-        result = cursor.fetchone()
-        conn.close()
-        
-        if result:
-            return jsonify({
-                'status': 'success',
-                'config': {
-                    'tron_api_url': result[0],
-                    'tron_api_key': result[1],
-                    'gasfree_api_key': result[2],
-                    'gasfree_endpoint': result[3]
-                }
-            })
-        else:
-            return jsonify({
-                'status': 'success',
-                'config': None
-            })
-            
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
-
-# === SECURE PASSWORD MANAGER API ENDPOINTS ===
 
 @app.route('/api/v1/system/passwords/store', methods=['POST'])
 def store_system_password():

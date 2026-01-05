@@ -69,6 +69,101 @@ while true; do
 done
 echo
 
+# Bitcoin backend selection (local or remote)
+echo -e "${YELLOW}Configuracao do backend do Bitcoin:${NC}"
+echo -e "${BLUE}1.${NC} Local (bitcoind no servidor)"
+echo -e "${BLUE}2.${NC} Remoto (RPC + ZMQ)"
+echo
+while true; do
+    read -p "Digite sua escolha (1 ou 2): " backend_choice
+    case $backend_choice in
+        1)
+            export BITCOIN_BACKEND="local"
+            echo -e "${GREEN}OK. Backend local selecionado${NC}"
+            echo ""
+            echo -e "${YELLOW}Modo de armazenamento:${NC}"
+            echo -e "${BLUE}1.${NC} Full (blockchain completa)"
+            echo -e "${BLUE}2.${NC} Pruned (economiza espaco - padrao: 550 MiB)"
+            echo
+            read -p "Digite sua escolha (1 ou 2, padrao 2): " prune_choice
+            prune_choice=${prune_choice:-2}
+            if [[ "$prune_choice" != "1" && "$prune_choice" != "2" ]]; then
+                echo -e "${YELLOW}Opcao invalida, usando pruned (2)${NC}"
+                prune_choice=2
+            fi
+            if [[ "$prune_choice" == "2" ]]; then
+                export BITCOIN_PRUNED="1"
+                read -p "Tamanho do prune em MiB (padrao 550): " prune_size
+                prune_size=${prune_size:-550}
+                export BITCOIN_PRUNE_SIZE="$prune_size"
+                echo -e "${GREEN}OK. Pruned habilitado (${BITCOIN_PRUNE_SIZE} MiB)${NC}"
+            else
+                export BITCOIN_PRUNED="0"
+                export BITCOIN_PRUNE_SIZE="0"
+                echo -e "${GREEN}OK. Full node selecionado${NC}"
+            fi
+            break
+            ;;
+        2)
+            export BITCOIN_BACKEND="remote"
+            echo -e "${GREEN}OK. Backend remoto selecionado${NC}"
+            echo ""
+            read -p "RPC Host (ex: 10.0.0.10): " BITCOIN_RPC_HOST
+            while [[ -z "$BITCOIN_RPC_HOST" ]]; do
+                read -p "RPC Host e obrigatorio. Informe o host: " BITCOIN_RPC_HOST
+            done
+            read -p "RPC Port (padrao 8332): " BITCOIN_RPC_PORT
+            BITCOIN_RPC_PORT=${BITCOIN_RPC_PORT:-8332}
+            read -p "RPC User: " BITCOIN_RPC_USER
+            while [[ -z "$BITCOIN_RPC_USER" ]]; do
+                read -p "RPC User e obrigatorio. Informe o usuario: " BITCOIN_RPC_USER
+            done
+            read -s -p "RPC Password: " BITCOIN_RPC_PASSWORD
+            echo
+            while [[ -z "$BITCOIN_RPC_PASSWORD" ]]; do
+                read -s -p "RPC Password e obrigatorio. Informe a senha: " BITCOIN_RPC_PASSWORD
+                echo
+            done
+
+            default_zmq_block="tcp://${BITCOIN_RPC_HOST}:28332"
+            default_zmq_tx="tcp://${BITCOIN_RPC_HOST}:28333"
+            read -p "ZMQ raw block (padrao ${default_zmq_block}): " BITCOIN_ZMQ_BLOCK
+            read -p "ZMQ raw tx (padrao ${default_zmq_tx}): " BITCOIN_ZMQ_TX
+            export BITCOIN_ZMQ_BLOCK=${BITCOIN_ZMQ_BLOCK:-$default_zmq_block}
+            export BITCOIN_ZMQ_TX=${BITCOIN_ZMQ_TX:-$default_zmq_tx}
+            export BITCOIN_PRUNED="0"
+            export BITCOIN_PRUNE_SIZE="0"
+            export BITCOIN_RPC_HOST
+            export BITCOIN_RPC_PORT
+            export BITCOIN_RPC_USER
+            export BITCOIN_RPC_PASSWORD
+            break
+            ;;
+        *)
+            echo -e "${RED}Opcao invalida! Digite 1 ou 2.${NC}"
+            ;;
+    esac
+done
+echo
+
+# Persist Bitcoin backend configuration
+BITCOIN_BACKEND_CONFIG="/data/brln-config/bitcoin-backend.env"
+sudo mkdir -p /data/brln-config
+sudo tee "$BITCOIN_BACKEND_CONFIG" > /dev/null << EOF
+BITCOIN_NETWORK=${BITCOIN_NETWORK}
+BITCOIN_BACKEND=${BITCOIN_BACKEND}
+BITCOIN_PRUNED=${BITCOIN_PRUNED:-0}
+BITCOIN_PRUNE_SIZE=${BITCOIN_PRUNE_SIZE:-0}
+BITCOIN_RPC_HOST=${BITCOIN_RPC_HOST:-127.0.0.1}
+BITCOIN_RPC_PORT=${BITCOIN_RPC_PORT:-8332}
+BITCOIN_RPC_USER=${BITCOIN_RPC_USER:-minibolt}
+BITCOIN_RPC_PASSWORD=${BITCOIN_RPC_PASSWORD:-}
+BITCOIN_ZMQ_BLOCK=${BITCOIN_ZMQ_BLOCK:-tcp://127.0.0.1:28332}
+BITCOIN_ZMQ_TX=${BITCOIN_ZMQ_TX:-tcp://127.0.0.1:28333}
+EOF
+sudo chmod 640 "$BITCOIN_BACKEND_CONFIG"
+echo -e "${GREEN}OK. Configuracao do Bitcoin salva em ${BITCOIN_BACKEND_CONFIG}${NC}"
+
 # Master Password Setup
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${GREEN}🔐 CONFIGURAÇÃO DE SENHA MESTRA${NC}"

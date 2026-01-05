@@ -22,8 +22,17 @@ if [[ -f "$SCRIPT_DIR/scripts/config.sh" ]]; then
     source "$SCRIPT_DIR/scripts/config.sh"
 fi
 
+is_remote_bitcoin() {
+    [[ "${BITCOIN_BACKEND}" == "remote" ]]
+}
+
 # Detect Bitcoin network
 detect_network() {
+    if [[ -n "${BITCOIN_NETWORK}" ]]; then
+        echo "${BITCOIN_NETWORK}"
+        return
+    fi
+
     if [[ -f "/data/bitcoin/bitcoin.conf" ]]; then
         if grep -q "testnet=1\|chain=test" /data/bitcoin/bitcoin.conf 2>/dev/null; then
             echo "testnet"
@@ -62,6 +71,23 @@ get_bitcoin_cli() {
     esac
 }
 
+bitcoin_rpc() {
+    local method="$1"
+    local params="${2:-[]}"
+    local rpc_user="${BITCOIN_RPC_USER:-}"
+    local rpc_pass="${BITCOIN_RPC_PASSWORD:-}"
+    local rpc_host="${BITCOIN_RPC_HOST:-127.0.0.1}"
+    local rpc_port="${BITCOIN_RPC_PORT:-8332}"
+
+    if [[ -z "$rpc_user" || -z "$rpc_pass" ]]; then
+        return 1
+    fi
+
+    local payload="{\"jsonrpc\":\"1.0\",\"id\":\"wallet-manager\",\"method\":\"${method}\",\"params\":${params}}"
+    curl -s --user "${rpc_user}:${rpc_pass}" --data-binary "$payload" -H 'content-type: text/plain;' "http://${rpc_host}:${rpc_port}"
+}
+
+
 # Print banner
 print_banner() {
     clear
@@ -82,44 +108,82 @@ print_banner() {
 
 # Check Bitcoin sync status
 check_bitcoin_sync() {
-    echo -e "${YELLOW}📊 Verificando status do Bitcoin...${NC}"
-    
+    echo -e "${YELLOW}?Y"S Verificando status do Bitcoin...${NC}"
+
+    if is_remote_bitcoin; then
+        echo -e "${BLUE}Backend remoto detectado - consultando via RPC...${NC}"
+        local info=$(bitcoin_rpc getblockchaininfo)
+        if [[ -z "$info" ]]; then
+            echo -e "${RED}??O N??o foi poss????vel conectar ao Bitcoin remoto via RPC${NC}"
+            return 1
+        fi
+
+        local rpc_error=$(echo "$info" | jq -r '.error // empty')
+        if [[ -n "$rpc_error" && "$rpc_error" != "null" ]]; then
+            echo -e "${RED}??O Erro RPC: $rpc_error${NC}"
+            return 1
+        fi
+
+        local blocks=$(echo "$info" | jq -r '.result.blocks')
+        local headers=$(echo "$info" | jq -r '.result.headers')
+        local progress=$(echo "$info" | jq -r '.result.verificationprogress')
+        local ibd=$(echo "$info" | jq -r '.result.initialblockdownload')
+        local chain=$(echo "$info" | jq -r '.result.chain')
+
+        local progress_pct=$(echo "$progress * 100" | bc -l 2>/dev/null | cut -d. -f1)
+        [[ -z "$progress_pct" ]] && progress_pct="0"
+
+        echo -e "${GREEN}?o. Bitcoin remoto ??????ivel${NC}"
+        echo -e "${BLUE}   Rede: ${CYAN}$chain${NC}"
+        echo -e "${BLUE}   Blocos: ${CYAN}$blocks / $headers${NC}"
+        echo -e "${BLUE}   Progresso: ${CYAN}${progress_pct}%${NC}"
+
+        if [[ "$ibd" == "true" ]]; then
+            echo -e "${YELLOW}?s????  Sincron???????o inicial em andamento${NC}"
+            return 2
+        fi
+
+        echo -e "${GREEN}?o. Blockchain sincronizada!${NC}"
+        return 0
+    fi
+
     if ! systemctl is-active --quiet bitcoind; then
-        echo -e "${RED}❌ Bitcoin Core não está rodando${NC}"
-        echo -e "${YELLOW}💡 Execute: sudo systemctl start bitcoind${NC}"
+        echo -e "${RED}??O Bitcoin Core n??o est?? rodando${NC}"
+        echo -e "${YELLOW}?Y'? Execute: sudo systemctl start bitcoind${NC}"
         return 1
     fi
-    
+
     local btc_cli=$(get_bitcoin_cli)
     local info=$($btc_cli getblockchaininfo 2>/dev/null)
-    
+
     if [[ -z "$info" ]]; then
-        echo -e "${RED}❌ Não foi possível conectar ao Bitcoin Core${NC}"
+        echo -e "${RED}??O N??o foi poss??vel conectar ao Bitcoin Core${NC}"
         return 1
     fi
-    
+
     local blocks=$(echo "$info" | jq -r '.blocks')
     local headers=$(echo "$info" | jq -r '.headers')
     local progress=$(echo "$info" | jq -r '.verificationprogress')
     local ibd=$(echo "$info" | jq -r '.initialblockdownload')
     local chain=$(echo "$info" | jq -r '.chain')
-    
+
     local progress_pct=$(echo "$progress * 100" | bc -l 2>/dev/null | cut -d. -f1)
     [[ -z "$progress_pct" ]] && progress_pct="0"
-    
-    echo -e "${GREEN}✅ Bitcoin Core está rodando${NC}"
+
+    echo -e "${GREEN}?o. Bitcoin Core est?? rodando${NC}"
     echo -e "${BLUE}   Rede: ${CYAN}$chain${NC}"
     echo -e "${BLUE}   Blocos: ${CYAN}$blocks / $headers${NC}"
     echo -e "${BLUE}   Progresso: ${CYAN}${progress_pct}%${NC}"
-    
+
     if [[ "$ibd" == "true" ]]; then
-        echo -e "${YELLOW}⚠️  Sincronização inicial em andamento${NC}"
+        echo -e "${YELLOW}?s????  Sincroniza????o inicial em andamento${NC}"
         return 2
     fi
-    
-    echo -e "${GREEN}✅ Blockchain sincronizada!${NC}"
+
+    echo -e "${GREEN}?o. Blockchain sincronizada!${NC}"
     return 0
 }
+
 
 # Check LND status
 check_lnd_status() {
@@ -354,88 +418,6 @@ unlock_lnd_wallet() {
     check_lnd_status
 }
 
-# Configure Elements/Liquid wallet
-configure_elements_wallet() {
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}💧 Configurar Carteira Elements/Liquid${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo
-    
-    if ! systemctl is-active --quiet elementsd; then
-        echo -e "${YELLOW}🚀 Iniciando Elements...${NC}"
-        sudo systemctl start elementsd
-        sleep 5
-    fi
-    
-    if ! systemctl is-active --quiet elementsd; then
-        echo -e "${RED}❌ Elements não está rodando${NC}"
-        echo -e "${YELLOW}💡 Verifique se o Elements está instalado${NC}"
-        return 1
-    fi
-    
-    echo -e "${BLUE}Verificando carteira Elements...${NC}"
-    
-    # Check if wallet exists
-    local wallets=$(elements-cli listwallets 2>/dev/null)
-    
-    if [[ "$wallets" == "[]" ]]; then
-        echo -e "${YELLOW}📦 Criando carteira Elements...${NC}"
-        elements-cli createwallet "default" false false "" false false
-        echo -e "${GREEN}✅ Carteira criada!${NC}"
-    else
-        echo -e "${GREEN}✅ Carteira já existe${NC}"
-    fi
-    
-    # Get new address
-    echo -e "${YELLOW}🔑 Gerando novo endereço Liquid...${NC}"
-    local address=$(elements-cli getnewaddress 2>/dev/null)
-    
-    if [[ -n "$address" ]]; then
-        echo -e "${GREEN}✅ Endereço Liquid:${NC}"
-        echo -e "${CYAN}   $address${NC}"
-    fi
-    
-    echo
-    echo -e "${YELLOW}Pressione ENTER para continuar...${NC}"
-    read
-}
-
-# Configure TRON wallet
-configure_tron_wallet() {
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}🔴 Configurar Carteira TRON${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo
-    
-    echo -e "${YELLOW}🔐 Digite a senha de criptografia:${NC}"
-    read -s encryption_password
-    echo
-    
-    if [[ -z "$encryption_password" ]]; then
-        echo -e "${RED}❌ Senha não pode estar vazia!${NC}"
-        return 1
-    fi
-    
-    echo -e "${YELLOW}🚀 Inicializando carteira TRON via API...${NC}"
-    
-    local response=$(curl -s -k -X POST https://localhost/api/v1/tron/wallet/initialize \
-        -H "Content-Type: application/json" \
-        -d "{\"encryption_password\": \"$encryption_password\"}")
-    
-    if echo "$response" | jq -e '.address' &>/dev/null; then
-        local address=$(echo "$response" | jq -r '.address')
-        echo -e "${GREEN}✅ Carteira TRON criada!${NC}"
-        echo -e "${CYAN}   Endereço: $address${NC}"
-    else
-        local error=$(echo "$response" | jq -r '.error // .message // "Erro desconhecido"')
-        echo -e "${RED}❌ Erro: $error${NC}"
-    fi
-    
-    echo
-    echo -e "${YELLOW}Pressione ENTER para continuar...${NC}"
-    read
-}
-
 # View service status
 view_service_status() {
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -443,7 +425,10 @@ view_service_status() {
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo
     
-    local services="bitcoind lnd elementsd peerswapd brln-api apache2 tor"
+    local services="lnd brln-api apache2 tor"
+    if ! is_remote_bitcoin; then
+        services="bitcoind $services"
+    fi
     
     for svc in $services; do
         if systemctl is-active --quiet "$svc" 2>/dev/null; then
@@ -466,34 +451,56 @@ view_service_status() {
 manage_services_menu() {
     while true; do
         print_banner
-        echo -e "${BLUE}⚙️  Gerenciar Serviços${NC}"
+        echo -e "${BLUE}?sT???  Gerenciar Servi?os${NC}"
         echo
-        echo -e "${GREEN}1.${NC} Iniciar Bitcoin Core"
-        echo -e "${GREEN}2.${NC} Parar Bitcoin Core"
-        echo -e "${GREEN}3.${NC} Iniciar LND"
-        echo -e "${GREEN}4.${NC} Parar LND"
-        echo -e "${GREEN}5.${NC} Reiniciar API"
-        echo -e "${GREEN}6.${NC} Ver logs (journalctl)"
+
+        local option=1
+        local start_bitcoind_opt=""
+        local stop_bitcoind_opt=""
+
+        if ! is_remote_bitcoin; then
+            echo -e "${GREEN}${option}.${NC} Iniciar Bitcoin Core"
+            start_bitcoind_opt=$option
+            option=$((option+1))
+            echo -e "${GREEN}${option}.${NC} Parar Bitcoin Core"
+            stop_bitcoind_opt=$option
+            option=$((option+1))
+        fi
+
+        local start_lnd_opt=$option
+        echo -e "${GREEN}${option}.${NC} Iniciar LND"
+        option=$((option+1))
+
+        local stop_lnd_opt=$option
+        echo -e "${GREEN}${option}.${NC} Parar LND"
+        option=$((option+1))
+
+        local restart_api_opt=$option
+        echo -e "${GREEN}${option}.${NC} Reiniciar API"
+        option=$((option+1))
+
+        local logs_opt=$option
+        echo -e "${GREEN}${option}.${NC} Ver logs (journalctl)"
         echo -e "${RED}0.${NC} Voltar"
         echo
-        echo -n "Escolha uma opção: "
+        echo -n "Escolha uma op??o: "
         read choice
-        
+
         case $choice in
-            1) sudo systemctl start bitcoind && echo -e "${GREEN}✅ Bitcoin iniciado${NC}" ;;
-            2) sudo systemctl stop bitcoind && echo -e "${YELLOW}⏹️  Bitcoin parado${NC}" ;;
-            3) sudo systemctl start lnd && echo -e "${GREEN}✅ LND iniciado${NC}" ;;
-            4) sudo systemctl stop lnd && echo -e "${YELLOW}⏹️  LND parado${NC}" ;;
-            5) sudo systemctl restart brln-api && echo -e "${GREEN}✅ API reiniciada${NC}" ;;
-            6)
-                echo -e "${BLUE}Qual serviço? (bitcoind/lnd/brln-api):${NC}"
+            ${start_bitcoind_opt}) sudo systemctl start bitcoind && echo -e "${GREEN}? Bitcoin iniciado${NC}" ;;
+            ${stop_bitcoind_opt}) sudo systemctl stop bitcoind && echo -e "${YELLOW}??  Bitcoin parado${NC}" ;;
+            ${start_lnd_opt}) sudo systemctl start lnd && echo -e "${GREEN}? LND iniciado${NC}" ;;
+            ${stop_lnd_opt}) sudo systemctl stop lnd && echo -e "${YELLOW}??  LND parado${NC}" ;;
+            ${restart_api_opt}) sudo systemctl restart brln-api && echo -e "${GREEN}? API reiniciada${NC}" ;;
+            ${logs_opt})
+                echo -e "${BLUE}Qual servi?o? (bitcoind/lnd/brln-api):${NC}"
                 read svc
                 journalctl -u "$svc" -n 50 --no-pager
                 ;;
             0) return ;;
-            *) echo -e "${RED}Opção inválida${NC}" ;;
+            *) echo -e "${RED}Op??o inv?lida${NC}" ;;
         esac
-        
+
         echo -e "${YELLOW}Pressione ENTER...${NC}"
         read
     done
@@ -555,39 +562,35 @@ lnd_wallet_menu() {
 main_menu() {
     while true; do
         print_banner
-        
+
         local network=$(detect_network)
-        echo -e "${BLUE}📡 Rede: ${CYAN}${network^^}${NC}"
+        echo -e "${BLUE}?Y"? Rede: ${CYAN}${network^^}${NC}"
         echo
-        
-        echo -e "${GREEN}1.${NC} 📊 Status dos Serviços"
-        echo -e "${GREEN}2.${NC} ₿  Verificar Sincronização Bitcoin"
-        echo -e "${GREEN}3.${NC} ⚡ Carteira LND (Lightning)"
-        echo -e "${GREEN}4.${NC} 💧 Carteira Elements/Liquid"
-        echo -e "${GREEN}5.${NC} 🔴 Carteira TRON"
-        echo -e "${GREEN}6.${NC} ⚙️  Gerenciar Serviços"
+
+        echo -e "${GREEN}1.${NC} ?Y"S Status dos Servi?os"
+        echo -e "${GREEN}2.${NC} ?'?  Verificar Sincroniza??o Bitcoin"
+        echo -e "${GREEN}3.${NC} ?s? Carteira LND (Lightning)"
+        echo -e "${GREEN}4.${NC} ?sT???  Gerenciar Servi?os"
         echo -e "${RED}0.${NC} Sair"
         echo
-        echo -n "Escolha uma opção: "
+        echo -n "Escolha uma op??o: "
         read choice
-        
+
         case $choice in
             1) view_service_status ;;
-            2) 
+            2)
                 check_bitcoin_sync
                 echo -e "${YELLOW}Pressione ENTER...${NC}"
                 read
                 ;;
             3) lnd_wallet_menu ;;
-            4) configure_elements_wallet ;;
-            5) configure_tron_wallet ;;
-            6) manage_services_menu ;;
-            0) 
-                echo -e "${GREEN}👋 Até logo!${NC}"
+            4) manage_services_menu ;;
+            0)
+                echo -e "${GREEN}?Y'< At? logo!${NC}"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}Opção inválida${NC}"
+                echo -e "${RED}Op??o inv?lida${NC}"
                 sleep 1
                 ;;
         esac

@@ -203,7 +203,7 @@ class WalletService {
     }, 4000);
   }
 
-  // Integrate wallet with system services (LND and Elements)
+  // Integrate wallet with system services (LND)
   async integrateWallet(walletId, password) {
     const data = await this.makeApiRequest('/wallet/integrate', {
       method: 'POST',
@@ -1119,12 +1119,6 @@ async function showWalletAddressesAndIntegrations() {
     // Display LND configuration
     displayLNDConfiguration(currentWallet.lnd_keys);
     
-    // Display Elements/Liquid configuration
-    displayElementsConfiguration(currentWallet.addresses);
-    
-    // Display TRON configuration
-    displayTronConfiguration(currentWallet.addresses);
-    
     // Setup event listeners for universal wallet actions
     setupUniversalWalletEventListeners();
   }
@@ -1148,12 +1142,6 @@ function showUniversalWallet(walletData) {
     // Display LND configuration
     displayLNDConfiguration(walletData.lnd_keys);
     
-    // Display Elements/Liquid configuration
-    displayElementsConfiguration(walletData.addresses);
-    
-    // Display TRON configuration
-    displayTronConfiguration(walletData.addresses);
-    
     // Setup event listeners for universal wallet actions
     setupUniversalWalletEventListeners();
   }
@@ -1170,8 +1158,6 @@ function displayChainAddresses(addresses) {
   const chainIcons = {
     'bitcoin': '₿',
     'ethereum': 'Ξ',
-    'liquid': '💧',
-    'tron': '⚡',
     'solana': '◎'
   };
   
@@ -1221,35 +1207,7 @@ async function displayLNDConfiguration(lndKeys) {
   }
 }
 
-// Display Elements/Liquid configuration options
-function displayElementsConfiguration(addresses) {
-  const elementsAddressElement = document.getElementById('elementsAddress');
-  
-  if (!elementsAddressElement) return;
-  
-  // Get liquid address from addresses object
-  if (addresses && addresses.liquid && addresses.liquid.address) {
-    elementsAddressElement.textContent = addresses.liquid.address;
-  } else {
-    elementsAddressElement.textContent = 'Generate wallet first';
-  }
-}
-
-// Display TRON configuration options
-function displayTronConfiguration(addresses) {
-  const tronAddressElement = document.getElementById('tronAddress');
-  
-  if (!tronAddressElement) return;
-  
-  // Get TRON address from addresses object
-  if (addresses && addresses.tron && addresses.tron.address) {
-    tronAddressElement.textContent = addresses.tron.address;
-  } else {
-    tronAddressElement.textContent = 'Generate wallet first';
-  }
-}
-
-// Update LND key display based on selected network
+// Update the LND extended key display for the selected network
 function updateLNDKeyDisplay(network) {
   const lndExtendedKey = document.getElementById('lndExtendedKey');
   const lndKeys = window.currentLNDKeys;
@@ -1278,29 +1236,6 @@ function setupUniversalWalletEventListeners() {
     autoConfigureLndBtn.addEventListener('click', autoConfigureLND);
   }
   
-  // Copy Elements address button
-  const copyElementsAddressBtn = document.getElementById('copyElementsAddressBtn');
-  if (copyElementsAddressBtn) {
-    copyElementsAddressBtn.addEventListener('click', copyElementsAddress);
-  }
-  
-  // Auto-configure Elements button
-  const autoConfigureElementsBtn = document.getElementById('autoConfigureElementsBtn');
-  if (autoConfigureElementsBtn) {
-    autoConfigureElementsBtn.addEventListener('click', autoConfigureElements);
-  }
-  
-  // Copy TRON address button
-  const copyTronAddressBtn = document.getElementById('copyTronAddressBtn');
-  if (copyTronAddressBtn) {
-    copyTronAddressBtn.addEventListener('click', copyTronAddress);
-  }
-  
-  // Auto-configure TRON button
-  const autoConfigureTronBtn = document.getElementById('autoConfigureTronBtn');
-  if (autoConfigureTronBtn) {
-    autoConfigureTronBtn.addEventListener('click', autoConfigureTron);
-  }
 }
 
 // Copy address to clipboard
@@ -1541,332 +1476,7 @@ async function autoConfigureLND() {
   }
 }
 
-// Copy Elements/Liquid address
-function copyElementsAddress() {
-  const elementsAddress = document.getElementById('elementsAddress');
-  const copyBtn = document.getElementById('copyElementsAddressBtn');
-  
-  if (!elementsAddress) return;
-  
-  const addressText = elementsAddress.textContent;
-  if (addressText && addressText !== '-') {
-    navigator.clipboard.writeText(addressText).then(() => {
-      walletService.showNotification('Liquid address copied!', 'success');
-      
-      // Visual feedback
-      copyBtn.classList.add('copied');
-      copyBtn.textContent = '✅';
-      setTimeout(() => {
-        copyBtn.classList.remove('copied');
-        copyBtn.textContent = '📋';
-      }, 2000);
-    }).catch(error => {
-      console.error('Error copying Liquid address:', error);
-      walletService.showNotification('Error copying Liquid address', 'error');
-    });
-  }
-}
-
-// Auto-configure Elements/Liquid with the wallet
-async function autoConfigureElements() {
-  try {
-    const automationStatus = document.getElementById('elementsAutomationStatus');
-    const statusMessage = document.getElementById('elementsStatusMessage');
-    const progressBar = document.getElementById('elementsProgressBar');
-    const autoConfigureBtn = document.getElementById('autoConfigureElementsBtn');
-    const elementsOutputContainer = document.getElementById('elementsOutputContainer');
-    const elementsScriptOutput = document.getElementById('elementsScriptOutput');
-    const elementsAddressElement = document.getElementById('elementsAddress');
-    
-    if (!currentWallet || !currentWallet.mnemonic) {
-      walletService.showNotification('No wallet loaded. Please generate or import a wallet first.', 'error');
-      return;
-    }
-    
-    // Show automation status and output container
-    automationStatus.style.display = 'block';
-    elementsOutputContainer.style.display = 'block';
-    autoConfigureBtn.disabled = true;
-    statusMessage.textContent = 'Preparing Elements/Liquid wallet integration...';
-    progressBar.style.width = '20%';
-    
-    // Clear and initialize output
-    elementsScriptOutput.value = '';
-    elementsScriptOutput.value += '╔════════════════════════════════════════════════════════════╗\n';
-    elementsScriptOutput.value += '║    BRLN-OS LIQUID/ELEMENTS WALLET AUTO-CONFIGURATION      ║\n';
-    elementsScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
-    elementsScriptOutput.value += '🚀 Starting Elements/Liquid wallet integration...\n';
-    elementsScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    
-    // Scroll output into view
-    elementsOutputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Integrate wallet with Elements
-    statusMessage.textContent = 'Integrating wallet with Elements...';
-    progressBar.style.width = '40%';
-    
-    elementsScriptOutput.value += `📋 Wallet ID: ${currentWallet.wallet_id || 'N/A'}\n`;
-    elementsScriptOutput.value += '⏳ Importing wallet into Elements daemon...\n\n';
-    elementsScriptOutput.scrollTop = elementsScriptOutput.scrollHeight;
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Call API to integrate wallet
-    const response = await fetch(`${API_BASE_URL}/wallet/integrate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        wallet_id: currentWallet.wallet_id,
-        password: currentWallet.encryption_password || '' // Send encryption password if available
-      })
-    });
-    
-    const result = await response.json();
-    
-    progressBar.style.width = '80%';
-    
-    if (response.ok && result.status === 'success') {
-      statusMessage.textContent = 'Elements wallet integrated successfully!';
-      progressBar.style.width = '100%';
-      
-      // Display integration output
-      elementsScriptOutput.value += '\n╔════════════════════════════════════════════════════════════╗\n';
-      elementsScriptOutput.value += '║              INTEGRATION OUTPUT                            ║\n';
-      elementsScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
-      
-      if (result.elements_integrated) {
-        elementsScriptOutput.value += '✅ Elements/Liquid: INTEGRATED\n';
-        if (result.elements_address) {
-          elementsScriptOutput.value += `💧 Liquid Address: ${result.elements_address}\n`;
-          // Update the address display
-          if (elementsAddressElement) {
-            elementsAddressElement.textContent = result.elements_address;
-          }
-        }
-      } else {
-        elementsScriptOutput.value += '⚠️  Elements/Liquid: Not integrated (may not be running)\n';
-      }
-      
-      elementsScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-      elementsScriptOutput.value += '✅ SUCCESS: Elements/Liquid wallet integrated!\n';
-      elementsScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-      
-      // Auto-scroll to bottom
-      elementsScriptOutput.scrollTop = elementsScriptOutput.scrollHeight;
-      
-      setTimeout(() => {
-        automationStatus.style.display = 'none';
-        autoConfigureBtn.disabled = false;
-        walletService.showNotification('Elements/Liquid wallet integrated successfully!', 'success');
-      }, 3000);
-      
-    } else {
-      throw new Error(result.error || result.message || 'Failed to integrate Elements wallet');
-    }
-    
-  } catch (error) {
-    console.error('Error auto-configuring Elements:', error);
-    
-    const automationStatus = document.getElementById('elementsAutomationStatus');
-    const statusMessage = document.getElementById('elementsStatusMessage');
-    const autoConfigureBtn = document.getElementById('autoConfigureElementsBtn');
-    const elementsScriptOutput = document.getElementById('elementsScriptOutput');
-    
-    statusMessage.textContent = 'Error configuring Elements: ' + error.message;
-    if (elementsScriptOutput) {
-      elementsScriptOutput.value += '\n\n╔════════════════════════════════════════════════════════════╗\n';
-      elementsScriptOutput.value += '║                     ERROR OCCURRED                         ║\n';
-      elementsScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
-      elementsScriptOutput.value += '❌ ERROR: ' + error.message + '\n';
-      elementsScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-      elementsScriptOutput.scrollTop = elementsScriptOutput.scrollHeight;
-    }
-    
-    setTimeout(() => {
-      automationStatus.style.display = 'none';
-      autoConfigureBtn.disabled = false;
-    }, 3000);
-    
-    walletService.showNotification('Error configuring Elements: ' + error.message, 'error');
-  }
-}
-
-// Copy TRON address
-function copyTronAddress() {
-  const tronAddress = document.getElementById('tronAddress');
-  const copyBtn = document.getElementById('copyTronAddressBtn');
-  
-  if (!tronAddress) return;
-  
-  const addressText = tronAddress.textContent;
-  if (addressText && addressText !== '-') {
-    navigator.clipboard.writeText(addressText).then(() => {
-      walletService.showNotification('TRON address copied!', 'success');
-      
-      // Visual feedback
-      copyBtn.classList.add('copied');
-      copyBtn.textContent = '✅';
-      setTimeout(() => {
-        copyBtn.classList.remove('copied');
-        copyBtn.textContent = '📋';
-      }, 2000);
-    }).catch(error => {
-      console.error('Error copying TRON address:', error);
-      walletService.showNotification('Error copying TRON address', 'error');
-    });
-  }
-}
-
-// Auto-configure TRON wallet
-async function autoConfigureTron() {
-  try {
-    const automationStatus = document.getElementById('tronAutomationStatus');
-    const statusMessage = document.getElementById('tronStatusMessage');
-    const progressBar = document.getElementById('tronProgressBar');
-    const autoConfigureBtn = document.getElementById('autoConfigureTronBtn');
-    const tronOutputContainer = document.getElementById('tronOutputContainer');
-    const tronScriptOutput = document.getElementById('tronScriptOutput');
-    const tronAddressElement = document.getElementById('tronAddress');
-    
-    if (!currentWallet || !currentWallet.wallet_id) {
-      walletService.showNotification('No wallet loaded. Please generate or import a wallet first.', 'error');
-      return;
-    }
-    
-    // Show automation status and output container
-    automationStatus.style.display = 'block';
-    tronOutputContainer.style.display = 'block';
-    autoConfigureBtn.disabled = true;
-    statusMessage.textContent = 'Preparing TRON wallet integration...';
-    progressBar.style.width = '20%';
-    
-    // Clear and initialize output
-    tronScriptOutput.value = '';
-    tronScriptOutput.value += '╔════════════════════════════════════════════════════════════╗\n';
-    tronScriptOutput.value += '║       BRLN-OS TRON WALLET AUTO-CONFIGURATION              ║\n';
-    tronScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
-    tronScriptOutput.value += '🚀 Starting TRON wallet integration...\n';
-    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    
-    // Scroll output into view
-    tronOutputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Initialize TRON wallet
-    statusMessage.textContent = 'Initializing TRON wallet...';
-    progressBar.style.width = '40%';
-    
-    tronScriptOutput.value += `📋 Wallet ID: ${currentWallet.wallet_id}\n`;
-    tronScriptOutput.value += `🔗 Network: TRON Mainnet\n\n`;
-    
-    tronScriptOutput.value += '⏳ Calling TRON wallet initialization API...\n';
-    tronScriptOutput.scrollTop = tronScriptOutput.scrollHeight;
-    
-    const response = await fetch(`${API_BASE_URL}/tron/wallet/initialize`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        wallet_id: currentWallet.wallet_id
-      })
-    });
-    
-    progressBar.style.width = '60%';
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to initialize TRON wallet');
-    }
-    
-    const result = await response.json();
-    
-    progressBar.style.width = '80%';
-    statusMessage.textContent = 'TRON wallet initialized successfully!';
-    
-    tronScriptOutput.value += '\n✅ TRON wallet initialized successfully!\n';
-    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    
-    if (result.tron_address) {
-      tronScriptOutput.value += `🔑 TRON Address:\n   ${result.tron_address}\n\n`;
-      
-      // Update the address display
-      if (tronAddressElement) {
-        tronAddressElement.textContent = result.tron_address;
-      }
-    }
-    
-    if (result.balance) {
-      tronScriptOutput.value += `💰 Current Balance:\n`;
-      tronScriptOutput.value += `   TRX: ${result.balance.trx || '0'} TRX\n`;
-      tronScriptOutput.value += `   USDT: ${result.balance.usdt || '0'} USDT\n\n`;
-    }
-    
-    if (result.gas_free) {
-      tronScriptOutput.value += `⚡ Gas-Free Features:\n`;
-      tronScriptOutput.value += `   Status: ${result.gas_free.enabled ? 'Enabled ✅' : 'Disabled ❌'}\n`;
-      if (result.gas_free.service_provider) {
-        tronScriptOutput.value += `   Provider: ${result.gas_free.service_provider}\n`;
-      }
-      tronScriptOutput.value += '\n';
-    }
-    
-    tronScriptOutput.value += '📝 Next Steps:\n';
-    tronScriptOutput.value += '   1. Send TRX or USDT to this address\n';
-    tronScriptOutput.value += '   2. Use TRON tools for transactions\n';
-    tronScriptOutput.value += `   3. Check balance: https://tronscan.org/#/address/${result.tron_address || ''}\n\n`;
-    
-    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-    tronScriptOutput.value += '✅ SUCCESS: TRON wallet configured!\n';
-    tronScriptOutput.value += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-    
-    tronScriptOutput.scrollTop = tronScriptOutput.scrollHeight;
-    
-    progressBar.style.width = '100%';
-    
-    setTimeout(() => {
-      automationStatus.style.display = 'none';
-      autoConfigureBtn.disabled = false;
-      walletService.showNotification('TRON wallet configured successfully!', 'success');
-    }, 3000);
-    
-  } catch (error) {
-    console.error('Error auto-configuring TRON:', error);
-    
-    const automationStatus = document.getElementById('tronAutomationStatus');
-    const statusMessage = document.getElementById('tronStatusMessage');
-    const autoConfigureBtn = document.getElementById('autoConfigureTronBtn');
-    const tronScriptOutput = document.getElementById('tronScriptOutput');
-    
-    statusMessage.textContent = 'Error configuring TRON: ' + error.message;
-    if (tronScriptOutput) {
-      tronScriptOutput.value += '\n\n╔════════════════════════════════════════════════════════════╗\n';
-      tronScriptOutput.value += '║                     ERROR OCCURRED                         ║\n';
-      tronScriptOutput.value += '╚════════════════════════════════════════════════════════════╝\n\n';
-      tronScriptOutput.value += '❌ ERROR: ' + error.message + '\n';
-      tronScriptOutput.value += '\nPlease check:\n';
-      tronScriptOutput.value += '  • Wallet has been properly generated\n';
-      tronScriptOutput.value += '  • API server is running\n';
-      tronScriptOutput.value += '  • TRON configuration is set up\n';
-      tronScriptOutput.value += '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-      tronScriptOutput.scrollTop = tronScriptOutput.scrollHeight;
-    }
-    
-    setTimeout(() => {
-      automationStatus.style.display = 'none';
-      autoConfigureBtn.disabled = false;
-    }, 3000);
-    
-    walletService.showNotification('Error configuring TRON: ' + error.message, 'error');
-  }
-}
-
-// Copiar mnemônico para clipboard
+// Copy mnemonic to clipboard
 function copyMnemonic() {
   if (!currentWallet || !currentWallet.mnemonic) {
     walletService.showNotification('Nenhuma seed phrase para copiar', 'warning');
@@ -1934,86 +1544,6 @@ function showCurrentWalletInfo(addresses) {
 }
 
 // Copiar endereço para clipboard
-function copyAddress(chain) {
-  const chainElements = {
-    'bitcoin': 'bitcoin-address',
-    'ethereum': 'ethereum-address',
-    'liquid': 'liquid-address', 
-    'tron': 'tron-address',
-    'solana': 'solana-address'
-  };
-  
-  const elementId = chainElements[chain];
-  if (!elementId) return;
-  
-  const element = document.getElementById(elementId);
-  if (!element) return;
-  
-  const address = element.textContent.trim();
-  if (address && address !== 'N/A') {
-    navigator.clipboard.writeText(address).then(() => {
-      walletService.showNotification(`Endereço ${chain} copiado!`, 'success');
-    }).catch(error => {
-      console.error('Error copying address:', error);
-      walletService.showNotification('Erro ao copiar endereço', 'error');
-    });
-  }
-}
-
-// Atualizar todos os saldos
-async function updateAllBalances() {
-  if (!currentWallet || !currentWallet.addresses) {
-    console.log('No wallet loaded');
-    return;
-  }
-  
-  console.log('Updating all balances...');
-  
-  const balanceElements = {
-    'bitcoin': 'btcBalance',
-    'ethereum': 'ethBalance',
-    'liquid': 'liquidBalance',
-    'tron': 'trxBalance',
-    'solana': 'solBalance'
-  };
-  
-  // Atualizar cada saldo usando a API
-  const updatePromises = Object.entries(currentWallet.addresses).map(async ([chain, data]) => {
-    try {
-      if (data.address && data.address !== 'Error') {
-        const balance = await walletService.getBalance(chain, data.address);
-        
-        const elementId = balanceElements[chain];
-        if (elementId) {
-          const element = document.getElementById(elementId);
-          if (element) {
-            element.textContent = balance;
-          }
-        }
-      }
-    } catch (error) {
-      console.error(`Error updating ${chain} balance:`, error);
-      const elementId = balanceElements[chain];
-      if (elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-          element.textContent = 'Erro';
-        }
-      }
-    }
-  });
-  
-  try {
-    await Promise.all(updatePromises);
-    console.log('✓ All balances updated');
-    walletService.showNotification('Saldos atualizados com sucesso', 'success');
-  } catch (error) {
-    console.error('Error updating balances:', error);
-    walletService.showNotification('Erro ao atualizar alguns saldos', 'warning');
-  }
-}
-
-// Alternar visibilidade de seções
 function toggleSection(sectionId) {
   const section = document.getElementById(sectionId);
   if (section) {

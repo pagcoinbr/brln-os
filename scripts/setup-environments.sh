@@ -37,7 +37,7 @@ check_environments() {
   
   local environments=(
     "api-v1:flask"
-    "brln-tools:telebot"
+    "brln-tools:cryptography"
     "wallet-tools:cryptography"
   )
   

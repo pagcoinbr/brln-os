@@ -93,11 +93,6 @@ setup_apache_web() {
   sudo cp -r "$SCRIPT_DIR/pages"/* /var/www/html/pages/
   sudo cp "$SCRIPT_DIR/main.html" /var/www/html/index.html
 
-  # Copiar simple-lnwallet se existir
-  if [ -d "$SCRIPT_DIR/simple-lnwallet" ]; then
-    sudo cp -r "$SCRIPT_DIR/simple-lnwallet" /var/www/html/
-  fi
-
   # Copiar favicon e outros assets estáticos
   if [ -f "$SCRIPT_DIR/favicon.ico" ]; then
     sudo cp -f "$SCRIPT_DIR/favicon.ico" /var/www/html/
@@ -172,12 +167,6 @@ deploy_to_apache() {
   # Copiar arquivo principal
   if [ -f "$SCRIPT_DIR/main.html" ]; then
     sudo cp "$SCRIPT_DIR/main.html" /var/www/html/index.html
-  fi
-
-  # Copiar simple-lnwallet
-  if [ -d "$SCRIPT_DIR/simple-lnwallet" ]; then
-    sudo rm -rf /var/www/html/simple-lnwallet
-    sudo cp -r "$SCRIPT_DIR/simple-lnwallet" /var/www/html/
   fi
 
   # Ajustar permissões
@@ -403,11 +392,6 @@ copy_brln_files_to_apache() {
   # Copiar arquivo principal
   if [ -f "$base_dir/main.html" ]; then
     sudo cp "$base_dir/main.html" /var/www/html/index.html || true
-  fi
-  
-  # Copiar simple-lnwallet
-  if [ -d "$base_dir/simple-lnwallet" ]; then
-    sudo cp -r "$base_dir/simple-lnwallet" /var/www/html/ || true
   fi
   
   # Copiar assets estáticos

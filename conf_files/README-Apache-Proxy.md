@@ -1,93 +1,84 @@
-# Configuração Apache Proxy Reverso para BRLN-OS
+# Configuracao Apache Proxy Reverso para BRLN-OS
 
 ## Problema Resolvido
 
-O Simple LNWallet (e outros serviços) usam cookies com `SameSite=Lax` que impedem o funcionamento correto quando carregados em iframes cross-origin.
+Servicos web internos precisam compartilhar o mesmo host para evitar problemas de cookies SameSite e iframes.
 
-## Solução Implementada
+## Solucao Implementada
 
-### 1. **Proxy Reverso Apache**
-- Todos os serviços agora são acessíveis através do mesmo domínio
-- Cookies SameSite são reescritos automaticamente para `SameSite=None; Secure`
-- Elimina problemas de cross-origin em iframes
+### 1. Proxy Reverso Apache
+- Todos os servicos ficam acessiveis sob o mesmo dominio
+- Cookies SameSite funcionam em iframes
+- WebSocket suportado para a API e terminal
 
-### 2. **Mapeamento de Serviços**
+### 2. Mapeamento de Servicos
 ```
-Serviço              Porta Original    Novo Caminho
-Simple LNWallet      35671            /simple-lnwallet/
+Servico              Porta Original    Novo Caminho
 LNDg                 8889             /lndg/
-ThunderHub          3000             /thunderhub/
-LNBits              5000             /lnbits/
-API                 5001             /api/
-GoTTY               3131             /gotty/
-CLI                 3232             /cli/
-Bitcoin Logs        3434             /bitcoin-logs/
-LND Logs            3535             /lnd-logs/
-BTC Editor          3636             /btc-editor/
-LND Editor          3333             /lnd-editor/
+API                 2121             /api/
+API WebSocket       2121             /ws/
+GoTTY (Terminal)     3131             /terminal/
+GoTTY (Alias)        3131             /gotty-fullauto/
 ```
 
-### 3. **Instalação**
+### 3. Instalacao
 
 ```bash
-# Executar o script de configuração
+# Executar o script de configuracao
 sudo /root/brln-os/conf_files/setup-apache-proxy.sh
 ```
 
-### 4. **Arquivos Criados**
-- `/root/brln-os/conf_files/brln-apache.conf` - Configuração principal Apache
-- `/root/brln-os/conf_files/brln-proxy-rules.conf` - Regras de proxy reutilizáveis  
-- `/root/brln-os/conf_files/setup-apache-proxy.sh` - Script de instalação
+### 4. Arquivos Criados
+- `/root/brln-os/conf_files/brln-apache.conf` - Configuracao principal Apache (HTTP)
+- `/root/brln-os/conf_files/brln-ssl-api.conf` - Configuracao SSL (HTTPS)
+- `/root/brln-os/conf_files/setup-apache-proxy.sh` - Script de instalacao
 
-### 5. **Modificações no Código**
-- `pages/components/header.html` - Link do Lightning atualizado para `/simple-lnwallet/`
-- `pages/components/tools/tools.js` - Função `abrirApp()` usa novos caminhos de proxy
+### 5. Modificacoes no Codigo
+- `pages/components/tools/tools.js` - Funcao `abrirApp()` usa caminhos de proxy
 
-### 6. **Benefícios**
-- ✅ **Cookies funcionam em iframes** - SameSite reescrito automaticamente
-- ✅ **Mesmo domínio** - Elimina problemas de cross-origin  
-- ✅ **WebSocket support** - Para aplicações que precisam
-- ✅ **HTTPS ready** - Configuração SSL incluída
-- ✅ **Segurança mantida** - Headers de segurança apropriados
+### 6. Beneficios
+- Cookies funcionam em iframes
+- Mesmo dominio evita problemas de cross-origin
+- WebSocket suportado
+- HTTPS pronto
 
-### 7. **Teste da Configuração**
+### 7. Teste da Configuracao
 
-Após executar o script, teste:
+Apos executar o script, teste:
 
-1. **Interface principal**: `http://SEU_IP/main.html`
-2. **Simple LNWallet**: `http://SEU_IP/simple-lnwallet/`
-3. **Via iframe**: Clicar em "LIGHTNING" na interface deve funcionar perfeitamente
+1. Interface principal: `http://SEU_IP/main.html`
+2. LNDg: `http://SEU_IP/lndg/`
+3. Terminal: `http://SEU_IP/terminal/`
 
-### 8. **Troubleshooting**
+### 8. Troubleshooting
 
 ```bash
 # Verificar status Apache
 sudo systemctl status apache2
 
-# Verificar configuração
+# Verificar configuracao
 sudo apache2ctl configtest
 
 # Ver logs de erro
 sudo tail -f /var/log/apache2/brln_error.log
 
-# Testar proxy específico
-curl -I http://localhost/simple-lnwallet/
+# Testar proxy especifico
+curl -I http://localhost/lndg/
 ```
 
-### 9. **Configurações de Firewall**
+### 9. Configuracoes de Firewall
 
-O script já configura automaticamente:
+O script configura automaticamente:
 - Porta 80 (HTTP) - permitida da rede local
 - Porta 443 (HTTPS) - permitida da rede local
-- Portas originais dos serviços mantidas para acesso direto se necessário
 
-### 10. **Produção**
+### 10. Producao
 
-Para produção, recomenda-se:
-- Usar HTTPS com certificados válidos
-- Configurar domínio real (não localhost)  
-- Ajustar configurações de segurança conforme necessário
+Para producao, recomenda-se:
+- Usar HTTPS com certificados validos
+- Configurar dominio real
+- Ajustar headers de seguranca conforme necessario
 
 ## Resultado Final
 
-Agora o Simple LNWallet funciona perfeitamente dentro do iframe da interface BRLN-OS, resolvendo completamente o problema de cookies SameSite!
+Servicos internos acessiveis sob o mesmo host, com cookies e WebSockets funcionando corretamente.

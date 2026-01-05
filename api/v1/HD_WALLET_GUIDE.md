@@ -17,7 +17,6 @@
 - Defines standard derivation path structure
 - Format: `m / purpose' / coin_type' / account' / change / address_index`
 - Purpose = 44' (for BIP44)
-- Coin type = 0' (Bitcoin), 60' (Ethereum), 195' (TRON), etc.
 
 ## Correct Implementation Flow
 
@@ -112,12 +111,6 @@ bitcoin_account2 = "m/44'/0'/1'/0/0"     # Second account, first address
 
 # Ethereum
 ethereum_path = "m/44'/60'/0'/0/0"
-
-# TRON
-tron_path = "m/44'/195'/0'/0/0"
-
-# Liquid/Elements
-liquid_path = "m/44'/1776'/0'/0/0"
 
 # Derive keys
 private_key = bip32.get_privkey_from_path(bitcoin_receiving)
@@ -232,10 +225,8 @@ def generate_ethereum_address(public_key):
 # Testnet Bitcoin
 "m/44'/1'/0'/0/0"
 
-# Liquid/Elements
 "m/44'/1776'/0'/0/0"
 
-# TRON
 "m/44'/195'/0'/0/0"
 
 # Solana
