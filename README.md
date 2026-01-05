@@ -363,7 +363,7 @@ Este projeto é licenciado sob a **Licença MIT**. Veja o arquivo [LICENSE](LICE
 
 <div align="center">
 
-**Construído com ❤️ pela liberdade e soberania da comunidade BRLN **
+**Construído com ❤️ pela liberdade e soberania da comunidade BRLN**
 
 *BRLN-OS – Bitcoin Open Bank*
 
