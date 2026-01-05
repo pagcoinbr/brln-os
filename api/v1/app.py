@@ -72,11 +72,12 @@ Bitcoin Core Proxy:
 - GET  /api/v1/bitcoin/block/<block_hash>       - Informações de bloco específico
 
 LND Wallet Initialization:
-- POST /api/v1/lnd/wallet/genseed               - Gerar seed phrase do LND
-- POST /api/v1/lnd/wallet/init                  - Inicializar wallet LND
+- POST /api/v1/lnd/wallet/genseed               - Gerar seed phrase aezeed (LND nativo)
+- POST /api/v1/lnd/wallet/gen-seed              - Gerar seed phrase aezeed via gRPC
+- POST /api/v1/lnd/wallet/init                  - Inicializar wallet LND com aezeed
+- POST /api/v1/lnd/wallet/init-hd               - Inicializar wallet LND com HD master key (BIP32/39) ⭐
 - POST /api/v1/lnd/wallet/unlock                - Desbloquear wallet LND
-- POST /api/v1/lnd/wallet/create-from-api       - Criar wallet LND usando seed da API
-- POST /api/v1/lnd/wallet/create-expect         - Criar wallet LND usando expect script
+- POST /api/v1/lnd/wallet/generate-and-init     - Gerar seed e inicializar wallet LND automaticamente
 
 TRON GasFree Wallet:
 - POST /api/v1/tron/wallet/initialize           - Inicializar wallet TRON
@@ -127,6 +128,15 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
+import re
+
+# Rate limiting for authentication endpoints
+try:
+    from flask_limiter import Limiter
+    from flask_limiter.util import get_remote_address
+    HAS_RATE_LIMITER = True
+except ImportError:
+    HAS_RATE_LIMITER = False
 
 # Secure Password Manager API Integration
 # Use brln-api user's directory when running as service, fallback to root for development
@@ -141,6 +151,28 @@ try:
 except ImportError as e:
     HAS_SECURE_PASSWORD_API = False
     print(f"Warning: Secure Password Manager API not available: {e}")
+
+# Session Authentication Module
+try:
+    from session_auth import (
+        session_manager,
+        require_auth,
+        optional_auth,
+        authenticate as session_authenticate,
+        destroy_session,
+        is_authenticated,
+        get_master_password_from_session
+    )
+    HAS_SESSION_AUTH = True
+    print("Session Authentication Module loaded successfully")
+except ImportError as e:
+    HAS_SESSION_AUTH = False
+    print(f"Warning: Session Authentication Module not available: {e}")
+    # Provide dummy decorator if module not available
+    def require_auth(f):
+        return f
+    def optional_auth(f):
+        return f
 
 # Wallet management imports
 try:
@@ -159,18 +191,37 @@ except ImportError as e:
 warnings.filterwarnings("ignore")
 
 # Network configuration
-BITCOIN_NETWORK = os.environ.get('BITCOIN_NETWORK', 'mainnet')
+BITCOIN_NETWORK = os.environ.get('BRLN_NETWORK', os.environ.get('BITCOIN_NETWORK', 'mainnet'))
 
 # Initialize Secure Password Manager API
 def get_master_password():
     """
-    Get master password from environment variable.
-    The master password is NOT stored on the system - it must be provided by the user.
-    For API usage, set BRLN_MASTER_PASSWORD environment variable when needed.
+    Get master password from active session or environment variable.
+    
+    Priority:
+    1. Active authenticated session (via HTTP cookie)
+    2. Environment variable BRLN_MASTER_PASSWORD
+    
+    The master password is NOT stored on the system - it must be provided by the user
+    through authentication (login) or environment variable.
     """
+    # First, try to get from session
+    try:
+        from flask import request
+        session_id = request.cookies.get('brln_session')
+        if session_id:
+            password = get_master_password_from_session(session_id)
+            if password:
+                return password
+    except RuntimeError:
+        # Outside request context
+        pass
+    except Exception as e:
+        print(f"Warning: Could not get password from session: {e}")
+    
+    # Fallback to environment variable
     env_password = os.environ.get('BRLN_MASTER_PASSWORD')
     if env_password:
-        print("Master password loaded from environment variable")
         return env_password
     
     # Master password not available - this is normal for the API service
@@ -326,13 +377,112 @@ except ImportError:
     print("Run: ./compile_protos.sh to generate proto files")
     exit(1)
 
+# Import WalletUnlocker for wallet initialization with extended_master_key (HD wallet support)
+try:
+    import walletunlocker_pb2 as walletunlocker
+    import walletunlocker_pb2_grpc as walletunlockerstub
+    HAS_WALLET_UNLOCKER = True
+    print("WalletUnlocker proto files loaded (HD wallet init supported)")
+except ImportError:
+    HAS_WALLET_UNLOCKER = False
+    print("Warning: WalletUnlocker proto files not found - HD wallet init via gRPC disabled")
+    print("Run: bash scripts/gen-proto.sh to generate proto files")
+
 app = Flask(__name__)
-CORS(app)
+
+# Initialize rate limiter for security-sensitive endpoints
+if HAS_RATE_LIMITER:
+    limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["200 per day", "50 per hour"],
+        storage_uri="memory://"
+    )
+else:
+    # Dummy limiter decorator if Flask-Limiter not available
+    class DummyLimiter:
+        def limit(self, limit_string):
+            def decorator(f):
+                return f
+            return decorator
+    limiter = DummyLimiter()
+
+# Enable CORS with credentials support for session cookies
+# Restrict to local/trusted origins only for security
+# Note: For local-only system, localhost and local network IPs are allowed
+CORS(app, supports_credentials=True, origins=[
+    'http://localhost',
+    'http://localhost:*',
+    'https://localhost',
+    'https://localhost:*',
+    'http://127.0.0.1',
+    'http://127.0.0.1:*',
+    'https://127.0.0.1',
+    'https://127.0.0.1:*',
+    'http://192.168.*.*',        # Local network
+    'http://192.168.*.*:*',
+    'https://192.168.*.*',
+    'https://192.168.*.*:*',
+    'http://10.*.*.*',           # Private network
+    'http://10.*.*.*:*',
+    'https://10.*.*.*',
+    'https://10.*.*.*:*',
+])
 
 # === ENCRYPTION HELPER FUNCTIONS ===
 
+# Use same high iteration count as secure_password_manager for consistency
+PBKDF2_ITERATIONS = 500000  # Quantum-resistant iterations (matches secure_password_manager)
+
+# === INPUT VALIDATION HELPERS ===
+
+# Allowed service names (whitelist approach for security)
+ALLOWED_SERVICE_NAMES = {
+    'lnbits', 'thunderhub', 'simple', 'lndg', 'lndg-controller',
+    'lnd', 'bitcoind', 'elementsd', 'bos-telegram', 'tor', 'gotty-fullauto'
+}
+
+# Regex patterns for input validation
+WALLET_ID_PATTERN = re.compile(r'^[a-zA-Z0-9_-]{1,64}$')
+SERVICE_NAME_PATTERN = re.compile(r'^[a-zA-Z0-9_-]{1,32}$')
+
+def validate_wallet_id(wallet_id):
+    """
+    Validate wallet_id format.
+    Allows alphanumeric characters, underscores, and hyphens.
+    Max length: 64 characters.
+    
+    Returns:
+        tuple: (is_valid: bool, error_message: str or None)
+    """
+    if not wallet_id:
+        return False, "wallet_id is required"
+    if not isinstance(wallet_id, str):
+        return False, "wallet_id must be a string"
+    if len(wallet_id) > 64:
+        return False, "wallet_id must be 64 characters or less"
+    if not WALLET_ID_PATTERN.match(wallet_id):
+        return False, "wallet_id can only contain letters, numbers, underscores, and hyphens"
+    return True, None
+
+def validate_service_name(service_name):
+    """
+    Validate service_name against whitelist.
+    Only allows known service names to prevent injection.
+    
+    Returns:
+        tuple: (is_valid: bool, error_message: str or None)
+    """
+    if not service_name:
+        return False, "service_name is required"
+    if not isinstance(service_name, str):
+        return False, "service_name must be a string"
+    if service_name not in ALLOWED_SERVICE_NAMES:
+        return False, f"Invalid service name. Allowed services: {', '.join(sorted(ALLOWED_SERVICE_NAMES))}"
+    return True, None
+
 def derive_key_from_password(password, salt):
-    """Deriva chave de criptografia da senha"""
+    """Deriva chave de criptografia da senha usando PBKDF2 com alto número de iterações"""
     password_salt = password.encode() + salt
     password_hash = hashlib.sha256(password_salt).digest()
     
@@ -340,7 +490,7 @@ def derive_key_from_password(password, salt):
         algorithm=hashes.SHA256(),
         length=32,
         salt=salt,
-        iterations=200000,
+        iterations=PBKDF2_ITERATIONS,  # Use consistent high iteration count
         backend=default_backend()
     )
     key = base64.urlsafe_b64encode(kdf.derive(password_hash))
@@ -554,7 +704,7 @@ class WalletManager:
                 algorithm=hashes.SHA256(),
                 length=32,  # 256 bits para AES-256
                 salt=salt,
-                iterations=200000,  # Aumentar iterações para maior segurança
+                iterations=PBKDF2_ITERATIONS,  # 500,000 iterations - quantum-resistant
                 backend=default_backend()
             )
             key = base64.urlsafe_b64encode(kdf.derive(password_hash))
@@ -589,7 +739,7 @@ class WalletManager:
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=200000,
+                iterations=PBKDF2_ITERATIONS,  # 500,000 iterations - quantum-resistant
                 backend=default_backend()
             )
             key = base64.urlsafe_b64encode(kdf.derive(password_hash))
@@ -616,7 +766,7 @@ class WalletManager:
                 algorithm=hashes.SHA256(),
                 length=32,
                 salt=salt,
-                iterations=200000,  # Mesmas iterações da criptografia
+                iterations=PBKDF2_ITERATIONS,  # 500,000 iterations - must match encryption
                 backend=default_backend()
             )
             key = base64.urlsafe_b64encode(kdf.derive(password_hash))
@@ -1769,13 +1919,17 @@ class LNDgRPCClient:
             return None, f"Erro ao gerar seed: {str(e)}"
     
     def init_wallet_grpc(self, wallet_password, cipher_seed_mnemonic, aezeed_passphrase="", recovery_window=250, channel_backups=None, stateless_init=False):
-        """Inicializar wallet LND via gRPC"""
+        """Inicializar wallet LND via gRPC com aezeed mnemonic"""
         try:
-            # Para inicializar wallet, não precisamos de autenticação ainda
-            channel = grpc.insecure_channel(self.host)
-            stub = lnrpcstub.LightningStub(channel)
+            if not HAS_WALLET_UNLOCKER:
+                return None, "WalletUnlocker proto not available - run gen-proto.sh"
             
-            request = lnrpc.InitWalletRequest()
+            # Para inicializar wallet, não precisamos de autenticação ainda
+            # Use insecure channel since wallet is not initialized yet
+            channel = grpc.insecure_channel(self.host)
+            stub = walletunlockerstub.WalletUnlockerStub(channel)
+            
+            request = walletunlocker.InitWalletRequest()
             request.wallet_password = wallet_password.encode('utf-8')
             request.cipher_seed_mnemonic[:] = cipher_seed_mnemonic
             if aezeed_passphrase:
@@ -1790,8 +1944,8 @@ class LNDgRPCClient:
             
             return {
                 'success': True,
-                'message': 'Wallet initialized successfully',
-                'admin_macaroon': response.admin_macaroon.hex() if hasattr(response, 'admin_macaroon') else None
+                'message': 'Wallet initialized successfully with aezeed',
+                'admin_macaroon': response.admin_macaroon.hex() if hasattr(response, 'admin_macaroon') and response.admin_macaroon else None
             }, None
             
         except grpc.RpcError as e:
@@ -1799,14 +1953,82 @@ class LNDgRPCClient:
         except Exception as e:
             return None, f"Erro ao inicializar wallet: {str(e)}"
     
+    def init_wallet_with_extended_key_grpc(self, wallet_password, extended_master_key, 
+                                           birthday_timestamp=0, recovery_window=2500, 
+                                           stateless_init=False):
+        """
+        Initialize LND wallet using BIP32 extended master key (xprv/tprv).
+        
+        This allows using a BIP39 HD wallet seed with LND instead of aezeed format.
+        The extended_master_key should be derived from BIP39 mnemonic using:
+        - BIP32 master key derivation
+        - Encoded as xprv (mainnet) or tprv (testnet)
+        
+        Args:
+            wallet_password: Password to encrypt the wallet (min 8 chars)
+            extended_master_key: BIP32 extended private key (xprv.../tprv...)
+            birthday_timestamp: Unix timestamp of wallet creation (0 = scan from SegWit activation)
+            recovery_window: Address lookahead for recovery (default 2500 for full scan)
+            stateless_init: If True, don't create macaroon files on disk
+            
+        Returns:
+            dict with success status and admin_macaroon (if stateless_init=True, MUST be saved!)
+        """
+        try:
+            if not HAS_WALLET_UNLOCKER:
+                return None, "WalletUnlocker proto not available - run: bash scripts/gen-proto.sh"
+            
+            # Validate extended_master_key format
+            if not extended_master_key:
+                return None, "extended_master_key is required"
+            if not (extended_master_key.startswith('xprv') or extended_master_key.startswith('tprv')):
+                return None, "extended_master_key must start with 'xprv' (mainnet) or 'tprv' (testnet)"
+            
+            # Validate password length
+            if len(wallet_password) < 8:
+                return None, "wallet_password must be at least 8 characters"
+            
+            # Use insecure channel since wallet is not initialized yet
+            channel = grpc.insecure_channel(self.host)
+            stub = walletunlockerstub.WalletUnlockerStub(channel)
+            
+            request = walletunlocker.InitWalletRequest()
+            request.wallet_password = wallet_password.encode('utf-8')
+            request.extended_master_key = extended_master_key
+            request.extended_master_key_birthday_timestamp = birthday_timestamp
+            request.recovery_window = recovery_window
+            request.stateless_init = stateless_init
+            
+            response = stub.InitWallet(request, timeout=180)  # Longer timeout for recovery scan
+            
+            return {
+                'success': True,
+                'message': 'LND wallet initialized successfully with HD master key',
+                'method': 'extended_master_key',
+                'recovery_window': recovery_window,
+                'admin_macaroon': response.admin_macaroon.hex() if hasattr(response, 'admin_macaroon') and response.admin_macaroon else None
+            }, None
+            
+        except grpc.RpcError as e:
+            error_details = e.details() if hasattr(e, 'details') else str(e)
+            # Check for common errors
+            if 'wallet already exists' in error_details.lower():
+                return None, "LND wallet already exists. Use unlock instead of init."
+            return None, f"gRPC Error: {error_details}"
+        except Exception as e:
+            return None, f"Error initializing wallet with extended key: {str(e)}"
+    
     def unlock_wallet_grpc(self, wallet_password, recovery_window=250, channel_backups=None, stateless_init=False):
         """Desbloquear wallet LND via gRPC"""
         try:
+            if not HAS_WALLET_UNLOCKER:
+                return None, "WalletUnlocker proto not available - run gen-proto.sh"
+            
             # Para desbloquear wallet, não precisamos de autenticação
             channel = grpc.insecure_channel(self.host)
-            stub = lnrpcstub.LightningStub(channel)
+            stub = walletunlockerstub.WalletUnlockerStub(channel)
             
-            request = lnrpc.UnlockWalletRequest()
+            request = walletunlocker.UnlockWalletRequest()
             request.wallet_password = wallet_password.encode('utf-8')
             request.recovery_window = recovery_window
             request.stateless_init = stateless_init
@@ -1829,6 +2051,28 @@ class LNDgRPCClient:
         except Exception as e:
             return None, f"Erro ao desbloquear wallet: {str(e)}"
     
+    def gen_seed_grpc(self):
+        """Generate aezeed seed phrase via gRPC (LND native format)"""
+        try:
+            if not HAS_WALLET_UNLOCKER:
+                return None, "WalletUnlocker proto not available - run gen-proto.sh"
+            
+            # Use insecure channel for seed generation
+            channel = grpc.insecure_channel(self.host)
+            stub = walletunlockerstub.WalletUnlockerStub(channel)
+            
+            request = walletunlocker.GenSeedRequest()
+            response = stub.GenSeed(request, timeout=30)
+            
+            return {
+                'cipher_seed_mnemonic': list(response.cipher_seed_mnemonic),
+                'enciphered_seed': response.enciphered_seed.hex() if response.enciphered_seed else None
+            }, None
+            
+        except grpc.RpcError as e:
+            return None, f"gRPC Error: {e.details()}"
+        except Exception as e:
+            return None, f"Error generating seed: {str(e)}"
     def close(self):
         """Fechar conexão gRPC"""
         if self.channel:
@@ -2945,6 +3189,188 @@ def list_unspent(min_confs=0, max_confs=9999999, account=None):
         }
 
 
+# === SESSION AUTHENTICATION ENDPOINTS ===
+# These endpoints use the master password from secure_password_manager
+# to create authenticated sessions for wallet operations
+
+@app.route('/api/v1/auth/login', methods=['POST'])
+@limiter.limit("5 per minute")  # Rate limit: 5 login attempts per minute to prevent brute force
+def auth_login():
+    """
+    Authenticate user with master password.
+    Creates a session cookie that allows access to protected endpoints.
+    
+    Request body:
+        password: The master password set during installation (brunel.sh)
+    
+    Returns:
+        success: Boolean indicating if authentication succeeded
+        message: Human-readable result message
+        session_expires: ISO timestamp when session expires (5 minutes)
+    """
+    try:
+        data = request.get_json()
+        if not data or 'password' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Password is required',
+                'status': 'error'
+            }), 400
+        
+        password = data['password']
+        
+        # Use session_auth module to authenticate
+        result = session_authenticate(password)
+        
+        if result['success']:
+            response = make_response(jsonify({
+                'success': True,
+                'message': 'Authenticated successfully',
+                'session_expires': result.get('session_expires'),
+                'status': 'success'
+            }))
+            
+            # Set session cookie
+            response.set_cookie(
+                'brln_session',
+                result['session_id'],
+                httponly=True,
+                secure=True,  # Only send over HTTPS
+                samesite='Strict',
+                max_age=300  # 5 minutes
+            )
+            
+            return response
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'Authentication failed'),
+                'status': 'error'
+            }), 401
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Authentication error: {str(e)}',
+            'status': 'error'
+        }), 500
+
+
+@app.route('/api/v1/auth/check', methods=['GET'])
+def auth_check():
+    """
+    Check if the current session is authenticated.
+    
+    Returns:
+        authenticated: Boolean indicating if session is valid
+        session_expires: ISO timestamp when session expires (if authenticated)
+    """
+    try:
+        session_id = request.cookies.get('brln_session')
+        
+        if session_id and is_authenticated(session_id):
+            # Get session info
+            session_info = session_manager.get_session_info(session_id)
+            return jsonify({
+                'authenticated': True,
+                'session_expires': session_info.get('expires') if session_info else None,
+                'status': 'success'
+            })
+        else:
+            return jsonify({
+                'authenticated': False,
+                'status': 'success'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'authenticated': False,
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+
+@app.route('/api/v1/auth/logout', methods=['POST'])
+def auth_logout():
+    """
+    End the current session.
+    Clears the session cookie and removes session data.
+    
+    Returns:
+        success: Boolean indicating if logout succeeded
+    """
+    try:
+        session_id = request.cookies.get('brln_session')
+        
+        if session_id:
+            destroy_session(session_id)
+        
+        response = make_response(jsonify({
+            'success': True,
+            'message': 'Logged out successfully',
+            'status': 'success'
+        }))
+        
+        # Clear the session cookie
+        response.delete_cookie('brln_session')
+        
+        return response
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Logout error: {str(e)}',
+            'status': 'error'
+        }), 500
+
+
+@app.route('/api/v1/auth/extend', methods=['POST'])
+def auth_extend():
+    """
+    Extend the current session timeout.
+    Requires valid session. Resets timeout to 5 more minutes.
+    
+    Returns:
+        success: Boolean indicating if extension succeeded
+        session_expires: New expiration time
+    """
+    try:
+        session_id = request.cookies.get('brln_session')
+        
+        if not session_id or not is_authenticated(session_id):
+            return jsonify({
+                'success': False,
+                'error': 'Not authenticated',
+                'status': 'error'
+            }), 401
+        
+        # Extend the session
+        result = session_manager.extend_session(session_id)
+        
+        if result.get('success'):
+            return jsonify({
+                'success': True,
+                'session_expires': result.get('new_expires'),
+                'status': 'success'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'Failed to extend session'),
+                'status': 'error'
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Session extension error: {str(e)}',
+            'status': 'error'
+        }), 500
+
+
+# === END SESSION AUTHENTICATION ENDPOINTS ===
+
+
 @app.route('/api/v1/system/config/network', methods=['GET'])
 def get_network_config():
     """Retorna a rede Bitcoin configurada (mainnet ou testnet)"""
@@ -3036,6 +3462,7 @@ def services_status():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/system/service', methods=['POST'])
+@require_auth
 def manage_service():
     """Gerencia um serviço com toggle automático (start/stop baseado no status atual)"""
     try:
@@ -3044,6 +3471,11 @@ def manage_service():
         
         if not service_key:
             return jsonify({'error': 'Service é obrigatório'}), 400
+        
+        # Validate service name using whitelist
+        is_valid, error = validate_service_name(service_key)
+        if not is_valid:
+            return jsonify({'error': error}), 400
         
         if service_key not in SERVICE_MAPPING:
             return jsonify({'error': f'Serviço {service_key} não encontrado'}), 404
@@ -4333,6 +4765,7 @@ def get_bitcoin_block(block_hash):
 # === WALLET MANAGEMENT ENDPOINTS ===
 
 @app.route('/api/v1/wallet/generate', methods=['POST'])
+@require_auth
 def generate_wallet():
     """Gerar nova carteira HD com mnemonic BIP39"""
     try:
@@ -4457,6 +4890,7 @@ def generate_wallet():
         }), 500
 
 @app.route('/api/v1/wallet/import', methods=['POST'])
+@require_auth
 def import_wallet():
     """Importar carteira existente usando mnemonic"""
     try:
@@ -4505,6 +4939,7 @@ def import_wallet():
         }), 500
 
 @app.route('/api/v1/wallet/save', methods=['POST'])
+@require_auth
 def save_wallet():
     """Salvar carteira criptografada com senha de banco de dados ou SystemD credentials"""
     try:
@@ -4527,6 +4962,15 @@ def save_wallet():
                 'status': 'error'
             }), 400
         
+        # Validate wallet_id format if provided
+        if wallet_id and not wallet_id.startswith('wallet_'):
+            is_valid, error = validate_wallet_id(wallet_id)
+            if not is_valid:
+                return jsonify({
+                    'error': error,
+                    'status': 'error'
+                }), 400
+        
         # If no password provided, use master password for encryption
         if not db_password or use_systemd_credentials:
             db_password = get_master_password()
@@ -4536,7 +4980,6 @@ def save_wallet():
                     'status': 'error'
                 }), 400
             metadata['encrypted_with_systemd_credentials'] = True
-            print("Using master password for wallet encryption")
         
         # Get BIP39 passphrase and private keys from temporary storage
         bip39_passphrase = ""
@@ -4601,17 +5044,21 @@ def save_wallet():
         message = 'Wallet encrypted and saved successfully'
         integration_result = None
         
-        # Auto-integrate with LND using expect script if this is the system default
+        # Auto-integrate with LND using gRPC if this is the system default
         if is_system_default:
             message += ' and set as system default'
             
             try:
-                print(f"🔄 Starting LND integration for wallet '{wallet_id}' using expect script...")
+                print(f"🔄 Starting LND integration for wallet '{wallet_id}' via gRPC...")
                 message += ' - LND integration started in background'
                 
-                # Run LND integration in background thread using expect script
+                # Run LND integration in background thread using gRPC
                 def background_lnd_integration():
                     try:
+                        if not HAS_WALLET_UNLOCKER:
+                            print("❌ WalletUnlocker proto not available - cannot integrate LND via gRPC")
+                            return
+                        
                         # Convert BIP39 to LND extended master key
                         result, error = wallet_manager.bip39_to_extended_master_key(mnemonic, bip39_passphrase or '', 'testnet')
                         if error:
@@ -4633,34 +5080,34 @@ def save_wallet():
                         import time
                         time.sleep(5)
                         
-                        # Run expect script with password in environment
-                        script_path = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
-                        env = os.environ.copy()
-                        env['LND_WALLET_PASSWORD'] = db_password  # Use wallet password for LND
-                        print("🔐 Using wallet password in environment variable")
-                        
-                        result = subprocess.run(
-                            ['sudo', '-E', '-u', 'lnd', script_path, extended_master_key],
-                            cwd='/home/brln-api/scripts',
-                            capture_output=True,
-                            text=True,
-                            timeout=120,
-                            env=env
+                        # Initialize wallet via gRPC (pure gRPC, no expect scripts)
+                        init_result, init_error = lnd_grpc_client.init_wallet_with_extended_key_grpc(
+                            wallet_password=db_password,  # Use wallet password for LND
+                            extended_master_key=extended_master_key,
+                            birthday_timestamp=0,
+                            recovery_window=2500,
+                            stateless_init=False
                         )
                         
-                        if result.returncode == 0:
-                            print(f"✅ LND wallet created successfully for wallet '{wallet_id}'")
-                            print("🔍 Checking for admin.macaroon...")
-                            
-                            # Check if admin.macaroon was created
-                            import time
-                            time.sleep(3)
-                            if os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
-                                print(f"✅ Admin macaroon created - LND integration complete for wallet '{wallet_id}'")
-                            else:
-                                print(f"⚠️ Admin macaroon not found - LND may still be initializing for wallet '{wallet_id}'")
+                        if init_error:
+                            print(f"❌ LND wallet creation failed for wallet '{wallet_id}': {init_error}")
+                            return
+                        
+                        print(f"✅ LND wallet created successfully for wallet '{wallet_id}' via gRPC")
+                        
+                        # Save password for auto-unlock
+                        lnd_password_file = '/data/lnd/password.txt'
+                        subprocess.run(
+                            ['sudo', 'bash', '-c', f'mkdir -p /data/lnd && echo -n "{db_password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
+                            capture_output=True, timeout=10
+                        )
+                        
+                        # Check if admin.macaroon was created
+                        time.sleep(3)
+                        if os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
+                            print(f"✅ Admin macaroon created - LND integration complete for wallet '{wallet_id}'")
                         else:
-                            print(f"❌ LND wallet creation failed for wallet '{wallet_id}': {result.stderr}")
+                            print(f"⚠️ Admin macaroon not found - LND may still be initializing for wallet '{wallet_id}'")
                             
                     except Exception as e:
                         print(f"❌ LND integration failed for wallet '{wallet_id}': {str(e)}")
@@ -4940,11 +5387,15 @@ def integrate_system_wallet():
                     wallet_manager.temp_wallets[wallet_id] = {}
                 wallet_manager.temp_wallets[wallet_id]['mnemonic'] = mnemonic
             
-            print(f"🔄 Starting manual LND integration for wallet '{wallet_id}' using expect script...")
+            print(f"🔄 Starting manual LND integration for wallet '{wallet_id}' via gRPC...")
             
-            # Run integration in background thread using expect script
+            # Run integration in background thread using gRPC (pure gRPC, no expect scripts)
             def background_lnd_integration():
                 try:
+                    if not HAS_WALLET_UNLOCKER:
+                        print("❌ WalletUnlocker proto not available - cannot integrate LND via gRPC")
+                        return
+                    
                     # Convert BIP39 to LND extended master key
                     result, error = wallet_manager.bip39_to_extended_master_key(mnemonic, '', 'testnet')
                     if error:
@@ -4966,34 +5417,34 @@ def integrate_system_wallet():
                     import time
                     time.sleep(5)
                     
-                    # Run expect script with password in environment
-                    script_path = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
-                    env = os.environ.copy()
-                    env['LND_WALLET_PASSWORD'] = password  # Use wallet password for LND
-                    print("🔐 Using wallet password in environment variable for manual integration")
-                    
-                    result = subprocess.run(
-                        ['sudo', '-E', '-u', 'lnd', script_path, extended_master_key],
-                        cwd='/home/brln-api/scripts',
-                        capture_output=True,
-                        text=True,
-                        timeout=120,
-                        env=env
+                    # Initialize wallet via gRPC (pure gRPC, no expect scripts)
+                    init_result, init_error = lnd_grpc_client.init_wallet_with_extended_key_grpc(
+                        wallet_password=password,  # Use wallet password for LND
+                        extended_master_key=extended_master_key,
+                        birthday_timestamp=0,
+                        recovery_window=2500,
+                        stateless_init=False
                     )
                     
-                    if result.returncode == 0:
-                        print(f"✅ LND wallet created successfully for manual integration '{wallet_id}'")
-                        print("🔍 Checking for admin.macaroon...")
-                        
-                        # Check if admin.macaroon was created
-                        import time
-                        time.sleep(3)
-                        if os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
-                            print(f"✅ Admin macaroon created - Manual LND integration complete for wallet '{wallet_id}'")
-                        else:
-                            print(f"⚠️ Admin macaroon not found - LND may still be initializing for manual integration '{wallet_id}'")
+                    if init_error:
+                        print(f"❌ LND wallet creation failed for manual integration '{wallet_id}': {init_error}")
+                        return
+                    
+                    print(f"✅ LND wallet created successfully for manual integration '{wallet_id}' via gRPC")
+                    
+                    # Save password for auto-unlock
+                    lnd_password_file = '/data/lnd/password.txt'
+                    subprocess.run(
+                        ['sudo', 'bash', '-c', f'mkdir -p /data/lnd && echo -n "{password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
+                        capture_output=True, timeout=10
+                    )
+                    
+                    # Check if admin.macaroon was created
+                    time.sleep(3)
+                    if os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
+                        print(f"✅ Admin macaroon created - Manual LND integration complete for wallet '{wallet_id}'")
                     else:
-                        print(f"❌ LND wallet creation failed for manual integration '{wallet_id}': {result.stderr}")
+                        print(f"⚠️ Admin macaroon not found - LND may still be initializing for manual integration '{wallet_id}'")
                         
                 except Exception as e:
                     print(f"❌ Manual LND integration failed for wallet '{wallet_id}': {str(e)}")
@@ -5061,7 +5512,6 @@ def integrate_elements_wallet():
                 master_password = get_master_password()
                 if master_password:
                     password = master_password
-                    print("Using master password from environment for Elements integration")
                 else:
                     return jsonify({
                         'error': 'Password required for wallet decryption',
@@ -5179,6 +5629,7 @@ def integrate_elements_wallet():
         }), 500
 
 @app.route('/api/v1/wallet/load', methods=['POST'])
+@require_auth
 def load_wallet():
     """Carregar e descriptografar carteira salva"""
     try:
@@ -5191,15 +5642,29 @@ def load_wallet():
         
         wallet_id = data.get('wallet_id', '')
         password = data.get('password', '')
+        use_session_auth = data.get('use_session_auth', False)
         
-        if not wallet_id:
+        # Validate wallet_id format
+        is_valid, error = validate_wallet_id(wallet_id)
+        if not is_valid:
             return jsonify({
-                'error': 'Wallet ID is required',
+                'error': error,
                 'status': 'error'
             }), 400
-            
-        # Password is optional for unencrypted wallets (empty string is valid)
         
+        # If no password provided, try to get from session authentication
+        if not password or use_session_auth:
+            master_password = get_master_password()
+            if master_password:
+                password = master_password
+            elif not password:
+                # No password available at all
+                return jsonify({
+                    'error': 'Authentication required. Please login first or provide password.',
+                    'status': 'error',
+                    'requires_auth': True
+                }), 401
+            
         # Carregar wallet do banco
         wallet_data, load_error = wallet_manager.load_wallet(wallet_id)
         if load_error:
@@ -5236,36 +5701,32 @@ def load_wallet():
             if success:
                 message = 'Wallet loaded and set as system default'
                 
-                # Try to unlock LND using expect script with wallet password
+                # Try to unlock LND using gRPC with wallet password
                 try:
-                    print(f"🔓 Attempting to unlock LND for loaded wallet '{wallet_id}' using wallet password...")
+                    print(f"🔓 Attempting to unlock LND for loaded wallet '{wallet_id}' via gRPC...")
                     
-                    # Run expect script with password in environment
-                    script_path = '/home/brln-api/scripts/auto-lnd-unlock.exp'
-                    env = os.environ.copy()
-                    env['LND_WALLET_PASSWORD'] = password  # Use the wallet password from the modal
-                    
-                    unlock_result = subprocess.run(
-                        ['sudo', '-E', '-u', 'lnd', script_path],
-                        cwd='/home/brln-api/scripts',
-                        capture_output=True,
-                        text=True,
-                        timeout=30,
-                        env=env
-                    )
-                    
-                    if unlock_result.returncode == 0:
-                        print(f"✅ LND unlocked successfully for wallet '{wallet_id}' using wallet password")
-                        message += ' - LND unlocked successfully'
+                    # Use gRPC to unlock wallet (pure gRPC, no expect scripts)
+                    if HAS_WALLET_UNLOCKER:
+                        unlock_result, unlock_error = lnd_grpc_client.unlock_wallet_grpc(
+                            wallet_password=password,
+                            recovery_window=250
+                        )
+                        
+                        if not unlock_error:
+                            print(f"✅ LND unlocked successfully for wallet '{wallet_id}' via gRPC")
+                            message += ' - LND unlocked successfully'
+                        else:
+                            print(f"⚠️ LND unlock failed for wallet '{wallet_id}': {unlock_error}")
+                            message += ' - LND unlock failed, may need manual unlock'
                     else:
-                        print(f"⚠️ LND unlock failed for wallet '{wallet_id}': {unlock_result.stderr}")
-                        message += ' - LND unlock failed, may need manual unlock'
+                        print("⚠️ WalletUnlocker proto not available - cannot unlock LND via gRPC")
+                        message += ' - LND unlock skipped (gRPC not available)'
                         
                 except Exception as e:
                     print(f"⚠️ Error unlocking LND for loaded wallet '{wallet_id}': {str(e)}")
                     message += ' - LND unlock error'
                 
-                # Start background LND integration using expect script if needed
+                # Start background LND integration via gRPC if needed
                 try:
                     # Check if admin.macaroon exists
                     if not os.path.exists(f'/data/lnd/data/chain/bitcoin/{BITCOIN_NETWORK}/admin.macaroon'):
@@ -5273,6 +5734,10 @@ def load_wallet():
                         
                         def background_lnd_integration():
                             try:
+                                if not HAS_WALLET_UNLOCKER:
+                                    print("❌ WalletUnlocker proto not available - cannot integrate LND via gRPC")
+                                    return
+                                
                                 # Convert BIP39 to LND extended master key
                                 result, error = wallet_manager.bip39_to_extended_master_key(mnemonic, '', 'testnet')
                                 if error:
@@ -5294,25 +5759,26 @@ def load_wallet():
                                 import time
                                 time.sleep(5)
                                 
-                                # Run expect script with password in environment
-                                script_path = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
-                                env = os.environ.copy()
-                                env['LND_WALLET_PASSWORD'] = unlock_password  # Use provided password for LND
-                                print("🔐 Using wallet password in environment variable")
-                                
-                                result = subprocess.run(
-                                    ['sudo', '-E', '-u', 'lnd', script_path, extended_master_key],
-                                    cwd='/home/brln-api/scripts',
-                                    capture_output=True,
-                                    text=True,
-                                    timeout=120,
-                                    env=env
+                                # Initialize wallet via gRPC (pure gRPC, no expect scripts)
+                                init_result, init_error = lnd_grpc_client.init_wallet_with_extended_key_grpc(
+                                    wallet_password=password,
+                                    extended_master_key=extended_master_key,
+                                    birthday_timestamp=0,
+                                    recovery_window=2500,
+                                    stateless_init=False
                                 )
                                 
-                                if result.returncode == 0:
-                                    print(f"✅ LND wallet created successfully for loaded wallet '{wallet_id}'")
+                                if not init_error:
+                                    print(f"✅ LND wallet created successfully for loaded wallet '{wallet_id}' via gRPC")
+                                    
+                                    # Save password for auto-unlock
+                                    lnd_password_file = '/data/lnd/password.txt'
+                                    subprocess.run(
+                                        ['sudo', 'bash', '-c', f'mkdir -p /data/lnd && echo -n "{password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
+                                        capture_output=True, timeout=10
+                                    )
                                 else:
-                                    print(f"❌ LND wallet creation failed for loaded wallet '{wallet_id}': {result.stderr}")
+                                    print(f"❌ LND wallet creation failed for loaded wallet '{wallet_id}': {init_error}")
                                     
                             except Exception as e:
                                 print(f"❌ LND integration failed for loaded wallet '{wallet_id}': {str(e)}")
@@ -5575,6 +6041,7 @@ def wallet_status():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/wallet/export-backup', methods=['POST'])
+@require_auth
 def export_wallet_backup():
     """
     Export complete wallet backup information for disaster recovery
@@ -5601,9 +6068,11 @@ def export_wallet_backup():
         wallet_id = data.get('wallet_id')
         password = data.get('password')  # Optional, for verification
         
-        if not wallet_id:
+        # Validate wallet_id format
+        is_valid, error = validate_wallet_id(wallet_id)
+        if not is_valid:
             return jsonify({
-                'error': 'wallet_id is required',
+                'error': error,
                 'status': 'error'
             }), 400
         
@@ -5701,77 +6170,8 @@ def convert_bip39_to_lnd():
             'status': 'error'
         }), 500
 
-@app.route('/api/v1/lnd/wallet/unlock', methods=['POST'])
-def unlock_lnd_wallet():
-    """Unlock LND wallet using expect script"""
-    try:
-        data = request.get_json()
-        unlock_password = data.get('password') if data else None
-        
-        # If no password provided, try to get from password file or password manager
-        if not unlock_password:
-            lnd_password_file = '/data/lnd/password.txt'
-            
-            # First try reading from LND password file
-            if os.path.exists(lnd_password_file):
-                try:
-                    with open(lnd_password_file, 'r') as f:
-                        unlock_password = f.read().strip()
-                        if unlock_password:
-                            print(f"Using LND password from {lnd_password_file}")
-                except Exception as e:
-                    print(f"Warning: Could not read LND password file: {e}")
-            
-            # Fallback to password manager
-            if not unlock_password:
-                unlock_password = get_secure_credential('lnd_wallet')
-                if unlock_password:
-                    print("Using LND password from password manager")
-            
-            # If still not found, return error
-            if not unlock_password:
-                return jsonify({
-                    'error': 'LND wallet password not found. Please provide password or ensure it exists in /data/lnd/password.txt',
-                    'status': 'error'
-                }), 400
-        
-        print("🔓 LND unlock requested via API...")
-        
-        # Run expect script with password in environment variable
-        script_path = '/home/brln-api/scripts/auto-lnd-unlock.exp'
-        
-        env = os.environ.copy()
-        env['LND_WALLET_PASSWORD'] = unlock_password
-        
-        unlock_result = subprocess.run(
-            ['sudo', '-E', '-u', 'lnd', script_path],
-            cwd='/home/brln-api/scripts',
-            capture_output=True,
-            text=True,
-            timeout=30,
-            env=env
-        )
-        
-        if unlock_result.returncode == 0:
-            print("✅ LND unlocked successfully via API call")
-            return jsonify({
-                'status': 'success',
-                'message': 'LND wallet unlocked successfully'
-            })
-        else:
-            print(f"❌ LND unlock failed via API call: {unlock_result.stderr}")
-            return jsonify({
-                'status': 'error',
-                'error': f'LND unlock failed: {unlock_result.stderr}'
-            }), 500
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
-
 @app.route('/api/v1/lnd/wallet/genseed', methods=['POST'])
+@require_auth
 def lnd_gen_seed():
     """Generate LND seed phrase via gRPC"""
     try:
@@ -5795,6 +6195,7 @@ def lnd_gen_seed():
         }), 500
 
 @app.route('/api/v1/lnd/wallet/init', methods=['POST'])
+@require_auth
 def lnd_init_wallet():
     """Initialize LND wallet with seed phrase via gRPC"""
     try:
@@ -5852,6 +6253,8 @@ def lnd_init_wallet():
         }), 500
 
 @app.route('/api/v1/lnd/wallet/unlock', methods=['POST'])
+@require_auth
+@limiter.limit("10 per minute")  # Rate limit: 10 unlock attempts per minute
 def lnd_unlock_wallet():
     """Unlock LND wallet via gRPC"""
     try:
@@ -5893,22 +6296,54 @@ def lnd_unlock_wallet():
             'status': 'error'
         }), 500
 
-@app.route('/api/v1/lnd/wallet/create-from-api', methods=['POST'])
-def lnd_create_from_api_seed():
-    """Generate BIP39 seed via API and create LND wallet automatically"""
+@app.route('/api/v1/lnd/wallet/generate-and-init', methods=['POST'])
+@require_auth
+@limiter.limit("5 per minute")
+def lnd_generate_and_init():
+    """
+    Generate BIP39 seed and initialize LND wallet in one step via pure gRPC.
+    
+    This endpoint:
+    1. Generates a new BIP39 mnemonic
+    2. Derives the extended master key
+    3. Initializes LND wallet via gRPC
+    4. Returns seed phrase for backup (SAVE THIS!)
+    
+    Required:
+    - wallet_password: Password for LND wallet (min 8 chars)
+    
+    Optional:
+    - word_count: 12 or 24 (default: 24)
+    - bip39_passphrase: Additional passphrase for seed (default: empty)
+    - network: 'mainnet' or 'testnet' (default: 'testnet')
+    - recovery_window: Address lookahead (default: 2500)
+    - save_password: Save password for auto-unlock (default: true)
+    """
     try:
-        data = request.get_json()
-        if not data:
-            data = {}
+        if not HAS_WALLET_UNLOCKER:
+            return jsonify({
+                'error': 'WalletUnlocker proto not available. Run: bash scripts/gen-proto.sh',
+                'status': 'error'
+            }), 500
+        
+        data = request.get_json() or {}
         
         wallet_password = data.get('wallet_password')
         word_count = data.get('word_count', 24)
         bip39_passphrase = data.get('bip39_passphrase', '')
         network = data.get('network', 'testnet')
+        recovery_window = data.get('recovery_window', 2500)
+        save_password = data.get('save_password', True)
         
         if not wallet_password:
             return jsonify({
                 'error': 'wallet_password is required',
+                'status': 'error'
+            }), 400
+        
+        if len(wallet_password) < 8:
+            return jsonify({
+                'error': 'wallet_password must be at least 8 characters',
                 'status': 'error'
             }), 400
         
@@ -5930,29 +6365,61 @@ def lnd_create_from_api_seed():
                 'status': 'error'
             }), 500
         
+        extended_master_key = lnd_key_result['extended_master_key']
+        
+        # Initialize LND wallet via gRPC
+        init_result, init_error = lnd_grpc_client.init_wallet_with_extended_key_grpc(
+            wallet_password=wallet_password,
+            extended_master_key=extended_master_key,
+            birthday_timestamp=0,
+            recovery_window=recovery_window,
+            stateless_init=False
+        )
+        
+        if init_error:
+            return jsonify({
+                'error': f'Failed to initialize LND wallet: {init_error}',
+                'status': 'error',
+                'seed_phrase': seed_phrase,  # Return seed even on failure so user can retry
+                'extended_master_key': extended_master_key
+            }), 500
+        
         # Generate universal wallet info
         universal_wallet, universal_error = wallet_manager.generate_universal_wallet(seed_phrase, bip39_passphrase)
         
-        # Password will be passed via environment variable to expect script when needed
-        import os
+        # Save password for auto-unlock if requested
+        password_saved = False
+        if save_password:
+            lnd_password_file = '/data/lnd/password.txt'
+            try:
+                write_result = subprocess.run(
+                    ['sudo', 'bash', '-c', 
+                     f'mkdir -p /data/lnd && echo -n "{wallet_password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                password_saved = (write_result.returncode == 0)
+            except Exception:
+                pass
         
         return jsonify({
             'status': 'success',
-            'message': 'Universal seed generated successfully',
+            'message': 'LND wallet generated and initialized successfully',
             'seed_phrase': seed_phrase,
             'word_count': word_count,
             'network': network,
-            'lnd_extended_master_key': lnd_key_result['extended_master_key'],
+            'method': 'extended_master_key (BIP32/39 HD wallet)',
+            'recovery_window': recovery_window,
+            'password_saved': password_saved,
+            'admin_macaroon': init_result.get('admin_macaroon'),
             'universal_wallet': universal_wallet if not universal_error else None,
-            'automation_ready': True,
-            'next_steps': {
-                'automated_lnd_creation': f'cd /home/brln-api/scripts && ./auto-lnd-create-masterkey.exp "{lnd_key_result["extended_master_key"]}"',
-                'manual_lnd_creation': {
-                    'command': 'lncli create',
-                    'option': 'x (extended master root key)',
-                    'extended_key': lnd_key_result['extended_master_key']
-                }
-            }
+            'important': [
+                '⚠️ BACKUP YOUR SEED PHRASE NOW - It will not be shown again!',
+                'Store it securely offline (paper, metal plate, etc.)',
+                'Never share your seed phrase with anyone',
+                'This seed can recover your wallet on any BIP39-compatible wallet'
+            ]
         })
         
     except Exception as e:
@@ -5961,10 +6428,34 @@ def lnd_create_from_api_seed():
             'status': 'error'
         }), 500
 
-@app.route('/api/v1/lnd/wallet/create-expect', methods=['POST'])
-def lnd_create_wallet_expect():
-    """Run expect script to create LND wallet with extended master key"""
+
+@app.route('/api/v1/lnd/wallet/init-hd', methods=['POST'])
+@require_auth
+@limiter.limit("5 per minute")  # Rate limit: 5 init attempts per minute
+def lnd_init_hd_wallet():
+    """
+    Initialize LND wallet using BIP32 extended master key (HD wallet) via pure gRPC.
+    
+    This is the preferred method for creating an LND wallet from a BIP39 seed phrase,
+    as it doesn't rely on expect scripts and provides full control over the process.
+    
+    Required parameters:
+    - wallet_password: Password to encrypt the LND wallet (min 8 characters)
+    - extended_master_key: BIP32 extended private key (xprv for mainnet, tprv for testnet)
+    
+    Optional parameters:
+    - birthday_timestamp: Unix timestamp of wallet creation for faster sync (default: 0 = full scan)
+    - recovery_window: Address lookahead for recovery (default: 2500)
+    - save_password: Whether to save password to LND password file for auto-unlock (default: true)
+    """
     try:
+        if not HAS_WALLET_UNLOCKER:
+            return jsonify({
+                'error': 'WalletUnlocker proto not available. Run: bash scripts/gen-proto.sh',
+                'status': 'error',
+                'resolution': 'The WalletUnlocker gRPC service is required for HD wallet initialization.'
+            }), 500
+        
         data = request.get_json()
         if not data:
             return jsonify({
@@ -5973,123 +6464,121 @@ def lnd_create_wallet_expect():
             }), 400
         
         extended_master_key = data.get('extended_master_key')
-        network = data.get('network', 'testnet')
+        wallet_password = data.get('wallet_password')
+        birthday_timestamp = data.get('birthday_timestamp', 0)
+        recovery_window = data.get('recovery_window', 2500)
+        save_password = data.get('save_password', True)
         
+        # Validate required parameters
         if not extended_master_key:
             return jsonify({
                 'error': 'extended_master_key is required',
+                'status': 'error',
+                'help': 'Use /api/v1/wallet/derive-keys endpoint to generate extended_master_key from BIP39 seed'
+            }), 400
+        
+        if not wallet_password:
+            return jsonify({
+                'error': 'wallet_password is required',
                 'status': 'error'
             }), 400
         
-        # Get LND wallet password - priority: password file -> password manager -> generate new
-        wallet_password = None
-        lnd_password_file = '/data/lnd/password.txt'
-        
-        # First try reading from LND password file
-        if os.path.exists(lnd_password_file):
-            try:
-                with open(lnd_password_file, 'r') as f:
-                    wallet_password = f.read().strip()
-                    if wallet_password:
-                        print(f"Using LND password from {lnd_password_file}")
-            except Exception as e:
-                print(f"Warning: Could not read LND password file: {e}")
-        
-        # Fallback to password manager
-        if not wallet_password:
-            wallet_password = get_secure_credential('lnd_wallet')
-            if wallet_password:
-                print("Using LND password from password manager")
-        
-        # Generate new password if not found
-        if not wallet_password:
-            import secrets
-            import string
-            alphabet = string.ascii_letters + string.digits
-            wallet_password = ''.join(secrets.choice(alphabet) for _ in range(32))
-            print("Generated new LND wallet password")
-            
-            # Try to save to password file
-            try:
-                os.makedirs(os.path.dirname(lnd_password_file), exist_ok=True)
-                subprocess.run(
-                    ['sudo', 'bash', '-c', f'echo -n "{wallet_password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
-                    check=False,
-                    capture_output=True
-                )
-                print(f"LND password saved to {lnd_password_file}")
-            except Exception as e:
-                print(f"Warning: Could not save LND password to file: {e}")
-        
-        # Validate password length
         if len(wallet_password) < 8:
             return jsonify({
-                'error': 'Password must be at least 8 characters',
+                'error': 'wallet_password must be at least 8 characters',
                 'status': 'error'
             }), 400
         
-        # Run expect script with password in environment
-        expect_script = '/home/brln-api/scripts/auto-lnd-create-masterkey.exp'
-        
-        if not os.path.exists(expect_script):
+        # Validate extended_master_key format
+        if not (extended_master_key.startswith('xprv') or extended_master_key.startswith('tprv')):
             return jsonify({
-                'error': f'Expect script not found: {expect_script}',
+                'error': 'extended_master_key must start with "xprv" (mainnet) or "tprv" (testnet)',
+                'status': 'error',
+                'help': 'Derive the key using BIP32 from your BIP39 seed phrase'
+            }), 400
+        
+        # Determine network from key prefix
+        network = 'mainnet' if extended_master_key.startswith('xprv') else 'testnet'
+        
+        # Initialize wallet via gRPC
+        result, error = lnd_grpc_client.init_wallet_with_extended_key_grpc(
+            wallet_password=wallet_password,
+            extended_master_key=extended_master_key,
+            birthday_timestamp=birthday_timestamp,
+            recovery_window=recovery_window,
+            stateless_init=False
+        )
+        
+        if error:
+            return jsonify({
+                'error': error,
                 'status': 'error'
             }), 500
         
-        # Execute expect script as lnd user with password in environment
-        try:
-            env = os.environ.copy()
-            env['LND_WALLET_PASSWORD'] = wallet_password
-            
-            result = subprocess.run(
-                ['sudo', '-E', '-u', 'lnd', expect_script, extended_master_key],
-                cwd='/home/brln-api/scripts',
-                capture_output=True,
-                text=True,
-                timeout=60,
-                env=env
-            )
-            
-            output = result.stdout + result.stderr
-            
-            if result.returncode == 0:
-                # Write password to LND password files for auto-unlock
-                try:
-                    password_locations = ['/data/lnd/password.txt', '/home/lnd/.lnd/password.txt']
-                    for pwd_file in password_locations:
-                        # Use subprocess to write as root since brln-api may not have direct access
-                        write_result = subprocess.run(
-                            ['sudo', 'bash', '-c', f'echo "{wallet_password}" > {pwd_file} && chown lnd:lnd {pwd_file} && chmod 600 {pwd_file}'],
-                            capture_output=True,
-                            text=True,
-                            timeout=10
-                        )
-                        if write_result.returncode == 0:
-                            print(f"✅ Password file written: {pwd_file}")
-                        else:
-                            print(f"⚠️ Failed to write password file {pwd_file}: {write_result.stderr}")
-                except Exception as pwd_error:
-                    print(f"⚠️ Could not write password files: {pwd_error}")
-                
-                return jsonify({
-                    'status': 'success',
-                    'message': 'LND wallet created successfully',
-                    'output': output,
-                    'network': network
-                })
-            else:
-                return jsonify({
-                    'status': 'error',
-                    'error': f'Expect script failed with exit code {result.returncode}',
-                    'output': output
-                }), 500
-                
-        except subprocess.TimeoutExpired:
+        # Save password to LND password file for auto-unlock if requested
+        password_saved = False
+        if save_password:
+            lnd_password_file = '/data/lnd/password.txt'
+            try:
+                write_result = subprocess.run(
+                    ['sudo', 'bash', '-c', 
+                     f'mkdir -p /data/lnd && echo -n "{wallet_password}" > {lnd_password_file} && chmod 600 {lnd_password_file} && chown lnd:lnd {lnd_password_file}'],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                password_saved = (write_result.returncode == 0)
+            except Exception:
+                pass  # Password save is optional, don't fail the request
+        
+        return jsonify({
+            'status': 'success',
+            'message': result['message'],
+            'method': 'extended_master_key (BIP32/39 HD wallet)',
+            'network': network,
+            'recovery_window': recovery_window,
+            'password_saved': password_saved,
+            'admin_macaroon': result.get('admin_macaroon'),
+            'next_steps': [
+                'LND wallet is now initialized with your HD master key',
+                'The wallet will automatically derive addresses from your BIP39 seed',
+                'Use the same seed phrase to recover this wallet in the future'
+            ]
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+
+@app.route('/api/v1/lnd/wallet/gen-seed', methods=['POST'])
+@require_auth
+def lnd_gen_seed():
+    """Generate a new aezeed seed phrase via gRPC (LND native format)"""
+    try:
+        if not HAS_WALLET_UNLOCKER:
             return jsonify({
-                'error': 'Expect script timed out after 60 seconds',
+                'error': 'WalletUnlocker proto not available. Run: bash scripts/gen-proto.sh',
                 'status': 'error'
             }), 500
+        
+        result, error = lnd_grpc_client.gen_seed_grpc()
+        
+        if error:
+            return jsonify({
+                'error': error,
+                'status': 'error'
+            }), 500
+        
+        return jsonify({
+            'status': 'success',
+            'cipher_seed_mnemonic': result['cipher_seed_mnemonic'],
+            'enciphered_seed': result.get('enciphered_seed'),
+            'format': 'aezeed (LND native)',
+            'word_count': len(result['cipher_seed_mnemonic'])
+        })
         
     except Exception as e:
         return jsonify({
@@ -6102,6 +6591,7 @@ def lnd_create_wallet_expect():
 # ============================================================================
 
 @app.route('/api/v1/tron/wallet/initialize', methods=['POST'])
+@require_auth
 def tron_initialize_wallet():
     """Initialize TRON wallet from system wallet seed phrase"""
     try:
@@ -6447,6 +6937,7 @@ def tron_get_balance():
         }), 500
 
 @app.route('/api/v1/tron/wallet/send', methods=['POST'])
+@require_auth
 def tron_send_usdt():
     """Send USDT via gas-free protocol"""
     try:
@@ -6723,6 +7214,7 @@ def tron_load_config():
 # === SECURE PASSWORD MANAGER API ENDPOINTS ===
 
 @app.route('/api/v1/system/passwords/store', methods=['POST'])
+@require_auth
 def store_system_password():
     """Store a service password in secure password manager"""
     if not password_api or not password_api.is_initialized():
@@ -6766,6 +7258,7 @@ def store_system_password():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/system/passwords/list', methods=['GET'])
+@require_auth
 def list_system_passwords():
     """List all stored service names (admin only)"""
     if not password_api or not password_api.is_initialized():
@@ -6803,6 +7296,7 @@ def password_manager_status():
         }), 500
 
 @app.route('/api/v1/system/passwords/delete/<service_name>', methods=['DELETE'])
+@require_auth
 def delete_system_password(service_name):
     """Delete a service password"""
     if not password_api or not password_api.is_initialized():
@@ -6823,6 +7317,7 @@ def delete_system_password(service_name):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/system/passwords/get/<service_name>', methods=['GET'])
+@require_auth
 def get_system_password(service_name):
     """Get a specific service password (requires active session)"""
     if not password_api or not password_api.is_initialized():
@@ -6847,6 +7342,7 @@ def get_system_password(service_name):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/system/passwords/unlock', methods=['POST'])
+@limiter.limit("5 per minute")  # Rate limit: 5 unlock attempts per minute to prevent brute force
 def unlock_password_session():
     """
     Unlock password manager session with master password.
@@ -6883,6 +7379,7 @@ def unlock_password_session():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/v1/system/passwords/backup', methods=['GET'])
+@require_auth
 def backup_password_database():
     """Create and download backup of password database"""
     if not password_api or not password_api.is_initialized():

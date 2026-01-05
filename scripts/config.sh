@@ -40,7 +40,7 @@ done
 LOCAL_APPS_DIR="${LOCAL_APPS_DIR:-$HOME/brlnfullauto/local_apps}"
 
 POETRY_BIN="$HOME/.local/bin/poetry"
-FLASKVENV_DIR="$HOME/envflask"
+FLASKVENV_DIR="/home/brln-api/venv"  # API runs as brln-api user for security isolation
 atual_user=$(whoami)
 branch=main
 git_user=pagcoinbr

@@ -75,7 +75,8 @@ class WalletService {
       const defaultOptions = {
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'  // Include cookies for session authentication
       };
       
       const response = await fetch(url, {
@@ -148,11 +149,12 @@ class WalletService {
   }
 
   // Carregar carteira
-  async loadWallet(walletId, password) {
+  async loadWallet(walletId, password = null, useSessionAuth = false) {
     const requestBody = {
       wallet_id: walletId,
-      // Always send password field - empty string for unencrypted wallets
-      password: password || ''
+      // Password can be null if using session authentication
+      password: password || '',
+      use_session_auth: useSessionAuth
     };
     
     const data = await this.makeApiRequest('/wallet/load', {
@@ -213,6 +215,38 @@ class WalletService {
       })
     });
     return data;
+  }
+
+  // ✅ NEW: Authenticate user with master password
+  async authenticate(masterPassword) {
+    const data = await this.makeApiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        password: masterPassword
+      })
+    });
+    return data;
+  }
+
+  // ✅ NEW: Check if user has valid authentication session
+  async checkAuthentication() {
+    try {
+      const data = await this.makeApiRequest('/auth/check');
+      return data.authenticated === true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // ✅ NEW: Logout and clear session
+  async logout() {
+    try {
+      await this.makeApiRequest('/auth/logout', { method: 'POST' });
+      return true;
+    } catch (error) {
+      console.error('Logout failed:', error);
+      return false;
+    }
   }
 }
 
@@ -459,6 +493,121 @@ function hidePasswordModal() {
     modal.style.display = 'none';
   }
 }
+
+// ✅ NEW: Show authentication modal for master password
+async function showAuthenticationModal() {
+  return new Promise((resolve, reject) => {
+    // Create modal if it doesn't exist
+    let authModal = document.getElementById('authenticationModal');
+    
+    if (!authModal) {
+      authModal = document.createElement('div');
+      authModal.id = 'authenticationModal';
+      authModal.className = 'modal';
+      authModal.innerHTML = `
+        <div class="modal-content">
+          <h3>🔐 Master Password Required</h3>
+          <p>Enter your BRLN-OS master password to encrypt/decrypt wallet data</p>
+          <p class="session-info">Your session will remain active for 30 minutes</p>
+          <div class="form-group">
+            <label for="authMasterPassword">Master Password:</label>
+            <input 
+              type="password" 
+              id="authMasterPassword" 
+              placeholder="Enter master password"
+              autocomplete="current-password"
+            />
+          </div>
+          <div class="modal-actions">
+            <button id="authConfirmBtn" class="action-button primary">Authenticate</button>
+            <button id="authCancelBtn" class="action-button secondary">Cancel</button>
+          </div>
+          <div id="authErrorMessage" class="error-message" style="display: none;"></div>
+        </div>
+      `;
+      document.body.appendChild(authModal);
+    }
+    
+    const passwordInput = document.getElementById('authMasterPassword');
+    const confirmBtn = document.getElementById('authConfirmBtn');
+    const cancelBtn = document.getElementById('authCancelBtn');
+    const errorMessage = document.getElementById('authErrorMessage');
+    
+    // Clear previous input and errors
+    passwordInput.value = '';
+    errorMessage.style.display = 'none';
+    
+    // Show modal
+    authModal.style.display = 'flex';
+    setTimeout(() => passwordInput.focus(), 100);
+    
+    // Handle confirm
+    const handleConfirm = async () => {
+      const password = passwordInput.value.trim();
+      
+      if (!password) {
+        errorMessage.textContent = 'Password is required';
+        errorMessage.style.display = 'block';
+        return;
+      }
+      
+      try {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Authenticating...';
+        
+        // Authenticate with backend
+        const result = await walletService.authenticate(password);
+        
+        // API returns 'success: true' on successful authentication
+        if (result && result.success) {
+          walletService.showNotification('Authentication successful', 'success');
+          authModal.style.display = 'none';
+          passwordInput.value = '';
+          resolve(true);
+        } else {
+          throw new Error(result.error || 'Authentication failed');
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        errorMessage.textContent = 'Invalid password. Please try again.';
+        errorMessage.style.display = 'block';
+        passwordInput.select();
+      } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Authenticate';
+      }
+    };
+    
+    // Handle cancel
+    const handleCancel = () => {
+      authModal.style.display = 'none';
+      passwordInput.value = '';
+      resolve(false);
+    };
+    
+    // Handle Enter key
+    const handleKeyPress = (e) => {
+      if (e.key === 'Enter') {
+        handleConfirm();
+      } else if (e.key === 'Escape') {
+        handleCancel();
+      }
+    };
+    
+    // Remove old listeners and add new ones
+    confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+    passwordInput.removeEventListener('keypress', handleKeyPress);
+    
+    const newConfirmBtn = document.getElementById('authConfirmBtn');
+    const newCancelBtn = document.getElementById('authCancelBtn');
+    
+    newConfirmBtn.addEventListener('click', handleConfirm);
+    newCancelBtn.addEventListener('click', handleCancel);
+    passwordInput.addEventListener('keypress', handleKeyPress);
+  });
+}
+
 
 // Carregar carteira por ID
 async function loadWalletById(walletId, password) {
@@ -979,46 +1128,44 @@ function validateMnemonicWords() {
   }
 }
 
-// Save wallet - prompt user for encryption password
+// Save wallet - uses authenticated session for encryption
 async function saveWalletWithSystemdCredentials() {
   if (!currentWallet || !currentWallet.mnemonic) {
     walletService.showNotification('No wallet data to save', 'error');
     return;
   }
   
-  // Prompt user for encryption password
-  const password = prompt(
-    '🔐 Enter an encryption password to secure your wallet:\n\n' +
-    '• This password will be used to encrypt your seed phrase\n' +
-    '• You will need this password to load the wallet later\n' +
-    '• Minimum 8 characters recommended',
-    ''
-  );
+  // Check if user is authenticated (has valid session)
+  const isAuthenticated = await walletService.checkAuthentication();
   
-  if (!password) {
-    walletService.showNotification('Password is required to save wallet securely', 'warning');
-    return;
-  }
-  
-  if (password.length < 8) {
-    walletService.showNotification('Password must be at least 8 characters', 'warning');
-    return;
+  if (!isAuthenticated) {
+    // User needs to authenticate first
+    walletService.showNotification('Please authenticate to save wallet securely', 'info');
+    await showAuthenticationModal();
+    
+    // Check again after authentication
+    const authenticated = await walletService.checkAuthentication();
+    if (!authenticated) {
+      walletService.showNotification('Authentication required to save wallet', 'warning');
+      return;
+    }
   }
   
   try {
     showLoading(true);
     
-    // Save wallet using API with user-provided password
+    // Save wallet using API - backend uses session password for encryption
     const metadata = {
       wordCount: currentWallet.wordCount,
       hasBip39Passphrase: !!currentWallet.bip39Passphrase,
       createdAt: new Date().toISOString(),
-      useSystemdCredentials: false
+      useSessionAuth: true  // ✅ Use authenticated session for encryption
     };
     
+    // ✅ NO PASSWORD SENT - backend retrieves from encrypted session
     const result = await walletService.saveWallet(
       currentWallet.mnemonic, 
-      password,  // User-provided encryption password
+      null,  // ✅ Password retrieved from session server-side
       currentWalletId,
       metadata
     );
@@ -1026,7 +1173,7 @@ async function saveWalletWithSystemdCredentials() {
     if (result && result.wallet_id) {
       currentWalletId = result.wallet_id;
       
-      walletService.showNotification(`Wallet saved securely. Redirecting to home...`, 'success');
+      walletService.showNotification(`Wallet saved securely using session authentication`, 'success');
       
       // Notify parent window and set as system default
       notifyWalletConfigured(currentWalletId);
@@ -1050,6 +1197,15 @@ async function saveWalletWithSystemdCredentials() {
     
   } catch (error) {
     console.error('Error saving wallet:', error);
+    
+    // Check if error is due to expired session
+    if (error.message.includes('session') || error.message.includes('authentication')) {
+      walletService.showNotification('Session expired. Please authenticate again.', 'warning');
+      await showAuthenticationModal();
+      // Retry saving after re-authentication
+      return saveWalletWithSystemdCredentials();
+    }
+    
     walletService.showNotification('Error saving wallet: ' + error.message, 'error');
   } finally {
     showLoading(false);

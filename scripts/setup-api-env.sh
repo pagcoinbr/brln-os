@@ -56,6 +56,15 @@ setup_api_environment() {
   sudo chmod -R 755 "$VENV_DIR"
   echo "✓ Ownership changed to brln-api:brln-api"
   
+  # Generate proto files (essential for LND wallet initialization with HD keys)
+  echo "Generating gRPC proto files..."
+  if [[ -f "$SCRIPT_DIR/gen-proto.sh" ]]; then
+    bash "$SCRIPT_DIR/gen-proto.sh"
+    echo "✓ Proto files generated"
+  else
+    echo "⚠ Warning: gen-proto.sh not found, skipping proto generation"
+  fi
+  
   echo "API environment setup complete!"
   echo "Venv location: $VENV_DIR"
 }

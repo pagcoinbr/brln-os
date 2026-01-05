@@ -114,16 +114,12 @@
         <div class="action-group">
           <h3>Import Existing Wallet</h3>
           <div class="form-group">
-            <label for="importMnemonic">Seed Phrase (12 words):</label>
+            <label for="importMnemonic">Seed Phrase (12/24 words):</label>
             <textarea id="importMnemonic" placeholder="word1 word2 word3..." rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label for="importPassphrase">Passphrase (optional):</label>
+            <label for="importPassphrase">BIP39 Passphrase (13th/25th word - optional):</label>
             <input type="password" id="importPassphrase" placeholder="Additional passphrase (BIP39)" />
-          </div>
-          <div class="form-group">
-            <label for="importPassword">Encryption Password (optional):</label>
-            <input type="password" id="importPassword" placeholder="Leave empty to save unencrypted" />
           </div>
           <div class="form-group">
             <label for="importWalletId">Wallet ID (optional):</label>

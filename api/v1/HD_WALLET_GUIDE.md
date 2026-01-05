@@ -383,3 +383,151 @@ The proper order is:
 6. **Addresses** (chain-specific encoding) ← What users see
 
 Your current implementation is close to correct. The main thing to understand is the distinction between mnemonic (for backup) and seed (for key derivation), and why each step exists.
+
+## API Integration
+
+### Initialize LND Wallet with HD Master Key (Recommended)
+
+The BRLN API now supports initializing LND wallets directly with BIP32 extended master keys via pure gRPC. This is the preferred method as it:
+- Doesn't require expect scripts
+- Uses pure gRPC (more secure and reliable)
+- Allows full control over wallet parameters
+- Supports wallet recovery from BIP39 seeds
+
+#### Step 1: Derive Extended Master Key from BIP39 Seed
+
+```bash
+# Using the API's derive-keys endpoint
+curl -X POST http://localhost:5001/api/v1/wallet/derive-keys \
+  -H "Content-Type: application/json" \
+  -H "Cookie: brln_session=YOUR_SESSION_ID" \
+  -d '{
+    "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+    "passphrase": "",
+    "network": "testnet"
+  }'
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "extended_master_key": "tprv8ZgxMBicQKsPd...",
+  "network": "testnet"
+}
+```
+
+#### Step 2: Initialize LND Wallet with Extended Key
+
+```bash
+# Initialize LND wallet with the derived extended master key
+curl -X POST http://localhost:5001/api/v1/lnd/wallet/init-hd \
+  -H "Content-Type: application/json" \
+  -H "Cookie: brln_session=YOUR_SESSION_ID" \
+  -d '{
+    "wallet_password": "your-secure-password-min-8-chars",
+    "extended_master_key": "tprv8ZgxMBicQKsPd...",
+    "birthday_timestamp": 0,
+    "recovery_window": 2500,
+    "save_password": true
+  }'
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "message": "LND wallet initialized successfully with HD master key",
+  "method": "extended_master_key (BIP32/39 HD wallet)",
+  "network": "testnet",
+  "recovery_window": 2500,
+  "password_saved": true,
+  "admin_macaroon": "0201036c6e640224...",
+  "next_steps": [
+    "LND wallet is now initialized with your HD master key",
+    "The wallet will automatically derive addresses from your BIP39 seed",
+    "Use the same seed phrase to recover this wallet in the future"
+  ]
+}
+```
+
+### API Endpoint Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/lnd/wallet/init-hd` | POST | Initialize LND with HD extended master key (xprv/tprv) |
+| `/api/v1/lnd/wallet/init` | POST | Initialize LND with aezeed mnemonic (LND native) |
+| `/api/v1/lnd/wallet/gen-seed` | POST | Generate new aezeed seed phrase |
+| `/api/v1/lnd/wallet/unlock` | POST | Unlock existing LND wallet |
+| `/api/v1/wallet/derive-keys` | POST | Derive extended keys from BIP39 mnemonic |
+
+### Parameters for `/api/v1/lnd/wallet/init-hd`
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `wallet_password` | Yes | - | Password to encrypt the wallet (min 8 chars) |
+| `extended_master_key` | Yes | - | BIP32 extended private key (xprv/tprv) |
+| `birthday_timestamp` | No | 0 | Unix timestamp of wallet creation (0 = scan from SegWit activation) |
+| `recovery_window` | No | 2500 | Address lookahead for recovery scan |
+| `save_password` | No | true | Save password to LND password file for auto-unlock |
+
+### Extended Key Format
+
+- **Mainnet**: xprv... (version bytes: 0x0488ADE4)
+- **Testnet**: tprv... (version bytes: 0x04358394)
+
+### Important Notes
+
+1. **Extended Master Key vs Aezeed**: LND natively uses aezeed format for seed phrases. Using `extended_master_key` bypasses aezeed and uses your BIP39-derived master key directly.
+
+2. **Recovery**: To recover this wallet, you need the original BIP39 mnemonic and passphrase (if used). Derive the extended master key again and reinitialize.
+
+3. **Birthday Timestamp**: Set this to the Unix timestamp of when the wallet was created for faster chain sync. Use 0 for full scan (slower but ensures all transactions found).
+
+4. **Recovery Window**: Higher values (2500+) are recommended for recovery to ensure all addresses are found. Lower values (250) are fine for new wallets.
+
+5. **Admin Macaroon**: If you use `stateless_init=true`, you MUST save the returned admin_macaroon - it won't be written to disk.
+
+### Complete Workflow Example
+
+```python
+import requests
+
+API_URL = "http://localhost:5001/api/v1"
+session = requests.Session()
+
+# 1. Authenticate
+auth_response = session.post(f"{API_URL}/auth/login", json={
+    "password": "your-master-password"
+})
+print(f"Auth: {auth_response.json()}")
+
+# 2. Generate or retrieve BIP39 seed
+# (Usually this is stored in the wallet manager)
+mnemonic = "your twelve word seed phrase here about abandon"
+
+# 3. Derive extended master key for testnet
+derive_response = session.post(f"{API_URL}/wallet/derive-keys", json={
+    "mnemonic": mnemonic,
+    "passphrase": "",
+    "network": "testnet"
+})
+keys = derive_response.json()
+extended_master_key = keys['testnet_extended_master_key']
+
+# 4. Initialize LND wallet
+init_response = session.post(f"{API_URL}/lnd/wallet/init-hd", json={
+    "wallet_password": "securepassword123",
+    "extended_master_key": extended_master_key,
+    "recovery_window": 2500,
+    "save_password": True
+})
+
+result = init_response.json()
+if result['status'] == 'success':
+    print(f"✅ LND wallet initialized: {result['message']}")
+    print(f"   Network: {result['network']}")
+    print(f"   Method: {result['method']}")
+else:
+    print(f"❌ Failed: {result['error']}")
+```

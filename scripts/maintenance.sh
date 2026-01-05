@@ -417,13 +417,14 @@ update_api_requirements() {
     echo -e "${BLUE}🐍 Verificando dependências Python da API...${NC}"
     
     local requirements_file="$SCRIPT_DIR/api/v1/requirements.txt"
-    local venv_path="$HOME/envflask"
+    local venv_path="/home/brln-api/venv"  # API runs as brln-api user for security
     
     if [[ -f "$requirements_file" ]]; then
         # Check if virtual environment exists
         if [[ ! -d "$venv_path" ]]; then
             echo -e "${BLUE}📦 Criando ambiente virtual Python...${NC}"
-            python3 -m venv "$venv_path"
+            sudo python3 -m venv "$venv_path"
+            sudo chown -R brln-api:brln-api "$venv_path"
         fi
         
         # Activate virtual environment and update packages

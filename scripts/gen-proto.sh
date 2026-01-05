@@ -115,6 +115,26 @@ else
     echo -e "${GREEN}   ✅ lightning.proto already exists${NC}"
 fi
 
+# Download walletunlocker.proto (ESSENTIAL for wallet init with extended_master_key)
+if [[ ! -f "$PROTO_DIR/walletunlocker.proto" ]] || [[ "$1" == "--force-download" ]]; then
+    echo -e "${YELLOW}   📄 Downloading walletunlocker.proto (essential for HD wallet support)...${NC}"
+    CURL_OUTPUT=$(curl -s -L -w "\n%{http_code}" "$LND_PROTO_URL/walletunlocker.proto" -o "$PROTO_DIR/walletunlocker.proto" 2>&1)
+    HTTP_CODE=$(echo "$CURL_OUTPUT" | tail -n1)
+    if [[ $? -eq 0 ]] && [[ "$HTTP_CODE" == "200" ]]; then
+        echo -e "${GREEN}   ✅ walletunlocker.proto downloaded${NC}"
+    else
+        echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}❌ ERRO: Falha ao baixar walletunlocker.proto${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${YELLOW}   Este arquivo é ESSENCIAL para criar wallets LND com HD master key${NC}"
+        echo -e "${YELLOW}   URL: $LND_PROTO_URL/walletunlocker.proto${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+        exit 1
+    fi
+else
+    echo -e "${GREEN}   ✅ walletunlocker.proto already exists${NC}"
+fi
+
 # Download additional proto files for sub-services
 ADDITIONAL_PROTO_DOWNLOADS=(
     "signrpc/signer.proto"
@@ -151,7 +171,14 @@ done
 cd "$API_DIR"
 
 # Activate virtual environment if it exists
-VENV_PATHS=("/root/envflask" "/home/admin/envflask")
+# Priority: brln-api user venv (production) > root venv (development) > legacy paths
+VENV_PATHS=(
+    "/home/brln-api/venv"
+    "/root/brln-os-envs/api-v1"
+    "/home/brln-api/brln-os-envs/api-v1"
+    "/root/envflask"
+    "/home/admin/envflask"
+)
 VENV_ACTIVATED=false
 
 for venv_path in "${VENV_PATHS[@]}"; do
@@ -210,6 +237,24 @@ else
     echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${RED}❌ ERRO: Falha ao compilar lightning.proto${NC}"
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    exit 1
+fi
+
+# Compile walletunlocker.proto (ESSENTIAL for HD wallet init)
+echo -e "${YELLOW}   📄 Compiling walletunlocker.proto...${NC}"
+COMPILE_ERROR=$(python3 -m grpc_tools.protoc \
+    --proto_path="$PROTO_DIR" \
+    --python_out=. \
+    --grpc_python_out=. \
+    "$PROTO_DIR/walletunlocker.proto" 2>&1)
+COMPILE_STATUS=$?
+
+if [[ $COMPILE_STATUS -eq 0 ]]; then
+    echo -e "${GREEN}   ✅ walletunlocker.proto compiled successfully${NC}"
+else
+    echo -e "${RED}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${RED}❌ ERRO: Falha ao compilar walletunlocker.proto${NC}"
+    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${YELLOW}   Arquivo: $PROTO_DIR/lightning.proto${NC}"
     echo -e "${YELLOW}   Diretório de trabalho: $PWD${NC}"
     echo -e "${RED}   Detalhes do erro:${NC}"
@@ -267,7 +312,7 @@ done
 
 # Verify main files were generated
 echo -e "${YELLOW}🧪 Verifying generated files...${NC}"
-MAIN_FILES=("lightning_pb2.py" "lightning_pb2_grpc.py")
+MAIN_FILES=("lightning_pb2.py" "lightning_pb2_grpc.py" "walletunlocker_pb2.py" "walletunlocker_pb2_grpc.py")
 ALL_GENERATED=true
 
 for file in "${MAIN_FILES[@]}"; do
@@ -296,7 +341,10 @@ sys.path.insert(0, '.')
 try:
     import lightning_pb2
     import lightning_pb2_grpc
+    import walletunlocker_pb2
+    import walletunlocker_pb2_grpc
     print('✅ Main imports working correctly')
+    print('✅ WalletUnlocker imports working (HD wallet support enabled)')
 except ImportError as e:
     print(f'❌ Import error: {e}')
     exit(1)

@@ -47,20 +47,30 @@ update_and_upgrade() {
   # sudo systemctl daemon-reload
 
   # Garante que o pacote python3-venv esteja instalado (still needed for control scripts)
-  if ! dpkg -l | grep -q python3-venv; then
+   if ! dpkg -l | grep -q python3-venv; then
     echo -e "${BLUE}📦 Instalando python3-venv...${NC}"
     sudo apt install python3-venv -y
   else
     echo "✅ python3-venv já está instalado."
   fi
 
-  # Define o diretório do ambiente virtual
-  FLASKVENV_DIR="$HOME/envflask"
+  # Define o diretório do ambiente virtual (brln-api user for security isolation)
+  FLASKVENV_DIR="/home/brln-api/venv"
+
+  # Ensure brln-api user exists
+  if ! id "brln-api" &>/dev/null; then
+    echo -e "${BLUE}👤 Criando usuário brln-api...${NC}"
+    sudo adduser --disabled-password --gecos "" brln-api
+  fi
+
+  # Ensure venv directory parent exists
+  sudo mkdir -p "$(dirname "$FLASKVENV_DIR")"
 
   # Cria o ambiente virtual apenas se ainda não existir
   if [ ! -d "$FLASKVENV_DIR" ]; then
     echo -e "${BLUE}🐍 Criando ambiente virtual Flask...${NC}"
-    python3 -m venv "$FLASKVENV_DIR"
+    sudo python3 -m venv "$FLASKVENV_DIR"
+    sudo chown -R brln-api:brln-api "$FLASKVENV_DIR"
   else
     echo "✅ Ambiente virtual já existe em $FLASKVENV_DIR."
   fi
