@@ -37,6 +37,154 @@
         height: calc(100vh - 80px);
       }
 
+      /* Auth Modal Styles - Global Authentication Overlay */
+      .auth-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.85);
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        backdrop-filter: blur(4px);
+      }
+
+      .auth-modal-overlay.active {
+        display: flex;
+      }
+
+      .auth-modal-content {
+        background: linear-gradient(145deg, #1a1a2e, #16213e);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6),
+                    0 0 0 1px rgba(255, 255, 255, 0.1);
+        text-align: center;
+        animation: authModalSlideIn 0.3s ease-out;
+      }
+
+      @keyframes authModalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .auth-modal-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+      }
+
+      .auth-modal-title {
+        color: #fff;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .auth-modal-subtitle {
+        color: #a0a0a0;
+        font-size: 14px;
+        margin-bottom: 25px;
+        line-height: 1.5;
+      }
+
+      .auth-modal-input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #333;
+        border-radius: 10px;
+        background: #0d0d1a;
+        color: #fff;
+        font-size: 16px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      .auth-modal-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+      }
+
+      .auth-modal-input.error {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+      }
+
+      .auth-modal-error {
+        color: #ff6b6b;
+        font-size: 13px;
+        margin-bottom: 15px;
+        min-height: 20px;
+        display: none;
+      }
+
+      .auth-modal-error.visible {
+        display: block;
+      }
+
+      .auth-modal-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+      }
+
+      .auth-modal-btn {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .auth-modal-btn.primary {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+      }
+
+      .auth-modal-btn.primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0088ff, #0066cc);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+      }
+
+      .auth-modal-btn.primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .auth-modal-btn.secondary {
+        background: #2a2a3a;
+        color: #ccc;
+      }
+
+      .auth-modal-btn.secondary:hover {
+        background: #3a3a4a;
+      }
+
+      .auth-modal-session-info {
+        color: #666;
+        font-size: 12px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #333;
+      }
+
       /* Terminal Modal Styles */
       .terminal-modal {
         display: none;
@@ -145,6 +293,33 @@
           <button class="terminal-close" onclick="closeTerminalModal()">&times;</button>
         </div>
         <iframe id="terminalIframe" class="terminal-iframe" src=""></iframe>
+      </div>
+    </div>
+
+    <!-- Global Authentication Modal - Displayed over all pages -->
+    <div id="globalAuthModal" class="auth-modal-overlay">
+      <div class="auth-modal-content">
+        <div class="auth-modal-icon">🔐</div>
+        <h2 class="auth-modal-title">Autenticação Necessária</h2>
+        <p class="auth-modal-subtitle">
+          Digite sua senha mestre do BRLN-OS para continuar.<br>
+          Sua sessão permanecerá ativa por 5 minutos.
+        </p>
+        <input
+          type="password"
+          id="globalAuthPassword"
+          class="auth-modal-input"
+          placeholder="Senha mestre"
+          autocomplete="current-password"
+        />
+        <div id="globalAuthError" class="auth-modal-error"></div>
+        <div class="auth-modal-actions">
+          <button id="globalAuthSubmit" class="auth-modal-btn primary">Autenticar</button>
+          <button id="globalAuthCancel" class="auth-modal-btn secondary">Cancelar</button>
+        </div>
+        <p class="auth-modal-session-info">
+          Sessão expira automaticamente após 5 minutos de inatividade
+        </p>
       </div>
     </div>
 
@@ -733,6 +908,172 @@
       // Make functions globally accessible
       window.openTerminalModal = openTerminalModal;
       window.closeTerminalModal = closeTerminalModal;
+
+      // ============================================
+      // GLOBAL AUTHENTICATION MODAL
+      // ============================================
+
+      // Promise resolver for authentication result
+      let authResolve = null;
+      let authReject = null;
+
+      /**
+       * Show global authentication modal
+       * Can be called from any iframe via parent.showGlobalAuthModal()
+       * @returns {Promise<boolean>} - Resolves true if authenticated, false if cancelled
+       */
+      function showGlobalAuthModal() {
+        return new Promise((resolve, reject) => {
+          authResolve = resolve;
+          authReject = reject;
+
+          const modal = document.getElementById('globalAuthModal');
+          const passwordInput = document.getElementById('globalAuthPassword');
+          const errorDiv = document.getElementById('globalAuthError');
+          const submitBtn = document.getElementById('globalAuthSubmit');
+
+          // Reset state
+          passwordInput.value = '';
+          passwordInput.classList.remove('error');
+          errorDiv.textContent = '';
+          errorDiv.classList.remove('visible');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Autenticar';
+
+          // Show modal
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+
+          // Focus on input after animation
+          setTimeout(() => passwordInput.focus(), 100);
+        });
+      }
+
+      /**
+       * Hide global authentication modal
+       */
+      function hideGlobalAuthModal() {
+        const modal = document.getElementById('globalAuthModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+      }
+
+      /**
+       * Handle authentication submission
+       */
+      async function handleGlobalAuthSubmit() {
+        const passwordInput = document.getElementById('globalAuthPassword');
+        const errorDiv = document.getElementById('globalAuthError');
+        const submitBtn = document.getElementById('globalAuthSubmit');
+
+        const password = passwordInput.value.trim();
+
+        if (!password) {
+          passwordInput.classList.add('error');
+          errorDiv.textContent = 'Senha é obrigatória';
+          errorDiv.classList.add('visible');
+          passwordInput.focus();
+          return;
+        }
+
+        // Disable button and show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Autenticando...';
+        passwordInput.classList.remove('error');
+        errorDiv.classList.remove('visible');
+
+        try {
+          // Call authentication API
+          const response = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ password: password })
+          });
+
+          const data = await response.json();
+
+          if (response.ok && data.success) {
+            // Success - hide modal and resolve promise
+            hideGlobalAuthModal();
+
+            // Show success notification
+            if (window.mainWalletManager) {
+              window.mainWalletManager.showWalletNotification('Autenticação realizada com sucesso!', true, 2000);
+            }
+
+            if (authResolve) {
+              authResolve(true);
+              authResolve = null;
+            }
+          } else {
+            // Failed - show error
+            passwordInput.classList.add('error');
+            errorDiv.textContent = data.error || 'Senha incorreta. Tente novamente.';
+            errorDiv.classList.add('visible');
+            passwordInput.select();
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Autenticar';
+          }
+        } catch (error) {
+          console.error('Authentication error:', error);
+          passwordInput.classList.add('error');
+          errorDiv.textContent = 'Erro de conexão. Tente novamente.';
+          errorDiv.classList.add('visible');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Autenticar';
+        }
+      }
+
+      /**
+       * Handle authentication cancel
+       */
+      function handleGlobalAuthCancel() {
+        hideGlobalAuthModal();
+
+        if (authResolve) {
+          authResolve(false);
+          authResolve = null;
+        }
+      }
+
+      // Set up event listeners for auth modal
+      document.addEventListener('DOMContentLoaded', () => {
+        const submitBtn = document.getElementById('globalAuthSubmit');
+        const cancelBtn = document.getElementById('globalAuthCancel');
+        const passwordInput = document.getElementById('globalAuthPassword');
+        const modal = document.getElementById('globalAuthModal');
+
+        submitBtn.addEventListener('click', handleGlobalAuthSubmit);
+        cancelBtn.addEventListener('click', handleGlobalAuthCancel);
+
+        // Enter key submits
+        passwordInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            handleGlobalAuthSubmit();
+          }
+        });
+
+        // Escape key cancels
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && modal.classList.contains('active')) {
+            handleGlobalAuthCancel();
+          }
+        });
+
+        // Click outside modal cancels (on overlay only)
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            handleGlobalAuthCancel();
+          }
+        });
+      });
+
+      // Make auth modal function globally accessible for iframes
+      window.showGlobalAuthModal = showGlobalAuthModal;
+      window.hideGlobalAuthModal = hideGlobalAuthModal;
     </script>
   </body>
 </html>

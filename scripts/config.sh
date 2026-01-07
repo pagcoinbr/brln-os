@@ -10,7 +10,7 @@ I2P_REPO_HELPER=https://repo.i2pd.xyz/.help/add_repo
 BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 
 LND_VERSION=0.20.0
-BTC_VERSION=30.0
+BTC_VERSION=29.2
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 
 # Smart path detection

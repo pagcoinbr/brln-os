@@ -21,7 +21,13 @@ install_bitcoind() {
   # Add admin user to bitcoin group
   echo -e "${BLUE}Adicionando usuário admin ao grupo bitcoin...${NC}"
   sudo adduser $atual_user bitcoin || true
-  
+
+  # Add brln-api user to bitcoin group (API access)
+  if id "brln-api" &>/dev/null; then
+    echo -e "${BLUE}Adicionando usuário brln-api ao grupo bitcoin...${NC}"
+    sudo adduser brln-api bitcoin || true
+  fi
+
   # Add bitcoin user to debian-tor group for Tor control
   echo -e "${BLUE}Adicionando usuário bitcoin ao grupo debian-tor...${NC}"
   sudo adduser bitcoin debian-tor || true
@@ -162,6 +168,14 @@ install_bitcoind() {
   else
     if [ ! -L /home/admin/.bitcoin ]; then
       sudo ln -s /data/bitcoin /home/admin/.bitcoin || true
+    fi
+  fi
+
+  # Create symbolic link for brln-api user (API access)
+  if id "brln-api" &>/dev/null; then
+    if [ ! -L /home/brln-api/.bitcoin ]; then
+      sudo ln -s /data/bitcoin /home/brln-api/.bitcoin || true
+      sudo chown -h brln-api:brln-api /home/brln-api/.bitcoin || true
     fi
   fi
 }
@@ -403,6 +417,17 @@ install_complete_stack() {
   sudo systemctl start bitcoind
   echo -e "${CYAN}💡 Aguardando bitcoind iniciar...${NC}"
   sleep 10
+
+  # Fix permissions for brln-api to read RPC cookie
+  echo -e "${BLUE}Ajustando permissões para API...${NC}"
+  sudo chmod g+rx /data/bitcoin
+  # Fix network subdirectory permissions (testnet3, testnet4, signet, regtest)
+  for netdir in /data/bitcoin/testnet3 /data/bitcoin/testnet4 /data/bitcoin/signet /data/bitcoin/regtest; do
+    if [[ -d "$netdir" ]]; then
+      sudo chmod g+rx "$netdir"
+    fi
+  done
+
   sudo systemctl enable bitcoind
   sudo systemctl status bitcoind --no-pager
 }

@@ -2418,17 +2418,15 @@ def manage_systemd_service(service_name, action):
 
 def detect_bitcoin_network():
     """Detecta qual rede o Bitcoin está rodando (mainnet, testnet, signet, regtest)"""
-    # Check bitcoin.conf for network settings
+    # Check bitcoin.conf for network settings (paths accessible by brln-api)
     possible_configs = [
         Path("/data/bitcoin/bitcoin.conf"),
-        Path("/home/bitcoin/.bitcoin/bitcoin.conf"),
-        Path.home() / ".bitcoin" / "bitcoin.conf",
-        Path("/root/.bitcoin/bitcoin.conf")
+        Path("/home/bitcoin/.bitcoin/bitcoin.conf")
     ]
-    
+
     for config_path in possible_configs:
-        if config_path.exists():
-            try:
+        try:
+            if config_path.exists():
                 content = config_path.read_text()
                 # Check for network settings in config
                 if 'testnet=1' in content or 'chain=test' in content:
@@ -2437,22 +2435,25 @@ def detect_bitcoin_network():
                     return 'signet'
                 elif 'regtest=1' in content or 'chain=regtest' in content:
                     return 'regtest'
-            except:
-                pass
-    
+        except (PermissionError, OSError):
+            continue
+
     # Also check for network data directories
     bitcoin_dir = Path("/data/bitcoin")
     if not bitcoin_dir.exists():
         bitcoin_dir = Path("/home/bitcoin/.bitcoin")
-    
-    if bitcoin_dir.exists():
-        if (bitcoin_dir / "testnet3").exists() or (bitcoin_dir / "testnet4").exists():
-            return 'testnet'
-        elif (bitcoin_dir / "signet").exists():
-            return 'signet'
-        elif (bitcoin_dir / "regtest").exists():
-            return 'regtest'
-    
+
+    try:
+        if bitcoin_dir.exists():
+            if (bitcoin_dir / "testnet3").exists() or (bitcoin_dir / "testnet4").exists():
+                return 'testnet'
+            elif (bitcoin_dir / "signet").exists():
+                return 'signet'
+            elif (bitcoin_dir / "regtest").exists():
+                return 'regtest'
+    except (PermissionError, OSError):
+        pass
+
     return 'mainnet'
 
 def get_bitcoin_cli_command():
@@ -2490,31 +2491,25 @@ def get_bitcoind_info():
         raise RuntimeError(f"Resposta inválida do Bitcoin Core: {str(e)}")
 
 def get_blockchain_size():
-    """Obtém o tamanho da blockchain usando pathlib"""
-    # Check multiple possible Bitcoin data directories
-    possible_dirs = [
-        Path("/data/bitcoin"),
-        Path("/home/bitcoin/.bitcoin"),
-        Path.home() / ".bitcoin",
-        Path("/root/.bitcoin")
-    ]
-    
-    bitcoin_dir = None
-    for dir_path in possible_dirs:
-        if dir_path.exists():
-            bitcoin_dir = dir_path
-            break
-    
-    if not bitcoin_dir:
-        raise FileNotFoundError(f"Diretório Bitcoin não encontrado em: {', '.join(str(p) for p in possible_dirs)}")
-        
-    total_size = sum(f.stat().st_size for f in bitcoin_dir.rglob('*') if f.is_file())
-    # Converter para formato legível
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if total_size < 1024.0:
-            return f"{total_size:.1f}{unit}"
-        total_size /= 1024.0
-    return f"{total_size:.1f}PB"
+    """Obtém o tamanho da blockchain via RPC (size_on_disk)"""
+    bitcoin_cli = get_bitcoin_cli_command()
+    output, code = run_command(f"{bitcoin_cli} getblockchaininfo 2>/dev/null")
+
+    if code != 0 or not output:
+        raise RuntimeError("Não foi possível obter informações do Bitcoin Core via RPC")
+
+    try:
+        info = json.loads(output)
+        total_size = info.get('size_on_disk', 0)
+
+        # Converter para formato legível
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if total_size < 1024.0:
+                return f"{total_size:.1f}{unit}"
+            total_size /= 1024.0
+        return f"{total_size:.1f}PB"
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Resposta inválida do Bitcoin Core: {str(e)}")
 
 def get_macaroon_hex():
     """Lê o admin.macaroon e retorna em formato hex para gRPC"""
