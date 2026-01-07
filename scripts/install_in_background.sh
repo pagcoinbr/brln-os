@@ -28,11 +28,25 @@ echo $$ > "$LOCK_FILE"
 trap "rm -f '$LOCK_FILE'" EXIT
 
 # Source required scripts
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/config.sh" 2>/dev/null || true
-source "$SCRIPT_DIR/utils.sh" 2>/dev/null || true
-source "$SCRIPT_DIR/bitcoin.sh" 2>/dev/null || true
-source "$SCRIPT_DIR/peerswap.sh" 2>/dev/null || true
+SCRIPTS_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BRLN_OS_DIR="$(dirname "$SCRIPTS_PATH")"
+
+# Source scripts with error checking (config.sh redefines SCRIPT_DIR, so source it first)
+if [[ -f "$SCRIPTS_PATH/config.sh" ]]; then
+    source "$SCRIPTS_PATH/config.sh"
+fi
+if [[ -f "$SCRIPTS_PATH/utils.sh" ]]; then
+    source "$SCRIPTS_PATH/utils.sh"
+fi
+if [[ -f "$SCRIPTS_PATH/services.sh" ]]; then
+    source "$SCRIPTS_PATH/services.sh"
+fi
+if [[ -f "$SCRIPTS_PATH/bitcoin.sh" ]]; then
+    source "$SCRIPTS_PATH/bitcoin.sh"
+fi
+if [[ -f "$SCRIPTS_PATH/peerswap.sh" ]]; then
+    source "$SCRIPTS_PATH/peerswap.sh"
+fi
 
 log_message "Starting background installation check..."
 
@@ -123,7 +137,7 @@ remove_cron_job() {
 # Main installation orchestration
 run_installation() {
     local network_choice="$1"
-    
+
     # If network not provided, try to detect from bitcoin.conf or lnd.conf
     if [ -z "$network_choice" ]; then
         if grep -q "testnet=1" /data/bitcoin/bitcoin.conf 2>/dev/null; then
@@ -132,8 +146,17 @@ run_installation() {
             network_choice="mainnet"
         fi
     fi
-    
+
     log_message "Starting background installation for network: $network_choice"
+
+    # Step 1: Install Bitcoin Core if not present
+    if ! command -v bitcoin-cli &> /dev/null; then
+        log_message "Bitcoin Core not installed. Installing now..."
+        export BITCOIN_NETWORK="$network_choice"
+        install_complete_stack
+        log_message "Bitcoin Core installed. Waiting for service to start..."
+        sleep 30
+    fi
 
     check_blockchain_sync "$network_choice"
     local sync_status=$?

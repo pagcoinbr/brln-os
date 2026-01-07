@@ -104,7 +104,7 @@ else:
     print("Warning: Not running in a virtual environment!")
     print("Run: bash /root/brln-os/scripts/setup-api-env.sh")
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 import subprocess
 import psutil
@@ -1897,26 +1897,7 @@ class LNDgRPCClient:
         except Exception as e:
             return None, f"Erro inesperado: {str(e)}"
     
-    def gen_seed_grpc(self):
-        """Gerar seed phrase via gRPC"""
-        try:
-            # Para gerar seed, não precisamos de autenticação
-            # Criar canal inseguro para operações de inicialização
-            channel = grpc.insecure_channel(self.host)
-            stub = lnrpcstub.LightningStub(channel)
-            
-            request = lnrpc.GenSeedRequest()
-            response = stub.GenSeed(request, timeout=30)
-            
-            return {
-                'cipher_seed_mnemonic': list(response.cipher_seed_mnemonic),
-                'enciphered_seed': response.enciphered_seed.hex() if response.enciphered_seed else None
-            }, None
-            
-        except grpc.RpcError as e:
-            return None, f"gRPC Error: {e.details()}"
-        except Exception as e:
-            return None, f"Erro ao gerar seed: {str(e)}"
+
     
     def init_wallet_grpc(self, wallet_password, cipher_seed_mnemonic, aezeed_passphrase="", recovery_window=250, channel_backups=None, stateless_init=False):
         """Inicializar wallet LND via gRPC com aezeed mnemonic"""
@@ -2437,17 +2418,15 @@ def manage_systemd_service(service_name, action):
 
 def detect_bitcoin_network():
     """Detecta qual rede o Bitcoin está rodando (mainnet, testnet, signet, regtest)"""
-    # Check bitcoin.conf for network settings
+    # Check bitcoin.conf for network settings (paths accessible by brln-api)
     possible_configs = [
         Path("/data/bitcoin/bitcoin.conf"),
-        Path("/home/bitcoin/.bitcoin/bitcoin.conf"),
-        Path.home() / ".bitcoin" / "bitcoin.conf",
-        Path("/root/.bitcoin/bitcoin.conf")
+        Path("/home/bitcoin/.bitcoin/bitcoin.conf")
     ]
-    
+
     for config_path in possible_configs:
-        if config_path.exists():
-            try:
+        try:
+            if config_path.exists():
                 content = config_path.read_text()
                 # Check for network settings in config
                 if 'testnet=1' in content or 'chain=test' in content:
@@ -2456,22 +2435,25 @@ def detect_bitcoin_network():
                     return 'signet'
                 elif 'regtest=1' in content or 'chain=regtest' in content:
                     return 'regtest'
-            except:
-                pass
-    
+        except (PermissionError, OSError):
+            continue
+
     # Also check for network data directories
     bitcoin_dir = Path("/data/bitcoin")
     if not bitcoin_dir.exists():
         bitcoin_dir = Path("/home/bitcoin/.bitcoin")
-    
-    if bitcoin_dir.exists():
-        if (bitcoin_dir / "testnet3").exists() or (bitcoin_dir / "testnet4").exists():
-            return 'testnet'
-        elif (bitcoin_dir / "signet").exists():
-            return 'signet'
-        elif (bitcoin_dir / "regtest").exists():
-            return 'regtest'
-    
+
+    try:
+        if bitcoin_dir.exists():
+            if (bitcoin_dir / "testnet3").exists() or (bitcoin_dir / "testnet4").exists():
+                return 'testnet'
+            elif (bitcoin_dir / "signet").exists():
+                return 'signet'
+            elif (bitcoin_dir / "regtest").exists():
+                return 'regtest'
+    except (PermissionError, OSError):
+        pass
+
     return 'mainnet'
 
 def get_bitcoin_cli_command():
@@ -2509,31 +2491,25 @@ def get_bitcoind_info():
         raise RuntimeError(f"Resposta inválida do Bitcoin Core: {str(e)}")
 
 def get_blockchain_size():
-    """Obtém o tamanho da blockchain usando pathlib"""
-    # Check multiple possible Bitcoin data directories
-    possible_dirs = [
-        Path("/data/bitcoin"),
-        Path("/home/bitcoin/.bitcoin"),
-        Path.home() / ".bitcoin",
-        Path("/root/.bitcoin")
-    ]
-    
-    bitcoin_dir = None
-    for dir_path in possible_dirs:
-        if dir_path.exists():
-            bitcoin_dir = dir_path
-            break
-    
-    if not bitcoin_dir:
-        raise FileNotFoundError(f"Diretório Bitcoin não encontrado em: {', '.join(str(p) for p in possible_dirs)}")
-        
-    total_size = sum(f.stat().st_size for f in bitcoin_dir.rglob('*') if f.is_file())
-    # Converter para formato legível
-    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
-        if total_size < 1024.0:
-            return f"{total_size:.1f}{unit}"
-        total_size /= 1024.0
-    return f"{total_size:.1f}PB"
+    """Obtém o tamanho da blockchain via RPC (size_on_disk)"""
+    bitcoin_cli = get_bitcoin_cli_command()
+    output, code = run_command(f"{bitcoin_cli} getblockchaininfo 2>/dev/null")
+
+    if code != 0 or not output:
+        raise RuntimeError("Não foi possível obter informações do Bitcoin Core via RPC")
+
+    try:
+        info = json.loads(output)
+        total_size = info.get('size_on_disk', 0)
+
+        # Converter para formato legível
+        for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+            if total_size < 1024.0:
+                return f"{total_size:.1f}{unit}"
+            total_size /= 1024.0
+        return f"{total_size:.1f}PB"
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Resposta inválida do Bitcoin Core: {str(e)}")
 
 def get_macaroon_hex():
     """Lê o admin.macaroon e retorna em formato hex para gRPC"""
@@ -6170,29 +6146,7 @@ def convert_bip39_to_lnd():
             'status': 'error'
         }), 500
 
-@app.route('/api/v1/lnd/wallet/genseed', methods=['POST'])
-@require_auth
-def lnd_gen_seed():
-    """Generate LND seed phrase via gRPC"""
-    try:
-        result, error = lnd_grpc_client.gen_seed_grpc()
-        if error:
-            return jsonify({
-                'error': error,
-                'status': 'error'
-            }), 500
-        
-        return jsonify({
-            'status': 'success',
-            'seed_mnemonic': result['cipher_seed_mnemonic'],
-            'enciphered_seed': result['enciphered_seed']
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
+
 
 @app.route('/api/v1/lnd/wallet/init', methods=['POST'])
 @require_auth

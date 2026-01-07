@@ -21,3 +21,15 @@ api/v1/signrpc/signer_pb2_grpc.py
 api/v1/signrpc/signer_pb2.py
 api/v1/walletrpc/walletkit_pb2_grpc.py
 api/v1/walletrpc/walletkit_pb2.py
+
+# Python cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+api/v1/__pycache__/walletunlocker_pb2_grpc.cpython-312.pyc
+api/v1/__pycache__/walletunlocker_pb2.cpython-312.pyc
+api/v1/__pycache__/walletunlocker_pb2.cpython-312.pyc
+api/v1/__pycache__/walletunlocker_pb2_grpc.cpython-312.pyc
+api/v1/__pycache__/walletunlocker_pb2.cpython-312.pyc
+api/v1/__pycache__/app.cpython-312.pyc

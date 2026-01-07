@@ -736,7 +736,13 @@ terminal_web
 
 tailscale_vpn
 
-# Start background installation service
+# Install Bitcoin Core
+echo
+echo -e "${YELLOW}₿ Instalando Bitcoin Core...${NC}"
+source "$SCRIPT_DIR/scripts/bitcoin.sh"
+install_complete_stack
+
+# Start background installation service (monitors sync and installs LND when ready)
 install_background_service
 
 # Final Installation Summary Screen
