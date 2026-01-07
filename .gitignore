@@ -21,3 +21,9 @@ api/v1/signrpc/signer_pb2_grpc.py
 api/v1/signrpc/signer_pb2.py
 api/v1/walletrpc/walletkit_pb2_grpc.py
 api/v1/walletrpc/walletkit_pb2.py
+
+# Python cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

@@ -1897,26 +1897,7 @@ class LNDgRPCClient:
         except Exception as e:
             return None, f"Erro inesperado: {str(e)}"
     
-    def gen_seed_grpc(self):
-        """Gerar seed phrase via gRPC"""
-        try:
-            # Para gerar seed, não precisamos de autenticação
-            # Criar canal inseguro para operações de inicialização
-            channel = grpc.insecure_channel(self.host)
-            stub = lnrpcstub.LightningStub(channel)
-            
-            request = lnrpc.GenSeedRequest()
-            response = stub.GenSeed(request, timeout=30)
-            
-            return {
-                'cipher_seed_mnemonic': list(response.cipher_seed_mnemonic),
-                'enciphered_seed': response.enciphered_seed.hex() if response.enciphered_seed else None
-            }, None
-            
-        except grpc.RpcError as e:
-            return None, f"gRPC Error: {e.details()}"
-        except Exception as e:
-            return None, f"Erro ao gerar seed: {str(e)}"
+
     
     def init_wallet_grpc(self, wallet_password, cipher_seed_mnemonic, aezeed_passphrase="", recovery_window=250, channel_backups=None, stateless_init=False):
         """Inicializar wallet LND via gRPC com aezeed mnemonic"""
@@ -6170,29 +6151,7 @@ def convert_bip39_to_lnd():
             'status': 'error'
         }), 500
 
-@app.route('/api/v1/lnd/wallet/genseed', methods=['POST'])
-@require_auth
-def lnd_gen_seed():
-    """Generate LND seed phrase via gRPC"""
-    try:
-        result, error = lnd_grpc_client.gen_seed_grpc()
-        if error:
-            return jsonify({
-                'error': error,
-                'status': 'error'
-            }), 500
-        
-        return jsonify({
-            'status': 'success',
-            'seed_mnemonic': result['cipher_seed_mnemonic'],
-            'enciphered_seed': result['enciphered_seed']
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'status': 'error'
-        }), 500
+
 
 @app.route('/api/v1/lnd/wallet/init', methods=['POST'])
 @require_auth
