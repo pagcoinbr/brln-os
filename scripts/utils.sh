@@ -328,7 +328,7 @@ load_master_password() {
     if [[ -n "${BRLN_MASTER_PASSWORD:-}" ]]; then
         return 0
     fi
-    
+
     # Check for temporary installation file (only exists during brunel.sh execution)
     if [[ -n "${TMP_MASTER_PASS_FILE:-}" && -f "${TMP_MASTER_PASS_FILE}" ]]; then
         export BRLN_MASTER_PASSWORD=$(cat "$TMP_MASTER_PASS_FILE" 2>/dev/null)
@@ -336,7 +336,18 @@ load_master_password() {
             return 0
         fi
     fi
-    
+
+    # Fallback: Look for any temp master password file and use the most recent one
+    # This allows background scripts (cron jobs) to access the password
+    local latest_pass_file=$(ls -t /tmp/.brln_master_pass_* 2>/dev/null | head -n1)
+    if [[ -n "$latest_pass_file" && -f "$latest_pass_file" ]]; then
+        export BRLN_MASTER_PASSWORD=$(cat "$latest_pass_file" 2>/dev/null)
+        if [[ -n "$BRLN_MASTER_PASSWORD" ]]; then
+            export TMP_MASTER_PASS_FILE="$latest_pass_file"
+            return 0
+        fi
+    fi
+
     # No automatic source found - user must provide password interactively
     return 1
 }

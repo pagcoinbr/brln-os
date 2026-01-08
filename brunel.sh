@@ -679,7 +679,7 @@ install_background_service() {
     
     echo -e "${GREEN}✓ Monitoramento em background configurado!${NC}"
     echo -e "${BLUE}ℹ O script verificará a sincronização a cada hora${NC}"
-    echo -e "${BLUE}ℹ Instalará LND, LNDG, PeerSwap e PSweb automaticamente quando pronto${NC}"
+    echo -e "${BLUE}ℹ Instalará LND, Elements, LNDG, PeerSwap e PSweb automaticamente quando pronto${NC}"
     echo -e "${BLUE}ℹ O cron job será removido automaticamente quando concluir${NC}"
     echo
     echo -e "${YELLOW}Para acompanhar o progresso, use:${NC}"

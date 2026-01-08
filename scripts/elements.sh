@@ -24,12 +24,8 @@ install_elements() {
   if command -v elementsd &> /dev/null; then
     echo -e "${YELLOW}⚠️  Elements já está instalado:${NC}"
     elementsd --version | head -n1
-    echo ""
-    read -p "Deseja reinstalar? (s/n): " reinstall
-    if [[ "$reinstall" != "s" && "$reinstall" != "S" ]]; then
-      echo -e "${BLUE}Instalação cancelada.${NC}"
-      return 0
-    fi
+    echo -e "${BLUE}Pulando instalação (já existe).${NC}"
+    return 0
   fi
 
   # Create elements user if doesn't exist
@@ -45,6 +41,14 @@ install_elements() {
     echo -e "${BLUE}🔐 Adicionando 'elements' ao grupo 'debian-tor'...${NC}"
     sudo usermod -aG debian-tor elements
     echo -e "${GREEN}✓ Usuário 'elements' adicionado ao grupo 'debian-tor'${NC}"
+    echo ""
+  fi
+
+  # Add elements user to bitcoin group for mainchain cookie access
+  if getent group bitcoin &>/dev/null; then
+    echo -e "${BLUE}🔐 Adicionando 'elements' ao grupo 'bitcoin'...${NC}"
+    sudo usermod -aG bitcoin elements
+    echo -e "${GREEN}✓ Usuário 'elements' adicionado ao grupo 'bitcoin'${NC}"
     echo ""
   fi
 
@@ -124,12 +128,7 @@ install_elements() {
   if gpg --verify SHA256SUMS.asc 2>&1 | grep -q "Good signature"; then
     echo -e "${GREEN}✓ Assinatura GPG verificada com sucesso!${NC}"
   else
-    echo -e "${YELLOW}⚠️  Aviso: Não foi possível verificar a assinatura GPG${NC}"
-    read -p "Deseja continuar mesmo assim? (s/n): " continue_anyway
-    if [[ "$continue_anyway" != "s" && "$continue_anyway" != "S" ]]; then
-      echo -e "${RED}Instalação cancelada.${NC}"
-      return 1
-    fi
+    echo -e "${YELLOW}⚠️  Aviso: Assinatura GPG não pôde ser verificada, mas prosseguindo...${NC}"
   fi
   echo ""
 
