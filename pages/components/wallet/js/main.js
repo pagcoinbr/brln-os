@@ -510,9 +510,9 @@ function hidePasswordModal() {
   }
 }
 
-// ✅ Show authentication modal - uses global modal from parent window
+// ✅ Show authentication modal - uses global modal from parent window only
 async function showAuthenticationModal() {
-  // Try to use the global modal from parent window (main.html)
+  // Use the global modal from parent window (main.html)
   // This provides a consistent authentication experience across all pages
   try {
     if (window.parent && window.parent !== window && window.parent.showGlobalAuthModal) {
@@ -520,163 +520,14 @@ async function showAuthenticationModal() {
       return await window.parent.showGlobalAuthModal();
     }
   } catch (e) {
-    // Cross-origin or other error, fall back to local modal
-    console.log('Cannot access parent modal, using local fallback:', e.message);
+    console.error('Cannot access parent modal:', e.message);
   }
 
-  // Fallback: Local modal if not in iframe or parent modal unavailable
-  return new Promise((resolve, reject) => {
-    let authModal = document.getElementById('authenticationModal');
-
-    if (!authModal) {
-      authModal = document.createElement('div');
-      authModal.id = 'authenticationModal';
-      authModal.className = 'modal';
-      authModal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 99999;
-        font-family: Arial, sans-serif;
-      `;
-      authModal.innerHTML = `
-        <div class="modal-content" style="
-          background: linear-gradient(145deg, #1a1a2e, #16213e);
-          border-radius: 16px;
-          padding: 40px;
-          max-width: 420px;
-          width: 90%;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-          text-align: center;
-        ">
-          <div style="font-size: 48px; margin-bottom: 20px;">🔐</div>
-          <h3 style="color: #fff; font-size: 24px; margin-bottom: 10px;">Autenticação Necessária</h3>
-          <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 25px;">
-            Digite sua senha mestre do BRLN-OS para continuar.
-          </p>
-          <input
-            type="password"
-            id="authMasterPassword"
-            placeholder="Senha mestre"
-            autocomplete="current-password"
-            style="
-              width: 100%;
-              padding: 14px 18px;
-              border: 2px solid #333;
-              border-radius: 10px;
-              background: #0d0d1a;
-              color: #fff;
-              font-size: 16px;
-              margin-bottom: 15px;
-              box-sizing: border-box;
-            "
-          />
-          <div id="authErrorMessage" style="color: #ff6b6b; font-size: 13px; margin-bottom: 15px; display: none;"></div>
-          <div style="display: flex; gap: 12px;">
-            <button id="authConfirmBtn" style="
-              flex: 1;
-              padding: 14px 20px;
-              border: none;
-              border-radius: 10px;
-              font-size: 15px;
-              font-weight: 600;
-              cursor: pointer;
-              background: linear-gradient(135deg, #007bff, #0056b3);
-              color: white;
-            ">Autenticar</button>
-            <button id="authCancelBtn" style="
-              flex: 1;
-              padding: 14px 20px;
-              border: none;
-              border-radius: 10px;
-              font-size: 15px;
-              font-weight: 600;
-              cursor: pointer;
-              background: #2a2a3a;
-              color: #ccc;
-            ">Cancelar</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(authModal);
-    }
-
-    const passwordInput = document.getElementById('authMasterPassword');
-    const confirmBtn = document.getElementById('authConfirmBtn');
-    const cancelBtn = document.getElementById('authCancelBtn');
-    const errorMessage = document.getElementById('authErrorMessage');
-
-    passwordInput.value = '';
-    errorMessage.style.display = 'none';
-
-    authModal.style.display = 'flex';
-    setTimeout(() => passwordInput.focus(), 100);
-
-    const handleConfirm = async () => {
-      const password = passwordInput.value.trim();
-
-      if (!password) {
-        errorMessage.textContent = 'Senha é obrigatória';
-        errorMessage.style.display = 'block';
-        return;
-      }
-
-      try {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Autenticando...';
-
-        const result = await walletService.authenticate(password);
-
-        if (result && result.success) {
-          walletService.showNotification('Autenticação realizada com sucesso', 'success');
-          authModal.style.display = 'none';
-          passwordInput.value = '';
-          resolve(true);
-        } else {
-          throw new Error(result.error || 'Falha na autenticação');
-        }
-      } catch (error) {
-        console.error('Authentication error:', error);
-        errorMessage.textContent = 'Senha incorreta. Tente novamente.';
-        errorMessage.style.display = 'block';
-        passwordInput.select();
-      } finally {
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = 'Autenticar';
-      }
-    };
-
-    const handleCancel = () => {
-      authModal.style.display = 'none';
-      passwordInput.value = '';
-      resolve(false);
-    };
-
-    const handleKeyPress = (e) => {
-      if (e.key === 'Enter') {
-        handleConfirm();
-      } else if (e.key === 'Escape') {
-        handleCancel();
-      }
-    };
-
-    confirmBtn.replaceWith(confirmBtn.cloneNode(true));
-    cancelBtn.replaceWith(cancelBtn.cloneNode(true));
-    passwordInput.removeEventListener('keypress', handleKeyPress);
-
-    const newConfirmBtn = document.getElementById('authConfirmBtn');
-    const newCancelBtn = document.getElementById('authCancelBtn');
-
-    newConfirmBtn.addEventListener('click', handleConfirm);
-    newCancelBtn.addEventListener('click', handleCancel);
-    passwordInput.addEventListener('keypress', handleKeyPress);
-  });
+  // If we can't access the parent modal, return false (auth failed)
+  // This prevents duplicate modals from appearing
+  console.warn('Parent authentication modal not available');
+  walletService.showNotification('Erro de autenticação - recarregue a página', 'error');
+  return false;
 }
 
 
