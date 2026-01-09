@@ -44,6 +44,9 @@ fi
 if [[ -f "$SCRIPTS_PATH/bitcoin.sh" ]]; then
     source "$SCRIPTS_PATH/bitcoin.sh"
 fi
+if [[ -f "$SCRIPTS_PATH/elements.sh" ]]; then
+    source "$SCRIPTS_PATH/elements.sh"
+fi
 if [[ -f "$SCRIPTS_PATH/peerswap.sh" ]]; then
     source "$SCRIPTS_PATH/peerswap.sh"
 fi
@@ -71,9 +74,9 @@ check_blockchain_sync() {
         return 1
     fi
     
-    # Get blockchain info
+    # Get blockchain info (run as bitcoin user to access RPC credentials)
     local blockchain_info
-    blockchain_info=$(bitcoin-cli $conf_arg getblockchaininfo 2>&1)
+    blockchain_info=$(sudo -u bitcoin bitcoin-cli $conf_arg getblockchaininfo 2>&1)
     
     if [ $? -ne 0 ]; then
         log_message "Error: Failed to connect to Bitcoin daemon"
@@ -117,8 +120,8 @@ check_blockchain_sync() {
 check_lnd_sync () {
     local network_choice="$1"
 
-    graphsync=$(lncli getinfo --network="$network_choice" 2>/dev/null | grep -oP '"synced_to_graph":\s*\K(true|false)')
-    if [ "$graphsync" = "true" ]; then
+    graphsync=$(sudo -u lnd lncli getinfo --network="$network_choice" 2>/dev/null | grep -oP '"synced_to_graph":\s*\K(true|false)')
+    if [ "$graphsync" = "false" ]; then
         log_message "LND graph is fully synchronized!"
         return 0
     else
@@ -164,27 +167,68 @@ run_installation() {
     if [ $sync_status -eq 0 ]; then
         log_message "Blockchain sync completed successfully, downloading and installing LND..."
         download_lnd
-        sleep 10
-        check_lnd_sync "$network_choice"
-        if [ $? -eq 0 ]; then
-            log_message "LND graph sync completed successfully, proceeding with further installations..."
-            install_lndg
-            install_peerswap
-            install_psweb
-            log_message "✓ All installations completed successfully!"
-            
-            # Remove cron job
-            remove_cron_job
-            
-            # Clean up lock file
-            rm -f "$LOCK_FILE"
-            
-            log_message "✓ Background installation completed and cron job removed!"
-            exit 0
-        else
-            log_message "LND graph is not yet synced. Will check again on next cron run."
-            exit 0
+
+        # Start LND service if not already running
+        if ! systemctl is-active --quiet lnd; then
+            log_message "Starting LND service..."
+            systemctl start lnd
         fi
+
+        # Wait and check if LND is running
+        sleep 10
+        while ! systemctl is-active --quiet lnd; do
+            log_message "Waiting for LND service to start..."
+            sleep 5
+        done
+        log_message "✓ LND service is running"
+
+        # Proceed with further installations (LND will sync in background)
+        log_message "Proceeding with Elements, LNDG, PeerSwap, and PSweb installation..."
+
+        # Install Elements Core (required for PeerSwap)
+        if ! command -v elementsd &> /dev/null; then
+            log_message "Installing Elements Core..."
+            install_elements >> "$LOG_FILE" 2>&1
+            log_message "✓ Elements binaries installed"
+
+            log_message "Configuring Elements..."
+            configure_elements >> "$LOG_FILE" 2>&1
+            log_message "✓ Elements configured"
+
+            log_message "Creating Elements systemd service..."
+            create_elements_service >> "$LOG_FILE" 2>&1
+            log_message "✓ Elements service created"
+
+            # Start Elements service
+            log_message "Starting Elements service..."
+            systemctl start elementsd
+
+            # Wait for Elements to start
+            sleep 10
+            while ! systemctl is-active --quiet elementsd; do
+                log_message "Waiting for Elements service to start..."
+                sleep 5
+            done
+            log_message "✓ Elements service is running"
+        else
+            log_message "✓ Elements already installed"
+        fi
+
+        log_message "Installing LNDG, PeerSwap, and PSweb..."
+        install_lndg >> "$LOG_FILE" 2>&1
+        install_peerswap >> "$LOG_FILE" 2>&1
+        install_psweb >> "$LOG_FILE" 2>&1
+        log_message "✓ All installations completed successfully!"
+
+        # Remove cron job
+        remove_cron_job
+
+        # Clean up lock file
+        rm -f "$LOCK_FILE"
+
+        log_message "✓ Background installation completed and cron job removed!"
+        log_message "ℹ LND will continue syncing in the background"
+        exit 0
     else
         log_message "Blockchain not yet synced. Will check again on next cron run."
         exit 0
@@ -210,11 +254,12 @@ run_installation "$NETWORK_CHOICE"
 #
 # DESCRIÇÃO:
 # - Script para monitorar sincronização do blockchain via CRON e executar
-#   instalações (LND, LNDG, PeerSwap, PSweb) quando estiver pronto.
+#   instalações (LND, Elements, LNDG, PeerSwap, PSweb) quando estiver pronto.
 #
 # FUNCIONALIDADES:
-# - check_blockchain_sync(), check_lnd_sync(), run_installation(): Verificação
-#   periódica via cron (a cada hora) e acionamento automático
+# - check_blockchain_sync(): Verificação periódica via cron (a cada hora)
+# - run_installation(): Acionamento automático das instalações
+# - Instala: LND → Elements → LNDG → PeerSwap → PSweb
 # - Lock file para evitar múltiplas instâncias
 # - Auto-remoção do cron job quando concluir
 # - Log detalhado em /var/log/brln-background-install.log

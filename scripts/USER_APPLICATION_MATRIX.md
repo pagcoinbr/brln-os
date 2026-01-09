@@ -12,7 +12,7 @@ This document provides a comprehensive overview of all system users, application
 |------|---------|------------|--------|
 | `bitcoin` | Bitcoin Core daemon | bitcoin.sh | bitcoin, debian-tor |
 | `lnd` | Lightning Network Daemon | bitcoin.sh | lnd, bitcoin, debian-tor |
-| `elements` | Elements/Liquid daemon | elements.sh | elements |
+| `elements` | Elements/Liquid daemon | elements.sh | elements, bitcoin, debian-tor |
 | `peerswap` | PeerSwap & PeerSwap Web | peerswap.sh | peerswap |
 | `brln-api` | BRLN-OS API service | brunel.sh | brln-api |
 | `$atual_user` (admin) | Lightning apps & management | - | bitcoin, lnd, brln-api |
@@ -203,23 +203,30 @@ This document provides a comprehensive overview of all system users, application
 ```
 bitcoin group:
 ├── bitcoin (owner)
-├── lnd (member) - needs access to RPC
+├── lnd (member) - needs access to RPC cookie
+├── elements (member) - needs access to mainchain RPC cookie
+├── brln-api (member) - API access to RPC
 └── $atual_user (member) - admin access
 
 lnd group:
 ├── lnd (owner)
+├── brln-api (member) - API access to macaroons
 └── $atual_user (member) - admin access, Lightning apps
 
 debian-tor group:
 ├── debian-tor (owner)
 ├── bitcoin (member) - Tor integration
-└── lnd (member) - Tor integration
+├── lnd (member) - Tor integration
+└── elements (member) - Tor integration
 
 elements group:
 └── elements (owner)
 
 peerswap group:
 └── peerswap (owner)
+
+brln-api group:
+└── brln-api (owner)
 ```
 
 ---
@@ -275,6 +282,13 @@ peerswap group:
 ├── .lnd -> /data/lnd           # symlink
 └── .bitcoin -> /data/bitcoin   # symlink
 
+/home/lnd/
+├── .lnd -> /data/lnd           # symlink
+└── .bitcoin -> /data/bitcoin   # symlink (for cookie access)
+
+/home/elements/
+└── .elements -> /data/elements # symlink
+
 /home/peerswap/
 ├── peerswap/                   # source code
 │   ├── Makefile
@@ -292,6 +306,73 @@ peerswap group:
 └── .peerswap/
     └── peerswap.conf           # 600
 ```
+
+---
+
+## Configuration File Paths Reference
+
+### Important: Service User Path Resolution
+
+Each service runs as a specific user and resolves paths relative to that user's home directory.
+The following table shows the **correct paths** to use in configuration files:
+
+| Service | User | Config File | Correct Path Pattern |
+|---------|------|-------------|---------------------|
+| LND | `lnd` | `/data/lnd/lnd.conf` | `/home/lnd/.bitcoin/` or `/data/bitcoin/` |
+| Elements | `elements` | `/data/elements/elements.conf` | `/data/bitcoin/` (needs bitcoin group) |
+| PeerSwap | `peerswap` | `/home/peerswap/.peerswap/peerswap.conf` | `/data/lnd/` for LND access |
+| PSweb | `peerswap` | `/home/peerswap/.peerswap/psweb.conf` | `/data/lnd/`, `/data/elements/` |
+
+### Testnet Configuration Paths
+
+**LND (`/data/lnd/lnd.conf`):**
+```ini
+# Bitcoin RPC cookie access (lnd user via symlink)
+bitcoind.rpccookie=/home/lnd/.bitcoin/testnet3/.cookie
+
+# Admin macaroon path
+adminmacaroonpath=/data/lnd/data/chain/bitcoin/testnet/admin.macaroon
+```
+
+**Elements (`/data/elements/elements.conf`):**
+```ini
+# Bitcoin mainchain cookie (elements user needs bitcoin group membership)
+rpccookiefile=/data/bitcoin/testnet3/.cookie
+```
+
+**PeerSwap (`/home/peerswap/.peerswap/peerswap.conf`):**
+```ini
+# LND TLS and macaroon paths (using /data/lnd directly)
+lnd.tlscertpath=/data/lnd/tls.cert
+lnd.macaroonpath=/data/lnd/data/chain/bitcoin/testnet/admin.macaroon
+```
+
+**PSweb (`/home/peerswap/.peerswap/psweb.conf`):**
+```json
+{
+  "DataDir": "/home/peerswap/.peerswap",
+  "ElementsDir": "/data/elements",
+  "ElementsDirMapped": "/data/elements",
+  "LightningDir": "/data/lnd"
+}
+```
+
+### Group Memberships Required for Path Access
+
+| User | Required Groups | Purpose |
+|------|-----------------|---------|
+| `lnd` | `bitcoin`, `debian-tor` | Read Bitcoin RPC cookie, Tor control |
+| `elements` | `bitcoin`, `debian-tor` | Read Bitcoin RPC cookie for mainchain validation |
+| `peerswap` | (none required) | Uses `/data/` paths with world-readable certs |
+
+### ⚠️ Common Path Mistakes to Avoid
+
+| Wrong Path | Correct Path | Reason |
+|------------|--------------|--------|
+| `/root/.bitcoin/...` | `/home/lnd/.bitcoin/...` or `/data/bitcoin/...` | Services don't run as root |
+| `/root/.lnd/...` | `/data/lnd/...` | Services don't run as root |
+| `/home/teste/...` | `/data/bitcoin/...` | Typo in old templates |
+| `home/root/.elements` | `/data/elements` | Missing leading `/`, wrong user |
 
 ---
 
@@ -518,7 +599,14 @@ The Lightning applications (LNDg, ThunderHub, BOS) run as the admin user because
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** December 29, 2025  
-**Maintained By:** BRLN-OS Development Team  
+**Document Version:** 1.1
+**Last Updated:** January 8, 2026
+**Maintained By:** BRLN-OS Development Team
 **License:** Same as BRLN-OS project
+
+### Changelog v1.1
+- Added Configuration File Paths Reference section
+- Fixed incorrect `/root/` paths documentation
+- Added elements user to bitcoin group for mainchain cookie access
+- Added symlinks documentation for lnd and elements users
+- Updated group memberships to include brln-api

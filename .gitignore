@@ -33,3 +33,5 @@ api/v1/__pycache__/walletunlocker_pb2.cpython-312.pyc
 api/v1/__pycache__/walletunlocker_pb2_grpc.cpython-312.pyc
 api/v1/__pycache__/walletunlocker_pb2.cpython-312.pyc
 api/v1/__pycache__/app.cpython-312.pyc
+__pycache__/
+*.pyc
