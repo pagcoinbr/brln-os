@@ -105,7 +105,7 @@ install_bitcoind() {
       ln -s /data/bitcoin /home/bitcoin/.bitcoin
     fi
   '
-  
+
   # Generate RPC credentials
   echo -e "${BLUE}Gerando credenciais RPC...${NC}"
   
@@ -216,7 +216,7 @@ configure_lnd() {
       ln -s /data/bitcoin /home/lnd/.bitcoin
     fi
   '
-  
+
   # Create wallet password file
   echo -e "${BLUE}Criando arquivo de senha da carteira...${NC}"
   
@@ -252,6 +252,7 @@ configure_lnd() {
     
     sudo chown lnd:lnd /data/lnd/lnd.conf
     sudo chmod 640 /data/lnd/lnd.conf
+    sudo chmod 640 /run/tor/control.authcookie
   else
     echo -e "${YELLOW}⚠ Arquivo lnd.conf não encontrado em conf_files/${NC}"
     echo -e "${YELLOW}  Por favor, crie manualmente o arquivo de configuração${NC}"
