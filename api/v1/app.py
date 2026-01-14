@@ -2161,6 +2161,175 @@ class ElementsRPCClient:
         """Obtém informações da blockchain"""
         return self._call_rpc("getblockchaininfo")
 
+    # === RAW TRANSACTION METHODS (for HTLC atomic swaps) ===
+
+    def create_raw_transaction(self, inputs, outputs, locktime=0, replaceable=False):
+        """
+        Cria transação raw não assinada.
+
+        Args:
+            inputs: Lista de dicts com 'txid' e 'vout'
+            outputs: Dict de {address: amount} ou lista de outputs
+            locktime: Locktime da transação (default: 0)
+            replaceable: Se True, marca como RBF (default: False)
+
+        Returns:
+            Tuple (hex_string, error)
+
+        Example:
+            inputs = [{"txid": "abc...", "vout": 0}]
+            outputs = {"tb1q...": 0.001}
+            hex, err = client.create_raw_transaction(inputs, outputs)
+        """
+        params = [inputs, outputs]
+        if locktime != 0:
+            params.append(locktime)
+        if replaceable:
+            params.append(replaceable)
+
+        return self._call_rpc("createrawtransaction", params)
+
+    def sign_raw_transaction_with_wallet(self, hex_tx, prevtxs=None, sighash_type="ALL"):
+        """
+        Assina transação raw com chaves da wallet.
+
+        Args:
+            hex_tx: Transação raw em hexadecimal
+            prevtxs: Lista opcional de UTXOs anteriores (para P2SH/P2WSH)
+            sighash_type: Tipo de assinatura (default: "ALL")
+
+        Returns:
+            Tuple (result_dict, error)
+            result_dict contém:
+                - 'hex': transação assinada
+                - 'complete': bool se todas assinaturas estão presentes
+                - 'errors': lista de erros se incomplete
+
+        Example:
+            result, err = client.sign_raw_transaction_with_wallet(hex_tx)
+            if result['complete']:
+                signed_hex = result['hex']
+        """
+        params = [hex_tx]
+        if prevtxs:
+            params.append(prevtxs)
+        if sighash_type != "ALL":
+            params.append(sighash_type)
+
+        return self._call_rpc("signrawtransactionwithwallet", params)
+
+    def send_raw_transaction(self, hex_tx, max_fee_rate=None):
+        """
+        Broadcast transação assinada para a rede.
+
+        Args:
+            hex_tx: Transação assinada em hexadecimal
+            max_fee_rate: Taxa máxima permitida (opcional)
+
+        Returns:
+            Tuple (txid, error)
+
+        Example:
+            txid, err = client.send_raw_transaction(signed_hex)
+            if not err:
+                print(f"Transaction broadcast: {txid}")
+        """
+        params = [hex_tx]
+        if max_fee_rate is not None:
+            params.append(max_fee_rate)
+
+        return self._call_rpc("sendrawtransaction", params)
+
+    def decode_raw_transaction(self, hex_tx, is_witness=True):
+        """
+        Decodifica transação raw para formato legível.
+
+        Args:
+            hex_tx: Transação em hexadecimal
+            is_witness: Se True, interpreta como witness transaction
+
+        Returns:
+            Tuple (decoded_dict, error)
+
+        Example:
+            decoded, err = client.decode_raw_transaction(hex_tx)
+            print(f"TXID: {decoded['txid']}")
+        """
+        params = [hex_tx]
+        if not is_witness:
+            params.append(is_witness)
+
+        return self._call_rpc("decoderawtransaction", params)
+
+    def get_raw_transaction(self, txid, verbose=True, blockhash=None):
+        """
+        Obtém transação raw pelo TXID.
+
+        Args:
+            txid: Transaction ID
+            verbose: Se True, retorna JSON. Se False, retorna hex (default: True)
+            blockhash: Hash do bloco onde procurar (opcional)
+
+        Returns:
+            Tuple (transaction_data, error)
+
+        Example:
+            tx_data, err = client.get_raw_transaction(txid, verbose=True)
+            print(f"Confirmations: {tx_data['confirmations']}")
+        """
+        params = [txid, verbose]
+        if blockhash:
+            params.append(blockhash)
+
+        return self._call_rpc("getrawtransaction", params)
+
+    def get_tx_out(self, txid, vout, include_mempool=True):
+        """
+        Obtém detalhes de um output específico (UTXO).
+
+        Args:
+            txid: Transaction ID
+            vout: Output index
+            include_mempool: Incluir transações na mempool
+
+        Returns:
+            Tuple (utxo_data, error)
+            Retorna None se UTXO já foi gasto
+
+        Example:
+            utxo, err = client.get_tx_out(txid, 0)
+            if utxo:
+                print(f"Value: {utxo['value']}")
+        """
+        params = [txid, vout, include_mempool]
+        return self._call_rpc("gettxout", params)
+
+    def fund_raw_transaction(self, hex_tx, options=None):
+        """
+        Adiciona inputs e change output a uma transação raw.
+
+        Args:
+            hex_tx: Transação raw parcialmente construída
+            options: Dict com opções (changeAddress, feeRate, etc)
+
+        Returns:
+            Tuple (result_dict, error)
+            result_dict contém:
+                - 'hex': transação com funding
+                - 'fee': taxa calculada
+                - 'changepos': índice do output de change
+
+        Example:
+            options = {"changeAddress": "tb1q...", "feeRate": 0.0001}
+            result, err = client.fund_raw_transaction(hex_tx, options)
+            funded_hex = result['hex']
+        """
+        params = [hex_tx]
+        if options:
+            params.append(options)
+
+        return self._call_rpc("fundrawtransaction", params)
+
 # Singleton para reusar conexão Elements RPC
 elements_rpc_client = ElementsRPCClient()
 

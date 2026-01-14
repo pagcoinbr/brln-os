@@ -1,0 +1,115 @@
+# BRLN-OS Atomic Swap Module - Docker Compose
+# Services: PostgreSQL (database) and Redis (cache/queue)
+# Note: LND and elementsd are managed by systemd on host
+
+version: '3.8'
+
+services:
+  # PostgreSQL database for swap state, peers, and transaction history
+  postgres:
+    image: postgres:16-alpine
+    container_name: brln-swap-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-brln_swaps}
+      POSTGRES_USER: ${POSTGRES_USER:-brln_swap_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_production}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:5432:5432"  # Only expose to localhost
+    networks:
+      - brln-swap-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-brln_swap_user} -d ${POSTGRES_DB:-brln_swaps}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for caching swap state and async task queue
+  redis:
+    image: redis:7-alpine
+    container_name: brln-swap-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfilename "brln-swap.aof"
+      --dir /data
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-changeme_redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"  # Only expose to localhost
+    networks:
+      - brln-swap-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Redis Commander (Web UI for debugging)
+  # Uncomment for development only - NEVER expose in production
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   container_name: brln-swap-redis-ui
+  #   restart: unless-stopped
+  #   environment:
+  #     - REDIS_HOSTS=redis:redis:6379:0:${REDIS_PASSWORD:-changeme_redis_password}
+  #     - HTTP_USER=admin
+  #     - HTTP_PASSWORD=${REDIS_UI_PASSWORD:-admin}
+  #   ports:
+  #     - "127.0.0.1:8081:8081"
+  #   networks:
+  #     - brln-swap-network
+  #   depends_on:
+  #     - redis
+
+  # Optional: pgAdmin (PostgreSQL Web UI for debugging)
+  # Uncomment for development only - NEVER expose in production
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: brln-swap-pgadmin
+  #   restart: unless-stopped
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@brln.local}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+  #     PGADMIN_LISTEN_PORT: 5050
+  #   ports:
+  #     - "127.0.0.1:5050:5050"
+  #   volumes:
+  #     - pgadmin_data:/var/lib/pgadmin
+  #   networks:
+  #     - brln-swap-network
+  #   depends_on:
+  #     - postgres
+
+networks:
+  brln-swap-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  # pgadmin_data:
+  #   driver: local

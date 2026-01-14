@@ -1,0 +1,97 @@
+# BRLN-OS Atomic Swap Module - Python Dependencies
+# Protótipo pré-MVP - Python only
+
+# ===== CORE DEPENDENCIES (from existing BRLN-OS API) =====
+Flask==3.0.0
+grpcio==1.59.0
+protobuf==4.24.4
+mnemonic==0.21
+bip32==5.0.0
+cryptography==41.0.7
+requests==2.31.0
+psutil==5.9.6
+flask-cors==4.0.0
+flask-limiter==3.5.0
+
+# ===== BITCOIN & CRYPTO LIBRARIES =====
+# Bitcoin transaction construction and script building
+python-bitcoinlib==0.12.2
+# ECDSA operations
+ecdsa==0.18.0
+# Additional crypto utilities
+pycryptodome==3.19.0
+
+# ===== DATABASE & ORM =====
+# SQLAlchemy for database models and ORM
+SQLAlchemy==2.0.23
+# Alembic for database migrations
+alembic==1.13.1
+# PostgreSQL adapter (production)
+psycopg2-binary==2.9.9
+# SQLite support (development fallback - built-in)
+
+# ===== ASYNC & NETWORKING =====
+# Async I/O for network operations
+aiohttp==3.9.1
+# WebSocket support
+websockets==12.0
+# ZeroMQ for low-latency P2P messaging
+pyzmq==25.1.2
+# Async utilities
+asyncio==3.4.3
+
+# ===== TOR INTEGRATION =====
+# Stem library for Tor control and hidden services
+stem==1.8.2
+# SOCKS proxy support
+PySocks==1.7.1
+
+# ===== API & DATA VALIDATION =====
+# Pydantic for data validation and serialization
+pydantic==2.5.3
+# FastAPI (optional - can integrate later for standalone service)
+fastapi==0.109.0
+uvicorn==0.27.0
+
+# ===== CLI =====
+# Click for command-line interface
+click==8.1.7
+# Rich for beautiful terminal output
+rich==13.7.0
+
+# ===== REDIS (for caching and async queue) =====
+redis==5.0.1
+# Celery for async task queue (optional)
+# celery==5.3.4
+
+# ===== TESTING =====
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# ===== LOGGING & MONITORING =====
+# Structured logging
+python-json-logger==2.0.7
+
+# ===== LIQUID/ELEMENTS SUPPORT =====
+# Note: py-liquidlib doesn't exist as standalone package
+# We'll use direct RPC calls via requests (similar to existing elementsd integration)
+# For future: integrate with elements-rpc or build custom wrapper
+
+# ===== DEVELOPMENT TOOLS =====
+# Code formatting
+black==23.12.1
+# Linting
+pylint==3.0.3
+# Type checking
+mypy==1.8.0
+# Pre-commit hooks
+pre-commit==3.6.0
+
+# ===== UTILITIES =====
+# Environment variable management
+python-dotenv==1.0.0
+# Date/time utilities
+python-dateutil==2.8.2
+# UUID generation
+uuid==1.30
