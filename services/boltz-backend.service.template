@@ -1,0 +1,43 @@
+[Unit]
+Description=Boltz Backend - Atomic Swap Service for Bitcoin, Lightning, and Liquid
+Documentation=https://github.com/BoltzExchange/boltz-backend
+Documentation=https://docs.boltz.exchange
+After=network.target postgresql.service bitcoind.service lnd.service elementsd.service
+Wants=postgresql.service bitcoind.service lnd.service
+PartOf=lnd.service
+
+[Service]
+Type=simple
+User=boltz-backend
+Group=boltz-backend
+WorkingDirectory=/opt/boltz-backend
+
+# Environment variables
+Environment="NODE_ENV=production"
+Environment="HOME=/home/boltz-backend"
+
+# Start Boltz backend
+ExecStart=/usr/bin/node bin/boltzd
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=boltz-backend
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/home/boltz-backend
+
+# Resource limits (optional, adjust as needed)
+# MemoryMax=2G
+# CPUQuota=200%
+
+[Install]
+WantedBy=multi-user.target

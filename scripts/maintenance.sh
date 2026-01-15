@@ -336,6 +336,11 @@ verify_frontend_status() {
     
     # Check API services status
     verify_api_services
+
+    # Check Boltz Backend status
+    if systemctl list-unit-files | grep -q "boltz-backend.service"; then
+        check_boltz_backend
+    fi
 }
 
 # Function to maintain API services
@@ -466,6 +471,81 @@ verify_api_services() {
 }
 
 # Help function
+# ============================================================================
+# BOLTZ BACKEND MANAGEMENT FUNCTIONS
+# ============================================================================
+
+# Function to check Boltz Backend status
+check_boltz_backend() {
+    echo -e "${BLUE}🔍 Checking Boltz Backend status...${NC}"
+
+    if systemctl is-active --quiet boltz-backend; then
+        echo -e "${GREEN}✅ Boltz Backend service is running${NC}"
+
+        # Check API health
+        local api_port=9001
+        if curl -s http://localhost:$api_port/version >/dev/null 2>&1; then
+            local version=$(curl -s http://localhost:$api_port/version 2>/dev/null | jq -r '.version' 2>/dev/null || echo "unknown")
+            echo -e "${GREEN}✅ Boltz Backend API responding (version: $version)${NC}"
+
+            # Check supported pairs
+            if curl -s http://localhost:$api_port/v2/swap/pairs >/dev/null 2>&1; then
+                local pairs=$(curl -s http://localhost:$api_port/v2/swap/pairs 2>/dev/null | jq -r 'keys | length' 2>/dev/null || echo "0")
+                echo -e "${GREEN}✅ Configured with $pairs trading pairs${NC}"
+
+                # Show pairs
+                echo -e "${BLUE}📊 Available trading pairs:${NC}"
+                curl -s http://localhost:$api_port/v2/swap/pairs 2>/dev/null | jq -r 'keys[]' 2>/dev/null | sed 's/^/   - /'
+            else
+                echo -e "${YELLOW}⚠️  Could not fetch trading pairs${NC}"
+            fi
+        else
+            echo -e "${RED}❌ Boltz Backend API not responding${NC}"
+            echo -e "${YELLOW}   Check logs with: sudo journalctl -u boltz-backend -n 50${NC}"
+        fi
+    else
+        echo -e "${RED}❌ Boltz Backend service not running${NC}"
+        echo -e "${YELLOW}   Start with: sudo systemctl start boltz-backend${NC}"
+    fi
+
+    echo ""
+}
+
+# Function to manage Boltz Backend service
+manage_boltz_backend() {
+    echo -e "${BLUE}🔧 Managing Boltz Backend service...${NC}"
+
+    # Restart service
+    echo -e "${BLUE}🔄 Restarting Boltz Backend...${NC}"
+    sudo systemctl restart boltz-backend
+
+    # Wait a few seconds
+    sleep 3
+
+    # Check status
+    if systemctl is-active --quiet boltz-backend; then
+        echo -e "${GREEN}✅ Boltz Backend restarted successfully${NC}"
+    else
+        echo -e "${RED}❌ Failed to restart Boltz Backend${NC}"
+        sudo systemctl status boltz-backend
+        return 1
+    fi
+
+    # Show status
+    check_boltz_backend
+}
+
+# Function to show Boltz Backend logs
+show_boltz_logs() {
+    echo -e "${BLUE}📋 Showing Boltz Backend logs (Ctrl+C to exit)...${NC}"
+    echo ""
+    sudo journalctl -u boltz-backend -f
+}
+
+# ============================================================================
+# HELP FUNCTION
+# ============================================================================
+
 show_help() {
     cat << EOF
 BRLN-OS Frontend & API Maintenance Script
@@ -491,7 +571,18 @@ EXEMPLOS:
 SERVIÇOS GERENCIADOS:
   Frontend:          Apache Web Server, páginas HTML/CSS/JS
   API:               brln-api, messager-monitor
+  Boltz Backend:     boltz-backend (atomic swaps)
   Conflitos:         Remove conflitos entre Nginx/Apache
+
+OPÇÕES BOLTZ BACKEND:
+  boltz              Gerencia serviço Boltz Backend (restart + status)
+  boltz-logs         Mostra logs do Boltz Backend em tempo real
+  boltz-check        Verifica status e saúde do Boltz Backend
+
+EXEMPLOS BOLTZ:
+  $0 boltz           # Reinicia Boltz Backend e mostra status
+  $0 boltz-logs      # Acompanha logs em tempo real
+  $0 boltz-check     # Verifica API e configuração
 
 EOF
 }
@@ -514,6 +605,15 @@ case "${1:-maintenance}" in
     "ssl-only")
         configure_ssl_only
         sudo systemctl reload apache2
+        ;;
+    "boltz")
+        manage_boltz_backend
+        ;;
+    "boltz-logs")
+        show_boltz_logs
+        ;;
+    "boltz-check")
+        check_boltz_backend
         ;;
     "help"|"-h"|"--help")
         show_help

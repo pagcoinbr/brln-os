@@ -11,6 +11,7 @@ BITCOIN_NETWORK=${BITCOIN_NETWORK:-mainnet}
 
 LND_VERSION=0.20.0
 BTC_VERSION=29.2
+BOLTZ_BACKEND_VERSION=master  # Use 'master' or specific version like 'v3.5.0'
 VERSION_THUB=$(curl -s https://api.github.com/repos/apotdevin/thunderhub/releases/latest | jq -r '.tag_name' | sed 's/^v//')
 
 # Smart path detection
